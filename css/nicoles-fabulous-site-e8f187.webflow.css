@@ -3049,6 +3049,11 @@ a {
   width: 100%;
 }
 
+.button:hover{
+  transform: scale(1.05);
+  box-shadow: 0 8px 8px -4px #fbff09 !important;
+}
+
 .home-category-info-1 {
   margin-left: 0;
 }
@@ -7128,3 +7133,16 @@ a {
   font-style: normal;
   font-display: swap;
 }
+
+.heading-style-h2-13{
+    letter-spacing: 1px;
+}
+
+.heading-style-h2-13{
+    height:5vh;
+}
+
+.text-size-medium-2{
+    color: #e13e00 !important;
+}
+
