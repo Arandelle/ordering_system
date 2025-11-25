@@ -7316,3 +7316,11 @@ a {
   flex-flow: column;
   display: flex;
 }
+
+.modal_submission{
+  margin-top:20px !important;
+}
+
+.submit_colors{
+  color: #e13e00;
+}
