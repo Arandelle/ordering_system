@@ -7146,6 +7146,27 @@ a {
     color: #e13e00 !important;
 }
 
+/* Start  of custom css */
+
+.about_box_container{
+  display:flex;
+  justify-content: center;
+  gap:50px;
+}
+
+.about_us_image{
+    width:30%;
+}
+
+.about_us_form{
+    width:30vw !important;
+    p{
+      text-align: left;
+    }
+}
+
+ 
+
 
 @media (max-width: 470px) { 
     .text-size-medium-2 {
@@ -7161,12 +7182,8 @@ a {
       display:block !important;
     }
 
-    .div-block-68.asdasdasd.wedqweqwe{
-      display:block !important;
-    }
-
     .div-block-84{
-      margin-top:17vw;
+      margin-top:5vw;
     }
 
     .div-block-68.asdasdasd.wedqweqwe {
@@ -7180,12 +7197,46 @@ a {
     .section.skills.asdad{
       height:170vw;
     }
+
+    .about_box_container{
+      display: block !important;
+      width: 100% !important;
+      padding: 10px !important;
+      margin-left:auto;
+      margin-right:auto;
+    }
+
+    .about_us_image{
+      width: 80% !important;
+      margin-right:auto;
+      margin-left:auto;
+      margin-bottom:20px;
+    }
+
+
+    .label-wrap-scroll {
+        width: 200% !important;
+    }
+
+    .about_us_form{
+      width:100% !important;
+      p{
+        text-align: left;
+      }
+    }
+
  }
+
+
 
  @media (max-width: 370px) { 
     .footer{
       padding-top:0px !important;
       padding-bottom:0px !important;
+    }
+
+    .about_box_container{
+      width:100% !important;
     }
 
     .section-2.is-footer{
@@ -7195,4 +7246,73 @@ a {
  }
 
 
+ @media (max-width: 924px) { 
 
+      .about_box_container{
+        display: block !important;
+        width: 100% !important;
+        padding: 10px !important;
+        margin-left:auto;
+        margin-right:auto;
+      }
+
+
+    .about_us_form{
+        width:100% !important;
+
+        p{
+          text-align: left;
+        }
+    }
+
+    .about_us_image{
+      width: 50% !important;
+      margin-right:auto;
+      margin-left:auto;
+      margin-bottom:20px;
+    }
+ }
+
+
+
+@media (max-width: 518px) { 
+  .about_us_form{
+      width:100% !important;
+
+      p{
+        text-align: left;
+      }
+  }
+
+  .about_us_image{
+    width: 100% !important;
+    margin-right:auto;
+    margin-left:auto;
+    margin-bottom:20px;
+  }
+}
+
+
+
+
+@media screen and (max-width: 767px) {
+  .margin-top-64 {
+    margin-top: 0rem !important;
+    margin-bottom: 50px !important;
+  }
+}
+
+
+
+@media screen and (min-width: 1440px) {
+  .section.base {
+    padding-bottom: 0 !important;
+  }
+}
+
+.div-block-84 {
+  grid-column-gap: 15px;
+  grid-row-gap: 15px;
+  flex-flow: column;
+  display: flex;
+}
