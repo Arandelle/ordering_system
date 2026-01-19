@@ -35,8 +35,8 @@
         <!-- Empty cart -->
         <div id="emptyCart" class="flex flex-col justify-center items-center mb-6 min-h-[50vh]">
           <div class="flex justify-center p-5">
-            <p class="p-4 bg-red-100 rounded-full">
-              <i data-lucide="shopping-cart" class="text-red-500"></i>
+            <p class="p-4 bg-orange-100 rounded-full">
+              <i data-lucide="utensils" class="text-orange-500"></i>
             </p>
           </div>
           <p class="text-lg text-slate-600 font-bold">
@@ -79,12 +79,6 @@
 
   </section>
 </main>
-
-
-    <script>
-      lucide.createIcons();
-    </script>
-
     <script>
       // Menu data with category metada
       const categories = [
@@ -103,29 +97,29 @@
           icon: null,
         },
         {
-          id: "chickenjoy",
-          title: "Chickenjoy",
+          id: "Harrison Bonding Bites",
+          title: "Harrison Bonding Bites",
           subtitle: null,
           showHeader: false,
           icon: null,
         },
         {
-          id: "nuggets",
-          title: "Chicken Nuggets",
+          id: "Harrison Full Plates",
+          title: "Harrison Full Plates",
           subtitle: null,
           showHeader: false,
           icon: null,
         },
         {
-          id: "burgers",
-          title: "Burgers",
+          id: "Harrison Refreshment",
+          title: "Harrison Refreshment",
           subtitle: null,
           showHeader: false,
           icon: null,
         },
         {
-          id: "spaghetti",
-          title: "Jolly Spaghetti & Palabok",
+          id: "Add-ons",
+          title: "Add-ons",
           subtitle: null,
           showHeader: false,
           icon: null,
@@ -145,45 +139,61 @@
           },
           {
             id: 2,
-            name: "2 - pc. Chickenjoy Solo",
-            price: 195,
+            name: "Chicken Wings",
+            price: 89,
             description:
               "The Best Fried Chicken! Crispylicious, Juicylicious! Jollibee's perfectly...",
             image:
-              "https://images.unsplash.com/photo-1562967914-608f82629710?w=150&h=150&fit=crop",
+              "assets/images/144.png",
           },
           {
             id: 3,
-            name: "1 - pc. Chickenjoy w/ Coke Float",
-            price: 151,
+            name: "Pecho",
+            price: 209,
             description:
               "Philippines' best-tasting crispylicious, juicylicious Chickenjoy with refreshin...",
             image:
-              "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=150&h=150&fit=crop",
+              "assets/images/145.png",
           },
           {
             id: 4,
-            name: "1 - pc. Chickenjoy w/ Burger Steak ...",
-            price: 162,
+            name: "Chicken Leg Quarter",
+            price: 189,
             description: "",
             image:
-              "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=150&h=150&fit=crop",
+              "assets/images/248.png",
           },
           {
             id: 5,
-            name: "1 - pc. Chickenjoy New Spicy Solo",
-            price: 104,
-            description: "",
-            image:
-              "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=150&h=150&fit=crop",
-          },
-          {
-            id: 6,
-            name: "2 - pc. Burger Steak Solo",
+            name: "Ehsaladang Talong",
             price: 149,
             description: "",
             image:
-              "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&h=150&fit=crop",
+              "assets/images/253.png",
+          },
+          {
+            id: 6,
+            name: "Chicken Gizzard",
+            price: 79,
+            description: "",
+            image:
+              "assets/images/255.png",
+          },
+          {
+            id: 61,
+            name: "Chicken BBQ",
+            price: 89,
+            description: "",
+            image:
+              "assets/images/256.png",
+          },
+          {
+            id: 62,
+            name: "Pork BBQ",
+            price: 89,
+            description: "",
+            image:
+              "assets/images/257.png",
           },
         ],
         "Harrison Traditions": [
@@ -221,117 +231,142 @@
             image:
               "assets/images/209.png",
           },
+           {
+            id: 101,
+            name: "Pancit Canton",
+            price: 299,
+            description: "Stir-fried egg noodles with pork, shrimp,sausage, and mixed vegetables in savory sauce.",
+            image:
+              "assets/images/216.png",
+          },
+          {
+            id: 102,
+            name: "Pork Sinigang",
+            price: 399,
+            description: "Tamarind-based soup with pork ribs, gabi, radish,eggplant, and kangkong. Tangy and comforting.",
+            image:
+              "assets/images/221.png",
+          },
+          {
+            id: 103,
+            name: "Harrison Sisig",
+            price: 399,
+            description: "Sizzling chopped pork with calamansi,onions, chili, and egg on a hot plate.",
+            image:
+              "assets/images/222.png",
+          },
         ],
-        chickenjoy: [
+        "Harrison Bonding Bites": [
           {
             id: 11,
-            name: "6 - pc. Chickenjoy Bucket",
-            price: 510,
-            description: "Share the joy with a bucket of Chickenjoy",
+            name: "The Juicy Gathering",
+            price: 1499,
+            description: "Includes 4 pcs Chicken Pecho, 4 pcs Pork BBQ, aserving of Pancit, and 4 servings of Rice. A hearty,meaty feast for small groups.",
             image:
-              "https://images.unsplash.com/photo-1562967914-608f82629710?w=150&h=150&fit=crop",
+              "assets/images/176.png",
           },
           {
             id: 12,
-            name: "8 - pc. Chickenjoy Bucket",
-            price: 680,
-            description: "Big bucket for big gatherings",
+            name: "WINGS MEET QUARTERS",
+            price: 1399,
+            description: "Includes 4 pcs Leg Quarter, 4 pcs Chicken Wings, aserving of Pancit, and 4 servings of Rice. Juicy andflavorful, perfect for friends or family to share.",
             image:
-              "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=150&h=150&fit=crop",
+              "assets/images/175.png",
           },
-        ],
-        nuggets: [
           {
             id: 13,
-            name: "6 - pc. Chicken Nuggets",
-            price: 99,
-            description: "Crispy and tender chicken nuggets",
+            name: "Stick It Together",
+            price: 999,
+            description: "Includes 4 pcs Pork BBQ, 4 pcs Chicken BBQ, aserving of Pancit, and 4 servings of Rice. Perfectfor sharing with friends or barkada.",
             image:
-              "https://images.unsplash.com/photo-1562967914-608f82629710?w=150&h=150&fit=crop",
+              "assets/images/177.png",
           },
+        ],
+        "Add-ons": [
           {
             id: 14,
-            name: "10 - pc. Chicken Nuggets",
-            price: 159,
-            description: "More nuggets, more fun!",
+            name: "Atchara",
+            price: 19,
+            description: "",
             image:
-              "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=150&h=150&fit=crop",
+              "assets/images/228.png",
           },
           {
             id: 15,
-            name: "20 - pc. Chicken Nuggets",
-            price: 299,
-            description: "Party size nuggets for everyone",
+            name: "Plain Rice",
+            price: 39,
+            description: "",
             image:
-              "https://images.unsplash.com/photo-1562967914-608f82629710?w=150&h=150&fit=crop",
+              "assets/images/275.png",
           },
         ],
-        burgers: [
+        "Harrison Full Plates": [
           {
             id: 16,
-            name: "Yumburger",
-            price: 45,
-            description: "The classic Jollibee burger",
+            name: "Pork BBQ Combo",
+            price: 199,
+            description: "2PCS PORK SKEWERS + RICE + ATCHARA",
             image:
-              "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&h=150&fit=crop",
-          },
-          {
-            id: 17,
-            name: "Cheeseburger",
-            price: 55,
-            description: "Yumburger with delicious cheese",
-            image:
-              "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&h=150&fit=crop",
-          },
-          {
-            id: 18,
-            name: "Jolly Hotdog",
-            price: 65,
-            description: "Juicy hotdog in a soft bun",
-            image:
-              "https://images.unsplash.com/photo-1612392062798-2dbae2f3f502?w=150&h=150&fit=crop",
-          },
-          {
-            id: 19,
-            name: "Burger Steak",
-            price: 89,
-            description: "Savory burger patty with mushroom gravy",
-            image:
-              "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=150&h=150&fit=crop",
+              "assets/images/243.png"
           },
         ],
-        spaghetti: [
+        "Harrison Refreshment": [
           {
             id: 20,
-            name: "Jolly Spaghetti",
-            price: 75,
-            description: "The sweet-style spaghetti everyone loves",
+            name: "Mountain Dew",
+            price: 99,
+            description: "",
             image:
-              "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=150&h=150&fit=crop",
+              "assets/images/159.png",
           },
-          {
+         {
             id: 21,
-            name: "Jolly Spaghetti Family Pan",
-            price: 320,
-            description: "Family-size pan of Jolly Spaghetti",
-            image:
-              "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=150&h=150&fit=crop",
+            name: "Sprite",
+            price: 99,
+            description: "",
+            image: "assets/images/160.png",
           },
           {
             id: 22,
-            name: "Palabok",
-            price: 85,
-            description: "Filipino-style noodles with savory sauce",
-            image:
-              "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=150&h=150&fit=crop",
+            name: "Royal",
+            price: 99,
+            description: "",
+            image: "assets/images/161.png",
+          },
+           {
+            id: 23,
+            name: "Super Dry",
+            price: 99,
+            description: "",
+            image: "assets/images/163.png",
           },
           {
-            id: 23,
-            name: "Palabok Family Pan",
-            price: 350,
-            description: "Family-size pan of Palabok",
-            image:
-              "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=150&h=150&fit=crop",
+            id: 24,
+            name: "Red Horse",
+            price: 99,
+            description: "",
+            image: "assets/images/164.png",
+          },
+          {
+            id: 25,
+            name: "San Mig Apple",
+            price: 99,
+            description: "",
+            image: "assets/images/165.png",
+          },
+          {
+            id: 26,
+            name: "Pale Pilsen",
+            price: 99,
+            description: "",
+            image: "assets/images/166.png",
+          },
+          {
+            id: 27,
+            name: "San Mig Light",
+            price: 99,
+            description: "",
+            image: "assets/images/167.png",
           },
         ],
       };
@@ -348,19 +383,23 @@
         <div class="flex justify-between items-start">
           <div class="flex-1">
             <h3 class="font-bold text-lg mb-1">${item.name}</h3>
-            <p class="text-sm text-gray-600 mb-2">from PHP ${item.price}</p>
-            ${item.description ?? `<p class="text-sm text-gray-600"></p>`}
+            <p class="text-slate-900 mb-2">from PHP ${item.price}</p>
+            ${item.description ? `<p class="text-md text-gray-500">
+            ${item.description}
+              </p>` : ""}
           </div>
           <div class="ml-4 relative">
             <img
               src="${item.image}"
               alt="${item.name}"
-              class="w-24 h-24 object-cover rounded-lg"
+              class="w-32 h-32 object-cover rounded-lg"
             />
             <button
                onclick="addToCart(${item.id})"
-              class="absolute -bottom-2 -right-2 w-8 h-8 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xl hover:bg-gray-50 hover:border-red-600 transition-all cursor-pointer"
-            >+</button>
+              class="absolute -bottom-2 -right-2 bg-white rounded-full flex items-center justify-center text-xl hover:bg-gray-50 hover:border-red-600 transition-all cursor-pointer"
+            >
+            <i data-lucide="circle-plus" class="text-orange-500"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -447,7 +486,7 @@
           cartTotal.textContent = `₱ ${total}`;
 
           cartItemContainer.innerHTML = cart.map(item => `
-                    <div class="flex items-center justify-between py-3 border-b">
+                    <div class="flex items-center justify-between py-3">
                        <img 
                        src="${item.image}"
                        alt="${item.name}"
@@ -459,13 +498,13 @@
                         <div class="flex items-center gap-2">
                             <button
                                 onclick="updateQuantity(${item.id}, -1)"
-                                class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300">
+                                class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 cursor-pointer">
                                 -
                             </button>
                             <span class="w-6 text-center font-semibold">${item.quantity}</span>
                             <button
                                 onclick="updateQuantity(${item.id}, 1)"
-                                class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300">
+                                class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 cursor-pointer">
                                 +
                             </button>
                             <button
@@ -493,5 +532,8 @@
       renderMenuSection();
     </script>
 
+      <script>
+      lucide.createIcons();
+    </script>
   </body>
 </html
