@@ -15,7 +15,6 @@
   <body class="bg-gray-50">
    <main class="mx-auto flex justify-center">
   <section class="max-w-7xl flex justify-center gap-2 h-screen">
-
     <!-- style for no scrollbar-->
     <style>
       .no-scrollbar::-webkit-scrollbar{
@@ -23,7 +22,7 @@
       }
 
     </style>
-
+    <!-- List of products-->
     <div
       id="menuSections"
       class="flex-1 overflow-y-auto p-6 max-h-screen no-scrollbar"
@@ -90,15 +89,15 @@
       // Menu data with category metada
       const categories = [
         {
-          id: "popular",
-          title: "Popular",
+          id: "Ala Carte & Grill",
+          title: "Ala Carte & Grill",
           subtitle: "Most ordered right now.",
           showHeader: true,
           icon: "👍",
         },
         {
-          id: "family",
-          title: "Family Super Meals",
+          id: "Harrison Traditions",
+          title: "Harrison Traditions",
           subtitle: null,
           showHeader: false,
           icon: null,
@@ -134,15 +133,15 @@
       ];
 
       const menuData = {
-        popular: [
+        "Ala Carte & Grill": [
           {
             id: 1,
-            name: "1 - pc. Chickenjoy w/ Jolly Spaghett...",
-            price: 164,
+            name: "Chicken Liver",
+            price: 79,
             description:
               "Crispylicious, juicylicious Chickenjoy paired with the tastiest and meatiest...",
             image:
-              "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=150&h=150&fit=crop",
+              "./assets/images/202.png",
           },
           {
             id: 2,
@@ -187,39 +186,40 @@
               "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=150&h=150&fit=crop",
           },
         ],
-        family: [
+        "Harrison Traditions": [
           {
             id: 7,
-            name: "Burger Steak Family Savers",
-            price: 363,
+            name: "Lechon Kawali",
+            price: 399,
             description:
-              "Perfect for sharing! Multiple servings of delicious burger steak",
+              "Crispy pork belly with juicy meat inside, served with liver sauce or spiced vinegar.",
             image:
-              "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=150&h=150&fit=crop",
+              "assets/images/205.png",
           },
           {
             id: 8,
-            name: "Family Super Meal A: 6 - pc. Chicke...",
-            price: 680,
+            name: "Lumpiang Shanghai",
+            price: 199,
             description:
-              "6 pieces of Chickenjoy with sides and drinks for the whole family",
+              "Golden spring rolls stuffed with seasoned, pork and veggies, paired with sweet chili dip",
             image:
-              "https://images.unsplash.com/photo-1562967914-608f82629710?w=150&h=150&fit=crop",
+              "assets/images/206.png",
+          },
+          {
+            id: 9,
+            name: "Sisig Turon",
+            price: 79,
+            description: "Sisig wrapped in lumpia skin, deepfried to a crisp. A fun, savory snack",
+            image:
+              "assets/images/207.png",
           },
         ],
         chickenjoy: [
-          {
-            id: 9,
-            name: "1 - pc. Chickenjoy",
-            price: 89,
-            description: "The Best Fried Chicken! Crispylicious, Juicylicious!",
-            image:
-              "https://images.unsplash.com/photo-1562967914-608f82629710?w=150&h=150&fit=crop",
-          },
+          
           {
             id: 10,
-            name: "2 - pc. Chickenjoy",
-            price: 178,
+            name: "Adobong Kangkong",
+            price: 99,
             description: "Double the deliciousness with 2 pieces",
             image:
               "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=150&h=150&fit=crop",
@@ -338,7 +338,7 @@
       };
 
       // cart state
-      const cart = [];
+      let cart = [];
 
       // Create menu item HTML / Card
       function createMenuItemCard(item) {
@@ -359,7 +359,8 @@
               class="w-24 h-24 object-cover rounded-lg"
             />
             <button
-              class="absolute -bottom-2 -right-2 w-8 h-8 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xl hover:bg-gray-50 hover:border-red-600 transition-all"
+               onclick="addToCart(${item.id})"
+              class="absolute -bottom-2 -right-2 w-8 h-8 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xl hover:bg-gray-50 hover:border-red-600 transition-all cursor-pointer"
             >+</button>
           </div>
         </div>
@@ -398,6 +399,27 @@
         }
 
         updateCart();
+
+        console.log("updated cart: ", cart)
+      }
+
+      //Remove item from the cart
+      function removeFromCart(itemId) {
+            cart = cart.filter(item => item.id !== itemId);
+            updateCart();
+        }
+
+      // update quantity
+      function updateQuantity(itemId, change){
+        const item = cart.find(item => item.id === itemId);
+        if (item){
+          item.quantity += change;
+          if (item.quantity <= 0){
+            removeFromCart(itemId);
+          } else {
+            updateCart();
+          }
+        }
       }
 
       // Update cart UI
@@ -405,17 +427,72 @@
         const cartItemContainer = document.getElementById("cartItems");
         const cartTotal = document.getElementById('cartTotal');
         const emptyCart = document.getElementById('emptyCart');
-        const summaryBtn = document.getElementById('summarBtn');
+        const summaryBtn = document.getElementById('summaryBtn');
         const checkoutBtn = document.getElementById('checkoutBtn');
 
         if (cart.length === 0){
           cartItemContainer.classList.add('hidden');
-          emptyCart.classList.remove('hidden');
+          emptyCart.classList.remove('hidden'); // show empty cart
+          summaryBtn.classList.add("hidden");
+          cartTotal.textContent = '₱ 0.00';
+          checkoutBtn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+          checkoutBtn.classList.remove('bg-red-600', 'text-white','hover:bg-red700', 'cursor-pointer');
+        } else {
+          cartItemContainer.classList.remove('hidden');
+          emptyCart.classList.add('hidden');
+          summaryBtn.classList.remove('hidden');
+          checkoutBtn.classList.remove('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+          checkoutBtn.classList.add('bg-red-600', 'text-white','hover:bg-red700', 'cursor-pointer');
+
+          const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+          cartTotal.textContent = `₱ ${total}`;
+
+          cartItemContainer.innerHTML = cart.map(item => `
+                    <div class="flex items-center justify-between py-3 border-b">
+                       <img 
+                       src="${item.image}"
+                       alt="${item.name}"
+                       class="mx-2 h-12 w-12" >
+                        <div class="flex-1">
+                            <p class="font-semibold text-sm">${item.name}</p>
+                            <p class="text-xs text-gray-600">₱ ${item.price}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button
+                                onclick="updateQuantity(${item.id}, -1)"
+                                class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300">
+                                -
+                            </button>
+                            <span class="w-6 text-center font-semibold">${item.quantity}</span>
+                            <button
+                                onclick="updateQuantity(${item.id}, 1)"
+                                class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300">
+                                +
+                            </button>
+                            <button
+                                onclick="removeFromCart(${item.id})"
+                                class="ml-2 text-red-600 hover:text-red-800 text-sm">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+          `).join('');
         }
       }
+
+
+        // Checkout Button
+      document.getElementById('checkoutBtn').addEventListener('click', function(){
+        if (cart.length > 0){
+          alert('Proceeding to checkout with '+ cart.length + 'item(s). Total: ₱' + cart.reduce((sum, item) => sum + (item.price * item.quantity), 0));
+        }
+      });
+
+
 
       // Render the menu
       renderMenuSection();
     </script>
+
   </body>
 </html
