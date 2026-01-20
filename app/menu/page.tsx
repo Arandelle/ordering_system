@@ -1,81 +1,9 @@
 "use client";
 
 import { JSX, useState } from "react";
-import { CirclePlus, Utensils } from "lucide-react";
+import { CirclePlus, Trash, Utensils } from "lucide-react";
 import Image from "next/image";
-
-// types.ts - TypeScript interfaces for Harrison House Menu
-
-/**
- * Base menu item interface
- */
-export interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  description: string;
-  image: string;
-}
-
-/**
- * Cart item extends MenuItem with quantity
- */
-export interface CartItem extends MenuItem {
-  quantity: number;
-}
-
-/**
- * Category metadata interface
- */
-export interface Category {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  showHeader: boolean;
-  icon: string | null;
-}
-
-/**
- * Menu data structure - maps category IDs to their menu items
- */
-export interface MenuData {
-  [categoryId: string]: MenuItem[];
-}
-
-/**
- * Props for MenuItemCard component
- */
-export interface MenuItemCardProps {
-  item: MenuItem;
-  onAddToCart: (itemId: number) => void;
-}
-
-/**
- * Props for CartItem component
- */
-export interface CartItemProps {
-  item: CartItem;
-  onUpdateQuantity: (itemId: number, change: number) => void;
-  onRemove: (itemId: number) => void;
-}
-
-/**
- * Props for MenuSection component (if you decide to create one)
- */
-export interface MenuSectionProps {
-  category: Category;
-  items: MenuItem[];
-  onAddToCart: (itemId: number) => void;
-}
-
-/**
- * Cart state interface
- */
-export interface CartState {
-  items: CartItem[];
-  total: number;
-  itemCount: number;
-}
+import { Category, MenuData, MenuItemCardProps, CartItemProps, CartItem, MenuItem } from "@/types/MenuTypes";
 
 // Menu data with category metadata
 const categories: Category[] = [
@@ -293,6 +221,34 @@ const menuData: MenuData = {
       description: "2PCS PORK SKEWERS + RICE + ATCHARA",
       image: "/images/243.png",
     },
+    {
+      id: 17,
+      name: "Chicken BBQ Combo",
+      price: 199,
+      description: "2 CHICKEN SKEWERS + RICE + ATCHARA",
+      image: "/images/141.png",
+    },
+    {
+      id: 18,
+      name: "Leg Quarter Combo",
+      price: 199,
+      description: "1 LEG QUARTER + RICE + ATCHARA",
+      image: "/images/142.png",
+    },
+    {
+      id: 19,
+      name: "Chicken Wings Combo",
+      price: 199,
+      description: "2 CHICKEN WINGS + RICE + ATCHARA",
+      image: "/images/146.png",
+    },
+    {
+      id: 191,
+      name: "Chicken Pecho Combo",
+      price: 219,
+      description: "1 PECHO INASAL + RICE + ATCHARA",
+      image: "/images/143.png",
+    },
   ],
   "Harrison Refreshment": [
     {
@@ -414,10 +370,10 @@ const CartItemComponent: React.FC<CartItemProps> = ({
         </button>
         <button
           onClick={() => onRemove(item.id)}
-          className="ml-2 text-red-600 hover:text-red-800 text-sm"
+          className="ml-2 text-red-600 hover:text-red-800 text-sm p-1 rounded-full hover:bg-red-100 cursor-pointer"
           aria-label={`Remove ${item.name} from cart`}
         >
-          ×
+          <Trash size={16}/>
         </button>
       </div>
     </div>
