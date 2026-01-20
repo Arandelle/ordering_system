@@ -16,7 +16,7 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-2 items-center min-h-[cal(100vh-8rem)]">
           {/** Content */}
           <div
-            className={`space-y-6 lg:space-y-8 text-center lg:text-left transform transition-all duration-100 
+            className={`space-y-6 lg:space-y-8 text-center lg:text-left transform transition-all duration-1000 
             ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >
             {/** Main headline */}
@@ -61,7 +61,7 @@ const Hero = () => {
 
           {/** Harrison Logo */}
           <div
-            className={`relative transform transition-all duration-100 delay-300 ${isVisible ? "translate-y-0 opacity-100 scale-100" : "translate-y-10 opacity-0 scale-95"}`}
+            className={`relative transform transition-all duration-1000 delay-300 ${isVisible ? "translate-y-0 opacity-100 scale-100" : "translate-y-10 opacity-0 scale-95"}`}
           >
             {/** Glow effect */}
             <div className="absolute inset-0 bg-[#e13e00]/20 rounded-full blur-3xl scale-75" />
