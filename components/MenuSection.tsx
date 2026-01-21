@@ -3,7 +3,7 @@
 import { categories, menuData } from "@/data/menuData";
 import { MenuItem } from "@/types/MenuTypes";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
 
 const MenuSection = () => {
@@ -12,71 +12,106 @@ const MenuSection = () => {
     "default" | "price-low" | "price-high" | "name"
   >("default");
 
-  const [isVisible, setIsVisible] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
+
+  const headerRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
 
   // convert menuData object into flattened array
-  const allItems: MenuItem[] = Object.entries(menuData).flatMap(([category, items]) => items.map(item => ({
-    ...item,
-    category
-  })));
+  const allItems: MenuItem[] = Object.entries(menuData).flatMap(
+    ([category, items]) =>
+      items.map((item) => ({
+        ...item,
+        category,
+      })),
+  );
 
-  const filteredItems = allItems.filter(item => {
-    // Category filter
-    if(activeCategory === 'All') return true;
-    if(activeCategory === "Best Sellers") return item.isBestSeller;
-    return item.category === activeCategory;
-  })
-  .filter(item => {
-    // Search filter
-    if (!searchQuery) return true;
-    return (
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  })
-  .sort((a, b) => {
-    switch(sortBy){
-      case 'price-low':
-        return a.price - b.price;
-      case 'price-high':
-        return b.price - a.price;
-      case 'name':
-        return a.name.localeCompare(b.name);
-      default:
-        return 0;
-    }
-  });
+  const filteredItems = allItems
+    .filter((item) => {
+      // Category filter
+      if (activeCategory === "All") return true;
+      if (activeCategory === "Best Sellers") return item.isBestSeller;
+      return item.category === activeCategory;
+    })
+    .filter((item) => {
+      // Search filter
+      if (!searchQuery) return true;
+      return (
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return a.price - b.price;
+        case "price-high":
+          return b.price - a.price;
+        case "name":
+          return a.name.localeCompare(b.name);
+        default:
+          return 0;
+      }
+    });
 
-  /** Animate section when it enters the viewport */
+  /** Animate header and filters when component mounts or becomes visible */
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      {
-        threshold: 0.1, // triggers when 20% of the section is visible
-      },
-    );
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px",
+    };
 
-    const section = document.getElementById("menu-section");
-    if (section) observer.observe(section);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in");
+        }
+      });
+    }, observerOptions);
+
+    if (headerRef.current) observer.observe(headerRef.current);
+    if (filtersRef.current) observer.observe(filtersRef.current);
 
     return () => observer.disconnect();
   }, []);
 
+  /** Observe product cards individually */
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: "50px",
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = parseInt(
+            entry.target.getAttribute("data-index") || "0",
+          );
+          setVisibleItems((prev) => new Set([...prev, index]));
+        }
+      });
+    }, observerOptions);
+
+    const cards = document.querySelectorAll(".product-card-wrapper");
+    cards.forEach((card) => observer.observe(card));
+
+    return () => observer.disconnect();
+  }, [filteredItems]); // Re-run when filtered items change
+
   const handleChangeCategory = (category: string) => {
     setActiveCategory(category);
+    setVisibleItems(new Set()); // Reset visible items when category changes
   };
 
   return (
-    <section id="menu-section" className="py-16 lg:py-24 bg-gray-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="menu-section" className="py-4 bg-white scroll-mt-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         {/** Section Header */}
         <div
-          className={`text-center mb-12 transform transition-all duration-700 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
+          ref={headerRef}
+          className="text-center mb-12 opacity-0 transition-all duration-700"
         >
           <p className="text-[#e13e00] font-semibold text-xl uppercase tracking-widest">
             Our Menu
@@ -89,11 +124,11 @@ const MenuSection = () => {
             is grilled with love and tradition.
           </p>
         </div>
+
         {/** Filters bar */}
         <div
-          className={`flex flex-col items-start lg:flex-row gap-4 mb-8 transform transition-all duration-700 delay-100 ${
-            isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-          }`}
+          ref={filtersRef}
+          className="flex flex-col items-start lg:flex-row gap-4 mb-8 opacity-0 transition-all duration-700 delay-100"
         >
           {/** Category Pills */}
           <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
@@ -159,22 +194,30 @@ const MenuSection = () => {
             </div>
           </div>
         </div>
-        
+
         {/** Results count*/}
-        <div className="mb-6 text-gray-500 text-sm">
-              Showing {filteredItems.length} {filteredItems.length === 1 ? 'item' : "items"}
-              {activeCategory !== 'All' && ` in ${activeCategory}`}
-              {searchQuery && ` matching ${searchQuery}`}
+        <div className="text-gray-500 text-sm">
+          Showing {filteredItems.length}{" "}
+          {filteredItems.length === 1 ? "item" : "items"}
+          {activeCategory !== "All" && ` in ${activeCategory}`}
+          {searchQuery && ` matching "${searchQuery}"`}
         </div>
 
         {/** Product Grid */}
         {filteredItems.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-6">
             {filteredItems.map((item, index) => (
-              <div key={index} className={`transform transition-all h-full duration-500 ${isVisible ? "translate-y-0 opacity-100" : 'translate-y-10 opacity-0'}`}
-              style={{transitionDelay: `${index * 50}ms`}}
+              <div
+                key={`${item.name}-${index}`}
+                data-index={index}
+                className={`product-card-wrapper h-full transition-all duration-500 ${
+                  visibleItems.has(index)
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-10 opacity-0"
+                }`}
+                style={{ transitionDelay: `${(index % 12) * 50}ms` }}
               >
-                <ProductCard item={item}/>
+                <ProductCard item={item} />
               </div>
             ))}
           </div>
@@ -186,10 +229,19 @@ const MenuSection = () => {
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
               No product found
             </h3>
-            <p className="text-gray-400">Try adjusting your search or filter criteria</p>
+            <p className="text-gray-400">
+              Try adjusting your search or filter criteria
+            </p>
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .animate-in {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
+        }
+      `}</style>
     </section>
   );
 };
