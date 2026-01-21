@@ -205,22 +205,45 @@ const MenuSection = () => {
 
         {/** Product Grid */}
         {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-6">
-            {filteredItems.map((item, index) => (
-              <div
-                key={`${item.name}-${index}`}
-                data-index={index}
-                className={`product-card-wrapper h-full transition-all duration-500 ${
-                  visibleItems.has(index)
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-10 opacity-0"
-                }`}
-                style={{ transitionDelay: `${(index % 12) * 50}ms` }}
-              >
-                <ProductCard item={item} />
+          Object.entries(
+            filteredItems.reduce(
+              (acc, item) => {
+                const category = item.category || "Uncategorized";
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(item);
+                return acc;
+              },
+              {} as Record<string, typeof filteredItems>,
+            ),
+          ).map(([category, items], categoryIndex) => (
+            <div key={category} className="mb-12">
+              {/* Category Header */}
+              <div className="mb-10">
+                <h2 className="text-[1.75rem] font-bold text-[#1a1a1a] tracking-tight">
+                  {category}
+                </h2>
+                <div className="w-10 h-[3px] bg-[#e13e00] mt-4 rounded-full" />
               </div>
-            ))}
-          </div>
+
+              {/* Items Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-6">
+                {items.map((item, index) => (
+                  <div
+                    key={`${item.name}-${index}`}
+                    data-index={index}
+                    className={`product-card-wrapper h-full transition-all duration-500 ${
+                      visibleItems.has(index)
+                        ? "translate-y-0 opacity-100"
+                        : "translate-y-10 opacity-0"
+                    }`}
+                    style={{ transitionDelay: `${(index % 12) * 50}ms` }}
+                  >
+                    <ProductCard item={item} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
         ) : (
           <div className="text-center py-16">
             <div className="text-gray-300 mb-4">
