@@ -2,6 +2,13 @@ import { Category, MenuData } from "@/types/MenuTypes";
 
 export const categories: Category[] = [
   {
+    id: "All",
+    title: "All",
+    subtitle: "",
+    showHeader: true,
+    icon: "👍",
+  },
+  {
     id: "Ala Carte & Grill",
     title: "Ala Carte & Grill",
     subtitle: "Most ordered right now.",
@@ -53,6 +60,7 @@ export const menuData: MenuData = {
       price: 79,
       description:
         "Crispylicious, juicylicious Chickenjoy paired with the tastiest and meatiest...",
+      isBestSeller: true,
       image: "/images/202.png",
     },
     {
@@ -76,6 +84,7 @@ export const menuData: MenuData = {
       name: "Chicken Leg Quarter",
       price: 189,
       description: "",
+      isBestSeller: true,
       image: "/images/248.png",
     },
     {
@@ -104,6 +113,7 @@ export const menuData: MenuData = {
       name: "Pork BBQ",
       price: 89,
       description: "",
+      isBestSeller: true,
       image: "/images/257.png",
     },
   ],
@@ -234,6 +244,7 @@ export const menuData: MenuData = {
       name: "Chicken Wings Combo",
       price: 199,
       description: "2 CHICKEN WINGS + RICE + ATCHARA",
+      isBestSeller: true,
       image: "/images/146.png",
     },
     {
@@ -278,6 +289,7 @@ export const menuData: MenuData = {
       name: "Red Horse",
       price: 99,
       description: "",
+      isBestSeller: true,
       image: "/images/164.png",
     },
     {
