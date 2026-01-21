@@ -32,7 +32,7 @@ const Header = () => {
 
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-[#1a1a1a] shadow-xl' : 'bg-transparent'
+      isScrolled ? 'bg-[#1a1a1a] shadow-xl' : 'bg-white'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -43,7 +43,7 @@ const Header = () => {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-[#e13e00] font-bold text-lg leading-tight">Harrison</h1>
-              <p className="text-white/80 text-xs">House of Inasal & BBQ</p>
+              <p className={`${isScrolled ? "text-white" : "text-slate-600"} text-xs`}>House of Inasal & BBQ</p>
             </div>
           </div>
           
@@ -56,8 +56,8 @@ const Header = () => {
                 // onClick={onLoginClick}
                 className="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-lg transition-colors"
               >
-                <LogIn size={18} />
-                <span className="text-sm font-medium">Login</span>
+                <LogIn size={18} className={`${isScrolled ? "text-white" : "text-slate-600"}`}/>
+                <span className={`text-sm font-medium ${isScrolled ? "text-white" : "text-slate-600"}`}>Login</span>
               </button>
               <button 
                 // onClick={onSignupClick}
@@ -71,9 +71,9 @@ const Header = () => {
             {/* Cart Button */}
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 group"
+              className={`relative p-2 sm:p-3 ${isScrolled ? "bg-white/10 hover:bg-white/20" : "bg-gray-100 hover:bg-gray-200"} rounded-full transition-all duration-300 group cursor-pointer`}
             >
-              <ShoppingBag size={20} className="text-white group-hover:scale-110 transition-transform" />
+              <ShoppingBag size={20} className={`group-hover:scale-110 transition-transform ${isScrolled ? "text-white" : "darkText"}`} />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
                   {totalItems}
@@ -84,7 +84,7 @@ const Header = () => {
             {/* Mobile Menu Button */}
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+              className={`lg:hidden p-2 ${isScrolled ? "text-white" : "darkText"}  hover:bg-white/10 rounded-lg transition-colors`}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
