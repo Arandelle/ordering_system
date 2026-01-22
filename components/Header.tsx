@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { ShoppingBag, Menu, X, User, LogIn } from 'lucide-react';
 import { categories } from '@/data/menuData';
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
+  const router = useRouter();
   const { totalItems, setIsCartOpen } = useCart();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -38,7 +40,9 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-12 h-12 bg-[#e13e00] rounded-full flex items-center justify-center">
+            <div 
+            onClick={() => router.push("/")}
+            className="cursor-pointer w-12 h-12 bg-[#e13e00] rounded-full flex items-center justify-center">
              <img src="images/harrison_logo.png" alt="harrison_logo" />
             </div>
             <div className="hidden sm:block">

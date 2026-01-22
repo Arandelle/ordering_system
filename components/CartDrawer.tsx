@@ -3,9 +3,13 @@
 import React from "react";
 import { useCart } from "@/contexts/CartContext";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 
 const CartDrawer = () => {
+
+  const router = useRouter();
+
   const {
     cartItems,
     isCartOpen,
@@ -18,7 +22,7 @@ const CartDrawer = () => {
 
   const handleCheckout = () => {
     setIsCartOpen(false);
-    alert("Checking out...");
+    router.push("/checkout")
   };
 
   if (!isCartOpen) return null;
@@ -142,14 +146,14 @@ const CartDrawer = () => {
             </div>
             <button
               onClick={handleCheckout}
-              className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer"
             >
               Proceed to checkout
               <ArrowRight size={20} />
             </button>
             <button
               onClick={clearCart}
-              className="w-full text-gray-500 hover:text-red-500 py-2 text-sm transition-colors"
+              className="w-full text-gray-500 hover:text-red-500 py-2 text-sm transition-colors cursor-pointer"
             >
               Clear Cart
             </button>

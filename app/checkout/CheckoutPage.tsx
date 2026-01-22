@@ -38,7 +38,7 @@ const CheckoutPage: React.FC = () => {
       {/** Header */}
       <header className="darkBackground sticky top-0 z-50">
         <div className="max-w-lg mx-auto p-4 flex items-center gap-4">
-          <button className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors">
+          <button className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
             <ArrowLeft size={24} />
           </button>
           <div>
