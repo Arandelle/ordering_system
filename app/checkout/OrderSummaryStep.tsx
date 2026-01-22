@@ -2,7 +2,11 @@ import { useCart } from "@/contexts/CartContext";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import React from "react";
 
-const OrderSummaryStep = () => {
+interface OrderSummaryStepProps {
+  onNext: () => void
+}
+
+const OrderSummaryStep = ({onNext} : OrderSummaryStepProps) => {
   const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
 
   if (cartItems.length === 0) {
@@ -91,7 +95,9 @@ const OrderSummaryStep = () => {
       </div>
 
       {/** Continue Button */}
-      <button className="w-full bg-[#e13e00] hover:bg-[#e13e00] text-white py-4 rounded-xl font-bold text-lg transition-colors">
+      <button 
+      onClick={onNext}
+      className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer">
         Continue to Delivery
       </button>
     </div>

@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import OrderSummaryStep from "./OrderSummaryStep";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/contexts/CartContext";
 
 type CheckoutStep =
   | "summary"
@@ -19,6 +21,8 @@ type CheckoutStep =
   | "success";
 
 const CheckoutPage: React.FC = () => {
+  const router = useRouter();
+  const {clearCart, totalPrice} = useCart();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
 
   const steps = [
@@ -33,12 +37,48 @@ const CheckoutPage: React.FC = () => {
     return index === -1 ? steps.length : index;
   };
 
+  const handleNext = (from: CheckoutStep) => {
+    switch(from){
+      case 'summary':
+        setCurrentStep('delivery')
+        break;
+      case 'delivery':
+        setCurrentStep('payment');
+        break;
+      case 'payment' :
+        setCurrentStep('confirmation')
+        break
+    }
+
+    window.scrollTo(0,0)
+  }
+
+  const handleBack = (from: CheckoutStep) => {
+    switch(from) {
+      case 'summary':
+        router.push('/');
+        break;
+      case 'delivery' :
+        setCurrentStep('summary');
+        break;
+      case 'payment':
+        setCurrentStep('delivery');
+        break;
+      case "confirmation":
+        setCurrentStep('payment');
+        break;
+    }
+    window.scrollTo(0,0);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/** Header */}
       <header className="darkBackground sticky top-0 z-50">
         <div className="max-w-lg mx-auto p-4 flex items-center gap-4">
-          <button className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
+          <button 
+          onClick={() => handleBack(currentStep)}
+          className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
             <ArrowLeft size={24} />
           </button>
           <div>
@@ -95,11 +135,11 @@ const CheckoutPage: React.FC = () => {
       {/** Step Content */}
       <div className="max-w-lg mx-auto px-4 py-6">
             {currentStep === 'summary' && (
-              <OrderSummaryStep />
+              <OrderSummaryStep onNext={() => handleNext('summary')}/>
             )}
              {currentStep === 'delivery' && (
               <div>
-                This page is delivery
+                This page is for delivery options either delivery (COD/Payment) or Pickup
               </div>
             )}
       </div>
