@@ -31,7 +31,7 @@ const CartDrawer = () => {
         onClick={() => setIsCartOpen(false)}
       />
       {/** Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transition-transform duration-300 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-60 shadow-2xl transition-transform duration-300 flex flex-col">
         {/** Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
