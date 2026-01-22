@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import OrderSummaryStep from "./OrderSummaryStep";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
+import DeliveryStep from "./DeliveryStep";
 
 type CheckoutStep =
   | "summary"
@@ -106,7 +107,7 @@ const CheckoutPage: React.FC = () => {
                 <React.Fragment key={index}>
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isCompleted ? "bg-green-500 text-white" : isActive ? "bg-[#e13e00] text-white" : "bg-gray-100 text-gray-400"}`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isCompleted ? "bg-green-500 text-white" : isActive ? "bg-[#e13e00] text-white" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
                     >
                       {isCompleted ? (
                         <Check size={20} />
@@ -138,9 +139,7 @@ const CheckoutPage: React.FC = () => {
               <OrderSummaryStep onNext={() => handleNext('summary')}/>
             )}
              {currentStep === 'delivery' && (
-              <div>
-                This page is for delivery options either delivery (COD/Payment) or Pickup
-              </div>
+            <DeliveryStep />
             )}
       </div>
     </div>
