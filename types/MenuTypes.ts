@@ -7,7 +7,7 @@ export interface MenuItem {
   id: number;
   name: string;
   price: number;
-  description: string;
+  description?: string;
   category?: string;
   isBestSeller?: boolean;
   image: string;
