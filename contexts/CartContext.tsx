@@ -1,7 +1,7 @@
 "use client";
 
 import { CartItem } from "@/types/MenuTypes";
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -22,6 +22,26 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    const saveCart = localStorage.getItem('cart');
+    if (saveCart){
+      try{
+        setCartItems(JSON.parse(saveCart))
+      }catch(error){
+        console.error("Error loading cart", error)
+      }
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // Save cart to localstorage whenever it changes
+  useEffect(() => {
+    if(isHydrated){
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isHydrated]);
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
     setCartItems((prev) => {
