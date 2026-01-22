@@ -55,9 +55,11 @@ const CartDrawer = () => {
         {/** Cart Items */}
         <div className="flex-1 overflow-y-auto p-6">
           {cartItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <ShoppingBag size={24} className="text-gray-200 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-400 mb-2">
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
+              <div className="p-2 bg-gray-100 rounded-full items-center">
+                <ShoppingBag size={24} className="text-slate-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-400">
                 Your cart is empty
               </h3>
               <p className="text-gray-400 text-sm">
