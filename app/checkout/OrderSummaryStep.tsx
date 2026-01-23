@@ -4,9 +4,10 @@ import React from "react";
 
 interface OrderSummaryStepProps {
   onNext: () => void;
+  deliveryFee?: number
 }
 
-const OrderSummaryStep = ({ onNext }: OrderSummaryStepProps) => {
+const OrderSummaryStep = ({ onNext, deliveryFee }: OrderSummaryStepProps) => {
   const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
 
   if (cartItems.length === 0) {
@@ -86,7 +87,7 @@ const OrderSummaryStep = ({ onNext }: OrderSummaryStepProps) => {
         </div>
         <div className="flex justify-between text-gray-600">
           <span>Delivery Fee</span>
-          <span>{totalPrice > 500 ? "Free" : `₱ ${50}`}</span>
+          <span>{totalPrice > 500 ? "Free" : `₱ ${deliveryFee}`}</span>
         </div>  
         <div className="border-t border-gray-200 pt-3 flex justify-between">
           <span className="font-bold text-gray-900">Total</span>
