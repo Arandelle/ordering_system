@@ -3,10 +3,10 @@ import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import React from "react";
 
 interface OrderSummaryStepProps {
-  onNext: () => void
+  onNext: () => void;
 }
 
-const OrderSummaryStep = ({onNext} : OrderSummaryStepProps) => {
+const OrderSummaryStep = ({ onNext }: OrderSummaryStepProps) => {
   const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
 
   if (cartItems.length === 0) {
@@ -85,19 +85,22 @@ const OrderSummaryStep = ({onNext} : OrderSummaryStepProps) => {
           <span>₱{totalPrice.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-gray-600">
-           <span>Delivery Fee</span>
-          <span>{totalPrice > 500 ? 'Free' : `₱ ${50}`}</span>
-        </div>
+          <span>Delivery Fee</span>
+          <span>{totalPrice > 500 ? "Free" : `₱ ${50}`}</span>
+        </div>  
         <div className="border-t border-gray-200 pt-3 flex justify-between">
           <span className="font-bold text-gray-900">Total</span>
-          <span className="font-bold text-xl text-[#e13e00]">₱{(totalPrice +  50).toFixed(2)}</span>
+          <span className="font-bold text-xl text-[#e13e00]">
+            ₱{(totalPrice + 50).toFixed(2)}
+          </span>
         </div>
       </div>
 
       {/** Continue Button */}
-      <button 
-      onClick={onNext}
-      className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer">
+      <button
+        onClick={onNext}
+        className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer"
+      >
         Continue to Delivery
       </button>
     </div>
