@@ -16,7 +16,7 @@ interface PromoBannerProps {
 
 const PromoBanner = ({
   autoPlayInterval = 5000,
-  type = "single",
+  type = "multi",
 }: PromoBannerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
