@@ -9,10 +9,11 @@ import {
   Truck,
 } from "lucide-react";
 import React, { useState } from "react";
-import OrderSummaryStep from "./OrderSummaryStep";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
+import OrderSummaryStep from "./OrderSummaryStep";
 import DeliveryStep, { DeliveryInfo } from "./DeliveryStep";
+import PaymentStep from "./PaymentStep";
 
 type CheckoutStep =
   | "summary"
@@ -192,6 +193,11 @@ const CheckoutPage: React.FC = () => {
             onBack={() => handleBack("delivery")}
           />
         )}
+
+        {currentStep === 'payment' && (
+          <PaymentStep />
+        )}
+
       </div>
     </div>
   );
