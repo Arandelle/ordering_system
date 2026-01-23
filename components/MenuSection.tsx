@@ -5,6 +5,7 @@ import { MenuItem } from "@/types/MenuTypes";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
+import PromoBanner from "./PromoBanner";
 
 const MenuSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,7 +40,7 @@ const MenuSection = () => {
       if (!searchQuery) return true;
       return (
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     })
     .sort((a, b) => {
@@ -107,6 +108,7 @@ const MenuSection = () => {
 
   return (
     <section id="menu-section" className="py-4 bg-white scroll-mt-24">
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         {/** Section Header */}
         <div
@@ -124,6 +126,8 @@ const MenuSection = () => {
             is grilled with love and tradition.
           </p>
         </div>
+
+                 <PromoBanner />
 
         {/** Filters bar */}
         <div
