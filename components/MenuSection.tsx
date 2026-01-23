@@ -108,7 +108,6 @@ const MenuSection = () => {
 
   return (
     <section id="menu-section" className="py-4 bg-white scroll-mt-24">
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
         {/** Section Header */}
         <div
@@ -127,7 +126,8 @@ const MenuSection = () => {
           </p>
         </div>
 
-                 <PromoBanner />
+        {/** Promo banners like specials, buy 1 take 1 */}
+         <PromoBanner/>
 
         {/** Filters bar */}
         <div
@@ -262,6 +262,8 @@ const MenuSection = () => {
           </div>
         )}
       </div>
+
+      
 
       <style jsx>{`
         .animate-in {
