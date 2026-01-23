@@ -12,7 +12,7 @@ import React, { useState } from "react";
 import OrderSummaryStep from "./OrderSummaryStep";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
-import DeliveryStep from "./DeliveryStep";
+import DeliveryStep, { DeliveryInfo } from "./DeliveryStep";
 
 type CheckoutStep =
   | "summary"
@@ -23,8 +23,22 @@ type CheckoutStep =
 
 const CheckoutPage: React.FC = () => {
   const router = useRouter();
-  const {clearCart, totalPrice} = useCart();
+  const { clearCart, totalPrice } = useCart();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
+  const [deliveryErrors, setDeliveryErrors] = useState<Record<string, string>>(
+    {},
+  );
+
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
+    type: "delivery",
+    fullname: "",
+    phone: "",
+    address: "",
+    city: "",
+    barangay: "",
+    landmark: "",
+    instructions: "",
+  });
 
   const steps = [
     { id: "summary", label: "Order", icon: ShoppingBag },
@@ -38,48 +52,79 @@ const CheckoutPage: React.FC = () => {
     return index === -1 ? steps.length : index;
   };
 
-  const handleNext = (from: CheckoutStep) => {
-    switch(from){
-      case 'summary':
-        setCurrentStep('delivery')
-        break;
-      case 'delivery':
-        setCurrentStep('payment');
-        break;
-      case 'payment' :
-        setCurrentStep('confirmation')
-        break
+  const validateDelivery = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!deliveryInfo.fullname.trim()) {
+      errors.fullname = "Fullname is required";
     }
 
-    window.scrollTo(0,0)
-  }
+    if(!deliveryInfo.phone.trim()){
+      errors.phone = "Phone number is required"
+    } else if (!/^(\+63|0)?[0-9]{10,11}$/.test(deliveryInfo.phone.replace(/\s/g, ''))){
+      errors.phone = "Please enter a valid phone number"
+    }
+
+    if (deliveryInfo.type === 'delivery') {
+      if (!deliveryInfo.address.trim()) {
+        errors.address = 'Street address is required';
+      }
+      if (!deliveryInfo.city.trim()) {
+        errors.city = 'City is required';
+      }
+      if (!deliveryInfo.barangay.trim()) {
+        errors.barangay = 'Barangay is required';
+      }
+    }
+
+    setDeliveryErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleNext = (from: CheckoutStep) => {
+    switch (from) {
+      case "summary":
+        setCurrentStep("delivery");
+        break;
+      case "delivery":
+        if (validateDelivery()) {
+          setCurrentStep("payment");
+        }
+        break;
+      case "payment":
+        setCurrentStep("confirmation");
+        break;
+    }
+
+    window.scrollTo(0, 0);
+  };
 
   const handleBack = (from: CheckoutStep) => {
-    switch(from) {
-      case 'summary':
-        router.push('/');
+    switch (from) {
+      case "summary":
+        router.push("/");
         break;
-      case 'delivery' :
-        setCurrentStep('summary');
+      case "delivery":
+        setCurrentStep("summary");
         break;
-      case 'payment':
-        setCurrentStep('delivery');
+      case "payment":
+        setCurrentStep("delivery");
         break;
       case "confirmation":
-        setCurrentStep('payment');
+        setCurrentStep("payment");
         break;
     }
-    window.scrollTo(0,0);
-  }
+    window.scrollTo(0, 0);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/** Header */}
       <header className="darkBackground sticky top-0 z-50">
         <div className="max-w-lg mx-auto p-4 flex items-center gap-4">
-          <button 
-          onClick={() => handleBack(currentStep)}
-          className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer">
+          <button
+            onClick={() => handleBack(currentStep)}
+            className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+          >
             <ArrowLeft size={24} />
           </button>
           <div>
@@ -135,12 +180,18 @@ const CheckoutPage: React.FC = () => {
 
       {/** Step Content */}
       <div className="max-w-lg mx-auto px-4 py-6">
-            {currentStep === 'summary' && (
-              <OrderSummaryStep onNext={() => handleNext('summary')}/>
-            )}
-             {currentStep === 'delivery' && (
-            <DeliveryStep />
-            )}
+        {currentStep === "summary" && (
+          <OrderSummaryStep onNext={() => handleNext("summary")} />
+        )}
+        {currentStep === "delivery" && (
+          <DeliveryStep
+            deliveryInfo={deliveryInfo}
+            setDeliveryInfo={setDeliveryInfo}
+            errors={deliveryErrors}
+            onNext={() => handleNext("delivery")}
+            onBack={() => handleBack("delivery")}
+          />
+        )}
       </div>
     </div>
   );
