@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 import OrderSummaryStep from "./OrderSummaryStep";
 import DeliveryStep, { DeliveryInfo } from "./DeliveryStep";
-import PaymentStep from "./PaymentStep";
+import PaymentStep, { PaymentInfo } from "./PaymentStep";
 
 type CheckoutStep =
   | "summary"
@@ -26,10 +26,6 @@ const CheckoutPage: React.FC = () => {
   const router = useRouter();
   const { clearCart, totalPrice } = useCart();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
-  const [deliveryErrors, setDeliveryErrors] = useState<Record<string, string>>(
-    {},
-  );
-
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     type: "delivery",
     fullname: "",
@@ -40,6 +36,18 @@ const CheckoutPage: React.FC = () => {
     landmark: "",
     instructions: "",
   });
+    
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
+    method: 'cod'
+  })
+  const [deliveryErrors, setDeliveryErrors] = useState<Record<string, string>>(
+    {},
+  );
+  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({})
+
+
+  const deliveryFee = deliveryInfo.type === 'pickup' ? 0 : totalPrice >= 500 ? 0 : 50;
+  const totalAmount = totalPrice + deliveryFee;
 
   const steps = [
     { id: "summary", label: "Order", icon: ShoppingBag },
@@ -80,6 +88,20 @@ const CheckoutPage: React.FC = () => {
     setDeliveryErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
+  const validatePayment = ():boolean => {
+    const errors : Record<string, string> = {};
+    if(paymentInfo.method === 'gcash'){
+      if(!paymentInfo.gcashNumber?.trim()){
+        errors.gcashNumber = 'Gcash number is required!'
+      } else if(!/^(\+63|0)?[0-9]{10,11}$/.test(paymentInfo.gcashNumber.replace(/\s/g, ''))){
+        errors.gcashNumber = "Please enter a valid GCash number."
+      }
+    }
+
+    setPaymentErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
 
   const handleNext = (from: CheckoutStep) => {
     switch (from) {
@@ -182,7 +204,7 @@ const CheckoutPage: React.FC = () => {
       {/** Step Content */}
       <div className="max-w-lg mx-auto px-4 py-6">
         {currentStep === "summary" && (
-          <OrderSummaryStep onNext={() => handleNext("summary")} />
+          <OrderSummaryStep onNext={() => handleNext("summary")}  deliveryFee={deliveryFee}/>
         )}
         {currentStep === "delivery" && (
           <DeliveryStep
@@ -195,7 +217,14 @@ const CheckoutPage: React.FC = () => {
         )}
 
         {currentStep === 'payment' && (
-          <PaymentStep />
+          <PaymentStep 
+          paymentInfo={paymentInfo}
+          setPaymentInfo={setPaymentInfo}
+          errors={paymentErrors}
+          onNext={() => handleNext('payment')}
+          onBack={() => handleBack('payment')}
+          totalAmount={totalAmount}
+          />
         )}
 
       </div>
