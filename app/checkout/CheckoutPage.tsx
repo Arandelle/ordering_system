@@ -36,17 +36,19 @@ const CheckoutPage: React.FC = () => {
     landmark: "",
     instructions: "",
   });
-    
+
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    method: 'cod'
-  })
+    method: "cod",
+  });
   const [deliveryErrors, setDeliveryErrors] = useState<Record<string, string>>(
     {},
   );
-  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({})
+  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>(
+    {},
+  );
 
-
-  const deliveryFee = deliveryInfo.type === 'pickup' ? 0 : totalPrice >= 500 ? 0 : 50;
+  const deliveryFee =
+    deliveryInfo.type === "pickup" ? 0 : totalPrice >= 500 ? 0 : 50;
   const totalAmount = totalPrice + deliveryFee;
 
   const steps = [
@@ -67,21 +69,23 @@ const CheckoutPage: React.FC = () => {
       errors.fullname = "Fullname is required";
     }
 
-    if(!deliveryInfo.phone.trim()){
-      errors.phone = "Phone number is required"
-    } else if (!/^(\+63|0)?[0-9]{10,11}$/.test(deliveryInfo.phone.replace(/\s/g, ''))){
-      errors.phone = "Please enter a valid phone number"
+    if (!deliveryInfo.phone.trim()) {
+      errors.phone = "Phone number is required";
+    } else if (
+      !/^(\+63|0)?[0-9]{10,11}$/.test(deliveryInfo.phone.replace(/\s/g, ""))
+    ) {
+      errors.phone = "Please enter a valid phone number";
     }
 
-    if (deliveryInfo.type === 'delivery') {
+    if (deliveryInfo.type === "delivery") {
       if (!deliveryInfo.address.trim()) {
-        errors.address = 'Street address is required';
+        errors.address = "Street address is required";
       }
       if (!deliveryInfo.city.trim()) {
-        errors.city = 'City is required';
+        errors.city = "City is required";
       }
       if (!deliveryInfo.barangay.trim()) {
-        errors.barangay = 'Barangay is required';
+        errors.barangay = "Barangay is required";
       }
     }
 
@@ -89,19 +93,68 @@ const CheckoutPage: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const validatePayment = ():boolean => {
-    const errors : Record<string, string> = {};
-    if(paymentInfo.method === 'gcash'){
-      if(!paymentInfo.gcashNumber?.trim()){
-        errors.gcashNumber = 'Gcash number is required!'
-      } else if(!/^(\+63|0)?[0-9]{10,11}$/.test(paymentInfo.gcashNumber.replace(/\s/g, ''))){
-        errors.gcashNumber = "Please enter a valid GCash number."
+  const isValidExpiry = (expiry: string): string | null => {
+      if(!/^\d{2}\/\d{2}$/.test(expiry)){
+        return "Invalid format (MM/YY)"
+      }
+
+      const [month, year] = expiry.split("/").map(Number); 
+      if(month < 1 || month > 12){
+        return 'Invalid month or year';
+      }
+
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear() % 100;
+
+      if (year < currentYear || (year === currentYear && month < currentMonth)){
+        return 'Card has expired!'
+      }
+
+      return null
+  }
+
+  const validatePayment = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (paymentInfo.method === "gcash") {
+      if (!paymentInfo.gcashNumber?.trim()) {
+        errors.gcashNumber = "Gcash number is required!";
+      } else if (
+        !/^(\+63|0|63)?[0-9]{10,11}$/.test(
+          paymentInfo.gcashNumber.replace(/\s/g, ""),
+        )
+      ) {
+        errors.gcashNumber = "Please enter a valid GCash number.";
+      }
+    }
+
+    if (paymentInfo.method === "card") {
+      if (!paymentInfo.cardName?.trim()) {
+        errors.cardName = "Cardholder name is required!";
+      }
+      if (!paymentInfo.cardNumber?.trim()) {
+        errors.cardNumber = "Card Number is required!";
+      } else if (paymentInfo.cardNumber.replace(/\s/g, "").length < 16) {
+        errors.cardNumber = "Please enter a valid number";
+      }
+      if (!paymentInfo.cardExpiry?.trim()) {
+        errors.cardExpiry = "Expiry date is required";
+      } else {
+        const expiryError = isValidExpiry(paymentInfo.cardExpiry);
+        if(expiryError){
+          errors.cardExpiry = expiryError
+        }
+      }
+      if (!paymentInfo.cardCvv?.trim()) {
+        errors.cardCvv = "CVV is required";
+      } else if (paymentInfo.cardCvv.length < 3) {
+        errors.cardCvv = "Invalid CVV";
       }
     }
 
     setPaymentErrors(errors);
     return Object.keys(errors).length === 0;
-  }
+  };
 
   const handleNext = (from: CheckoutStep) => {
     switch (from) {
@@ -114,7 +167,9 @@ const CheckoutPage: React.FC = () => {
         }
         break;
       case "payment":
-        setCurrentStep("confirmation");
+        if (validatePayment()) {
+          setCurrentStep("confirmation");
+        }
         break;
     }
 
@@ -204,7 +259,11 @@ const CheckoutPage: React.FC = () => {
       {/** Step Content */}
       <div className="max-w-lg mx-auto px-4 py-6">
         {currentStep === "summary" && (
-          <OrderSummaryStep onNext={() => handleNext("summary")}  deliveryFee={deliveryFee}/>
+          <OrderSummaryStep
+            onNext={() => handleNext("summary")}
+            onBack={() => handleBack("summary")}
+            deliveryFee={deliveryFee}
+          />
         )}
         {currentStep === "delivery" && (
           <DeliveryStep
@@ -216,17 +275,16 @@ const CheckoutPage: React.FC = () => {
           />
         )}
 
-        {currentStep === 'payment' && (
-          <PaymentStep 
-          paymentInfo={paymentInfo}
-          setPaymentInfo={setPaymentInfo}
-          errors={paymentErrors}
-          onNext={() => handleNext('payment')}
-          onBack={() => handleBack('payment')}
-          totalAmount={totalAmount}
+        {currentStep === "payment" && (
+          <PaymentStep
+            paymentInfo={paymentInfo}
+            setPaymentInfo={setPaymentInfo}
+            errors={paymentErrors}
+            onNext={() => handleNext("payment")}
+            onBack={() => handleBack("payment")}
+            totalAmount={totalAmount}
           />
         )}
-
       </div>
     </div>
   );
