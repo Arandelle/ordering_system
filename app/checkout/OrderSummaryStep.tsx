@@ -4,10 +4,15 @@ import React from "react";
 
 interface OrderSummaryStepProps {
   onNext: () => void;
-  deliveryFee?: number
+  onBack: () => void;
+  deliveryFee?: number;
 }
 
-const OrderSummaryStep = ({ onNext, deliveryFee }: OrderSummaryStepProps) => {
+const OrderSummaryStep = ({
+  onNext,
+  onBack,
+  deliveryFee,
+}: OrderSummaryStepProps) => {
   const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
 
   if (cartItems.length === 0) {
@@ -88,7 +93,7 @@ const OrderSummaryStep = ({ onNext, deliveryFee }: OrderSummaryStepProps) => {
         <div className="flex justify-between text-gray-600">
           <span>Delivery Fee</span>
           <span>{totalPrice > 500 ? "Free" : `₱ ${deliveryFee}`}</span>
-        </div>  
+        </div>
         <div className="border-t border-gray-200 pt-3 flex justify-between">
           <span className="font-bold text-gray-900">Total</span>
           <span className="font-bold text-xl text-[#e13e00]">
@@ -97,13 +102,21 @@ const OrderSummaryStep = ({ onNext, deliveryFee }: OrderSummaryStepProps) => {
         </div>
       </div>
 
-      {/** Continue Button */}
-      <button
-        onClick={onNext}
-        className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer"
-      >
-        Continue to Delivery
-      </button>
+      <div className="flex gap-4">
+        <button
+          onClick={onBack}
+          className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold transition-colors cursor-pointer"
+        >
+          Order more
+        </button>
+        {/** Continue Button */}
+        <button
+          onClick={onNext}
+          className="flex-1 bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer"
+        >
+          Continue to Delivery
+        </button>
+      </div>
     </div>
   );
 };
