@@ -1,4 +1,4 @@
-import { MapPin, Truck } from "lucide-react";
+import { Clock, MapPin, Truck } from "lucide-react";
 import { FormInput } from "@/components/form/FormInput";
 import { FormTextarea } from "@/components/form/FormTextArea";
 
@@ -85,7 +85,7 @@ const DeliveryStep = ({
           label="Full name"
           name="fullname"
           value={deliveryInfo.fullname}
-          onChange={(value) => handleChange("fullname", value)}
+          onChange={(e) => handleChange("fullname", e.target.value)}
           error={errors.fullname}
           placeholder="Enter your full name"
           required
@@ -95,7 +95,7 @@ const DeliveryStep = ({
           label="Phone"
           name="phone"
           value={deliveryInfo.phone}
-          onChange={(value) => handleChange("phone", value)}
+          onChange={(e) => handleChange("phone", e.target.value)}
           error={errors.phone}
           placeholder="Enter your phone number"
           required
@@ -109,7 +109,7 @@ const DeliveryStep = ({
               label="Street Address"
               name="address"
               value={deliveryInfo.address}
-              onChange={(value) => handleChange("address", value)}
+              onChange={(e) => handleChange("address", e.target.value)}
               error={errors.address}
               placeholder="123 Main Street, Building/Unit"
               required
@@ -120,17 +120,17 @@ const DeliveryStep = ({
                 label="City"
                 name="city"
                 value={deliveryInfo.city}
-                onChange={(value) => handleChange("city", value)}
+                onChange={(e) => handleChange("city", e.target.value)}
                 error={errors.city}
                 placeholder="Makati City"
                 required
               />
 
-              <FormInput
+              <FormInput  
                 label="Barangay"
                 name="barangay"
                 value={deliveryInfo.barangay}
-                onChange={(value) => handleChange("barangay", value)}
+                onChange={(e) => handleChange("barangay", e.target.value)}
                 error={errors.barangay}
                 placeholder="Poblacion"
                 required
@@ -141,20 +141,41 @@ const DeliveryStep = ({
               label="Landmark (Optional)"
               name="landmark"
               value={deliveryInfo.landmark}
-              onChange={(value) => handleChange("landmark", value)}
+              onChange={(e) => handleChange("landmark", e.target.value)}
               placeholder="Near the church, beside 7-Eleven"
             />
             <FormTextarea
               label="Delivery Instructions (Optional)"
               name="instructions"
               value={deliveryInfo.instructions}
-              onChange={(value) => handleChange("instructions", value)}
+              onChange={(e) => handleChange("instructions", e)}
               placeholder="Leave at the gate, ring the doorbell, etc."
               rows={2}
             />
           </div>
         )}
       </div>
+
+      {deliveryInfo.type === 'pickup' && (
+        <div className="bg-[#e13e00]/5 border border-[#e13e00]/20 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <MapPin className="text-[#e13e00] flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <h4 className="font-semibold text-gray-900">Pickup Location</h4>
+              <p className="text-gray-600 text-sm mt-1">
+                Harrison – House of Inasal & BBQ<br />
+                Century Mall, Makati City<br />
+                Philippines
+              </p>
+              <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                <Clock size={14} />
+                <span>Ready in 15-20 minutes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/** Navigation button */}
       <div className="flex gap-4">
