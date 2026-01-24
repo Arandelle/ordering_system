@@ -4,10 +4,11 @@ interface FormInputProps {
   label: string;
   name: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; // ✅ Accept event
   error?: string;
-  type?: "text" | "tel" | "email";
+  type?: "text" | "tel" | "email" | "password";
   placeholder?: string;
+  maxLength?: number;
   required?: boolean;
 }
 
@@ -19,6 +20,7 @@ export const FormInput = ({
   error,
   type = "text",
   placeholder,
+  maxLength,
   required = false,
 }: FormInputProps) => {
   return (
@@ -33,8 +35,9 @@ export const FormInput = ({
         type={type}
         id={name}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange} // ✅ Pass event directly
         placeholder={placeholder}
+        maxLength={maxLength}
         className={`w-full px-4 py-3 rounded-xl border ${error ? "border-red-500" : "border-gray-200"} focus:border-[#e13e00] focus:ring-2 focus:ring-[#e13e00]/20 outline-none transition-all`}
       />
       {error && (
