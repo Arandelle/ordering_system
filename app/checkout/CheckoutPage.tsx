@@ -194,6 +194,9 @@ const CheckoutPage: React.FC = () => {
       case "confirmation":
         setCurrentStep("payment");
         break;
+      case "success":
+        router.push('/');
+        break;
     }
     window.scrollTo(0, 0);
   };
