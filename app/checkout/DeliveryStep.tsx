@@ -32,7 +32,8 @@ const DeliveryStep = ({
 
   const handleChange = (field: keyof DeliveryInfo, value: string) => {
     setDeliveryInfo({ ...deliveryInfo, [field]: value });
-  };
+    delete errors[field]
+  }; 
   return (
     <div className="space-y-6">
       <div>
@@ -48,7 +49,7 @@ const DeliveryStep = ({
       <div className="grid grid-cols-2 gap-4">
         <button
           onClick={() => handleChange("type", "delivery")}
-          className={`p-4 rounded-xl border transition-all ${isDelivery ? "border-[#e13e00] bg-[#e13e00]/5" : "border-gray-200 hover:border-gray-300"}`}
+          className={`p-4 rounded-xl border transition-all ${isDelivery ? "border-[#e13e00] bg-[#e13e00]/5" : "border-gray-200 hover:border-gray-300 cursor-pointer"}`}
         >
           <Truck
             size={24}
@@ -179,8 +180,8 @@ const DeliveryStep = ({
 
       {/** Navigation button */}
       <div className="flex gap-4">
-        <button onClick={onBack} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold transition-colors">Back</button>
-        <button onClick={onNext} className="flex-1 bg-[#e13e00] hover:[#c13500] text-white py-4 rounded-xl rounded-xl font-bold transition-colors">Continue to Payment</button>
+        <button onClick={onBack} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold transition-colors cursor-pointer">Back</button>
+        <button onClick={onNext} className="flex-1 bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl rounded-xl font-bold transition-colors cursor-pointer">Continue to Payment</button>
       </div>
     </div>
   );
