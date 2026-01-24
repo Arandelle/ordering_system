@@ -14,6 +14,7 @@ import { useCart } from "@/contexts/CartContext";
 import OrderSummaryStep from "./OrderSummaryStep";
 import DeliveryStep, { DeliveryInfo } from "./DeliveryStep";
 import PaymentStep, { PaymentInfo } from "./PaymentStep";
+import ConfirmationStep from "./ConfirmationStep";
 
 type CheckoutStep =
   | "summary"
@@ -24,7 +25,7 @@ type CheckoutStep =
 
 const CheckoutPage: React.FC = () => {
   const router = useRouter();
-  const { clearCart, totalPrice } = useCart();
+  const { totalPrice } = useCart();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     type: "delivery",
@@ -94,25 +95,25 @@ const CheckoutPage: React.FC = () => {
   };
 
   const isValidExpiry = (expiry: string): string | null => {
-      if(!/^\d{2}\/\d{2}$/.test(expiry)){
-        return "Invalid format (MM/YY)"
-      }
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+      return "Invalid format (MM/YY)";
+    }
 
-      const [month, year] = expiry.split("/").map(Number); 
-      if(month < 1 || month > 12){
-        return 'Invalid month or year';
-      }
+    const [month, year] = expiry.split("/").map(Number);
+    if (month < 1 || month > 12) {
+      return "Invalid month or year";
+    }
 
-      const now = new Date();
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear() % 100;
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear() % 100;
 
-      if (year < currentYear || (year === currentYear && month < currentMonth)){
-        return 'Card has expired!'
-      }
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+      return "Card has expired!";
+    }
 
-      return null
-  }
+    return null;
+  };
 
   const validatePayment = (): boolean => {
     const errors: Record<string, string> = {};
@@ -141,8 +142,8 @@ const CheckoutPage: React.FC = () => {
         errors.cardExpiry = "Expiry date is required";
       } else {
         const expiryError = isValidExpiry(paymentInfo.cardExpiry);
-        if(expiryError){
-          errors.cardExpiry = expiryError
+        if (expiryError) {
+          errors.cardExpiry = expiryError;
         }
       }
       if (!paymentInfo.cardCvv?.trim()) {
@@ -170,6 +171,9 @@ const CheckoutPage: React.FC = () => {
         if (validatePayment()) {
           setCurrentStep("confirmation");
         }
+        break;
+      case "success":
+        setCurrentStep("success");
         break;
     }
 
@@ -283,6 +287,19 @@ const CheckoutPage: React.FC = () => {
             onNext={() => handleNext("payment")}
             onBack={() => handleBack("payment")}
             totalAmount={totalAmount}
+          />
+        )}
+
+        {(currentStep === "confirmation" || currentStep === "success") && (
+          <ConfirmationStep
+            deliveryInfo={deliveryInfo}
+            paymentInfo={paymentInfo}
+            deliveryFee={deliveryFee}
+            onNext={() => handleNext("success")}
+            onBack={() => handleBack('confirmation')}
+            onEditDelivery={() => setCurrentStep('delivery')}
+            onEditPayment={() => setCurrentStep('payment')}
+            currentStep={currentStep}
           />
         )}
       </div>
