@@ -1,4 +1,4 @@
-interface PaymentButtonType {
+    interface PaymentButtonType {
   isActive: boolean;
   method: string;
   subTitle: string;
