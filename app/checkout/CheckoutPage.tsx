@@ -204,7 +204,7 @@ const CheckoutPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/** Header */}
-      <header className="darkBackground sticky top-0 z-50">
+      <header className="darkBackground sticky top-0 z-40">
         <div className="max-w-lg mx-auto p-4 flex items-center gap-4">
           <button
             onClick={() => handleBack(currentStep)}
