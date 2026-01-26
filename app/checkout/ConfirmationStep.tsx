@@ -81,7 +81,7 @@ const ConfirmationStep = ({
     const order: OrderType = {
       id: newOrderNumber,
       createdAt: new Date().toISOString(),
-      status:  paymentInfo.method !== 'gcash' ? "pending" : "paid",
+      status:  paymentInfo.method === 'cod' ? "pending" : "paid",
 
       items: cartItems,
       deliveryInfo,
