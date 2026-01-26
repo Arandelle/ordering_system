@@ -7,6 +7,7 @@ interface OrderContextType {
   placedOrders: OrderType[];
   addOrder: (order: OrderType) => void;
   updateOrderStatus: (orderId: string, status: OrderType['status']) => void;
+  totalOrders: number;
   clearOrder: () => void;
 }
 
@@ -55,12 +56,15 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  const totalOrders = placedOrders.filter((item) => (item.status !== 'cancelled' && item.status !== 'completed')).length
+
   return (
     <OrderContext.Provider
       value={{
         placedOrders,
         addOrder: (order) => setPlacedOrders((prev) => [...prev, order]),
         updateOrderStatus,
+        totalOrders,
         clearOrder: () => setPlacedOrders([]),
       }}
     >
