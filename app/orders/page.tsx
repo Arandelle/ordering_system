@@ -16,12 +16,16 @@ import {
   Ban,
   CreditCard,
   Hamburger,
+  MapIcon,
+  Map,
+  MapPin,
+  Banknote,
 } from "lucide-react";
 import { OrderType } from "@/types/OrderTypes";
 
 const TABS = [
   { key: "all", label: "All" },
-  { key: "pending", label: "To Pay", statuses: ['pending', 'paid'] },
+  { key: "pending", label: "To Pay", statuses: ["pending", "paid"] },
   { key: "preparing", label: "To Dispatch" },
   { key: "to-receive", label: "To Receive", statuses: ["dispatched", "ready"] },
   { key: "completed", label: "To Review" },
@@ -29,26 +33,32 @@ const TABS = [
 ];
 
 export default function OrdersPage() {
-  const { placedOrders, updateOrderStatus} = useOrder();
+  const { placedOrders, updateOrderStatus } = useOrder();
   const { addToCart, setIsCartOpen } = useCart();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("all");
 
   const filteredOrders = useMemo(() => {
-    if (activeTab === 'all'){
-        return placedOrders.sort((a,b) => {
-            // Pushed cancelled to bottom
-            if (a.status === 'cancelled' && b.status !== 'cancelled') return 1;
-            if (a.status !== 'cancelled' && b.status === 'cancelled') return -1;
+    if (activeTab === "all") {
+      return placedOrders.sort((a, b) => {
+        // Pushed cancelled to bottom
+        if (a.status === "cancelled" && b.status !== "cancelled") return 1;
+        if (a.status !== "cancelled" && b.status === "cancelled") return -1;
 
-            // Sort date by descending 
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
+        // Sort date by descending
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
     }
 
-    const currentTab = TABS.find(tab => tab.key === activeTab);
-    return currentTab?.statuses ? placedOrders.filter(order => currentTab.statuses.includes(order.status)) : placedOrders.filter(order => order.status === activeTab);
-  }, [placedOrders, activeTab])
+    const currentTab = TABS.find((tab) => tab.key === activeTab);
+    return currentTab?.statuses
+      ? placedOrders.filter((order) =>
+          currentTab.statuses.includes(order.status),
+        )
+      : placedOrders.filter((order) => order.status === activeTab);
+  }, [placedOrders, activeTab]);
 
   const handleBuyAgain = (orderItems: any[]) => {
     orderItems.forEach((item) => {
@@ -94,9 +104,12 @@ export default function OrdersPage() {
             {TABS.map((tab) => {
               const count =
                 tab.key === "all"
-                  ? placedOrders.length : tab.statuses ? 
-                placedOrders.filter((o) => tab.statuses.includes(o.status)).length : 
-                placedOrders.filter((o) => o.status === tab.key).length
+                  ? placedOrders.length
+                  : tab.statuses
+                    ? placedOrders.filter((o) =>
+                        tab.statuses.includes(o.status),
+                      ).length
+                    : placedOrders.filter((o) => o.status === tab.key).length;
 
               return (
                 <button
@@ -109,7 +122,7 @@ export default function OrdersPage() {
                   }`}
                 >
                   {tab.label}
-                  {count > 0 && (
+                  {count > 0 && !["cancelled", "completed"].includes(tab.key) && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center border border-white">
                       {count}
                     </span>
@@ -144,18 +157,35 @@ export default function OrdersPage() {
                 <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-100">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-bold text-gray-900 text-lg">
+                      <p className="font-bold text-slate-700 text-lg">
                         Order #{order.id}
                       </p>
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        {new Date(order.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
+                      <div className="flex text-sm text-gray-600 items-center gap-4 py-2">
+                        <p className="flex items-center gap-1">
+                          <Clock size={16} />
+                          {new Date(order.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </p>
+
+                        <p className="flex items-center gap-1">
+                          <Banknote size={16} />
+                          {order.paymentInfo.label}
+                        </p>
+                        <p className="flex items-center gap-1">
+                          <MapPin size={16} />
+                          {order.deliveryInfo.type === "delivery"
+                            ? "Delivery"
+                            : "Pickup"}
+                        </p>
+                      </div>
                     </div>
                     <StatusBadge status={order.status} />
                   </div>
