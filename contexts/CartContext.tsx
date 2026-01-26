@@ -24,17 +24,29 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  useEffect(() => {
-    const saveCart = localStorage.getItem('cart');
-    if (saveCart){
-      try{
-        setCartItems(JSON.parse(saveCart))
-      }catch(error){
-        console.error("Error loading cart", error)
+ useEffect(() => {
+  const savedCart = localStorage.getItem('cart');
+
+  if (savedCart) {
+    try {
+      const parsed = JSON.parse(savedCart);
+
+      // ✅ ENSURE ARRAY
+      if (Array.isArray(parsed)) {
+        setCartItems(parsed);
+      } else {
+        setCartItems([]);
       }
+
+    } catch (error) {
+      console.error("Error loading cart", error);
+      setCartItems([]); // ✅ fallback
     }
-    setIsHydrated(true);
-  }, []);
+  }
+
+  setIsHydrated(true);
+}, []);
+
 
   // Save cart to localstorage whenever it changes
   useEffect(() => {
@@ -72,8 +84,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCartItems([]);
   }
 
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalItems = cartItems?.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
     <CartContext.Provider value={{
