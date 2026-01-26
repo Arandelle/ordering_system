@@ -4,6 +4,8 @@ import { PaymentInfo } from "./PaymentStep";
 import { useCart } from "@/contexts/CartContext";
 import { Check, Clock, CreditCard, Edit2, MapPin, Phone, Truck, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useOrder } from "@/contexts/OrderContext";
+import { OrderType } from "@/types/OrderTypes";
 
 interface ConfirmationStepProps {
   deliveryInfo: DeliveryInfo;
@@ -26,7 +28,10 @@ const ConfirmationStep = ({
   onEditPayment,
   currentStep
 }: ConfirmationStepProps) => {
-  const router = useRouter()
+  const router = useRouter();
+
+  const {addOrder} = useOrder();
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderNumber, setOrderNumber] = useState('')
   const { cartItems, totalPrice, clearCart } = useCart();
@@ -72,7 +77,30 @@ const ConfirmationStep = ({
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     const newOrderNumber = generateOrderNumber();
+
+    const order: OrderType = {
+      id: newOrderNumber,
+      createdAt: new Date().toISOString(),
+      status: 'pending',
+
+      items: cartItems,
+      deliveryInfo,
+      paymentInfo: {
+        method: paymentInfo.method,
+        label: getPaymentMethodLabel()
+      },
+
+      totals: {
+        subTotal: totalPrice,
+        deliveryFee,
+        total: totalAmount
+      },
+
+      estimatedTime
+    }
+
     setOrderNumber(newOrderNumber);
+    addOrder(order);
     clearCart();
     setIsProcessing(false);
     onNext();
