@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import { ShoppingBag, Menu, X, User, LogIn } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, LogIn, Package } from 'lucide-react';
 import { categories } from '@/data/menuData';
 import { useRouter } from 'next/navigation';
 
@@ -71,6 +71,19 @@ const Header = () => {
                 <span>Sign Up</span>
               </button>
             </div>
+
+            {/** List of orders button */}
+            <button 
+              onClick={() => router.push('/orders')}
+              className={`relative p-2 sm:p-3 ${isScrolled ? "bg-white/10 hover:bg-white/20" : "bg-gray-100 hover:bg-gray-200"} rounded-full transition-all duration-300 group cursor-pointer`}
+            >
+              <Package size={20} className={`group-hover:scale-110 transition-transform ${isScrolled ? "text-white" : "darkText"}`} />
+              {/* {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
+                  {totalItems}
+                </span>
+              )} */}
+            </button>
             
             {/* Cart Button */}
             <button 
