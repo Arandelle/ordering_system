@@ -5,7 +5,7 @@ import { PaymentInfo } from "@/app/checkout/PaymentStep";
 export interface OrderType {
     id: string;
     createdAt: string;
-    status: 'pending' | 'paid' | 'preparing' | 'completed';
+    status: 'pending' | 'paid' | 'preparing' | 'completed' | 'cancelled';
 
     items: CartItem[];
 
