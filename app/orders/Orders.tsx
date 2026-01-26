@@ -309,7 +309,7 @@ function StatusBadge({ status }: { status: OrderType["status"] }) {
   > = {
     pending: {
       label: "Pending Payment",
-      color: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+      color: "bg-yellow-100 text-yellow-700 border border-yellow-200",
       icon: <CreditCard size={14} />,
     },
     paid: {
