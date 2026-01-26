@@ -1,11 +1,10 @@
 import { DeliveryInfo } from "@/app/checkout/DeliveryStep";
 import { CartItem } from "./MenuTypes";
-import { PaymentInfo } from "@/app/checkout/PaymentStep";
 
 export interface OrderType {
     id: string;
     createdAt: string;
-    status: 'pending' | 'paid' | 'preparing' | 'completed' | 'cancelled';
+    status: 'pending' | 'paid' | 'preparing' | 'dispatched' | 'ready' | 'completed' | 'cancelled';
 
     items: CartItem[];
 
