@@ -4,8 +4,9 @@ import { OrderType } from "@/types/OrderTypes";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface OrderContextType {
-  currentOrder: OrderType[];
-  setOrder: (order: OrderType[]) => void;
+  placedOrders: OrderType[];
+  addOrder: (order: OrderType) => void;
+  updateOrderStatus: (orderId: string, status: OrderType['status']) => void;
   clearOrder: () => void;
 }
 
@@ -14,17 +15,24 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined);
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [currentOrder, setCurrentOrder] = useState<OrderType[]>([]);
+  const [placedOrders, setPlacedOrders] = useState<OrderType[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Load order on mount
   useEffect(() => {
-    const storedOrder = localStorage.getItem("currentOrder");
+    const storedOrder = localStorage.getItem("orders");
     if (storedOrder) {
       try {
-        setCurrentOrder(JSON.parse(storedOrder));
+        const parsed = JSON.parse(storedOrder);
+
+        if (Array.isArray(parsed)) {
+          setPlacedOrders(parsed);
+        } else {
+          setPlacedOrders([]);
+        }
       } catch (e) {
         console.error("Failed to parsed stored order", e);
+        setPlacedOrders([]);
       }
     }
     setIsHydrated(true);
@@ -33,16 +41,27 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
   // Save order when it changes
   useEffect(() => {
     if (isHydrated) {
-      localStorage.setItem("currentOrder", JSON.stringify(currentOrder));
+      localStorage.setItem("orders", JSON.stringify(placedOrders));
     }
-  }, [currentOrder, isHydrated]);
+  }, [placedOrders, isHydrated]);
+
+  const updateOrderStatus = (orderId: string, status: OrderType["status"]) => {
+    if (!orderId) return;
+
+    setPlacedOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status } : order,
+      ),
+    );
+  };
 
   return (
     <OrderContext.Provider
       value={{
-        currentOrder,
-        setOrder: setCurrentOrder,
-        clearOrder: () => setCurrentOrder([]),
+        placedOrders,
+        addOrder: (order) => setPlacedOrders((prev) => [...prev, order]),
+        updateOrderStatus,
+        clearOrder: () => setPlacedOrders([]),
       }}
     >
       {children}
@@ -53,5 +72,5 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useOrder = () => {
   const ctx = useContext(OrderContext);
   if (!ctx) throw new Error("useOrder must be used within OrderProvider");
-  return ctx;
+  return ctx; // sample usage -> {placedOrders, addOrder, clearOrders} = useOrder();
 };
