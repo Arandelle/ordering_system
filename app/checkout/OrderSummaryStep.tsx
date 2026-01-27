@@ -24,7 +24,7 @@ const OrderSummaryStep = ({
           Your cart is empty
         </h3>
         <p className="text-gray-400">Add your favourite before checking out!</p>
-        <OrderNowButton />
+        <OrderNowButton /> 
       </div>
     );
   }

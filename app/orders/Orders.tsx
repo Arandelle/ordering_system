@@ -284,7 +284,7 @@ const Orders = () => {
                       </button>
                     )}
 
-                    {order.status === "completed" || order.status === "cancelled" && (
+                    {(order.status === "completed" || order.status === "cancelled") && (
                        <button
                           onClick={() => handleBuyAgain(order.items)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#e13e00] hover:bg-orange-50 text-[#e13e00] text-sm font-semibold transition-all"
