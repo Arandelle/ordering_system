@@ -1,4 +1,4 @@
-import MenuSection from '@/components/HomePage/MenuSection'
+import MenuSection from '@/components/homepage/MenuSection'
 import React from 'react'
 
 const FullMenuSection = () => {

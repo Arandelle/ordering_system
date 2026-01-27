@@ -1,6 +1,6 @@
-import Footer from "@/components/HomePage/Footer";
-import Hero from "@/components/HomePage/Hero";
-import MenuSection from "@/components/HomePage/MenuSection";
+import Footer from "@/components/homepage/Footer";
+import Hero from "@/components/homepage/Hero";
+import MenuSection from "@/components/homepage/MenuSection";
 
 export default function Home() {
   return <>
