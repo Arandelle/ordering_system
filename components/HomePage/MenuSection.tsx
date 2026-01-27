@@ -1,13 +1,12 @@
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
 import { categories, menuData } from "@/data/menuData";
 import { MenuItem } from "@/types/MenuTypes";
-import { ChevronRightCircle, Search, SlidersHorizontal, X } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "./ProductCard";
 import PromoBanner from "./PromoBanner";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 
 const MenuSection = ({
   variant = "full",

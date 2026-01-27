@@ -4,18 +4,13 @@ import { useCart } from "@/contexts/CartContext";
 import { useOrder } from "@/contexts/OrderContext";
 import { StatusBadge } from "./StatusBadge";
 import {
-  Ban,
   Banknote,
-  CheckCircle,
   Clock,
-  CreditCard,
   Eye,
-  Hamburger,
   MapPin,
   Package,
   ShoppingCart,
   Star,
-  Truck,
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -119,6 +114,11 @@ const Orders = () => {
                 </button>
               );
             })}
+            <button 
+            onClick={() => router.push("/menu")}
+            className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer bg-[#e13e00] text-white hover:bg-[#c13500]">
+             Add new order!
+            </button> 
           </div>
         </div>
 
