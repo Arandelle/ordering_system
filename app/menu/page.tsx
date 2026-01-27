@@ -1,10 +1,8 @@
-import React from 'react'
-import FullMenuSection from './FullMenuSection'
+import React from "react";
+import FullMenuSection from "./FullMenuSection";
 
 const page = () => {
-  return (
-  <FullMenuSection />
-  )
-}
+  return <FullMenuSection />;
+};
 
-export default page
+export default page;

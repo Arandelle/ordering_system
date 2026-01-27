@@ -153,6 +153,7 @@ const MenuSection = ({
           </p>
         </div>
 
+        {/** Filters button, sort, search */}
         {variant === "full" && (
           <>
             {/** Filters bar */}

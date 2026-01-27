@@ -1,3 +1,4 @@
+import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import React from "react";
@@ -23,6 +24,7 @@ const OrderSummaryStep = ({
           Your cart is empty
         </h3>
         <p className="text-gray-400">Add your favourite before checking out!</p>
+        <OrderNowButton />
       </div>
     );
   }

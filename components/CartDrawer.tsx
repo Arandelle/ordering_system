@@ -4,6 +4,7 @@ import React from "react";
 import { useCart } from "@/contexts/CartContext";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import OrderNowButton from "./ui/OrderNowButton";
 
 const CartDrawer = () => {
   const router = useRouter();
@@ -24,11 +25,6 @@ const CartDrawer = () => {
   };
 
   if (!isCartOpen) return null;
-
-   const scrollToMenu = () => {
-    router.push("/menu");
-    setIsCartOpen(false);;
-  };
 
   return (
     <>
@@ -72,11 +68,7 @@ const CartDrawer = () => {
               <p className="text-gray-400 text-sm">
                 Add some delicious items to get started!
               </p>
-              <button 
-              onClick={scrollToMenu}
-              className="px-4 py-2 mt-4 rounded-xl bg-[#e13e00] hover:bg-[#c13500] text-white transition-colors shadow-xl cursor-pointer">
-                Order Now!
-              </button>
+              <OrderNowButton />
             </div>
           ) : (
             <div className="space-y-4">

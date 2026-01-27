@@ -1,10 +1,12 @@
 "use client";
 
 import { ChevronDown, Clock, MapPin, Utensils } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const router = useRouter()
 
   useEffect(() => {
     setIsVisible(true);
@@ -51,7 +53,7 @@ const Hero = () => {
                 </span>
               </button>
               <button 
-              onClick={scrollToMenu}
+              onClick={() => router.push("/menu")}
               className="group bg-[#1a1a1a]/90 hover:bg-[#1a1a1a] text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 border-2 border-[#1a1a1a]/80 hover:border-white/40 cursor-pointer">
                 View Menu
               </button>
