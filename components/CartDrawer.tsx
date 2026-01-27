@@ -5,9 +5,7 @@ import { useCart } from "@/contexts/CartContext";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-
 const CartDrawer = () => {
-
   const router = useRouter();
 
   const {
@@ -22,7 +20,7 @@ const CartDrawer = () => {
 
   const handleCheckout = () => {
     setIsCartOpen(false);
-    router.push("/checkout")
+    router.push("/checkout");
   };
 
   if (!isCartOpen) return null;
@@ -69,6 +67,11 @@ const CartDrawer = () => {
               <p className="text-gray-400 text-sm">
                 Add some delicious items to get started!
               </p>
+              <button 
+              onClick={() => {router.push("/"); setIsCartOpen(false)}}
+              className="px-4 py-2 mt-4 rounded-xl bg-[#e13e00] hover:bg-[#c13500] text-white transition-colors shadow-xl">
+                Order Now!
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
