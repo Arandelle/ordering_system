@@ -179,10 +179,10 @@ const ConfirmationStep = ({
             {/* Actions */}
             <div className="space-y-3">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push('/orders')}
                 className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold transition-colors"
               >
-                Back to Home
+                View Details
               </button>
               <button
                 onClick={() => router.push('/')}
