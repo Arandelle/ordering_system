@@ -81,7 +81,7 @@ const Orders = () => {
       });
     });
 
-    setIsCartOpen(true)
+    setIsCartOpen(true);
   };
 
   return (
@@ -276,20 +276,21 @@ const Orders = () => {
 
                     {/* Leave Review & Buy Again - For completed orders */}
                     {order.status === "completed" && (
-                      <>
-                        <button
-                          onClick={() => router.push("/write-review")}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e13e00] hover:bg-[#c53600] text-white text-sm font-semibold transition-all shadow-md"
-                        >
-                          <Star size={16} /> Leave Review
-                        </button>
-                        <button
+                      <button
+                        onClick={() => router.push("/write-review")}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e13e00] hover:bg-[#c53600] text-white text-sm font-semibold transition-all shadow-md"
+                      >
+                        <Star size={16} /> Leave Review
+                      </button>
+                    )}
+
+                    {order.status === "completed" || order.status === "cancelled" && (
+                       <button
                           onClick={() => handleBuyAgain(order.items)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#e13e00] hover:bg-orange-50 text-[#e13e00] text-sm font-semibold transition-all"
                         >
                           <ShoppingCart size={16} /> Buy Again
                         </button>
-                      </>
                     )}
                   </div>
                 </div>
