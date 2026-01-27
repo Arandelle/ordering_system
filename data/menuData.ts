@@ -69,6 +69,7 @@ export const menuData: MenuData = {
       price: 89,
       description:
         "The Best Fried Chicken! Crispylicious, Juicylicious! Jollibee's perfectly...",
+      isBestSeller: true,
       image: "/images/144.png",
     },
     {
@@ -132,6 +133,7 @@ export const menuData: MenuData = {
       price: 199,
       description:
         "Golden spring rolls stuffed with seasoned, pork and veggies, paired with sweet chili dip",
+      isBestSeller: true,
       image: "/images/206.png",
     },
     {
@@ -140,6 +142,7 @@ export const menuData: MenuData = {
       price: 79,
       description:
         "Sisig wrapped in lumpia skin, deepfried to a crisp. A fun, savory snack",
+      isBestSeller: true,
       image: "/images/207.png",
     },
     {
@@ -148,6 +151,7 @@ export const menuData: MenuData = {
       price: 99,
       description:
         "Water spinach sautéed in soy-vinegar, garlic sauce. Simple, earthy, and satisfying.",
+      isBestSeller: true,
       image: "/images/209.png",
     },
     {
