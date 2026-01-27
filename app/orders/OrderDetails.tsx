@@ -1,0 +1,239 @@
+'use client';
+
+import { useOrder } from '@/contexts/OrderContext';
+import { formatDistanceToNow } from 'date-fns';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { StatusBadge } from './StatusBadge';
+
+interface OrderDetailsProps {
+  orderId: string;
+}
+
+const statusColors = {
+  pending: 'bg-yellow-100 text-yellow-800',
+  paid: 'bg-blue-100 text-blue-800',
+  preparing: 'bg-orange-100 text-orange-800',
+  dispatched: 'bg-purple-100 text-purple-800',
+  ready: 'bg-green-100 text-green-800',
+  completed: 'bg-green-200 text-green-900',
+  cancelled: 'bg-red-100 text-red-800',
+};
+
+const statusLabels = {
+  pending: 'Pending Payment',
+  paid: 'Paid',
+  preparing: 'Preparing',
+  dispatched: 'Out for Delivery',
+  ready: 'Ready for Pickup',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+};
+
+export default function OrderDetails({ orderId }: OrderDetailsProps) {
+  const { placedOrders } = useOrder();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const order = placedOrders.find(o => o.id === orderId);
+
+  useEffect(() => {
+    // Wait for hydration
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    // After hydration, if no order found, redirect
+    if (!isLoading && !order) {
+      router.push('/orders');
+    }
+  }, [isLoading, order, router]);
+
+  // If no order after loading, show nothing (redirect will happen)
+  if (!order) {
+    return null;
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const timeAgo = formatDistanceToNow(new Date(order.createdAt), { addSuffix: true });
+
+  return (
+    <div className={`space-y-6 max-w-5xl mx-auto p-4`}>
+      {/* Header */}
+      <div className="border-b pb-4">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h2 className={`font-bold`}>
+              Order #{order.id}
+            </h2>
+            <p className="text-sm text-gray-500">
+              Placed {timeAgo} • {formatDate(order.createdAt)}
+            </p>
+          </div>
+         <StatusBadge status={order.status} />
+        </div>
+        
+        {order.estimatedTime && (
+          <p className="text-sm text-gray-600">
+            <strong>Estimated:</strong> {order.estimatedTime}
+          </p>
+        )}
+      </div>
+
+      {/* Order Timeline */}
+      {order.timeline && (
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="font-semibold mb-3">Order Timeline</h3>
+          <div className="space-y-2 text-sm">
+            {order.timeline.paidAt && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">💳 Paid</span>
+                <span>{formatDate(order.timeline.paidAt)}</span>
+              </div>
+            )}
+            {order.timeline.preparingAt && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">👨‍🍳 Preparing</span>
+                <span>{formatDate(order.timeline.preparingAt)}</span>
+              </div>
+            )}
+            {order.timeline.dispatchedAt && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">🚗 Dispatched</span>
+                <span>{formatDate(order.timeline.dispatchedAt)}</span>
+              </div>
+            )}
+            {order.timeline.readyAt && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">✅ Ready</span>
+                <span>{formatDate(order.timeline.readyAt)}</span>
+              </div>
+            )}
+            {order.timeline.completedAt && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">🎉 Completed</span>
+                <span>{formatDate(order.timeline.completedAt)}</span>
+              </div>
+            )}
+            {order.timeline.cancelledAt && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">❌ Cancelled</span>
+                <span>{formatDate(order.timeline.cancelledAt)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Dispatch Info */}
+      {order.dispatchInfo && order.status === 'dispatched' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-semibold mb-2 flex items-center">
+            🚗 Delivery Information
+          </h3>
+          <div className="space-y-1 text-sm">
+            <p><strong>Rider:</strong> {order.dispatchInfo.riderName}</p>
+            <p><strong>Phone:</strong> {order.dispatchInfo.riderPhone}</p>
+            <p><strong>Vehicle:</strong> {order.dispatchInfo.vehicleType}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Items */}
+      <div>
+        <h3 className="font-semibold mb-3">Order Items</h3>
+        <div className="space-y-3">
+          {order.items.map((item) => (
+            <div key={item.id} className="flex gap-3 border-b pb-3">
+              <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                <Image
+                  src={item.image}
+                  alt={item.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium">{item.name}</h4>
+                <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-medium">₱{(item.price * item.quantity).toFixed(2)}</p>
+                <p className="text-xs text-gray-500">₱{item.price.toFixed(2)} each</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Delivery Information */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="font-semibold mb-3">
+          {order.deliveryInfo.type === 'delivery' ? '📦 Delivery Address' : '🏪 Pickup Details'}
+        </h3>
+        <div className="space-y-1 text-sm">
+          <p><strong>Name:</strong> {order.deliveryInfo.fullname}</p>
+          <p><strong>Phone:</strong> {order.deliveryInfo.phone}</p>
+          {order.deliveryInfo.type === 'delivery' && (
+            <>
+              <p><strong>Address:</strong> {order.deliveryInfo.address}</p>
+              <p><strong>Barangay:</strong> {order.deliveryInfo.barangay}</p>
+              <p><strong>City:</strong> {order.deliveryInfo.city}</p>
+              {order.deliveryInfo.landmark && (
+                <p><strong>Landmark:</strong> {order.deliveryInfo.landmark}</p>
+              )}
+            </>
+          )}
+          {order.deliveryInfo.instructions && (
+            <p className="mt-2 text-gray-600">
+              <strong>Instructions:</strong> {order.deliveryInfo.instructions}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Payment Information */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="font-semibold mb-3">💳 Payment</h3>
+        <div className="space-y-1 text-sm">
+          <p><strong>Method:</strong> {order.paymentInfo.label}</p>
+        </div>
+      </div>
+
+      {/* Order Summary */}
+      <div className="border-t pt-4">
+        <h3 className="font-semibold mb-3">Order Summary</h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Subtotal</span>
+            <span>₱{order.totals.subTotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Delivery Fee</span>
+            <span>₱{order.totals.deliveryFee.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between font-semibold text-base pt-2 border-t">
+            <span>Total</span>
+            <span>₱{order.totals.total.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Notes */}
+      {order.notes && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-sm"><strong>Note:</strong> {order.notes}</p>
+        </div>
+      )}
+    </div>
+  );
+}
