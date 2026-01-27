@@ -25,6 +25,11 @@ const CartDrawer = () => {
 
   if (!isCartOpen) return null;
 
+   const scrollToMenu = () => {
+    router.push("/menu");
+    setIsCartOpen(false);;
+  };
+
   return (
     <>
       {/** Backdrop */}
@@ -68,8 +73,8 @@ const CartDrawer = () => {
                 Add some delicious items to get started!
               </p>
               <button 
-              onClick={() => {router.push("/"); setIsCartOpen(false)}}
-              className="px-4 py-2 mt-4 rounded-xl bg-[#e13e00] hover:bg-[#c13500] text-white transition-colors shadow-xl">
+              onClick={scrollToMenu}
+              className="px-4 py-2 mt-4 rounded-xl bg-[#e13e00] hover:bg-[#c13500] text-white transition-colors shadow-xl cursor-pointer">
                 Order Now!
               </button>
             </div>
