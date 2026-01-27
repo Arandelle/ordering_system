@@ -20,7 +20,7 @@ export default function Modal({ children }: { children: React.ReactNode }) {
       onClick={() => router.back()}
     >
       <div 
-        className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 relative"
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
