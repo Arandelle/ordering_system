@@ -36,4 +36,7 @@ export interface OrderType {
         vehicleType?: string;
     };
     notes?: string;
+
+    isReviewed?: boolean;
+    reviewedAt?: string
 }
