@@ -13,8 +13,8 @@ import {
   Star,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { useMemo } from "react";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -29,7 +29,11 @@ const Orders = () => {
   const { placedOrders, updateOrderStatus } = useOrder();
   const { addToCart, setIsCartOpen } = useCart();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<string>("all");
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  // Get active tab from URL query params
+  const activeTab = searchParams.get("status") || "all";
 
   const filteredOrders = useMemo(() => {
     if (activeTab === "all") {
@@ -56,6 +60,19 @@ const Orders = () => {
   const handleViewDetails = (orderId: string) => {
     router.push(`/orders/${orderId}`);
   };
+
+  // Handle tab change by updating url
+  const handleTabChange = (tabKey: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (tabKey === "all"){
+      params.delete("status")
+    } else {
+      params.set("status", tabKey);
+    }
+
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.push(newUrl)
+  }
 
   const handleCancelOrder = (orderId: string) => {
     if (confirm(`Are you sure you want to cancel order ${orderId} ? `)) {
@@ -101,7 +118,7 @@ const Orders = () => {
               return (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => handleTabChange(tab.key)}
                   className={`relative px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.key ? "bg-[#e13e00] text-white" : "bg-white text-gray-600 border border-gray-700 hover:border-[#e13e00] hover:text-[#e13e00]"}`}
                 >
                   {tab.label}
