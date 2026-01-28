@@ -23,12 +23,20 @@ export default function NotFound() {
       <p className="text-center text-slate-500">
         Looks like the page you're looking for doesn't exist.
       </p>
-      <Link
-        href="/"
-        className="mt-4 px-4 py-2 bg-[#e13e00] text-white rounded hover:bg-[#c13500] transition"
-      >
-        Go to Homepage
-      </Link>
+      <div className="flex gap-4">
+        <Link
+          href="/"
+          className="mt-4 px-4 py-2 border border-[#e13e00] text-[#e13e00] rounded hover:bg-[#c13500] transition"
+        >
+          Go to Homepage
+        </Link>
+        <button
+          onClick={() => window.history.back()}
+          className="mt-4 px-4 py-2 bg-[#e13e00] text-white rounded hover:bg-[#c13500] transition"
+        >
+          Go Back
+        </button>
+      </div>
     </div>
   );
 }
