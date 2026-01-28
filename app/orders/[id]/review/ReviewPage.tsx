@@ -247,7 +247,7 @@ const ReviewPage = () => {
               </button>
               <button
                 type="button"
-                onClick={() => router.push("/orders")}
+                onClick={() => router.back()}
                 className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
               >
                 Skip for Now
