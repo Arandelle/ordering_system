@@ -5,6 +5,7 @@ import Header from "@/components/homepage/Header";
 import { CartProvider } from "@/contexts/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 import { OrderProvider } from "@/contexts/OrderContext";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,8 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      > 
+      <Toaster richColors position="top-right" closeButton/>
         <OrderProvider>
           <CartProvider>
             <Header />

@@ -5,12 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { OrderType } from "@/types/OrderTypes";
 import { Star } from "lucide-react";
+import { toast } from "sonner";
 
 const ReviewPage = () => {
   const params = useParams();
   const router = useRouter();
   const { placedOrders, markAsReviewed } = useOrder();
-  
+
   const [order, setOrder] = useState<OrderType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +31,18 @@ const ReviewPage = () => {
     if (foundOrder) {
       setOrder(foundOrder);
       setIsLoading(false);
+
+      if (foundOrder.isReviewed) {
+        toast.info("You've already reviewed this order!");
+        router.push("/orders");
+        return;
+      }
+
+      if (foundOrder.status !== "completed") {
+        toast.warning("You can only review completed orders");
+        router.push("/orders");
+        return;
+      }
     } else {
       setIsLoading(false);
       router.push("/orders");

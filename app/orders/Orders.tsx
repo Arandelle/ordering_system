@@ -274,9 +274,9 @@ const Orders = () => {
                     )}
 
                     {/* Leave Review & Buy Again - For completed orders */}
-                    {order.status === "completed" && (
+                    {(order.status === "completed" && !order.isReviewed) && (
                       <button
-                        onClick={() => router.push("/write-review")}
+                        onClick={() => router.push(`/orders/${order.id}/review`)}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e13e00] hover:bg-[#c53600] text-white text-sm font-semibold transition-all shadow-md"
                       >
                         <Star size={16} /> Leave Review
