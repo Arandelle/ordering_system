@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag, Menu, X, User, LogIn, Package } from "lucide-react";
-import { categories } from "@/data/menuData";
 import { useRouter } from "next/navigation";
 import { useOrder } from "@/contexts/OrderContext";
 import Image from "next/image";
