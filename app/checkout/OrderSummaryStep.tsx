@@ -1,6 +1,7 @@
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface OrderSummaryStepProps {
@@ -15,6 +16,7 @@ const OrderSummaryStep = ({
   deliveryFee,
 }: OrderSummaryStepProps) => {
   const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const router = useRouter();
 
   if (cartItems.length === 0) {
     return (
@@ -106,7 +108,7 @@ const OrderSummaryStep = ({
 
       <div className="flex gap-4">
         <button
-          onClick={onBack}
+          onClick={() => router.push("/menu")}
           className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold transition-colors cursor-pointer"
         >
           Order more
