@@ -11,31 +11,14 @@ interface OrderDetailsProps {
   orderId: string;
 }
 
-const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  paid: 'bg-blue-100 text-blue-800',
-  preparing: 'bg-orange-100 text-orange-800',
-  dispatched: 'bg-purple-100 text-purple-800',
-  ready: 'bg-green-100 text-green-800',
-  completed: 'bg-green-200 text-green-900',
-  cancelled: 'bg-red-100 text-red-800',
-};
-
-const statusLabels = {
-  pending: 'Pending Payment',
-  paid: 'Paid',
-  preparing: 'Preparing',
-  dispatched: 'Out for Delivery',
-  ready: 'Ready for Pickup',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-};
-
 export default function OrderDetails({ orderId }: OrderDetailsProps) {
   const { placedOrders } = useOrder();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const order = placedOrders.find(o => o.id === orderId);
+
+  const [showAllItems, setShowAllItems] = useState(false);
+  const ITEMS_TO_SHOW = 3;
 
   useEffect(() => {
     // Wait for hydration
@@ -67,7 +50,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
   const timeAgo = formatDistanceToNow(new Date(order.createdAt), { addSuffix: true });
 
   return (
-    <div className={`space-y-6 max-w-5xl mx-auto p-4`}>
+    <div className={`space-y-6 max-w-5xl max-h-[calc(100vh-100px)] overflow-y-auto mx-auto p-4 hide-scrollbar`}>
       {/* Header */}
       <div className="border-b pb-4">
         <div className="flex justify-between items-start mb-2">
@@ -152,7 +135,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
       <div>
         <h3 className="font-semibold mb-3">Order Items</h3>
         <div className="space-y-3">
-          {order.items.map((item) => (
+          {(showAllItems ? order.items : order.items.slice(0, ITEMS_TO_SHOW)).map((item) => (
             <div key={item.id} className="flex gap-3 border-b pb-3">
               <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                 <Image
@@ -172,6 +155,22 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
               </div>
             </div>
           ))}
+           
+          {/* View more/less button with gradient overlay */}
+          {order.items.length > ITEMS_TO_SHOW && (
+            <div className="relative -mx-4">
+              {!showAllItems && (
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white via-white/60 to-transparent pointer-events-none" />
+              )}
+              <button
+                type="button"
+                onClick={() => setShowAllItems(!showAllItems)}
+                className="relative bg-gradient-to-b from-white to-gray-200 w-full py-3 text-sm text-[#e13e00] hover:text-[#c13500] font-semibold transition-colors cursor-pointer border-t border-gray-200"
+              >
+                {showAllItems ? "Show Less" : `+${order.items.length - ITEMS_TO_SHOW} More Item/s`}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
