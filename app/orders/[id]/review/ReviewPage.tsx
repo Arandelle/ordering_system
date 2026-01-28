@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { OrderType } from "@/types/OrderTypes";
 import { Package, Star } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
 import { FormTextarea } from "@/components/form/FormTextArea";
 
 const ReviewPage = () => {
@@ -20,6 +19,9 @@ const ReviewPage = () => {
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>("");
   const [hoveredRating, setHoveredRating] = useState(0);
+
+  const [showAllItems, setShowAllItems] = useState(false);
+  const ITEMS_TO_SHOW = 3;
 
   useEffect(() => {
     if (placedOrders.length === 0) {
@@ -55,7 +57,7 @@ const ReviewPage = () => {
     e.preventDefault();
 
     if (rating === 0) {
-      alert("Please provide a rating");
+      toast.error("Please provide a rating");
       return;
     }
 
@@ -68,11 +70,11 @@ const ReviewPage = () => {
       // Mark order as reviewed
       markAsReviewed(params.id as string);
 
-      alert("Thank you for your review!");
+      toast.success("Thank you for your review!");
       router.push("/orders");
     } catch (error) {
       console.error("Failed to submit review:", error);
-      alert("Failed to submit review. Please try again.");
+      toast.error("Failed to submit review. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -97,11 +99,11 @@ const ReviewPage = () => {
   const displayRating = hoveredRating || rating;
   const labels = [
     "No rating",
-    "Poor",
-    "Fair",
-    "Good",
-    "Very Good",
-    "Excellent",
+    "Poor 😓",
+    "Fair 😐",
+    "Good 🙂",
+    "Very Good 😋",
+    "Excellent 😍",
   ];
 
   return (
@@ -123,10 +125,13 @@ const ReviewPage = () => {
           <div className="mb-8 p-4 bg-gray-50 rounded-lg">
             <h3 className="font-semibold text-gray-900 mb-3">Your Order</h3>
             <div className="space-y-2">
-              {order.items.map((item, idx) => (
-                <div key={`${item.id}-${idx}`} className="flex gap-4">
+              {(showAllItems ? order.items : order.items.slice(0, ITEMS_TO_SHOW)).map((item, idx) => (
+                <div
+                  key={`${item.id}-${idx}`}
+                  className="flex gap-4 items-center"
+                >
                   {/** Item Image */}
-                  <div className="w-20 h-20 flex shrink-0 bg-gray-100 rounded-xl overflow-hidden">
+                  <div className="w-16 h-16 flex shrink-0 bg-gray-100 rounded-xl overflow-hidden">
                     {item.image ? (
                       <img
                         src={item.image}
@@ -148,16 +153,37 @@ const ReviewPage = () => {
                     <p className="text-sm text-gray-500">
                       Quanity: {item.quantity}
                     </p>
+                  </div>
+
+                  {/**Item Price */}
+                  <div className="text-right flex-shrink-0">
                     <p className="text-sm font-semibold text-[#e13e00]">
+                      ₱{(item.price * item.quantity).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-500">
                       ₱{item.price.toFixed(2)} each
                     </p>
                   </div>
                 </div>
               ))}
+
+
+              {/** View more/less button */}
+              {order.items.length > ITEMS_TO_SHOW && (
+                <button
+                type="button"
+                onClick={() => setShowAllItems(!showAllItems)}
+                className="w-full py-2 text-sm text-[#e13e00] hover:text-[#c13500] font-semibold transition-colors cursor-pointer"
+                >
+                  {showAllItems ? "Show Less" : `+${order.items.length - ITEMS_TO_SHOW} More Items`}
+                </button>
+              )}
             </div>
-            <div className="border-t mt-3 pt-3 flex justify-between font-semibold">
+            <div className="border-t mt-4 pt-3 flex justify-between font-semibold text-gray-900">
               <span>Total</span>
-              <span>₱{order.totals.total.toFixed(2)}</span>
+              <span className="text-[#e13e00]">
+                ₱{order.totals.total.toFixed(2)}
+              </span>
             </div>
           </div>
 
@@ -168,7 +194,8 @@ const ReviewPage = () => {
               <label className="font-[550] text-gray-700">
                 How was your experience? <span className="text-red-500">*</span>
               </label>
-              <div className="flex items-center justify-around mx-auto w-full max-w-sm gap-2 ">
+              {/** Stars */}
+              <div className="flex items-center justify-center gap-2 py-4 group">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
@@ -176,22 +203,26 @@ const ReviewPage = () => {
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoveredRating(star)}
                     onMouseLeave={() => setHoveredRating(0)}
-                    className="transition-transform hover:scale-110 focus:outline-none text-yellow-900 cursor-pointer"
+                    className={`transition-transform focus:outline-none active:scale-150 cursor-pointer ${
+                      star <= displayRating ? "group-hover:scale-110" : ""
+                    }`}
                   >
                     <Star
                       className="w-12 h-12 transition-all duration-200"
                       fill={star <= displayRating ? "#e13e00" : "#e5e7eb"}
                       stroke={star <= displayRating ? "#c13500" : "#d1d5db"}
-                      strokeWidth={1}
+                      strokeWidth={1.5}
                     />
                   </button>
                 ))}
               </div>
-              <p className="flex gap-2">
-                <span className="block font-[550] text-gray-700 mb-1">
-                  Rating : {labels[displayRating]}{" "}
-                </span>
-              </p>
+
+              {/** Rating Label */}
+              {displayRating > 0 && (
+                <p className="text-center text-lg font-semibold text-[#e13e00]">
+                  {labels[displayRating]}
+                </p>
+              )}
             </div>
 
             {/* Comment */}
