@@ -6,9 +6,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 interface OrderContextType {
   placedOrders: OrderType[];
   addOrder: (order: OrderType) => void;
-  updateOrderStatus: (orderId: string, status: OrderType['status']) => void;
+  updateOrderStatus: (orderId: string, status: OrderType["status"]) => void;
   markAsReviewed: (orderId: string) => void;
-  totalOrders: number;
+  activeOrdersCount: number;
   clearOrder: () => void;
 }
 
@@ -68,12 +68,16 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
               isReviewed: true,
               reviewedAt: new Date().toISOString(),
             }
-          : order
-      )
+          : order,
+      ),
     );
   };
 
-  const totalOrders = placedOrders.filter((item) => (item.status !== 'cancelled' && item.status !== 'completed')).length
+  const activeOrdersCount = placedOrders.filter(
+    (order) =>
+      order.status !== "cancelled" &&
+      (order.status !== "completed" || !order.isReviewed),
+  ).length;
 
   return (
     <OrderContext.Provider
@@ -82,7 +86,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
         addOrder: (order) => setPlacedOrders((prev) => [...prev, order]),
         updateOrderStatus,
         markAsReviewed,
-        totalOrders,
+        activeOrdersCount,
         clearOrder: () => setPlacedOrders([]),
       }}
     >

@@ -10,7 +10,7 @@ import Image from "next/image";
 const Header = () => {
   const router = useRouter();
   const { totalItems, setIsCartOpen } = useCart();
-  const { totalOrders } = useOrder();
+  const { activeOrdersCount } = useOrder();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -108,9 +108,9 @@ const Header = () => {
                 size={20}
                 className={`group-hover:scale-110 transition-transform ${isScrolled ? "text-white" : "darkText"}`}
               />
-              {totalOrders > 0 && (
+              {activeOrdersCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
-                  {totalOrders}
+                  {activeOrdersCount}
                 </span>
               )}
             </button>
