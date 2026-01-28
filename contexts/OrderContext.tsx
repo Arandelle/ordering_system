@@ -7,6 +7,7 @@ interface OrderContextType {
   placedOrders: OrderType[];
   addOrder: (order: OrderType) => void;
   updateOrderStatus: (orderId: string, status: OrderType['status']) => void;
+  markAsReviewed: (orderId: string) => void;
   totalOrders: number;
   clearOrder: () => void;
 }
@@ -56,6 +57,22 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
+  const markAsReviewed = (orderId: string) => {
+    if (!orderId) return;
+
+    setPlacedOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              isReviewed: true,
+              reviewedAt: new Date().toISOString(),
+            }
+          : order
+      )
+    );
+  };
+
   const totalOrders = placedOrders.filter((item) => (item.status !== 'cancelled' && item.status !== 'completed')).length
 
   return (
@@ -64,6 +81,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
         placedOrders,
         addOrder: (order) => setPlacedOrders((prev) => [...prev, order]),
         updateOrderStatus,
+        markAsReviewed,
         totalOrders,
         clearOrder: () => setPlacedOrders([]),
       }}
@@ -76,5 +94,5 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useOrder = () => {
   const ctx = useContext(OrderContext);
   if (!ctx) throw new Error("useOrder must be used within OrderProvider");
-  return ctx; // sample usage -> {placedOrders, addOrder, clearOrders} = useOrder();
+  return ctx;
 };
