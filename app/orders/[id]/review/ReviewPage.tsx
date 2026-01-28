@@ -4,8 +4,10 @@ import { useOrder } from "@/contexts/OrderContext";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { OrderType } from "@/types/OrderTypes";
-import { Star } from "lucide-react";
+import { Package, Star } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
+import { FormTextarea } from "@/components/form/FormTextArea";
 
 const ReviewPage = () => {
   const params = useParams();
@@ -93,17 +95,25 @@ const ReviewPage = () => {
   }
 
   const displayRating = hoveredRating || rating;
+  const labels = [
+    "No rating",
+    "Poor",
+    "Fair",
+    "Good",
+    "Very Good",
+    "Excellent",
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className=" bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-[#e13e00] text-2xl md:text-3xl font-bold mb-2">
               Rate Your Experience
             </h1>
-            <p className="text-gray-600">Order #{order.id}</p>
+            <p className="text-slate-600 font-semibold">Order #{order.id}</p>
             <p className="text-sm text-gray-500 mt-1">
               Completed on {new Date(order.createdAt).toLocaleDateString()}
             </p>
@@ -114,13 +124,34 @@ const ReviewPage = () => {
             <h3 className="font-semibold text-gray-900 mb-3">Your Order</h3>
             <div className="space-y-2">
               {order.items.map((item, idx) => (
-                <div key={idx} className="flex justify-between text-sm">
-                  <span className="text-gray-700">
-                    {item.quantity}x {item.name}
-                  </span>
-                  <span className="text-gray-600">
-                    ₱{(item.price * item.quantity).toFixed(2)}
-                  </span>
+                <div key={`${item.id}-${idx}`} className="flex gap-4">
+                  {/** Item Image */}
+                  <div className="w-20 h-20 flex shrink-0 bg-gray-100 rounded-xl overflow-hidden">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package size={24} className="text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/** Item Details */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h3 className="font-semibold text-gray-900 truncate">
+                      {item.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Quanity: {item.quantity}
+                    </p>
+                    <p className="text-sm font-semibold text-[#e13e00]">
+                      ₱{item.price.toFixed(2)} each
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -133,11 +164,11 @@ const ReviewPage = () => {
           {/* Review Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Star Rating */}
-            <div className="space-y-3">
-              <label className="text-lg font-semibold text-gray-900">
-                How was your experience? *
+            <div className="flex flex-col space-y-6">
+              <label className="font-[550] text-gray-700">
+                How was your experience? <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-2">
+              <div className="flex items-center justify-around mx-auto w-full max-w-sm gap-2 ">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
@@ -145,53 +176,41 @@ const ReviewPage = () => {
                     onClick={() => setRating(star)}
                     onMouseEnter={() => setHoveredRating(star)}
                     onMouseLeave={() => setHoveredRating(0)}
-                    className="transition-transform hover:scale-110 focus:outline-none"
+                    className="transition-transform hover:scale-110 focus:outline-none text-yellow-900 cursor-pointer"
                   >
                     <Star
-                      className={`w-12 h-12 ${
-                        star <= displayRating
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
-                      } transition-colors`}
+                      className="w-12 h-12 transition-all duration-200"
+                      fill={star <= displayRating ? "#e13e00" : "#e5e7eb"}
+                      stroke={star <= displayRating ? "#c13500" : "#d1d5db"}
+                      strokeWidth={1}
                     />
                   </button>
                 ))}
               </div>
-              {rating > 0 && (
-                <p className="text-sm text-gray-600">
-                  {rating === 1 && "Poor"}
-                  {rating === 2 && "Fair"}
-                  {rating === 3 && "Good"}
-                  {rating === 4 && "Very Good"}
-                  {rating === 5 && "Excellent"}
-                </p>
-              )}
+              <p className="flex gap-2">
+                <span className="block font-[550] text-gray-700 mb-1">
+                  Rating : {labels[displayRating]}{" "}
+                </span>
+              </p>
             </div>
 
             {/* Comment */}
-            <div className="space-y-2">
-              <label
-                htmlFor="comment"
-                className="text-lg font-semibold text-gray-900"
-              >
-                Share Your Thoughts (Optional)
-              </label>
-              <textarea
-                id="comment"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="What did you love? What could be better?"
-                rows={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              />
-            </div>
+
+            <FormTextarea
+              label="Share Your Thoughts (Optional)"
+              name="comment"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="What did you love? What could be better?"
+              rows={5}
+            />
 
             {/* Submit Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
                 type="submit"
                 disabled={isSubmitting || rating === 0}
-                className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 bg-[#e13e00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] transition-colors disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Submitting..." : "Submit Review"}
               </button>
