@@ -6,15 +6,18 @@ import { MenuItem } from "@/types/MenuTypes";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "./ProductCard";
 import PromoBanner from "./PromoBanner";
-import { useSearchParams } from "next/navigation";
-import { LINKS } from "../constant/links";
+import { LINKS } from "../../constant/links";
+import { useScrollToSection } from "@/hooks/useScrollToSection";
 
 const MenuSection = ({
   variant = "full",
 }: {
   variant?: "landing" | "full";
 }) => {
-  const searchParams = useSearchParams();
+
+
+  useScrollToSection();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<
     "default" | "price-low" | "price-high" | "name"
@@ -124,14 +127,6 @@ const MenuSection = ({
     setActiveCategory(category);
     setVisibleItems(new Set()); // Reset visible items when category changes
   };
-
-  useEffect(() => {
-    if (searchParams.get("scroll") === "menu") {
-      document
-        .getElementById("menu-section")
-        ?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [searchParams]);
 
   return (
     <section id="menu-section" className="py-4 bg-white scroll-mt-24">

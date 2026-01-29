@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
 import {
   MapPin,
   Clock,
@@ -9,9 +8,10 @@ import {
   Utensils,
   ChevronRight,
 } from "lucide-react";
-import { LINKS } from "../constant/links";
+import { LINKS } from "../../constant/links";
 
 const LocationsSection = () => {
+
   const locations = [
     {
       id: 1,
@@ -84,7 +84,7 @@ const LocationsSection = () => {
   }
 
   return (
-    <section className="w-full bg-gradient-to-b from-white to-gray-50 py-16 lg:pt-24">
+    <section id="location-section" className="w-full bg-gradient-to-b from-white to-gray-50 py-16 lg:pt-24">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
