@@ -153,7 +153,7 @@ const MenuSection = ({
           </p>
         </div>
 
-        <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-2xl p-6 mb-8 border border-orange-100">
+        <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-center md:text-left">
               <h3 className="text-lg font-bold text-gray-900 mb-1">
@@ -164,18 +164,28 @@ const MenuSection = ({
                 Foodpanda!
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex w-full md:w-auto md:justify-end gap-3">
               <button
                 onClick={() => window.open(`${LINKS.GRAB}`, "_blank")}
-                className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 shadow-md hover:shadow-lg"
+                className="flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer grab-background-color text-white hover:bg-green-700 flex flex-col md:flex-row items-center gap-2 shadow-md hover:shadow-lg"
               >
-                🚗 Order via Grab
+                <img
+                  src={"/images/grab.jpg"}
+                  alt="grab logo"
+                  className="w-8 h-8 scale-160 mr-2"
+                />
+                <p className="hidden md:block">Grab Food</p>
               </button>
               <button
                 onClick={() => window.open(`${LINKS.FOODPANDA}`, "_blank")}
-                className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-pink-600 text-white hover:bg-pink-700 flex items-center gap-2 shadow-md hover:shadow-lg"
+                className="flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-pink-600 text-white hover:bg-pink-700 flex flex-col md:flex-row items-center gap-2 shadow-md hover:shadow-lg"
               >
-                🐼 Order via Foodpanda
+                <img
+                  src={"/images/foodpanda_whiteoutline.png"}
+                  alt="grab logo"
+                  className="w-8 h-8 scale-110"
+                />{" "}
+                <p className="hidden md:block">Foodpanda</p>
               </button>
             </div>
           </div>
