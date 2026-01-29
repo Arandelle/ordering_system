@@ -105,7 +105,7 @@ const LocationsSection = () => {
           {locations.map((location, index) => (
             <div
               key={index}
-              className={`grid lg:grid-cols-2 gap-8 items-center pt-16 max-w-7xl mx-auto`}
+              className={`grid lg:grid-cols-2 gap-8 items-center pt-8 md:pt-16 max-w-7xl mx-auto`}
             >
               {/* Map Section */}
 

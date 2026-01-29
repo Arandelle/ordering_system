@@ -285,7 +285,7 @@ const MenuSection = ({
                 <div className="w-10 h-[3px] bg-[#e13e00] mt-4 rounded-full" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {computedItems.map((item, index) => (
                   <div
                     key={`${item.name}-${index}`}
@@ -303,7 +303,7 @@ const MenuSection = ({
 
                 {/* CTA */}
                 <div
-                  className="flex items-center justify-center transition-all duration-500 opacity-0 translate-y-10"
+                  className="mt-12 md:pt-0 flex items-center justify-center transition-all duration-500 opacity-0 translate-y-10"
                   style={{ transitionDelay: `${computedItems.length * 50}ms` }}
                   ref={(el) => {
                     if (el && !el.classList.contains("animated")) {
@@ -319,6 +319,7 @@ const MenuSection = ({
                   }}
                 >
                   <a
+                    aria-label="View full menu"
                     href="/menu"
                     className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#e13e00] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#e13e00]/30 transition-all duration-300 hover:scale-105 overflow-hidden"
                   >
