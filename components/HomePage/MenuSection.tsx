@@ -7,6 +7,7 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "./ProductCard";
 import PromoBanner from "./PromoBanner";
 import { useSearchParams } from "next/navigation";
+import { LINKS } from "../constant/links";
 
 const MenuSection = ({
   variant = "full",
@@ -153,31 +154,32 @@ const MenuSection = ({
         </div>
 
         <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-2xl p-6 mb-8 border border-orange-100">
-  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-    <div className="text-center md:text-left">
-      <h3 className="text-lg font-bold text-gray-900 mb-1">
-        Order Through Your Favorite Delivery App
-      </h3>
-      <p className="text-sm text-gray-600">
-        Can't order directly? Get our food delivered via Grab or Foodpanda!
-      </p>
-    </div>
-    <div className="flex gap-3">
-      <button
-        onClick={() => window.open('https://www.grab.com/ph/food/', '_blank')}
-        className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 shadow-md hover:shadow-lg"
-      >
-        🚗 Order via Grab
-      </button>
-      <button
-        onClick={() => window.open('https://www.foodpanda.ph/', '_blank')}
-        className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-pink-600 text-white hover:bg-pink-700 flex items-center gap-2 shadow-md hover:shadow-lg"
-      >
-        🐼 Order via Foodpanda
-      </button>
-    </div>
-  </div>
-</div>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <h3 className="text-lg font-bold text-gray-900 mb-1">
+                Order Through Your Favorite Delivery App
+              </h3>
+              <p className="text-sm text-gray-600">
+                Can't order directly? Get our food delivered via Grab or
+                Foodpanda!
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.open(`${LINKS.GRAB}`, "_blank")}
+                className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 shadow-md hover:shadow-lg"
+              >
+                🚗 Order via Grab
+              </button>
+              <button
+                onClick={() => window.open(`${LINKS.FOODPANDA}`, "_blank")}
+                className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-pink-600 text-white hover:bg-pink-700 flex items-center gap-2 shadow-md hover:shadow-lg"
+              >
+                🐼 Order via Foodpanda
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/** Filters button, sort, search */}
         {variant === "full" && (
@@ -288,42 +290,51 @@ const MenuSection = ({
                     <ProductCard item={item} />
                   </div>
                 ))}
-                
-              {/* CTA */}
-              <div
-                className="flex items-center justify-center transition-all duration-500 opacity-0 translate-y-10"
-                style={{ transitionDelay: `${computedItems.length * 50}ms` }}
-                ref={(el) => {
-                  if (el && !el.classList.contains('animated')) {
-                    setTimeout(() => {
-                      el.classList.add('translate-y-0', 'opacity-100', 'animated');
-                      el.classList.remove('translate-y-10', 'opacity-0');
-                    }, 100);
-                  }
-                }}
-              >
-                <a
-                  href="/menu"
-                  className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#e13e00] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#e13e00]/30 transition-all duration-300 hover:scale-105 overflow-hidden"
+
+                {/* CTA */}
+                <div
+                  className="flex items-center justify-center transition-all duration-500 opacity-0 translate-y-10"
+                  style={{ transitionDelay: `${computedItems.length * 50}ms` }}
+                  ref={(el) => {
+                    if (el && !el.classList.contains("animated")) {
+                      setTimeout(() => {
+                        el.classList.add(
+                          "translate-y-0",
+                          "opacity-100",
+                          "animated",
+                        );
+                        el.classList.remove("translate-y-10", "opacity-0");
+                      }, 100);
+                    }
+                  }}
                 >
-                  {/* Animated background gradient */}
-                  <span className="absolute inset-0 bg-gradient-to-r from-[#ff4500] to-[#e13e00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  {/* Content */}
-                  <span className="relative z-10">View Full Menu</span>
-                  <svg 
-                    className="relative z-10 w-6 h-6 transition-transform duration-300 group-hover:translate-x-1" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                  <a
+                    href="/menu"
+                    className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#e13e00] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#e13e00]/30 transition-all duration-300 hover:scale-105 overflow-hidden"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                  
-                  {/* Shine effect */}
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                </a>
-              </div>
+                    {/* Animated background gradient */}
+                    <span className="absolute inset-0 bg-gradient-to-r from-[#ff4500] to-[#e13e00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    {/* Content */}
+                    <span className="relative z-10">View Full Menu</span>
+                    <svg
+                      className="relative z-10 w-6 h-6 transition-transform duration-300 group-hover:translate-x-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+
+                    {/* Shine effect */}
+                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  </a>
+                </div>
               </div>
             </>
           ) : (
