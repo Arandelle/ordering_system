@@ -149,7 +149,7 @@ const DeliveryStep = ({
               label="Delivery Instructions (Optional)"
               name="instructions"
               value={deliveryInfo.instructions}
-              onChange={(e) => handleChange("instructions", e)}
+              onChange={(e) => handleChange("instructions", e.target.value)}
               placeholder="Leave at the gate, ring the doorbell, etc."
               rows={2}
             />
