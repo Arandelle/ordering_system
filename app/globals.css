@@ -4,6 +4,9 @@
   --background: #ffffff;
   --foreground: #171717;
   --darkColor: #1a1a1a;
+  --grabColor: #009B3D;
+  --foodpandaColor: #D6005F;
+
 }
 
 @theme inline {
@@ -44,4 +47,12 @@ body {
     display: none;
   }
 }
+
+  .grab-background-color {
+    background-color: var(--grabColor);
+  }
+
+  .foodpanda-background-color {
+    background-color: var(--foodpandaColor);
+  }
 
