@@ -152,6 +152,33 @@ const MenuSection = ({
           </p>
         </div>
 
+        <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-2xl p-6 mb-8 border border-orange-100">
+  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="text-center md:text-left">
+      <h3 className="text-lg font-bold text-gray-900 mb-1">
+        Order Through Your Favorite Delivery App
+      </h3>
+      <p className="text-sm text-gray-600">
+        Can't order directly? Get our food delivered via Grab or Foodpanda!
+      </p>
+    </div>
+    <div className="flex gap-3">
+      <button
+        onClick={() => window.open('https://www.grab.com/ph/food/', '_blank')}
+        className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 shadow-md hover:shadow-lg"
+      >
+        🚗 Order via Grab
+      </button>
+      <button
+        onClick={() => window.open('https://www.foodpanda.ph/', '_blank')}
+        className="px-6 py-3 rounded-xl font-semibold transition-all cursor-pointer bg-pink-600 text-white hover:bg-pink-700 flex items-center gap-2 shadow-md hover:shadow-lg"
+      >
+        🐼 Order via Foodpanda
+      </button>
+    </div>
+  </div>
+</div>
+
         {/** Filters button, sort, search */}
         {variant === "full" && (
           <>
