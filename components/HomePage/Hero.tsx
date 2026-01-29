@@ -25,7 +25,7 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center lg:min-h-[calc(100vh-8rem)]">
           {/** Content */}
           <div
-            className={`space-y-6 lg:space-y-8 text-center lg:text-left transform transition-all duration-1000 
+            className={`space-y-6 lg:space-y-8 text-center mt-12 md:mt-0 lg:text-left transform transition-all duration-1000 
             ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}
           >
             {/** Main headline */}
