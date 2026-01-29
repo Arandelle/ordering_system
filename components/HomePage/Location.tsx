@@ -9,6 +9,7 @@ import {
   Utensils,
   ChevronRight,
 } from "lucide-react";
+import { LINKS } from "../constant/links";
 
 const LocationsSection = () => {
   const locations = [
@@ -49,6 +50,38 @@ const LocationsSection = () => {
         "Experience authentic Filipino grilled favorites at our flagship location in Century City Mall.",
     },
   ];
+
+  function DeliveryButton({
+    label = "Logo",
+    href = "/",
+    imgSrc = "/images/harrison_logo.png",
+    bgColor = "bg-white",
+    imgSize = "h-12 w-12",
+    hoverTextColor = "group-hover:text-gray-900",
+  }) {
+    return (
+      <button
+        onClick={() => window.open(href, "_blank")}
+        className="group flex flex-col items-center gap-3 transition-all hover:scale-105"
+      >
+        <div
+          className={`h-20 w-20 rounded-full overflow-hidden flex items-center justify-center shadow-sm ${bgColor}`}
+        >
+          <img
+            src={imgSrc}
+            alt={label}
+            className={`object-contain ${imgSize}`}
+          />
+        </div>
+
+        <span
+          className={`font-semibold text-gray-800 transition ${hoverTextColor}`}
+        >
+          {label}
+        </span>
+      </button>
+    );
+  }
 
   return (
     <section className="w-full bg-gradient-to-b from-white to-gray-50 py-16 lg:pt-24">
@@ -276,23 +309,34 @@ const LocationsSection = () => {
           Can't visit us? We deliver to your doorstep!
         </h3>
         <p className="text-gray-600 mb-8 text-lg">
-          Order your favorite Harrison's dishes through our delivery partners
+          Order your favorite Harrison’s dishes directly or through trusted delivery platforms.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <button
-            onClick={() =>
-              window.open("https://www.grab.com/ph/food/", "_blank")
-            }
-            className="px-8 py-4 rounded-xl font-bold transition-all cursor-pointer bg-green-600 text-white hover:bg-green-700 flex items-center gap-3 shadow-lg hover:shadow-xl hover:scale-105"
-          >
-            🚗 <span>Order via Grab</span>
-          </button>
-          <button
-            onClick={() => window.open("https://www.foodpanda.ph/", "_blank")}
-            className="px-8 py-4 rounded-xl font-bold transition-all cursor-pointer bg-pink-600 text-white hover:bg-pink-700 flex items-center gap-3 shadow-lg hover:shadow-xl hover:scale-105"
-          >
-            🐼 <span>Order via Foodpanda</span>
-          </button>
+        <div className="flex flex-wrap justify-center gap-10">
+          <DeliveryButton
+            label="Harrison’s Menu"
+            href={LINKS.MENU}
+            imgSrc="/images/harrison_logo.png"
+            bgColor="bg-[#e13e00]"
+            imgSize="h-14 w-14"
+            hoverTextColor="group-hover:text-[#e13e00]"
+          />
+
+          <DeliveryButton
+            label="Grab"
+            href={LINKS.GRAB}
+            imgSrc="/images/grab.jpg"
+            bgColor="bg-[#009B3D]"
+            imgSize="h-12 w-12 scale-170"
+            hoverTextColor="group-hover:text-green-600"
+          />
+          <DeliveryButton
+            label="Foodpanda"
+            href={LINKS.FOODPANDA}
+            imgSrc="/images/foodpanda.png"
+            bgColor="bg-[#D6005F]"
+            imgSize="h-12 w-12 scale-150"
+            hoverTextColor="group-hover:text-pink-600"
+          />
         </div>
       </div>
     </section>
