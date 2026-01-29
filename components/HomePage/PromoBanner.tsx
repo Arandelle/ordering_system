@@ -19,6 +19,7 @@ const PromoBanner = ({
   type = "multi",
 }: PromoBannerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Sample promo cards
   const promoCards: PromoCard[] = [
@@ -66,9 +67,26 @@ const PromoBanner = ({
     },
   ];
 
-  // For multi card view, calculate how many slides we have
-  const cardPerView = type === "multi" ? 3 : 1;
-  const totalSlides = Math.ceil(promoCards.length / cardPerView);
+  // Check if screen is mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // 768px is md breakpoint in Tailwind
+    };
+
+    // Check on mount
+    checkMobile();
+
+    // Add event listener for resize
+    window.addEventListener("resize", checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Force single view on mobile, otherwise use the type prop
+  const effectiveType = isMobile ? "single" : type;
+  const cardsPerView = effectiveType === "multi" ? 3 : 1;
+  const totalSlides = Math.ceil(promoCards.length / cardsPerView);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -90,8 +108,8 @@ const PromoBanner = ({
     setCurrentIndex(index);
   };
 
-  if (type === "single") {
-    // Single full-width
+  if (effectiveType === "single") {
+    // Single full-width (shown on mobile OR when type="single")
     return (
       <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-orange-50 to-red-50">
         <div
@@ -100,26 +118,26 @@ const PromoBanner = ({
         >
           {promoCards.map((card) => (
             <div key={card.id} className="min-w-full relative">
-              <div className="relative h-64 md:h-80 lg:h-96">
+              <div className="relative h-64 sm:h-72 md:h-80 lg:h-96">
                 <img
                   src={card.image}
                   alt={card.title}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
-                <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-16 lg:px-24">
+                <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-8 md:px-16 lg:px-24">
                   {card.discount && (
-                    <span className="inline-block bg-[#e13e00] text-white px-4 py-2 rounded-full font-bold text-sm mb-4 w-fit">
+                    <span className="inline-block bg-[#e13e00] text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm mb-3 sm:mb-4 w-fit">
                       {card.discount}
                     </span>
                   )}
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4">
                     {card.title}
                   </h2>
-                  <p className="text-lg md:text-xl lg:text-2xl text-white/90 mb-4 md:mb-6">
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-3 sm:mb-4 md:mb-6">
                     {card.description}
                   </p>
-                  <button className="bg-[#e13e00] hover:bg-[#c13500] text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-bold text-base md:text-lg transition-colors w-fit">
+                  <button className="bg-[#e13e00] hover:bg-[#c13500] text-white px-5 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-full font-bold text-sm sm:text-base md:text-lg transition-colors w-fit">
                     Order Now!
                   </button>
                 </div>
@@ -127,24 +145,35 @@ const PromoBanner = ({
             </div>
           ))}
         </div>
+
+        {/* Navigation Buttons */}
         <button
           onClick={goToPrevious}
-          className="absolute top-1/2 left-4 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
+          className="absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
+          aria-label="Previous slide"
         >
-          <ChevronLeft size={24} className="text-gray-800" />
+          <ChevronLeft size={20} className="text-gray-800 sm:w-6 sm:h-6" />
         </button>
         <button
           onClick={goToNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
+          aria-label="Next slide"
         >
-          <ChevronRight size={24} className="text-gray-800" />
+          <ChevronRight size={20} className="text-gray-800 sm:w-6 sm:h-6" />
         </button>
-        <div className="absolute bottom-4 left-1/2 -tranlate-x-1/2 flex gap-2 z-10">
+
+        {/* Dots Indicator */}
+        <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {Array.from({ length: totalSlides }).map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all cursor-pointer ${currentIndex === index ? "bg-[#e13e00] w-8" : "bg-white/50 w-2 hover:bg-white/75"}`}
+              className={`h-2 rounded-full transition-all cursor-pointer ${
+                currentIndex === index
+                  ? "bg-[#e13e00] w-8"
+                  : "bg-white/50 w-2 hover:bg-white/75"
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
             ></button>
           ))}
         </div>
@@ -152,6 +181,7 @@ const PromoBanner = ({
     );
   }
 
+  // Multi-card view (only shown on tablet/desktop)
   return (
     <div className="relative w-full">
       <div className="overflow-hidden rounded-2xl">
@@ -164,13 +194,13 @@ const PromoBanner = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-2">
                 {promoCards
                   .slice(
-                    slideIndex * cardPerView,
-                    (slideIndex + 1) * cardPerView,
+                    slideIndex * cardsPerView,
+                    (slideIndex + 1) * cardsPerView,
                   )
                   .map((card) => (
                     <div
                       key={card.id}
-                      className="relative group cursor-pointer overflow-hidden roundex-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                      className="relative group cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                     >
                       <div className="relative h-64">
                         <img
@@ -178,7 +208,7 @@ const PromoBanner = ({
                           alt={card.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-tranparent" />{" "}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                         {card.discount && (
                           <div className="absolute top-4 right-4 bg-[#e13e00] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                             {card.discount}
@@ -188,11 +218,10 @@ const PromoBanner = ({
                           <h3 className="text-xl font-bold text-white mb-2">
                             {card.title}
                           </h3>
-
                           <p className="text-sm text-white/90 mb-3">
                             {card.description}
                           </p>
-                          <button className="bg-white hover:bg-gray-100  text-[#e13e00] px-4 py-2 rounded-full font-semibold text-sm transition-colors">
+                          <button className="bg-white hover:bg-gray-100 text-[#e13e00] px-4 py-2 rounded-full font-semibold text-sm transition-colors">
                             View Details
                           </button>
                         </div>
@@ -205,17 +234,20 @@ const PromoBanner = ({
         </div>
       </div>
 
+      {/* Navigation for multi-card view */}
       {totalSlides > 1 && (
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white hover:bg-gray-100 p-3 rounded-full  shadow-lg  transition-all z-10"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white hover:bg-gray-100 p-3 rounded-full shadow-lg transition-all z-10"
+            aria-label="Previous slide"
           >
             <ChevronLeft size={24} className="text-gray-800" />
           </button>
           <button
             onClick={goToNext}
             className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white hover:bg-gray-100 p-3 rounded-full shadow-lg transition-all z-10"
+            aria-label="Next slide"
           >
             <ChevronRight size={24} className="text-gray-800" />
           </button>
@@ -224,7 +256,12 @@ const PromoBanner = ({
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all ${currentIndex === index ? "bg-[#e13e00] w-8" : "bg-gray-300 w-2 hover:bg-gray-400"}`}
+                className={`h-2 rounded-full transition-all ${
+                  currentIndex === index
+                    ? "bg-[#e13e00] w-8"
+                    : "bg-gray-300 w-2 hover:bg-gray-400"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
               ></button>
             ))}
           </div>
