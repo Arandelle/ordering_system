@@ -1,3 +1,5 @@
+'use client';
+
 import MenuSection from '@/components/homepage/MenuSection'
 import React from 'react'
 
