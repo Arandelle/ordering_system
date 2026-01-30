@@ -1,4 +1,4 @@
-import { DeliveryInfo } from "@/app/checkout/DeliveryStep";
+import { DeliveryInfo } from "@/app/customer/checkout/DeliveryStep";
 import { CartItem } from "./MenuTypes";
 
 export interface OrderType {

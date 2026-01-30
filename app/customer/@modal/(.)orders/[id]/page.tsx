@@ -1,5 +1,5 @@
 import Modal from '@/components/Modal';
-import OrderDetails from '@/app/orders/OrderDetails';
+import OrderDetails from '@/app/customer/orders/OrderDetails';
 
 export default async function OrderModal({ 
   params 

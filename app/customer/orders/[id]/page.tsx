@@ -1,4 +1,4 @@
-import OrderDetails from "@/app/orders/OrderDetails";
+import OrderDetails from "../OrderDetails";
 
 export default async function OrderPage({
   params,
