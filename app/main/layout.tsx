@@ -1,10 +1,13 @@
 import Header from "@/components/main/Header";
-import React from "react";
+import MenuSectionSkeleton from "@/components/ui/MenuSectionSkeleton";
+import React, { Suspense } from "react";
 
 export default function layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Header />
+      <Suspense fallback={<MenuSectionSkeleton />}>
+        <Header />
+      </Suspense>
       {children}
     </>
   );
