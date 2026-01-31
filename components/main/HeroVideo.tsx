@@ -1,7 +1,15 @@
-'use client'
-import React from 'react'
+"use client";
+import React from "react";
+import { useSubdomainPath } from "@/hooks/useSubDomainUrl";
 
 const HeroVideo = () => {
+  // Navigate to food subdomain
+  const orderUrl = useSubdomainPath("/", "food");
+  const menuUrl = useSubdomainPath("/menu", "food");
+
+  // Or if you want to go back to main domain from food subdomain:
+  // const homeUrl = useSubdomainPath('/', undefined) // goes to domain.com
+
   return (
     <section className="relative w-full">
       <div className="max-w-8xl mx-auto">
@@ -32,17 +40,24 @@ const HeroVideo = () => {
 
               {/* Subheading */}
               <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 max-w-xl">
-                Experience authentic Filipino BBQ and Inasal. Grilled to perfection, served with love.
+                Experience authentic Filipino BBQ and Inasal. Grilled to
+                perfection, served with love.
               </p>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="w-full sm:w-auto bg-[#e13e00] text-white px-8 py-4 text-lg font-bold hover:bg-[#b83200] transition-all duration-300 transform hover:scale-105 shadow-lg">
+                <a
+                  href={orderUrl}
+                  className="w-full sm:w-auto bg-[#e13e00] text-white px-8 py-4 text-lg font-bold hover:bg-[#b83200] transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
                   Order Now
-                </button>
-                <button className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-4 text-lg font-bold hover:bg-white hover:text-[#e13e00] transition-all duration-300">
+                </a>
+                <a
+                  href={menuUrl}
+                  className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-4 text-lg font-bold hover:bg-white hover:text-[#e13e00] transition-all duration-300"
+                >
                   View Menu
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -64,7 +79,7 @@ const HeroVideo = () => {
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default HeroVideo
+export default HeroVideo;
