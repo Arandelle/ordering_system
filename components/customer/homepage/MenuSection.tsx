@@ -6,7 +6,7 @@ import { MenuItem } from "@/types/MenuTypes";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import ProductCard from "./ProductCard";
 import PromoBanner from "./PromoBanner";
-import { LINKS } from "../../constant/links";
+import { LINKS } from "@/constant/links";
 import { useScrollToSection } from "@/hooks/useScrollToSection";
 
 const MenuSection = ({

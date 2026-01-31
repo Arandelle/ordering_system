@@ -1,7 +1,7 @@
-import Footer from "@/components/homepage/Footer";
-import Hero from "@/components/homepage/Hero";
-import LocationsSection from "@/components/homepage/Location";
-import MenuSection from "@/components/homepage/MenuSection";
+import Footer from "@/components/customer/homepage/Footer";
+import Hero from "@/components/customer/homepage/Hero";
+import LocationsSection from "@/components/customer/homepage/Location";
+import MenuSection from "@/components/customer/homepage/MenuSection";
 import MenuSectionSkeleton from "@/components/ui/MenuSectionSkeleton";
 import { Suspense } from "react";
 

@@ -1,5 +1,5 @@
 import CartDrawer from "@/components/CartDrawer";
-import Header from "@/components/homepage/Header";
+import Header from "@/components/customer/homepage/Header";
 import { CartProvider } from "@/contexts/CartContext";
 import { OrderProvider } from "@/contexts/OrderContext";
 import React from "react";

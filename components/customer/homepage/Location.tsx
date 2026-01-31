@@ -8,7 +8,7 @@ import {
   Utensils,
   ChevronRight,
 } from "lucide-react";
-import { LINKS } from "../../constant/links";
+import { LINKS } from "@/constant/links";
 
 const LocationsSection = () => {
 
