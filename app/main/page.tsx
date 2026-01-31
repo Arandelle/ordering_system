@@ -1,11 +1,11 @@
-import React from 'react'
+import HeroVideo from '@/components/main/HeroVideo';
 
-const page = () => {
+const MainPage = () => {
   return (
-    <div>
-      main
-    </div>
+  <>
+    <HeroVideo />
+  </>
   )
 }
 
-export default page
+export default MainPage

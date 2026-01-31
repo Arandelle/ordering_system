@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useScrollToSection } from "@/hooks/useScrollToSection";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 const Header = () => {
   useScrollToSection();
@@ -10,13 +11,13 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white z-50 border-b border-gray-200">
+    <nav className="sticky top-0 bg-white z-50 border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 p-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <a
-              onClick={() => router.push("/s")}
+            <Link
+              href="/"
               className="cursor-pointer w-12 h-12 bg-[#e13e00] rounded-full flex items-center justify-center"
             >
               <Image
@@ -30,7 +31,7 @@ const Header = () => {
                   e.currentTarget.src = "images/harrison_logo.png.jpg"; // Optional fallback
                 }}
               />
-            </a>
+            </Link>
             <div className="hidden sm:block">
               <h1 className="text-[#e13e00] font-bold text-lg leading-tight">
                 Harrison
