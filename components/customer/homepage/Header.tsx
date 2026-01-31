@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag, Menu, X, User, LogIn, Package } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useOrder } from "@/contexts/OrderContext";
 import Image from "next/image";
+import Link from "next/link";
 
 const Header = () => {
-  const router = useRouter();
+
   const { totalItems, setIsCartOpen } = useCart();
   const { activeOrdersCount } = useOrder();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -44,8 +44,8 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div
-              onClick={() => router.push("/")}
+            <Link
+              href={"/"}
               className="cursor-pointer w-12 h-12 bg-[#e13e00] rounded-full flex items-center justify-center"
             >
               <Image
@@ -59,7 +59,7 @@ const Header = () => {
                   e.currentTarget.src = "images/harrison_logo.png.jpg"; // Optional fallback
                 }}
               />
-            </div>
+            </Link>
             <div className="hidden sm:block">
               <h1 className="text-[#e13e00] font-bold text-lg leading-tight">
                 Harrison
@@ -100,8 +100,8 @@ const Header = () => {
             </div>
 
             {/** List of orders button */}
-            <button
-              onClick={() => router.push("/orders")}
+            <Link
+              href="/orders"
               className={`relative p-2 sm:p-3 ${isScrolled ? "bg-white/10 hover:bg-white/20" : "bg-gray-100 hover:bg-gray-200"} rounded-full transition-all duration-300 group cursor-pointer`}
             >
               <Package
@@ -113,7 +113,7 @@ const Header = () => {
                   {activeOrdersCount}
                 </span>
               )}
-            </button>
+            </Link>
 
             {/* Cart Button */}
             <button
