@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useSubdomainPath } from "@/hooks/useSubDomainUrl";
+import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 
 const HeroVideo = () => {
   // Navigate to food subdomain
