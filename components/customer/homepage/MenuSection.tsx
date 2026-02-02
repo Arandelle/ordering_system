@@ -266,7 +266,7 @@ const MenuSection = ({
         )}
 
         {/** Promo banners like specials, buy 1 take 1 */}
-        <PromoBanner type="single"/>
+        <PromoBanner type="multi"/>
 
         {/** Product Grid */}
         {computedItems.length > 0 ? (
