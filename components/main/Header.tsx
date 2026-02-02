@@ -54,7 +54,7 @@ const Header = () => {
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.section}
-                href={`/?secton=${item.section}`}
+                href={`/?section=${item.section}`}
                 className="text-gray-800 font-[550] hover:text-[#e13e00] transition-colors"
               >
                 {item.label}
