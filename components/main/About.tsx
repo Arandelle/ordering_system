@@ -10,32 +10,32 @@ import {
   Phone,
   Twitter,
 } from "lucide-react";
-import React from "react";
+import { getLucideIcon } from "@/lib/iconUtils";
 
 const About = () => {
   useScrollToSection();
   // Franchise steps
   const franchiseSteps = [
     {
-      step: 1,
+      icon: "Send",
       title: "Inquiry",
       description:
         "Submit your franchise application and express your interest in joining the Harrison Mang Inasal family.",
     },
     {
-      step: 2,
+      icon: "NotebookPen",
       title: "Evaluation",
       description:
         "Our team reviews your application, conducts interviews, and assesses location viability.",
     },
     {
-      step: 3,
+      icon: "BicepsFlexed",
       title: "Setup & Training",
       description:
         "Complete comprehensive training on operations, food preparation, and customer service.",
     },
     {
-      step: 4,
+      icon: "Rocket",
       title: "Opening",
       description:
         "Launch your branch with full support from our team and start serving authentic Filipino BBQ.",
@@ -200,20 +200,25 @@ const About = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {franchiseSteps.map((item) => (
-              <div
-                key={item.step}
-                className="bg-gray-50 p-6 border border-gray-200"
-              >
-                <div className="w-12 h-12 bg-[#e13e00] text-white flex items-center justify-center font-bold text-xl mb-4">
-                  {item.step}
+            {franchiseSteps.map((item) => {
+              
+              const Icon = getLucideIcon(item.icon)
+
+              return (
+                <div
+                  key={item.title}
+                  className="bg-gray-50 p-6 border border-gray-200"
+                >
+                  <div className="w-12 h-12 bg-[#e13e00] text-white flex items-center justify-center font-bold text-xl mb-4">
+                   <Icon />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm">{item.description}</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-gray-600 text-sm">{item.description}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="text-center">
@@ -255,7 +260,7 @@ const About = () => {
                 className="bg-white p-6 border border-gray-200"
               >
                 <div className="flex items-start gap-3 mb-4">
-                  <MapPin className="w-5 h-5 text-[#e13e00] flex-shrink-0 mt-1" />
+                  <MapPin className="w-5 h-5 text-[#e13e00] shrink-0 mt-1" />
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
                       {location.name}
