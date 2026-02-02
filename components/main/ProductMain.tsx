@@ -78,7 +78,7 @@ const ProductMain = () => {
   return (
     <section
       id="products-main-section"
-      className="py-20 bg-white gap-8 flex flex-col"
+      className="pt-20 bg-white gap-8 flex flex-col"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
@@ -229,7 +229,7 @@ const ProductMain = () => {
       <div className="bg-[#e13e00] py-8">
         <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="space-y-2">
-            <h1 className="text-white font-bold text-3xl">Promos</h1>
+            <h1 className="text-white font-bold text-4xl">Promos</h1>
             <p className="text-white text-lg font-[550]">
               These deals and discounts are waiting for you!
             </p>
@@ -238,7 +238,7 @@ const ProductMain = () => {
           {/* Desktop: Show all promos */}
           <div className="hidden md:flex items-center justify-center w-full max-w-7xl mx-auto gap-8">
             {promoData.map(({ src, alt }) => (
-              <div key={src} className="relative w-full max-w-450px aspect-9/10">
+              <div key={src} className="relative w-full max-w-450px aspect-6/9">
                 <Image
                   src={src}
                   fill
