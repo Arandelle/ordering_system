@@ -111,7 +111,7 @@ const PromoBanner = ({
   if (effectiveType === "single") {
     // Single full-width (shown on mobile OR when type="single")
     return (
-      <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-orange-50 to-red-50">
+      <div className="relative w-full overflow-hidden rounded-2xl bg-linear-to-r from-orange-50 to-red-50">
         <div
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -124,7 +124,7 @@ const PromoBanner = ({
                   alt={card.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-r from-black/60 to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-8 md:px-16 lg:px-24">
                   {card.discount && (
                     <span className="inline-block bg-[#e13e00] text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm mb-3 sm:mb-4 w-fit">
@@ -208,7 +208,7 @@ const PromoBanner = ({
                           alt={card.title}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
                         {card.discount && (
                           <div className="absolute top-4 right-4 bg-[#e13e00] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                             {card.discount}
