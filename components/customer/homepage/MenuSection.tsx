@@ -266,7 +266,7 @@ const MenuSection = ({
         )}
 
         {/** Promo banners like specials, buy 1 take 1 */}
-        <PromoBanner />
+        <PromoBanner type="single"/>
 
         {/** Product Grid */}
         {computedItems.length > 0 ? (
@@ -277,7 +277,7 @@ const MenuSection = ({
                 <h2 className="text-[1.75rem] font-bold text-[#1a1a1a] tracking-tight">
                   Best Sellers
                 </h2>
-                <div className="w-10 h-[3px] bg-[#e13e00] mt-4 rounded-full" />
+                <div className="w-10 h-0.75 bg-[#e13e00] mt-4 rounded-full" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -319,7 +319,7 @@ const MenuSection = ({
                     className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#e13e00] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#e13e00]/30 transition-all duration-300 hover:scale-105 overflow-hidden"
                   >
                     {/* Animated background gradient */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-[#ff4500] to-[#e13e00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <span className="absolute inset-0 bg-linear-to-r from-[#ff4500] to-[#e13e00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                     {/* Content */}
                     <span className="relative z-10">View Full Menu</span>
@@ -338,7 +338,7 @@ const MenuSection = ({
                     </svg>
 
                     {/* Shine effect */}
-                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-linear-to-r from-transparent via-white/20 to-transparent" />
                   </a>
                 </div>
               </div>
@@ -362,7 +362,7 @@ const MenuSection = ({
                   <h2 className="text-[1.75rem] font-bold text-[#1a1a1a] tracking-tight">
                     {category}
                   </h2>
-                  <div className="w-10 h-[3px] bg-[#e13e00] mt-4 rounded-full" />
+                  <div className="w-10 h-0.75 bg-[#e13e00] mt-4 rounded-full" />
                 </div>
 
                 {/* Items Grid */}
