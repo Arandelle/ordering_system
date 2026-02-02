@@ -5,7 +5,7 @@ export function useScrollToSection(){
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        const target = searchParams.get("scroll");
+        const target = searchParams.get("section");
 
         if(!target) return;
 
