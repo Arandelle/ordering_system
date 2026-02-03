@@ -4,6 +4,7 @@ import Hero from "@/components/customer/homepage/Hero";
 import HeroPromo from "@/components/customer/homepage/HeroPromo";
 import LocationsSection from "@/components/customer/homepage/Location";
 import MenuSection from "@/components/customer/homepage/MenuSection";
+import StickyScrollProducts from "@/components/customer/homepage/StickyScrollProducts";
 import StorySection from "@/components/customer/homepage/StorySection";
 import Testimonials from "@/components/customer/homepage/Testimonials";
 import MenuSectionSkeleton from "@/components/ui/MenuSectionSkeleton";
@@ -19,6 +20,7 @@ export default function Home() {
       </Suspense>
       <StorySection />
       <BestSellers />
+      <StickyScrollProducts />
       <Testimonials />
       <LocationsSection />
       <Footer />
