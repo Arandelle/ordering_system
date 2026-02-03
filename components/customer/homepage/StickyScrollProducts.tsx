@@ -83,28 +83,21 @@ const StickyScrollProducts = () => {
   const active = products[activeIndex];
 
   return (
-    <section className="relative bg-[#0f0f0f] min-h-screen">
-        
-      {/** Section header (scrolls away normally) */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-10">
-        <span className="text-sm font-semibold text-gray-500 uppercase tracking-widest">
-          Our Menu
-        </span>
-        <h2 className="text-4xl lg:text-5xl font-bold text-white mt-2">
-          Grilled to <span className="text-[#e13e00]">perfection.</span>
-        </h2>
-      </div>
-
+    <section className="relative bg-gray-50 min-h-screen">
       {/** Sticky + scroll layot */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row">
         {/**Left - sticky image panel */}
         <div className="lg:w-1/2 lg:sticky lg:top-24 lg:h-[calc(100vh-6rem)] flex items-center justify-center">
-          <div className="relative w-full max-w-md mx-auto">
-            {/** Glow behinde image */}
-            <div
-              className="absolute inset-0 blur-[60px] opacity-30 transition-colors duration-1000 rounded-full"
-              style={{ backgroundColor: active.color }}
-            />
+          <div className="relative w-full max-w-lg mx-auto">
+            {/** Section header — now inside the sticky panel */}
+            <div className="mb-8">
+              <span className="text-sm font-semibold text-[#e13e00] uppercase tracking-widest">
+                Check this out!
+              </span>
+              <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 mt-2">
+                Grilled to <span className="text-[#e13e00]">perfection.</span>
+              </h2>
+            </div>
 
             {/**Image stack - crossfade between products */}
             <div className="relative z-10 aspect-square">
@@ -119,19 +112,16 @@ const StickyScrollProducts = () => {
                   }}
                 >
                   {/** Placeholder image frame */}
-                  <div className="w-full h-full rounded-2xl overflow-hidden border border-white/5 bg-[#1a1a1a] flex items-center justify-center">
+                  <div className="w-full h-full rounded-2xl overflow-hidden border border-gray-200 bg-[#1a1a1a] flex items-center justify-center">
                     <object
                       data={product.image}
                       type="image/jpeg"
                       className="w-full h-full"
                       style={{ objectFit: "cover" }}
                     >
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#161616] rounded-2xl">
-                        <Flame
-                          size={56}
-                          className="text-[#e13e00] opacity-60 mb-3"
-                        />
-                        <span className="text-white/30 text-sm font-[550]">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white border border-gray-200 rounded-2xl shadow-sm">
+                        <Flame size={56} className="text-[#e13e00] mb-3" />
+                        <span className="text-gray-600 text-sm font-[550]">
                           {product.title}
                         </span>
                       </div>
@@ -154,7 +144,8 @@ const StickyScrollProducts = () => {
                     style={{
                       width: i === activeIndex ? "32px" : "8px",
                       opacity: i === activeIndex ? "1" : "0.25",
-                      backgroundColor: i === activeIndex ? "#e13e00" : "white",
+                      backgroundColor:
+                        i === activeIndex ? "#e13e00" : "#1a1a1a",
                     }}
                   />
                 </button>
@@ -173,6 +164,18 @@ const StickyScrollProducts = () => {
               }}
               className="lg:h-screen flex flex-col justify-center py-20 lg:py-0"
             >
+                  {/** Scroll hint — only shows when this panel is NOT the active one */}
+                <div
+                  className={`flex items-center gap-1.5 mb-3 transition-all duration-500 ${
+                    i === activeIndex
+                      ? "opacity-0 h-0 mb-0 overflow-hidden"
+                      : "opacity-100 h-auto"
+                  }`}
+                >
+                  <span className="text-md text-[#e13e00] font-medium uppercase tracking-widest">
+                    ↑↓ Scroll to view the correct product details
+                  </span>
+                </div>
               <div
                 className="transition-all duration-500"
                 style={{
@@ -181,6 +184,7 @@ const StickyScrollProducts = () => {
                     i === activeIndex ? "translateX(0)" : "translateX(12px)",
                 }}
               >
+              
                 {/** Tag */}
                 <span
                   className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
@@ -195,7 +199,7 @@ const StickyScrollProducts = () => {
 
                 {/** Title / price row */}
                 <div className="flex items-baseline gap-4 mt-4">
-                  <h3 className="text-3xl lg:text-4xl font-bold text-white">
+                  <h3 className="text-3xl lg:text-4xl font-bold text-slate-900">
                     {product.title}
                   </h3>
                   <span className="text-xl font-semibold text-[#e13e00]">
@@ -210,7 +214,7 @@ const StickyScrollProducts = () => {
                 />
 
                 {/** Description */}
-                <p className="text-gray-400 text-base lg:text-lg leading-relaxed max-w-md">
+                <p className="text-gray-600 text-base lg:text-lg leading-relaxed max-w-md">
                   {product.description}
                 </p>
 
@@ -219,9 +223,9 @@ const StickyScrollProducts = () => {
                   {product.details.map((d) => (
                     <span
                       key={d}
-                      className="flex items-center gap-1.5 border border-white/10 bg-white/5 text-gray-300 text-xs font-medium px-3 py-1.5 rounded-full"
+                      className="flex items-center gap-1.5 border border-gray-200 bg-white text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full"
                     >
-                        <ChefHat size={11} className="text-[#e13e00]"/>
+                      <ChefHat size={11} className="text-[#e13e00]" />
                       {d}
                     </span>
                   ))}
