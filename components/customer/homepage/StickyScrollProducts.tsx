@@ -136,7 +136,7 @@ const StickyScrollProducts = () => {
               {Array.from({ length: products.length }).map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveIndex(i)}
+                  onClick={() => {setActiveIndex(i);  contentPanels.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" });}}
                   className="transition-all duration-300 cursor-pointer"
                 >
                   <div
