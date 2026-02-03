@@ -43,7 +43,7 @@ const MenuSection = ({
 
     // Landing page logic
     if (variant === "landing") {
-      items = items.filter((item) => item.isBestSeller).slice(0, 7);
+      items = items.filter((item) => item.price > 300 && item.description).slice(0, 7);
     }
 
     // Full menu logic
@@ -140,7 +140,7 @@ const MenuSection = ({
             Our Menu
           </p>
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">
-            Mga Paboritong Putahe
+           Favourite Dishes
           </h2>
           <p className="text-gray-500 max-w-2xl mx-auto">
             From our signature Chicken Inasal to mouthwatering BBQ, every dish
@@ -275,7 +275,7 @@ const MenuSection = ({
             <>
               <div className="mb-10">
                 <h2 className="text-[1.75rem] font-bold text-[#1a1a1a] tracking-tight">
-                  Best Sellers
+                  Customer Favourites 🔥
                 </h2>
                 <div className="w-10 h-0.75 bg-[#e13e00] mt-4 rounded-full" />
               </div>
