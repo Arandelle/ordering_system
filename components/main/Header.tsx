@@ -8,7 +8,7 @@ import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 
 const Header = () => {
   useScrollToSection();
-  const orderUrl = useSubdomainPath("/menu", "food");
+  const orderUrl = useSubdomainPath("/", "food");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const NAV_ITEMS = [
