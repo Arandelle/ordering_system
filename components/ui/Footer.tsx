@@ -17,22 +17,25 @@ const Footer = ({
 }: {
   variant?: "marketing" | "customer";
 }) => {
+
   const currentYear = new Date().getFullYear();
   const homeUrl = useSubdomainPath("/", "");
+  const menuUrl = useSubdomainPath("/menu", "food");
+  const bestSellerUrl = useSubdomainPath("/?section=bestsellers", "food");
+  const ourStoryUrl = useSubdomainPath("/?section=story", "food");
 
   const footerQuickLinks = {
     customer: [
       { name: "Home", href: homeUrl },
-      { name: "Menu", href: "#menu-section" },
-      { name: "Best Sellers", href: "#bestsellers-section" },
-      { name: "Our Story", href: "#story-section" },
-      { name: "Order Now", href: "#cta-section" },
+      { name: "Menu", href: menuUrl },
+      { name: "Best Sellers", href: bestSellerUrl },
+      { name: "Our Story", href: ourStoryUrl},
     ],
 
     marketing: [
-      { name: "Menu", href: "#menu-section" },
-      { name: "News", href: "#news-section" },
-      { name: "Franchise", href: "#franchise-section" },
+      { name: "Menu", href: menuUrl },
+      { name: "News", href: "?section=news" },
+      { name: "Franchise", href: "?section=franchise" },
     ],
   };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useScrollToSection } from "@/hooks/useScrollToSection";
 import { Calendar, ChevronDown } from "lucide-react";
 import React, { useState } from "react";
 
@@ -17,6 +18,9 @@ type ExpandedCardState = {
 };
 
 const NewsSection = () => {
+
+  useScrollToSection();
+
   const newsArticles: NewsArticle[] = [
     {
       id: 1,
@@ -106,7 +110,7 @@ const NewsSection = () => {
   };
 
   return (
-    <section className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
+    <section id="news-section" className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/**Section header */}
         <div className="text-center mb-16">

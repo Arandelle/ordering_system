@@ -77,7 +77,7 @@ const BestSellers: React.FC = () => {
             >
               <div className="flex">
                 {/* Image */}
-                <div className="w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 relative overflow-hidden">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 shrink-0 relative overflow-hidden">
                   <img 
                     src={item.image} 
                     alt={item.name}
@@ -136,7 +136,7 @@ const BestSellers: React.FC = () => {
         </div>
         
         {/* Daily Special Banner */}
-        <div className={`mt-12 bg-gradient-to-r from-[#e13e00] to-[#ff6b35] rounded-2xl p-6 lg:p-8 text-white transform transition-all duration-700 delay-500 ${
+        <div className={`mt-12 bg-linear-to-r from-[#e13e00] to-[#ff6b35] rounded-2xl p-6 lg:p-8 text-white transform transition-all duration-700 delay-500 ${
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
