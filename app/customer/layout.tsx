@@ -1,4 +1,5 @@
 import CartDrawer from "@/components/CartDrawer";
+import Footer from "@/components/customer/homepage/Footer";
 import Header from "@/components/customer/homepage/Header";
 import { CartProvider } from "@/contexts/CartContext";
 import { OrderProvider } from "@/contexts/OrderContext";
@@ -12,6 +13,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
           <Header />
           <CartDrawer />
           {children}
+          <Footer />
         </CartProvider>
       </OrderProvider>
     </>
