@@ -2,7 +2,7 @@
 
 import { useScrollToSection } from "@/hooks/useScrollToSection";
 import { Calendar, ChevronDown } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface NewsArticle {
   id: number;
@@ -17,8 +17,11 @@ type ExpandedCardState = {
   [key: number]: boolean;
 };
 
-const NewsSection = () => {
+type VisibleCardsState = {
+  [key: number]: boolean;
+};
 
+const NewsSection = () => {
   useScrollToSection();
 
   const newsArticles: NewsArticle[] = [
@@ -84,7 +87,10 @@ const NewsSection = () => {
     },
   ];
 
+  const [isVisible, setIsVisible] = useState(false);
   const [expandedCards, setExpandedCards] = useState<ExpandedCardState>({});
+  const [visibleCards, setVisibleCards] = useState<VisibleCardsState>({});
+  const cardRefs = useRef<(HTMLElement | null)[]>([]);
 
   const TEXT_LIMIT = 120;
 
@@ -109,12 +115,64 @@ const NewsSection = () => {
     return text.substring(0, limit) + "....";
   };
 
+  // Header animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    const section = document.getElementById("news-section");
+    if (section) observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Individual card animations
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    cardRefs.current.forEach((card, index) => {
+      if (!card) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setVisibleCards((prev) => ({
+              ...prev,
+              [index]: true,
+            }));
+            observer.disconnect(); // Stop observing once visible
+          }
+        },
+        {
+          threshold: 0.15,
+          rootMargin: "0px 0px -50px 0px",
+        }
+      );
+
+      observer.observe(card);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
   return (
     <section id="news-section" className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/**Section header */}
+        {/* Section header */}
         <div className="text-center mb-16">
-          <div className="inline-block">
+          <div
+            className={`inline-block transform transition-all duration-700 ${
+              isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+            }`}
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="h-px w-12 bg-linear-to-r from-transparent to-[#e13e00]"></div>
               <span className="text-[#e13e00] font-bold tracking-wider uppercase text-sm">
@@ -132,15 +190,22 @@ const NewsSection = () => {
           </div>
         </div>
 
-        {/** News Grid */}
+        {/* News Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {newsArticles.map((article, index) => (
             <article
               key={article.id}
-              className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 group hover:-translate-y-2"
-              style={{ animationDelay: `${index * 100}ms` }}
+              ref={(el) => {cardRefs.current[index] = el}}
+              className={`bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-700 group hover:-translate-y-2 transform ${
+                visibleCards[index]
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-16 opacity-0"
+              }`}
+              style={{
+                transitionDelay: visibleCards[index] ? `${index * 100}ms` : "0ms",
+              }}
             >
-              {/** Images */}
+              {/* Image */}
               <div className="relative h-56 overflow-hidden">
                 <img
                   src={article.image}
@@ -156,16 +221,16 @@ const NewsSection = () => {
                 </div>
               </div>
 
-              {/** Content */}
+              {/* Content */}
               <div className="p-6">
-                {/** Date */}
+                {/* Date */}
                 <div className="flex items-center gap-2 mb-3">
                   <Calendar size={14} className="text-[#e13e00]" />
                   <time className="text-sm text-stone-500 font-medium">
                     {formatDate(article.date)}
                   </time>
                 </div>
-                {/** Title */}
+                {/* Title */}
                 <h3 className="text-xl font-bold text-stone-900 mb-3 leading-snug group-hover:text-orange-600 transition-colors duration-300">
                   {article.title}
                 </h3>
@@ -177,7 +242,7 @@ const NewsSection = () => {
                     : truncateText(article.description, TEXT_LIMIT)}
                 </p>
 
-                {/** Read more button */}
+                {/* Read more button */}
                 {article.description.length >= TEXT_LIMIT && (
                   <button
                     onClick={() => toggleExpand(article.id)}
@@ -186,7 +251,12 @@ const NewsSection = () => {
                     <span>
                       {expandedCards[article.id] ? "Show less" : "Read More"}
                     </span>
-                    <ChevronDown size={20} className={`transform transition-transform duration-300 ${expandedCards[article.id] && "rotate-180"} `}/>
+                    <ChevronDown
+                      size={20}
+                      className={`transform transition-transform duration-300 ${
+                        expandedCards[article.id] && "rotate-180"
+                      }`}
+                    />
                   </button>
                 )}
               </div>
