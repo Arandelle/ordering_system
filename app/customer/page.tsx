@@ -1,6 +1,4 @@
 import BestSellers from "@/components/customer/homepage/BestSellers";
-import Footer from "@/components/customer/homepage/Footer";
-import Hero from "@/components/customer/homepage/Hero";
 import HeroPromo from "@/components/customer/homepage/HeroPromo";
 import LocationsSection from "@/components/customer/homepage/Location";
 import MenuSection from "@/components/customer/homepage/MenuSection";

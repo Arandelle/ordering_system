@@ -1,4 +1,5 @@
 "use client";
+
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import {
   Clock,
@@ -11,17 +12,29 @@ import {
 } from "lucide-react";
 import React from "react";
 
-const Footer = () => {
+const Footer = ({
+  variant = "customer",
+}: {
+  variant?: "marketing" | "customer";
+}) => {
   const currentYear = new Date().getFullYear();
   const homeUrl = useSubdomainPath("/", "");
 
-  const quickLinks = [
-    { name: "Home", href: homeUrl },
-    { name: "Menu", href: "#menu-section" },
-    { name: "Best Sellers", href: "#bestsellers-section" },
-    { name: "Our Story", href: "#story-section" },
-    { name: "Order Now", href: "#cta-section" },
-  ];
+  const footerQuickLinks = {
+    customer: [
+      { name: "Home", href: homeUrl },
+      { name: "Menu", href: "#menu-section" },
+      { name: "Best Sellers", href: "#bestsellers-section" },
+      { name: "Our Story", href: "#story-section" },
+      { name: "Order Now", href: "#cta-section" },
+    ],
+
+    marketing: [
+      { name: "Menu", href: "#menu-section" },
+      { name: "News", href: "#news-section" },
+      { name: "Franchise", href: "#franchise-section" },
+    ],
+  };
 
   const legalLinks = [
     { name: "Privacy Policy", href: "#" },
@@ -79,7 +92,7 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-3">
-              {quickLinks.map((link) => (
+              {footerQuickLinks[variant].map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}

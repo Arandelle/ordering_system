@@ -1,7 +1,6 @@
 import About from '@/components/main/About';
 import ContactUs from '@/components/main/ContactUs';
 import HeroVideo from '@/components/main/HeroVideo';
-import MainFooterSection from '@/components/main/MainFooterSection';
 import MainLocationSection from '@/components/main/MainLocationSection';
 import MissionVision from '@/components/main/MissionVision';
 import NewsSection from '@/components/main/NewsSection';
@@ -17,7 +16,6 @@ const MainPage = () => {
     <NewsSection />
     <MainLocationSection /> {/** Included how to franchise and CTA button*/}
     <ContactUs />
-    <MainFooterSection />
   </>
   )
 }
