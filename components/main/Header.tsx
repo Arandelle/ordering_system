@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useScrollToSection } from "@/hooks/useScrollToSection";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
@@ -12,12 +12,26 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const NAV_ITEMS = [
-    { label: "About", section: "about" },
     { label: "Products", section: "products-main" },
+    { label: "About", section: "about" },
+    { label: "News", section: "news" },
     { label: "Franchise", section: "franchise" },
     { label: "Locations", section: "locations" },
     { label: "Contact", section: "contact" },
   ];
+
+  function useScrollLink(section: string) {
+    const pathname = usePathname();
+
+    return (e: React.MouseEvent) => {
+      if (pathname === "/") {
+        e.preventDefault();
+        document
+          .getElementById(`${section}-section`)
+          ?.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+  }
 
   return (
     <nav className="sticky top-0 bg-white z-50 border-b border-gray-200">
@@ -55,6 +69,7 @@ const Header = () => {
               <Link
                 key={item.section}
                 href={`/?section=${item.section}`}
+                onClick={useScrollLink(item.section)}
                 className="text-gray-800 font-[550] hover:text-[#e13e00] transition-colors"
               >
                 {item.label}
