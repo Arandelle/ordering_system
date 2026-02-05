@@ -1,6 +1,10 @@
 "use client";
 
 import { menuData } from "@/data/menuData";
+import {
+  useIntersectionAnimation,
+  useIntersectionAnimationList,
+} from "@/hooks/useIntersectionAnimation";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -75,13 +79,50 @@ const ProductMain = () => {
     }
   };
 
+  // Keep observing so header animate in and out on scroll
+  const { ref: headerRef, isVisible: isHeaderVisible } =
+    useIntersectionAnimation({ threshold: 0.2, triggerOnce: false });
+
+  const { itemRefs: cardRefs, visibleItems: visibleCards } =
+    useIntersectionAnimationList<HTMLElement>(menuList.length, {
+      threshold: 0.15,
+      rootMargin: "0px 0px -50px 0px",
+      triggerOnce: false,
+    });
+  
+  const { itemRefs: mobileCardRef, visibleItems: mobileVisibleCards } =
+    useIntersectionAnimationList<HTMLElement>(visibleProducts.length, {
+      threshold: 0.15,
+      rootMargin: "0px 0px -50px 0px",
+      triggerOnce: false,
+    });
+
+  const headerAnimationStyle = `transform transition-all duration-700  ${isHeaderVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`;
+
+  const cardAnimationStyle = (
+    index: number,
+    type: "mobileVisibleCards" | "visibleCards" = "visibleCards",
+  ) => {
+    const visibilityMap =
+      type === "mobileVisibleCards" ? mobileVisibleCards : visibleCards;
+
+    return `transform transition-all duration-700 ${
+      visibilityMap[index]
+        ? "translate-y-0 opacity-100"
+        : "translate-y-10 opacity-0"
+    }`;
+  };
+
   return (
     <section
       id="products-main-section"
       className="pt-20 bg-white gap-8 flex flex-col"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div
+          ref={headerRef}
+          className={`text-center mb-16 ${headerAnimationStyle}`}
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             OUR SIGNATURE PRODUCTS
           </h2>
@@ -95,8 +136,19 @@ const ProductMain = () => {
         <div className="relative">
           {/* Desktop & Tablet: Grid */}
           <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {menuList.map((product) => (
-              <div key={product.id} className="bg-white border border-gray-200">
+            {menuList.map((product, index) => (
+              <div
+                key={product.id}
+                ref={(el) => {
+                  cardRefs.current[index] = el;
+                }}
+                className={`bg-white border border-gray-200 ${cardAnimationStyle(index)}`}
+                style={{
+                  transitionDelay: visibleCards[index]
+                    ? `${index * 100}ms`
+                    : "0ms",
+                }}
+              >
                 <div className="aspect-square overflow-hidden">
                   <img
                     src={product.image}
@@ -127,10 +179,18 @@ const ProductMain = () => {
           {/* Mobile: Carousel with 2 items */}
           <div className="md:hidden relative">
             <div className="flex gap-4 overflow-hidden">
-              {visibleProducts.map((product) => (
+              {visibleProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  className="bg-white border border-gray-200 shrink-0 w-[calc(50%-8px)]"
+                  ref={(el) => {
+                    mobileCardRef.current[index] = el;
+                  }}
+                  className={`bg-white border border-gray-200 shrink-0 w-[calc(50%-8px)] ${cardAnimationStyle(index, "mobileVisibleCards")}`}
+                  style={{
+                    transitionDelay: mobileVisibleCards[index]
+                      ? `${index * 100}ms`
+                      : "0ms",
+                  }}
                 >
                   <div className="aspect-square overflow-hidden">
                     <img
