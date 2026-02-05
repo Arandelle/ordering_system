@@ -8,7 +8,8 @@ import type { NextRequest } from 'next/server'
  * - order.localhost:3000 → routes to /customer (ordering app)
  */
 export function proxy(request: NextRequest) {
-  const url = request.nextUrl.clone()
+  //  By calling .clone(), you get a new URL instance that you can safely modify
+  const url = request.nextUrl.clone() 
   const hostname = request.headers.get('host') || ''
   const { pathname } = url
   
@@ -45,9 +46,10 @@ export function proxy(request: NextRequest) {
  * - images: Static images from public/images folder
  * - main: Already routed pages (prevents loop)
  * - customer: Already routed pages (prevents loop)
+ * - Add more
  */
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos|privacy-policy).*)',
   ],
 }
