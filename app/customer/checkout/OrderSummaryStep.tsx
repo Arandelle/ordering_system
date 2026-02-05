@@ -39,7 +39,7 @@ const OrderSummaryStep = ({
       </div>
 
       {/**Cart Items */}
-      <div className="space-y-4 h-[calc(100vh/2)] overflow-y-auto hide-scrollbar">
+      <div className="space-y-4 max-h-[calc(100vh/2)] overflow-y-auto hide-scrollbar">
         {cartItems.map((item) => (
           <div key={item.id} className="flex gap-4 bg-linear-to-br from-stone-100 via-amber-50 to-stone-100/50 rounded-xl p-4">
             <img

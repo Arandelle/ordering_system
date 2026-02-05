@@ -225,7 +225,7 @@ const CheckoutPage: React.FC = () => {
       </header>
 
       {/** Progress steps */}
-      <div className="bg-white border-b border-gray-100 sticky top-18 z-40">
+      <div className="bg-white border-b border-gray-100 sticky top-[72px] z-40">
         <div className="max-w-lg mx-auto p-4">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => {
