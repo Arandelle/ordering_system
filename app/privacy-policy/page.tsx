@@ -1,4 +1,4 @@
-import PrivacyPolicy from '@/components/main/PrivacyPolicy'
+import PrivacyPolicy from '@/app/privacy-policy/PrivacyPolicy'
 import React from 'react'
 
 const page = () => {
