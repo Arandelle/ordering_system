@@ -1,8 +1,12 @@
 "use client";
 
 import { useScrollToSection } from "@/hooks/useScrollToSection";
+import {
+  useIntersectionAnimation,
+  useIntersectionAnimationList,
+} from "@/hooks/useIntersectionAnimation";
 import { Calendar, ChevronDown } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 
 interface NewsArticle {
   id: number;
@@ -14,10 +18,6 @@ interface NewsArticle {
 }
 
 type ExpandedCardState = {
-  [key: number]: boolean;
-};
-
-type VisibleCardsState = {
   [key: number]: boolean;
 };
 
@@ -87,10 +87,21 @@ const NewsSection = () => {
     },
   ];
 
-  const [isVisible, setIsVisible] = useState(false);
   const [expandedCards, setExpandedCards] = useState<ExpandedCardState>({});
-  const [visibleCards, setVisibleCards] = useState<VisibleCardsState>({});
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
+
+  // Animate header
+  const { ref: headerRef, isVisible: headerVisible } = useIntersectionAnimation({
+    threshold: 0.2,
+    triggerOnce: false
+  });
+
+  // Animate cards independently
+  const { itemRefs: cardRefs, visibleItems: visibleCards } =
+    useIntersectionAnimationList<HTMLElement>(newsArticles.length, {
+      threshold: 0.15,
+      rootMargin: "0px 0px -50px 0px",
+      triggerOnce: false
+    });
 
   const TEXT_LIMIT = 120;
 
@@ -115,72 +126,24 @@ const NewsSection = () => {
     return text.substring(0, limit) + "....";
   };
 
-  // Header animation
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    const section = document.getElementById("news-section");
-    if (section) observer.observe(section);
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Individual card animations
-  useEffect(() => {
-    const observers: IntersectionObserver[] = [];
-
-    cardRefs.current.forEach((card, index) => {
-      if (!card) return;
-
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setVisibleCards((prev) => ({
-              ...prev,
-              [index]: true,
-            }));
-            observer.disconnect(); // Stop observing once visible
-          }
-        },
-        {
-          threshold: 0.15,
-          rootMargin: "0px 0px -50px 0px",
-        }
-      );
-
-      observer.observe(card);
-      observers.push(observer);
-    });
-
-    return () => observers.forEach((o) => o.disconnect());
-  }, []);
-
   return (
     <section id="news-section" className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
-        <div className="text-center mb-16">
+        <div ref={headerRef} className="text-center mb-16">
           <div
             className={`inline-block transform transition-all duration-700 ${
-              isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+              headerVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-px w-12 bg-linear-to-r from-transparent to-[#e13e00]"></div>
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#e13e00]"></div>
               <span className="text-[#e13e00] font-bold tracking-wider uppercase text-sm">
                 Latest Updates
               </span>
-              <div className="h-px w-12 bg-linear-to-r from-[#e13e00] to-transparent"></div>
+              <div className="h-px w-12 bg-gradient-to-r from-[#e13e00] to-transparent"></div>
             </div>
-            <h2 className="text-5xl lg:text-6xl font-bold bg-linear-to-r from-[#e13e00] via-[#c13500] to-[#e13e00]/60 bg-clip-text text-transparent mb-4">
+            <h2 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#e13e00] via-[#c13500] to-[#e13e00]/60 bg-clip-text text-transparent mb-4">
               News & Events
             </h2>
             <p className="text-stone-600 text-lg max-w-2xl mx-auto">
@@ -212,7 +175,7 @@ const NewsSection = () => {
                   alt={article.title}
                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 {/* Category Badge */}
                 <div className="absolute top-4 left-4">
                   <span className="inline-block px-4 py-1.5 bg-[#e13e00] text-white text-xs font-bold rounded-full shadow-lg">
