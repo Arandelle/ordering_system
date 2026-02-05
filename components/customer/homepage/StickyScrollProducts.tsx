@@ -122,7 +122,7 @@ const StickyScrollProducts = () => {
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-white border border-gray-200 rounded-2xl shadow-sm">
                         <Flame size={56} className="text-[#e13e00] mb-3" />
                         <span className="text-gray-600 text-sm font-[550]">
-                          {product.title}
+                          No image found
                         </span>
                       </div>
                     </object>
