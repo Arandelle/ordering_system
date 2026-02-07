@@ -25,7 +25,6 @@ export interface OrderType {
   };
   totals: {
     subTotal: number;
-    deliveryFee: number;
     total: number;
   };
   estimatedTime: string;

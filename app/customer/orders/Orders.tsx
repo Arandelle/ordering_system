@@ -292,14 +292,6 @@ const Orders = () => {
                           ₱{order.totals.subTotal.toFixed(2)}
                         </span>
                       </div>
-                      {order.totals.deliveryFee > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Delivery Fee</span>
-                          <span className="font-medium">
-                            ₱{order.totals.deliveryFee.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
                       <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                         <span className="text-gray-900">Total</span>
                         <span className="text-[#e13e00]">

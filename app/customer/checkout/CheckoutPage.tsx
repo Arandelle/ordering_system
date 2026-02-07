@@ -43,16 +43,7 @@ const CheckoutPage: React.FC = () => {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     method: "cod",
   });
-  const [deliveryErrors, setDeliveryErrors] = useState<Record<string, string>>(
-    {},
-  );
-  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>(
-    {},
-  );
 
-  const deliveryFee =
-    deliveryInfo.type === "pickup" ? 0 : totalPrice >= 500 ? 0 : 50;
-  const totalAmount = totalPrice + deliveryFee;
 
   const steps = [
     { id: "summary", label: "Order", icon: ShoppingBag },
@@ -64,36 +55,6 @@ const CheckoutPage: React.FC = () => {
   const getStepIndex = (step: CheckoutStep) => {
     const index = steps.findIndex((s) => s.id === step);
     return index === -1 ? steps.length : index;
-  };
-
-  const validateDelivery = (): boolean => {
-    const errors: Record<string, string> = {};
-    if (!deliveryInfo.fullname.trim()) {
-      errors.fullname = "Fullname is required";
-    }
-
-    if (!deliveryInfo.phone.trim()) {
-      errors.phone = "Phone number is required";
-    } else if (
-      !/^(\+63|0)?[0-9]{10,11}$/.test(deliveryInfo.phone.replace(/\s/g, ""))
-    ) {
-      errors.phone = "Please enter a valid phone number";
-    }
-
-    if (deliveryInfo.type === "delivery") {
-      if (!deliveryInfo.address.trim()) {
-        errors.address = "Street address is required";
-      }
-      if (!deliveryInfo.city.trim()) {
-        errors.city = "City is required";
-      }
-      if (!deliveryInfo.barangay.trim()) {
-        errors.barangay = "Barangay is required";
-      }
-    }
-
-    setDeliveryErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
   const isValidExpiry = (expiry: string): string | null => {
@@ -155,7 +116,6 @@ const CheckoutPage: React.FC = () => {
       }
     }
 
-    setPaymentErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
@@ -273,7 +233,6 @@ const CheckoutPage: React.FC = () => {
           <OrderSummaryStep
             onNext={() => handleNext("summary")}
             onBack={() => handleBack("summary")}
-            deliveryFee={deliveryFee}
             onSetCheckoutUrl={setCheckoutUrl}
           />
         )}
@@ -306,7 +265,6 @@ const CheckoutPage: React.FC = () => {
           <ConfirmationStep
             deliveryInfo={deliveryInfo}
             paymentInfo={paymentInfo}
-            deliveryFee={deliveryFee}
             onNext={() => handleNext("success")}
             onBack={() => handleBack('confirmation')}
             onEditDelivery={() => setCurrentStep('delivery')}

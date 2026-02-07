@@ -216,10 +216,6 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
             <span className="text-gray-600">Subtotal</span>
             <span>₱{order.totals.subTotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Delivery Fee</span>
-            <span>₱{order.totals.deliveryFee.toFixed(2)}</span>
-          </div>
           <div className="flex justify-between font-semibold text-base pt-2 border-t">
             <span>Total</span>
             <span>₱{order.totals.total.toFixed(2)}</span>
