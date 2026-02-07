@@ -2,21 +2,24 @@ import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
+import { toast } from "sonner";
 
 interface OrderSummaryStepProps {
   onNext: () => void;
   onBack: () => void;
   deliveryFee?: number;
+  onSetCheckoutUrl: (url: string) => void;
 }
 
 const OrderSummaryStep = ({
   onNext,
   onBack,
   deliveryFee,
+  onSetCheckoutUrl
 }: OrderSummaryStepProps) => {
-  const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart,} = useCart();
   const router = useRouter();
+
 
   if (cartItems.length === 0) {
     return (
@@ -30,6 +33,94 @@ const OrderSummaryStep = ({
       </div>
     );
   }
+
+  const handlePlaceOrder = async () => {
+
+    try {
+      // FRONTEND VALIDATION - Check minimum amount before API call
+      const MINIMUM_AMOUNT = 100;
+      
+      if (totalPrice < MINIMUM_AMOUNT) {
+        toast.error("Minimum Order Amount", {
+          description: `Your order total is ₱${totalPrice.toFixed(2)}. The minimum amount for online payment is ₱${MINIMUM_AMOUNT.toFixed(2)}. Please add more items to your cart.`,
+          duration: 6000,
+        });
+        return;
+      }
+
+      // Call PayMongo API to create payment link
+      const response = await fetch("/api/paymongo/create-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: Number(totalPrice + (totalPrice * 0.12)),
+          description: `Harrison BBQ Order - ${new Date().toLocaleDateString()}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Parse user-friendly error messages from PayMongo
+        let userMessage = "Unable to create payment link. Please try again.";
+        
+        if (data.error?.errors && Array.isArray(data.error.errors)) {
+          const errorDetails = data.error.errors[0];
+          
+          // Handle specific PayMongo error codes
+          switch (errorDetails.code) {
+            case "parameter_below_minimum":
+              userMessage = `Order amount is below the minimum requirement of ₱100.00. Please add more items to your cart.`;
+              break;
+            case "parameter_above_maximum":
+              userMessage = `Order amount exceeds the maximum limit. Please contact support.`;
+              break;
+            case "parameter_invalid":
+              userMessage = `Invalid payment details. Please check your information and try again.`;
+              break;
+            case "authentication_failed":
+              userMessage = `Payment service is temporarily unavailable. Please try again later or contact support.`;
+              break;
+            default:
+              // Show the actual error detail if it's user-friendly
+              if (errorDetails.detail && errorDetails.detail.length < 100) {
+                userMessage = errorDetails.detail;
+              }
+          }
+        } else if (data.error) {
+          // Fallback for simple error messages
+          userMessage = typeof data.error === 'string' ? data.error : userMessage;
+        }
+        
+        toast.error("Payment Error", {
+          description: userMessage,
+          duration: 6000,
+        });
+        
+        throw new Error(userMessage);
+      }
+
+      // Validate the response has the checkout_url
+      if (!data.checkout_url) {
+        throw new Error("Payment link was not generated. Please try again or contact support.");
+      }
+
+      // Simulate order processing
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+
+      // Save checkout URL and order number
+      onSetCheckoutUrl(data.checkout_url);
+
+      onNext();
+      window.scrollTo(0, 0);
+    } catch (error: any) {
+      // Error already shown via toast
+      console.error("Payment error:", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -90,18 +181,10 @@ const OrderSummaryStep = ({
 
       {/**Order Totals */}
       <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-        <div className="flex justify-between text-gray-600">
-          <span>Subtotal</span>
-          <span>₱{totalPrice.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-gray-600">
-          <span>Delivery Fee</span>
-          <span>{totalPrice > 500 ? "Free" : `₱ ${deliveryFee}`}</span>
-        </div>
         <div className="border-t border-gray-200 pt-3 flex justify-between">
           <span className="font-bold text-gray-900">Total</span>
           <span className="font-bold text-xl text-[#e13e00]">
-            ₱{(totalPrice + 50).toFixed(2)}
+            ₱{(totalPrice).toFixed(2)}
           </span>
         </div>
       </div>
@@ -115,10 +198,10 @@ const OrderSummaryStep = ({
         </button>
         {/** Continue Button */}
         <button
-          onClick={onNext}
+          onClick={() => {onNext(); handlePlaceOrder()}}
           className="flex-1 bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer"
         >
-          Continue to Delivery
+          Continue to Payment
         </button>
       </div>
     </div>

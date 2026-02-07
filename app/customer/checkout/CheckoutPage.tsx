@@ -15,6 +15,7 @@ import OrderSummaryStep from "./OrderSummaryStep";
 import DeliveryStep, { DeliveryInfo } from "./DeliveryStep";
 import PaymentStep, { PaymentInfo } from "./PaymentStep";
 import ConfirmationStep from "./ConfirmationStep";
+import PayToLink from "./PayToLink";
 
 type CheckoutStep =
   | "summary"
@@ -24,6 +25,7 @@ type CheckoutStep =
   | "success";
 
 const CheckoutPage: React.FC = () => {
+   const [checkoutUrl, setCheckoutUrl] = useState("");
   const router = useRouter();
   const { totalPrice } = useCart();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
@@ -54,7 +56,7 @@ const CheckoutPage: React.FC = () => {
 
   const steps = [
     { id: "summary", label: "Order", icon: ShoppingBag },
-    { id: "delivery", label: "Delivery", icon: Truck },
+    // { id: "delivery", label: "Delivery", icon: Truck },
     { id: "payment", label: "Payment", icon: CreditCard },
     { id: "confirmation", label: "Confirm", icon: CheckCircle },
   ];
@@ -160,13 +162,14 @@ const CheckoutPage: React.FC = () => {
   const handleNext = (from: CheckoutStep) => {
     switch (from) {
       case "summary":
-        setCurrentStep("delivery");
+        // setCurrentStep("delivery");
+         setCurrentStep("payment");
         break;
-      case "delivery":
-        if (validateDelivery()) {
-          setCurrentStep("payment");
-        }
-        break;
+      // case "delivery":
+      //   if (validateDelivery()) {
+      //     setCurrentStep("payment");
+      //   }
+      //   break;
       case "payment":
         if (validatePayment()) {
           setCurrentStep("confirmation");
@@ -185,11 +188,12 @@ const CheckoutPage: React.FC = () => {
       case "summary":
         router.push("/");
         break;
-      case "delivery":
-        setCurrentStep("summary");
-        break;
+      // case "delivery":
+      //   setCurrentStep("summary");
+      //   break;
       case "payment":
-        setCurrentStep("delivery");
+        // setCurrentStep("delivery");
+        setCurrentStep("summary");
         break;
       case "confirmation":
         setCurrentStep("payment");
@@ -216,7 +220,7 @@ const CheckoutPage: React.FC = () => {
             <h1 className="text-white font-bold text-lg">Checkout</h1>
             <p className="text-gray-400 text-sm">
               {currentStep === "summary" && "Review your order"}
-              {currentStep === "delivery" && "Delivery options"}
+              {/* {currentStep === "delivery" && "Delivery options"} */}
               {currentStep === "payment" && "Payment method"}
               {currentStep === "confirmation" && "Confirm order"}
             </p>
@@ -270,9 +274,10 @@ const CheckoutPage: React.FC = () => {
             onNext={() => handleNext("summary")}
             onBack={() => handleBack("summary")}
             deliveryFee={deliveryFee}
+            onSetCheckoutUrl={setCheckoutUrl}
           />
         )}
-        {currentStep === "delivery" && (
+        {/* {currentStep === "delivery" && (
           <DeliveryStep
             deliveryInfo={deliveryInfo}
             setDeliveryInfo={setDeliveryInfo}
@@ -280,8 +285,8 @@ const CheckoutPage: React.FC = () => {
             onNext={() => handleNext("delivery")}
             onBack={() => handleBack("delivery")}
           />
-        )}
-
+        )} */}
+{/* 
         {currentStep === "payment" && (
           <PaymentStep
             paymentInfo={paymentInfo}
@@ -291,6 +296,10 @@ const CheckoutPage: React.FC = () => {
             onBack={() => handleBack("payment")}
             totalAmount={totalAmount}
           />
+        )} */}
+
+        {currentStep === "payment" && (
+          <PayToLink checkoutUrl = {checkoutUrl}/>
         )}
 
         {(currentStep === "confirmation" || currentStep === "success") && (
