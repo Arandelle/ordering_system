@@ -8,7 +8,7 @@ import {
   ShoppingBag,
   Truck,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 import OrderSummaryStep from "./OrderSummaryStep";
@@ -25,7 +25,7 @@ type CheckoutStep =
   | "success";
 
 const CheckoutPage: React.FC = () => {
-   const [checkoutUrl, setCheckoutUrl] = useState("");
+  const [checkoutUrl, setCheckoutUrl] = useState("");
   const router = useRouter();
   const { totalPrice } = useCart();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
@@ -43,7 +43,6 @@ const CheckoutPage: React.FC = () => {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     method: "cod",
   });
-
 
   const steps = [
     { id: "summary", label: "Order", icon: ShoppingBag },
@@ -119,11 +118,40 @@ const CheckoutPage: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
+  useEffect(() => {
+    const savedPayment = localStorage.getItem("active_payment");
+
+    if (!savedPayment) {
+      // No active payment → stay on order summary
+      setCurrentStep("summary");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedPayment);
+
+      // Optional: expire abandoned links after 30 minutes
+      const MAX_AGE = 30 * 60 * 1000;
+      if (Date.now() - parsed.createdAt > MAX_AGE) {
+        localStorage.removeItem("active_payment");
+        setCurrentStep("summary");
+        return;
+      }
+
+      // Active payment exists → resume payment step
+      setCheckoutUrl(parsed.checkoutUrl);
+      setCurrentStep("payment");
+    } catch {
+      // Corrupted data → reset safely
+      localStorage.removeItem("active_payment");
+      setCurrentStep("summary");
+    }
+  }, []);
   const handleNext = (from: CheckoutStep) => {
     switch (from) {
       case "summary":
         // setCurrentStep("delivery");
-         setCurrentStep("payment");
+        setCurrentStep("payment");
         break;
       // case "delivery":
       //   if (validateDelivery()) {
@@ -153,13 +181,15 @@ const CheckoutPage: React.FC = () => {
       //   break;
       case "payment":
         // setCurrentStep("delivery");
+        localStorage.removeItem("active_payment");
+        setCheckoutUrl("");
         setCurrentStep("summary");
         break;
       case "confirmation":
         setCurrentStep("payment");
         break;
       case "success":
-        router.push('/');
+        router.push("/");
         break;
     }
     window.scrollTo(0, 0);
@@ -245,7 +275,7 @@ const CheckoutPage: React.FC = () => {
             onBack={() => handleBack("delivery")}
           />
         )} */}
-{/* 
+        {/* 
         {currentStep === "payment" && (
           <PaymentStep
             paymentInfo={paymentInfo}
@@ -257,18 +287,16 @@ const CheckoutPage: React.FC = () => {
           />
         )} */}
 
-        {currentStep === "payment" && (
-          <PayToLink checkoutUrl = {checkoutUrl}/>
-        )}
+        {currentStep === "payment" && <PayToLink checkoutUrl={checkoutUrl} setCurrentStep={setCurrentStep} />}
 
         {(currentStep === "confirmation" || currentStep === "success") && (
           <ConfirmationStep
             deliveryInfo={deliveryInfo}
             paymentInfo={paymentInfo}
             onNext={() => handleNext("success")}
-            onBack={() => handleBack('confirmation')}
-            onEditDelivery={() => setCurrentStep('delivery')}
-            onEditPayment={() => setCurrentStep('payment')}
+            onBack={() => handleBack("confirmation")}
+            onEditDelivery={() => setCurrentStep("delivery")}
+            onEditPayment={() => setCurrentStep("payment")}
             currentStep={currentStep}
           />
         )}

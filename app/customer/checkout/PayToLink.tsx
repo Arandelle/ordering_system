@@ -1,10 +1,41 @@
 import { useCart } from "@/contexts/CartContext";
 import { CreditCard, ExternalLink } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 
-const PayToLink = ({ checkoutUrl }: { checkoutUrl: string }) => {
+const PayToLink = ({ checkoutUrl, setCurrentStep }: { checkoutUrl: string, setCurrentStep: (step: "summary" | "payment") => void}) => {
+
   const { totalPrice } = useCart();
   const taxAmount = totalPrice * 0.12;
+
+  const { clearCart } = useCart();
+
+  useEffect(() => {
+    const saved = localStorage.getItem("active_payment");
+    if (!saved) return;
+
+    const { linkId } = JSON.parse(saved);
+
+    const interval = setInterval(async () => {
+      const res = await fetch(
+        `/api/paymongo/link-status?linkId=${linkId}`
+      );
+      const data = await res.json();
+
+      if (data.status === "paid") {
+        clearCart();
+        localStorage.removeItem("active_payment");
+        clearInterval(interval);
+        setCurrentStep("summary");
+      }
+
+      if (data.status === "expired") {
+        localStorage.removeItem("active_payment");
+        clearInterval(interval);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [clearCart, setCurrentStep]);
 
 
   const totalAmount = totalPrice + taxAmount

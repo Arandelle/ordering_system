@@ -7,19 +7,15 @@ import { toast } from "sonner";
 interface OrderSummaryStepProps {
   onNext: () => void;
   onBack: () => void;
-  deliveryFee?: number;
   onSetCheckoutUrl: (url: string) => void;
 }
 
 const OrderSummaryStep = ({
   onNext,
-  onBack,
-  deliveryFee,
-  onSetCheckoutUrl
+  onSetCheckoutUrl,
 }: OrderSummaryStepProps) => {
-  const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart,} = useCart();
+  const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
   const router = useRouter();
-
 
   if (cartItems.length === 0) {
     return (
@@ -29,17 +25,16 @@ const OrderSummaryStep = ({
           Your cart is empty
         </h3>
         <p className="text-gray-400">Add your favourite before checking out!</p>
-        <OrderNowButton /> 
+        <OrderNowButton />
       </div>
     );
   }
 
   const handlePlaceOrder = async () => {
-
     try {
       // FRONTEND VALIDATION - Check minimum amount before API call
       const MINIMUM_AMOUNT = 100;
-      
+
       if (totalPrice < MINIMUM_AMOUNT) {
         toast.error("Minimum Order Amount", {
           description: `Your order total is ₱${totalPrice.toFixed(2)}. The minimum amount for online payment is ₱${MINIMUM_AMOUNT.toFixed(2)}. Please add more items to your cart.`,
@@ -55,7 +50,7 @@ const OrderSummaryStep = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: Number(totalPrice + (totalPrice * 0.12)),
+          amount: Number(totalPrice + totalPrice * 0.12),
           description: `Harrison BBQ Order - ${new Date().toLocaleDateString()}`,
         }),
       });
@@ -65,10 +60,10 @@ const OrderSummaryStep = ({
       if (!response.ok) {
         // Parse user-friendly error messages from PayMongo
         let userMessage = "Unable to create payment link. Please try again.";
-        
+
         if (data.error?.errors && Array.isArray(data.error.errors)) {
           const errorDetails = data.error.errors[0];
-          
+
           // Handle specific PayMongo error codes
           switch (errorDetails.code) {
             case "parameter_below_minimum":
@@ -91,28 +86,37 @@ const OrderSummaryStep = ({
           }
         } else if (data.error) {
           // Fallback for simple error messages
-          userMessage = typeof data.error === 'string' ? data.error : userMessage;
+          userMessage =
+            typeof data.error === "string" ? data.error : userMessage;
         }
-        
+
         toast.error("Payment Error", {
           description: userMessage,
           duration: 6000,
         });
-        
+
         throw new Error(userMessage);
       }
 
       // Validate the response has the checkout_url
       if (!data.checkout_url) {
-        throw new Error("Payment link was not generated. Please try again or contact support.");
+        throw new Error(
+          "Payment link was not generated. Please try again or contact support.",
+        );
       }
 
       // Simulate order processing
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-
-      // Save checkout URL and order number
-      onSetCheckoutUrl(data.checkout_url);
+      // Save payment link info for persistence
+      localStorage.setItem(
+        "active_payment",
+        JSON.stringify({
+          linkId: data.id,
+          checkoutUrl: data.checkout_url,
+          createdAt: Date.now(),
+        }),
+      );
 
       onNext();
       window.scrollTo(0, 0);
@@ -132,7 +136,10 @@ const OrderSummaryStep = ({
       {/**Cart Items */}
       <div className="space-y-4 max-h-[calc(100vh/2)] overflow-y-auto hide-scrollbar">
         {cartItems.map((item) => (
-          <div key={item.id} className="flex gap-4 bg-linear-to-br from-stone-100 via-amber-50 to-stone-100/50 rounded-xl p-4">
+          <div
+            key={item.id}
+            className="flex gap-4 bg-linear-to-br from-stone-100 via-amber-50 to-stone-100/50 rounded-xl p-4"
+          >
             <img
               src={item.image}
               alt={item.name || "Product Image"}
@@ -184,7 +191,7 @@ const OrderSummaryStep = ({
         <div className="border-t border-gray-200 pt-3 flex justify-between">
           <span className="font-bold text-gray-900">Total</span>
           <span className="font-bold text-xl text-[#e13e00]">
-            ₱{(totalPrice).toFixed(2)}
+            ₱{totalPrice.toFixed(2)}
           </span>
         </div>
       </div>
@@ -198,7 +205,9 @@ const OrderSummaryStep = ({
         </button>
         {/** Continue Button */}
         <button
-          onClick={() => {onNext(); handlePlaceOrder()}}
+          onClick={() => {
+            handlePlaceOrder();
+          }}
           className="flex-1 bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer"
         >
           Continue to Payment
