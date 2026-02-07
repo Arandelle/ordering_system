@@ -62,9 +62,3 @@ export async function POST(request: NextRequest) {
     });
   }
 }
-
-export async function GET () {
-    return NextResponse.json({
-        success: "Hello world"
-    })
-}
