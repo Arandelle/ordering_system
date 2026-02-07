@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
+        id: data.data.id, 
         checkout_url: data.data.attributes.checkout_url,
         amount: data.data.attributes.amount,
         description: data.data.attributes.description,
