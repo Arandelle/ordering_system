@@ -1,5 +1,4 @@
 // app/api/webhooks/paymongo/route.ts
-// app/api/webhooks/paymongo/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -9,8 +8,8 @@ export async function POST(request: NextRequest) {
     const signatureHeader = request.headers.get("paymongo-signature");
     const webhookSecret = process.env.PAYMONGO_WEBHOOK_SECRET;
 
-    console.log("🔑 Webhook Secret:", webhookSecret?.substring(0, 15) + "...");
-    console.log("✍️ Signature Header:", signatureHeader);
+    console.log("Webhook Secret:", webhookSecret?.substring(0, 15) + "...");
+    console.log("Signature Header:", signatureHeader);
 
     // 🔐 Parse the signature format: t=timestamp,te=signature,li=
     if (webhookSecret && signatureHeader) {
@@ -71,10 +70,10 @@ export async function POST(request: NextRequest) {
       console.log("💰 Amount:", attributes.amount / 100);
        console.log("💳 Method:", payment?.source?.type ?? "N/A");
       console.log(
-    "⏰ Paid at:",
-    payment?.paid_at
-      ? new Date(payment.paid_at * 1000).toISOString()
-      : "N/A"
+        "⏰ Paid at:",
+        payment?.paid_at
+          ? new Date(payment.paid_at * 1000).toISOString()
+          : "N/A"
   );
        console.log("📧 Email:", payment?.billing?.email ?? "N/A");
 
