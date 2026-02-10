@@ -137,7 +137,7 @@ const OrderSummaryStep = ({
       <div className="space-y-4 max-h-[calc(100vh/2)] overflow-y-auto hide-scrollbar">
         {cartItems.map((item) => (
           <div
-            key={item.id}
+            key={item._id}
             className="flex gap-4 bg-linear-to-br from-stone-100 via-amber-50 to-stone-100/50 rounded-xl p-4"
           >
             <img
@@ -152,7 +152,7 @@ const OrderSummaryStep = ({
                   <p className="text-sm text-gray-500">{item.category}</p>
                 </div>
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item._id)}
                   className="p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                 >
                   <Trash2 size={16} />
@@ -162,7 +162,7 @@ const OrderSummaryStep = ({
               <div className="flex items-center justify-between mt-3">
                 <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200">
                   <button
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    onClick={() => updateQuantity(item._id, item.quantity - 1)}
                     className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <Minus size={14} />
@@ -171,7 +171,7 @@ const OrderSummaryStep = ({
                     {item.quantity}
                   </span>
                   <button
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    onClick={() => updateQuantity(item._id, item.quantity + 1)}
                     className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <Plus size={14} />

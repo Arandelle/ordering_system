@@ -90,7 +90,7 @@ const Orders = () => {
   const handleBuyAgain = (orderItems: any[]) => {
     orderItems.forEach((item) => {
       addToCart({
-        id: item.id,
+        _id: item.id,
         name: item.name,
         price: item.price,
         image: item.image,
@@ -231,7 +231,7 @@ const Orders = () => {
                   <div className="px-6 py-4">
                     <div className="space-y-4">
                       {itemsToShow.map((item, index) => (
-                        <div key={`${item.id}-${index}`} className="flex gap-4">
+                        <div key={`${item._id}-${index}`} className="flex gap-4">
                           {/** Item Image */}
                           <div className="w-20 h-20 flex shrink-0 bg-gray-100 rounded-xl overflow-hidden">
                             {item.image ? (

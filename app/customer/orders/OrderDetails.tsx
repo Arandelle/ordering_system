@@ -136,7 +136,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
         <h3 className="font-semibold mb-3">Order Items</h3>
         <div className="space-y-3">
           {(showAllItems ? order.items : order.items.slice(0, ITEMS_TO_SHOW)).map((item) => (
-            <div key={item.id} className="flex gap-3 border-b pb-3">
+            <div key={item._id} className="flex gap-3 border-b pb-3">
               <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                 <Image
                   src={item.image}

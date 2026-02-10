@@ -385,7 +385,7 @@ const ConfirmationStep = ({
         </h3>
         <div className="space-y-3">
           {cartItems.map((item) => (
-            <div key={item.id} className="flex items-center gap-3">
+            <div key={item._id} className="flex items-center gap-3">
               <img
                 src={item.image}
                 alt={item.name}

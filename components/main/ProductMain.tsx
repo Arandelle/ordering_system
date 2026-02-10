@@ -138,7 +138,7 @@ const ProductMain = () => {
           <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {menuList.map((product, index) => (
               <div
-                key={product.id}
+                key={product._id}
                 ref={(el) => {
                   cardRefs.current[index] = el;
                 }}
@@ -181,7 +181,7 @@ const ProductMain = () => {
             <div className="flex gap-4 overflow-hidden">
               {visibleProducts.map((product, index) => (
                 <div
-                  key={product.id}
+                  key={product._id}
                   ref={(el) => {
                     mobileCardRef.current[index] = el;
                   }}

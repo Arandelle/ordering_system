@@ -127,7 +127,7 @@ const ReviewPage = () => {
             <div className="space-y-2">
               {(showAllItems ? order.items : order.items.slice(0, ITEMS_TO_SHOW)).map((item, idx) => (
                 <div
-                  key={`${item.id}-${idx}`}
+                  key={`${item._id}-${idx}`}
                   className="flex gap-4 items-center"
                 >
                   {/** Item Image */}

@@ -8,7 +8,7 @@ import { TrendingUp, ShoppingBag, Check, Flame, Star } from 'lucide-react';
 const BestSellers: React.FC = () => {
   const { addToCart } = useCart();
   const [isVisible, setIsVisible] = useState(false);
-  const [addedItems, setAddedItems] = useState<Set<number>>(new Set());
+  const [addedItems, setAddedItems] = useState<Set<number | string>>(new Set());
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -30,17 +30,17 @@ const BestSellers: React.FC = () => {
 
   const handleAddToCart = (item: typeof bestSellers[0]) => {
     addToCart({
-      id: item.id,
+      _id: item._id,
       name: item.name,
       price: item.price,
       image: item.image,
       category: item.category
     });
-    setAddedItems(prev => new Set([...prev, item.id]));
+    setAddedItems(prev => new Set([...prev, item._id]));
     setTimeout(() => {
       setAddedItems(prev => {
         const next = new Set(prev);
-        next.delete(item.id);
+        next.delete(item._id);
         return next;
       });
     }, 1500);
@@ -69,7 +69,7 @@ const BestSellers: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bestSellers.map((item, index) => (
             <div
-              key={item.id}
+              key={item._id}
               className={`group relative bg-gray-50 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 transform ${
                 isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
               }`}
@@ -109,14 +109,14 @@ const BestSellers: React.FC = () => {
                     <span className="text-[#e13e00] font-bold text-lg">₱{item.price}</span>
                     <button
                       onClick={() => handleAddToCart(item)}
-                      disabled={addedItems.has(item.id)}
+                      disabled={addedItems.has(item._id)}
                       className={`${
-                        addedItems.has(item.id)
+                        addedItems.has(item._id)
                           ? 'bg-green-500'
                           : 'bg-[#1a1a1a] hover:bg-[#e13e00]'
                       } text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2`}
                     >
-                      {addedItems.has(item.id) ? (
+                      {addedItems.has(item._id) ? (
                         <>
                           <Check size={16} />
                           Added
