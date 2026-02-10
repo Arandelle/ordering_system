@@ -74,7 +74,7 @@ const CartDrawer = () => {
             <div className="space-y-4">
               {cartItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="flex gap-4 bg-gray-50 rounded-xl p-4"
                 >
                   <img
@@ -92,7 +92,7 @@ const CartDrawer = () => {
                       <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200">
                         <button
                           onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
+                            updateQuantity(item._id, item.quantity - 1)
                           }
                           className="p-1.5 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                         >
@@ -103,7 +103,7 @@ const CartDrawer = () => {
                         </span>
                         <button
                           onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
+                            updateQuantity(item._id, item.quantity + 1)
                           }
                           className="p-1.5 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                         >
@@ -112,7 +112,7 @@ const CartDrawer = () => {
                       </div>
 
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item._id)}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
                       >
                         <Trash2 size={16} />

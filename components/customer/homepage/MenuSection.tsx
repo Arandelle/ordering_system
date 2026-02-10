@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { categories, menuData } from "@/data/menuData";
 import { MenuItem } from "@/types/MenuTypes";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import ProductCard from "./ProductCard";
+import ProductCard from "../../ui/ProductCard";
 import PromoBanner from "./PromoBanner";
 import { LINKS } from "@/constant/links";
 import { useScrollToSection } from "@/hooks/useScrollToSection";

@@ -1,3 +1,5 @@
+'use client'
+
 import { useCart } from "@/contexts/CartContext";
 import { MenuItem } from "@/types/MenuTypes";
 import { Check, Plus, ShoppingBag } from "lucide-react";
@@ -13,7 +15,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
 
   const handleAddToCart = () => {
     addToCart({
-      id: item.id,
+      _id: item._id,
       name: item.name,
       price: item.price,
       image: item.image,
