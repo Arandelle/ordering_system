@@ -6,15 +6,10 @@ const ProductSchema = new Schema({
     description: String,
     image: {type: String, required: true},
 
-    categoryId: {
-        type: Schema.Types.ObjectId,
-        ref: "Category",
-        required: true
-    },
+    category: {type: String, required: true},
 
     isBestSeller: {type: Boolean, default: false},
-    stock: {type: Number, default: 0},
-    isActive: {type: Boolean, default: true}
+    stock: {type: Number, default: 0}
 },
 {timestamps: true}
 );
