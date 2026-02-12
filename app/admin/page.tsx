@@ -168,8 +168,8 @@ export default function ProductFormDynamicCategories() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold mb-6 text-gray-800">Add New Product</h2>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md h-[calc(100vh-100px)] overflow-y-auto mt-16">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Add New Product</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Product Name */}
@@ -184,8 +184,8 @@ export default function ProductFormDynamicCategories() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            placeholder="e.g., Wireless Headphones"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
+            placeholder="e.g., Pork Sinigang"
           />
         </div>
 
@@ -195,7 +195,7 @@ export default function ProductFormDynamicCategories() {
             Price <span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
             <input
               type="number"
               id="price"
@@ -205,7 +205,7 @@ export default function ProductFormDynamicCategories() {
               required
               step="0.01"
               min="0"
-              className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
               placeholder="0.00"
             />
           </div>
@@ -223,8 +223,8 @@ export default function ProductFormDynamicCategories() {
             onChange={handleChange}
             required
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
-            placeholder="Describe your product in detail..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition resize-none"
+            placeholder="Describe your dish in detail..."
           />
         </div>
 
@@ -245,15 +245,15 @@ export default function ProductFormDynamicCategories() {
                 onChange={handleCategoryChange}
                 value={showCustomCategory ? '__add_new__' : formData.category}
                 required={!showCustomCategory}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition cursor-pointer"
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ')}
+                    {cat.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                   </option>
                 ))}
-                <option value="__add_new__">➕ Add New Category</option>
+                <option value="__add_new__" className='text-[#e13e00] semi-font-bold'>Add New Category + </option>
               </select>
 
               {/* Custom Category Input */}
@@ -265,10 +265,10 @@ export default function ProductFormDynamicCategories() {
                     onChange={handleCustomCategoryChange}
                     required
                     placeholder="Enter new category name"
-                    className="w-full px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                    className="w-full px-4 py-3 border border-[#e13e00] rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Tip: Use simple names like "electronics", "clothing", "books"
+                    Tip: Use simple names like "Full Plates", "Favourites", "Dessert"
                   </p>
                 </div>
               )}
@@ -291,7 +291,7 @@ export default function ProductFormDynamicCategories() {
               id="imageFile"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#e13e00]/20 file:text-[#e13e00] hover:file:bg-[#e13e00]/30 cursor-pointer"
             />
             {imageFile && (
               <p className="text-sm text-green-600 mt-2">
@@ -313,7 +313,7 @@ export default function ProductFormDynamicCategories() {
               value={formData.image}
               onChange={handleChange}
               disabled={!!imageFile}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="https://example.com/image.jpg"
             />
           </div>
@@ -338,7 +338,7 @@ export default function ProductFormDynamicCategories() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+          className="w-full bg-[#e13e00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
         >
           {loading ? (
             <span className="flex items-center justify-center">
