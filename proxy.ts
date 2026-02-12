@@ -21,13 +21,18 @@ export function proxy(request: NextRequest) {
   
   // Skip rewriting if already routed to /main or /customer
   // This prevents infinite rewrite loops
-  if (pathname.startsWith('/main') || pathname.startsWith('/customer')) {
+  if (pathname.startsWith('/main') || pathname.startsWith('/customer') || pathname.startsWith('/admin')) {
     return NextResponse.next()
   }
   
   // Route customer ordering subdomains to /customer folder
   if (subdomain === 'food' || subdomain === 'order') {
     url.pathname = `/customer${pathname}`
+    return NextResponse.rewrite(url)
+  }
+
+  if (subdomain === 'admin') {
+    url.pathname = `/admin${pathname}`
     return NextResponse.rewrite(url)
   }
   
@@ -50,6 +55,6 @@ export function proxy(request: NextRequest) {
  */
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos|privacy-policy|paymongo).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos|privacy-policy|paymongo|admin).*)',
   ],
 }
