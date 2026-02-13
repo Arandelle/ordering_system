@@ -1,6 +1,6 @@
 import { Clock, MapPin, Truck } from "lucide-react";
-import { FormInput } from "@/components/form/FormInput";
-import { FormTextarea } from "@/components/form/FormTextArea";
+import { FormInput } from "@/components/ui/form/FormInput";
+import { FormTextarea } from "@/components/ui/form/FormTextArea";
 
 export interface DeliveryInfo {
   type: "delivery" | "pickup";

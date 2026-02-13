@@ -1,6 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { FormInput } from "@/components/ui/form/FormInput";
+import { InputField } from "@/components/ui/InputField";
+import { Beef, DollarSign, Link, Share, ShoppingBag } from "lucide-react";
+import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 
 interface ProductFormData {
   name: string;
@@ -12,21 +15,21 @@ interface ProductFormData {
 
 export default function ProductFormDynamicCategories() {
   const [formData, setFormData] = useState<ProductFormData>({
-    name: '',
-    price: '',
-    description: '',
-    image: '',
-    category: '',
+    name: "",
+    price: "",
+    description: "",
+    image: "",
+    category: "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  
+  const [message, setMessage] = useState("");
+
   // Category management
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [showCustomCategory, setShowCustomCategory] = useState(false);
-  const [customCategory, setCustomCategory] = useState('');
+  const [customCategory, setCustomCategory] = useState("");
 
   // Load existing categories on mount
   useEffect(() => {
@@ -35,18 +38,18 @@ export default function ProductFormDynamicCategories() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/products?action=categories');
+      const response = await fetch("/api/products?action=categories");
       const data = await response.json();
       setCategories(data.categories || []);
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      console.error("Failed to load categories:", error);
     } finally {
       setLoadingCategories(false);
     }
   };
 
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     setFormData({
       ...formData,
@@ -56,10 +59,10 @@ export default function ProductFormDynamicCategories() {
 
   const handleCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    
-    if (value === '__add_new__') {
+
+    if (value === "__add_new__") {
       setShowCustomCategory(true);
-      setFormData({ ...formData, category: '' });
+      setFormData({ ...formData, category: "" });
     } else {
       setShowCustomCategory(false);
       setFormData({ ...formData, category: value });
@@ -77,17 +80,17 @@ export default function ProductFormDynamicCategories() {
       const file = e.target.files[0];
 
       if (file.size > 5 * 1024 * 1024) {
-        setMessage('✗ Image size must be less than 5MB');
+        setMessage("✗ Image size must be less than 5MB");
         return;
       }
 
-      if (!file.type.startsWith('image/')) {
-        setMessage('✗ Please select a valid image file');
+      if (!file.type.startsWith("image/")) {
+        setMessage("✗ Please select a valid image file");
         return;
       }
 
       setImageFile(file);
-      setMessage('');
+      setMessage("");
     }
   };
 
@@ -103,7 +106,7 @@ export default function ProductFormDynamicCategories() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setMessage("");
 
     try {
       let imageData = formData.image;
@@ -113,54 +116,58 @@ export default function ProductFormDynamicCategories() {
       }
 
       if (!imageData) {
-        throw new Error('Please provide an image URL or upload an image');
+        throw new Error("Please provide an image URL or upload an image");
       }
 
-      const response = await fetch('/api/products', {
-        method: 'POST',
+      const response = await fetch("/api/products", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: formData.name,
           price: parseFloat(formData.price),
           description: formData.description,
-          image: imageData.startsWith('http') ? imageData : undefined,
-          imageFile: imageData.startsWith('data:') ? imageData : undefined,
+          image: imageData.startsWith("http") ? imageData : undefined,
+          imageFile: imageData.startsWith("data:") ? imageData : undefined,
           category: formData.category,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create product');
+        throw new Error(errorData.error || "Failed to create product");
       }
 
       const result = await response.json();
-      setMessage('✓ Product created successfully!');
+      setMessage("✓ Product created successfully!");
 
       // Reset form
       setFormData({
-        name: '',
-        price: '',
-        description: '',
-        image: '',
-        category: '',
+        name: "",
+        price: "",
+        description: "",
+        image: "",
+        category: "",
       });
       setImageFile(null);
       setShowCustomCategory(false);
-      setCustomCategory('');
+      setCustomCategory("");
 
       // Reload categories to include the new one
       fetchCategories();
 
-      const fileInput = document.getElementById('imageFile') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      const fileInput = document.getElementById(
+        "imageFile",
+      ) as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
 
-      console.log('Created product:', result);
+      console.log("Created product:", result);
     } catch (error) {
       setMessage(
-        error instanceof Error ? `✗ ${error.message}` : '✗ Failed to create product'
+        error instanceof Error
+          ? `✗ ${error.message}`
+          : "✗ Failed to create product",
       );
     } finally {
       setLoading(false);
@@ -173,47 +180,37 @@ export default function ProductFormDynamicCategories() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Product Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-            Product Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
-            placeholder="e.g., Pork Sinigang"
-          />
-        </div>
+        <InputField
+          label="Product Name"
+          leftIcon={<Beef size={18} />}
+          placeholder="e.g., Pork Sinigang"
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
 
         {/* Price */}
-        <div>
-          <label htmlFor="price" className="block text-sm font-semibold text-gray-700 mb-2">
-            Price <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
-            <input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              required
-              step="0.01"
-              min="0"
-              className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
+        <InputField
+          label="Price"
+          leftIcon={<DollarSign size={18} />}
+          placeholder="0.00"
+          type="number"
+          id="price"
+          name="price"
+          value={formData.price}
+          onChange={handleChange}
+          required
+        />
 
         {/* Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+          <label
+            htmlFor="description"
+            className="block text-sm font-semibold text-gray-700 mb-2"
+          >
             Description <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -230,10 +227,13 @@ export default function ProductFormDynamicCategories() {
 
         {/* Category (Dynamic) */}
         <div>
-          <label htmlFor="categorySelect" className="block text-sm font-semibold text-gray-700 mb-2">
+          <label
+            htmlFor="categorySelect"
+            className="block text-sm font-semibold text-gray-700 mb-2"
+          >
             Category <span className="text-red-500">*</span>
           </label>
-          
+
           {loadingCategories ? (
             <div className="px-4 py-3 border border-gray-300 rounded-lg text-gray-500">
               Loading categories...
@@ -243,17 +243,28 @@ export default function ProductFormDynamicCategories() {
               <select
                 id="categorySelect"
                 onChange={handleCategoryChange}
-                value={showCustomCategory ? '__add_new__' : formData.category}
+                value={showCustomCategory ? "__add_new__" : formData.category}
                 required={!showCustomCategory}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition cursor-pointer"
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
-                    {cat.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    {cat
+                      .replace(/-/g, " ")
+                      .split(" ")
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1),
+                      )
+                      .join(" ")}
                   </option>
                 ))}
-                <option value="__add_new__" className='text-[#e13e00] semi-font-bold'>Add New Category + </option>
+                <option
+                  value="__add_new__"
+                  className="text-[#e13e00] semi-font-bold"
+                >
+                  Add New Category +{" "}
+                </option>
               </select>
 
               {/* Custom Category Input */}
@@ -268,7 +279,8 @@ export default function ProductFormDynamicCategories() {
                     className="w-full px-4 py-3 border border-[#e13e00] rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Tip: Use simple names like "Full Plates", "Favourites", "Dessert"
+                    Tip: Use simple names like "Full Plates", "Favourites",
+                    "Dessert"
                   </p>
                 </div>
               )}
@@ -283,8 +295,11 @@ export default function ProductFormDynamicCategories() {
           </label>
 
           <div className="mb-4">
-            <label htmlFor="imageFile" className="block text-xs text-gray-600 mb-2">
-              📤 Upload Image (Max 5MB)
+            <label
+              htmlFor="imageFile"
+              className="block text-xs text-gray-600 mb-2"
+            >
+              Upload Image (Max 5MB)
             </label>
             <input
               type="file"
@@ -295,7 +310,8 @@ export default function ProductFormDynamicCategories() {
             />
             {imageFile && (
               <p className="text-sm text-green-600 mt-2">
-                ✓ Selected: {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} MB)
+                ✓ Selected: {imageFile.name} (
+                {(imageFile.size / 1024 / 1024).toFixed(2)} MB)
               </p>
             )}
           </div>
@@ -304,17 +320,17 @@ export default function ProductFormDynamicCategories() {
 
           <div>
             <label htmlFor="image" className="block text-xs text-gray-600 mb-2">
-              🔗 Paste Image URL
+              Paste Image URL
             </label>
-            <input
-              type="url"
+            <InputField 
+             type="url"
               id="image"
               name="image"
               value={formData.image}
               onChange={handleChange}
               disabled={!!imageFile}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="https://example.com/image.jpg"
+              leftIcon={<Link size={16} />}
             />
           </div>
         </div>
@@ -328,7 +344,8 @@ export default function ProductFormDynamicCategories() {
               alt="Product preview"
               className="w-full max-w-md h-64 object-cover rounded-lg mx-auto shadow-sm"
               onError={(e) => {
-                e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Invalid+Image';
+                e.currentTarget.src =
+                  "https://via.placeholder.com/400x300?text=Invalid+Image";
               }}
             />
           </div>
@@ -365,7 +382,7 @@ export default function ProductFormDynamicCategories() {
               Creating Product...
             </span>
           ) : (
-            '✓ Create Product'
+            "✓ Create Product"
           )}
         </button>
       </form>
@@ -374,9 +391,9 @@ export default function ProductFormDynamicCategories() {
       {message && (
         <div
           className={`mt-6 p-4 rounded-lg font-medium ${
-            message.includes('✓')
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
+            message.includes("✓")
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
           }`}
         >
           {message}
@@ -386,7 +403,8 @@ export default function ProductFormDynamicCategories() {
       {/* Category Count */}
       {!loadingCategories && categories.length > 0 && (
         <div className="mt-4 text-sm text-gray-500 text-center">
-          {categories.length} categor{categories.length === 1 ? 'y' : 'ies'} available
+          {categories.length} categor{categories.length === 1 ? "y" : "ies"}{" "}
+          available
         </div>
       )}
     </div>

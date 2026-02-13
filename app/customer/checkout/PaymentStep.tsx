@@ -1,6 +1,6 @@
 import React from "react";
 import { Banknote, CreditCard, Shield, Smartphone } from "lucide-react";
-import { FormInput } from "@/components/form/FormInput";
+import { FormInput } from "@/components/ui/form/FormInput";
 import PaymentButton from "@/components/ui/PaymentButton";
 
 export interface PaymentInfo {

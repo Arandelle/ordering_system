@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { OrderType } from "@/types/OrderTypes";
 import { Package, Star } from "lucide-react";
 import { toast } from "sonner";
-import { FormTextarea } from "@/components/form/FormTextArea";
+import { FormTextarea } from "@/components/ui/form/FormTextArea";
 
 const ReviewPage = () => {
   const params = useParams();
