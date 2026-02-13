@@ -1,14 +1,5 @@
-import {
-  ChartLine,
-  Folder,
-  LayoutDashboard,
-  LogOut,
-  Package,
-  Settings,
-  ShoppingCart,
-  Users,
-  X,
-} from "lucide-react";
+import { getLucideIcon } from "@/lib/iconUtils";
+import { LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -19,13 +10,13 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
-  { name: "Orders", path: "/admin/orders", icon: ShoppingCart },
-  { name: "Products", path: "/admin/products", icon: Package },
-  { name: "Categories", path: "/admin/categories", icon: Folder },
-  { name: "Customers", path: "/admin/accounts", icon: Users },
-  { name: "Reports", path: "/admin/reports", icon: ChartLine },
-  { name: "Settings", path: "/admin/settings", icon: Settings },
+  { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
+  { name: "Orders", path: "/orders", icon: "ShoppingCart" },
+  { name: "Products", path: "/products", icon: "Package" },
+  { name: "Categories", path: "/categories", icon: "Folder" },
+  { name: "Customers", path: "/accounts", icon: "Users" },
+  { name: "Reports", path: "/reports", icon: "ChartLine" },
+  { name: "Settings", path: "/settings", icon: "Settings" },
 ];
 
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
@@ -67,7 +58,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
           <ul className="space-y-2">
             {navItems.map((item) => {
               const isActive = pathname === item.path;
-              const Icon = item.icon;
+              const Icon = getLucideIcon(item.icon);
               return (
                 <li key={item.path}>
                   <Link
@@ -75,7 +66,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                     onClick={onClose}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duratin-200 group ${isActive ? "bg-[#e13e00]/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-[#e13e00]"}`}
                   >
-                    <Icon size={16} />
+                    <Icon size={18} />
                     <span className="font-semibold text-sm">{item.name}</span>
                     {isActive && (
                       <span className="ml-auto w-2 h-2 rounded-full bg-white" />
