@@ -19,13 +19,13 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { name: "Orders", path: "/orders", icon: ShoppingCart },
-  { name: "Products", path: "/products", icon: Package },
-  { name: "Categories", path: "/categories", icon: Folder },
-  { name: "Customers", path: "/accounts", icon: Users },
-  { name: "Reports", path: "/reports", icon: ChartLine },
-  { name: "Settings", path: "/settings", icon: Settings },
+  { name: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
+  { name: "Orders", path: "/admin/orders", icon: ShoppingCart },
+  { name: "Products", path: "/admin/products", icon: Package },
+  { name: "Categories", path: "/admin/categories", icon: Folder },
+  { name: "Customers", path: "/admin/accounts", icon: Users },
+  { name: "Reports", path: "/admin/reports", icon: ChartLine },
+  { name: "Settings", path: "/admin/settings", icon: Settings },
 ];
 
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
