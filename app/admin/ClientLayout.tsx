@@ -1,7 +1,7 @@
 'use client'
 
 import AdminHeader from "@/components/admin/AdminHeader";
-import Sidebar from "@/components/ui/Sidebar";
+import Sidebar from "@/components/admin/Sidebar";
 import React, { ReactNode, useState } from "react";
 
 const ClientLayout = ({ children }: { children: ReactNode }) => {
