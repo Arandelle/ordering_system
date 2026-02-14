@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   title: "Home | Harrison House of Inasal & BBQ",
   description:
     "Discover Harrison: proudly Filipino BBQ and Inasal, served with stories and barkada vibes. New branches, online orders, and collabs coming soon—follow the grill!",
+  themeColor: "#e13e00",
+  icons: {
+    icon: "images/harrison_logo.png",
+  },
 };
 
 export default function RootLayout({
