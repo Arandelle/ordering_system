@@ -1,6 +1,6 @@
 import React from 'react';
-import DashboardCards from '@/components/ui/DashboardCard';
-import SalesChart from '@/components/ui/SalesChart';
+import DashboardCards from '@/components/admin/DashboardCard';
+import SalesChart from '@/components/admin/SalesChart';
 import OrdersTable from '@/components/OrdersTable';
 import { mockDashboardStats, mockSalesData, mockTopProducts, mockOrders } from '@/data/mockData'
 
