@@ -2,7 +2,9 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { InputField } from "@/components/ui/InputField";
 import Modal from "@/components/ui/Modal";
 import { Beef, DollarSign, Layers, Link } from "lucide-react";
+import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
 import { Product } from "@/types/adminType";
+import { toast } from "sonner";
 
 interface ProductFormData {
   name: string;
@@ -12,7 +14,6 @@ interface ProductFormData {
   category: string;
   stock: string;
 }
-
 
 interface ProductsModalProps {
   setIsModalOpen: (value: boolean) => void;
@@ -25,6 +26,10 @@ const ProductsModal = ({
 }: ProductsModalProps) => {
   const isEditMode = !!editProduct;
 
+  // USE THE MUTATIONS
+  const createMutation = useCreateProduct();
+  const updateMutation = useUpdateProduct();
+
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     price: "",
@@ -35,20 +40,20 @@ const ProductsModal = ({
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
-  // Load categories on mount
+  // Loading/error states come from mutations
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+  const error = createMutation.error || updateMutation.error;
+  const isSuccess = createMutation.isSuccess || updateMutation.isSuccess;
+
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // Populate form if editing
   useEffect(() => {
     if (editProduct) {
       setFormData({
@@ -106,17 +111,14 @@ const ProductsModal = ({
       const file = e.target.files[0];
 
       if (file.size > 5 * 1024 * 1024) {
-        setMessage("✗ Image size must be less than 5MB");
         return;
       }
 
       if (!file.type.startsWith("image/")) {
-        setMessage("✗ Please select a valid image file");
         return;
       }
 
       setImageFile(file);
-      setMessage("");
     }
   };
 
@@ -131,8 +133,6 @@ const ProductsModal = ({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
 
     try {
       let imageData = formData.image;
@@ -155,81 +155,23 @@ const ProductsModal = ({
         stock: parseFloat(formData.stock),
       };
 
-      let response;
-
-      if (isEditMode) {
-        // Update existing product
-        response = await fetch(`/api/products/${editProduct._id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+      if (isEditMode && editProduct) {
+        // USE THE UPDATE MUTATION
+        await updateMutation.mutateAsync({
+          id: editProduct._id,
+          data: payload,
         });
+
+        toast.success("Update Successfully!")
       } else {
-        // Create new product
-        response = await fetch("/api/products", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+        // USE THE CREATE MUTATION
+        await createMutation.mutateAsync(payload);
+        toast.success("Created Successfull!")
       }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error ||
-            `Failed to ${isEditMode ? "update" : "create"} product`,
-        );
-      }
-
-      const result = await response.json();
-      setMessage(
-        `✓ Product ${isEditMode ? "updated" : "created"} successfully!`,
-      );
-
-      // Reset form (only if creating)
-      if (!isEditMode) {
-        setFormData({
-          name: "",
-          price: "",
-          description: "",
-          image: "",
-          category: "",
-          stock: "",
-        });
-        setImageFile(null);
-        setShowCustomCategory(false);
-        setCustomCategory("");
-
-        const fileInput = document.getElementById(
-          "imageFile",
-        ) as HTMLInputElement;
-        if (fileInput) fileInput.value = "";
-      }
-
-      // Reload categories to include the new one
-      fetchCategories();
-
-      console.log(
-        `${isEditMode ? "Updated" : "Created"} product:`,
-        result,
-      );
-
-      // Close modal after short delay
-      setTimeout(() => {
-        setIsModalOpen(false);
-      }, 1500);
+      setIsModalOpen(false);
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? `✗ ${error.message}`
-          : `✗ Failed to ${isEditMode ? "update" : "create"} product`,
-      );
-    } finally {
-      setLoading(false);
+      console.error("Mutation error:", error);
     }
   };
 
@@ -252,6 +194,7 @@ const ProductsModal = ({
             onChange={handleChange}
             required
           />
+
           {/* Description */}
           <div>
             <label
@@ -271,6 +214,7 @@ const ProductsModal = ({
               placeholder="Describe your dish in detail..."
             />
           </div>
+
           {/* Category (Dynamic) */}
           <div>
             <label
@@ -312,7 +256,6 @@ const ProductsModal = ({
                     Add New Category +{" "}
                   </option>
                 </select>
-                {/* Custom Category Input */}
                 {showCustomCategory && (
                   <div className="mt-3">
                     <input
@@ -332,6 +275,7 @@ const ProductsModal = ({
               </>
             )}
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             {/* Price */}
             <InputField
@@ -345,7 +289,7 @@ const ProductsModal = ({
               onChange={handleChange}
               required
             />
-            {/** Stock */}
+            {/* Stock */}
             <InputField
               label="Stock"
               leftIcon={<Layers size={18} />}
@@ -358,6 +302,7 @@ const ProductsModal = ({
               required
             />
           </div>
+
           {/* Image Upload */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
             <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -404,6 +349,7 @@ const ProductsModal = ({
               />
             </div>
           </div>
+
           {/* Image Preview */}
           {(formData.image || imageFile) && (
             <div className="border border-gray-300 rounded-lg p-4">
@@ -423,13 +369,14 @@ const ProductsModal = ({
               />
             </div>
           )}
+
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-[#e13e00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+            disabled={isLoading}
+            className="w-full bg-[#e13e00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
           >
-            {loading ? (
+            {isLoading ? (
               <span className="flex items-center justify-center">
                 <svg
                   className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
@@ -458,19 +405,20 @@ const ProductsModal = ({
             )}
           </button>
         </form>
-        {/* Status Message */}
-        {message && (
-          <div
-            className={`mt-6 p-4 rounded-lg font-medium ${
-              message.includes("✓")
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}
-          >
-            {message}
+
+        {/* Status Messages */}
+        {isSuccess && (
+          <div className="mt-6 p-4 rounded-lg font-medium bg-green-50 text-green-700 border border-green-200">
+            ✓ Product {isEditMode ? "updated" : "created"} successfully!
           </div>
         )}
-        {/* Category Count */}
+
+        {error && (
+          <div className="mt-6 p-4 rounded-lg font-medium bg-red-50 text-red-700 border border-red-200">
+            ✗ {error instanceof Error ? error.message : "An error occurred"}
+          </div>
+        )}
+
         {!loadingCategories && categories.length > 0 && (
           <div className="mt-4 text-sm text-gray-500 text-center">
             {categories.length} categor{categories.length === 1 ? "y" : "ies"}{" "}
