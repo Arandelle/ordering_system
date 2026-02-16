@@ -2,6 +2,7 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { InputField } from "@/components/ui/InputField";
 import Modal from "@/components/ui/Modal";
 import { Beef, DollarSign, Layers, Link } from "lucide-react";
+import { Product } from "@/types/adminType";
 
 interface ProductFormData {
   name: string;
@@ -12,11 +13,18 @@ interface ProductFormData {
   stock: string;
 }
 
+
+interface ProductsModalProps {
+  setIsModalOpen: (value: boolean) => void;
+  editProduct?: Product | null;
+}
+
 const ProductsModal = ({
   setIsModalOpen,
-}: {
-  setIsModalOpen: (value: boolean) => void;
-}) => {
+  editProduct = null,
+}: ProductsModalProps) => {
+  const isEditMode = !!editProduct;
+
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     price: "",
@@ -39,6 +47,20 @@ const ProductsModal = ({
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  // Populate form if editing
+  useEffect(() => {
+    if (editProduct) {
+      setFormData({
+        name: editProduct.name,
+        price: editProduct.price.toString(),
+        description: editProduct.description,
+        image: editProduct.image,
+        category: editProduct.category,
+        stock: editProduct.stock.toString(),
+      });
+    }
+  }, [editProduct]);
 
   const fetchCategories = async () => {
     try {
@@ -123,57 +145,88 @@ const ProductsModal = ({
         throw new Error("Please provide an image URL or upload an image");
       }
 
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          price: parseFloat(formData.price),
-          description: formData.description,
-          image: imageData.startsWith("http") ? imageData : undefined,
-          imageFile: imageData.startsWith("data:") ? imageData : undefined,
-          category: formData.category,
-          stock: parseFloat(formData.stock)
-        }),
-      });
+      const payload = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        description: formData.description,
+        image: imageData.startsWith("http") ? imageData : undefined,
+        imageFile: imageData.startsWith("data:") ? imageData : undefined,
+        category: formData.category,
+        stock: parseFloat(formData.stock),
+      };
+
+      let response;
+
+      if (isEditMode) {
+        // Update existing product
+        response = await fetch(`/api/products/${editProduct._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // Create new product
+        response = await fetch("/api/products", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create product");
+        throw new Error(
+          errorData.error ||
+            `Failed to ${isEditMode ? "update" : "create"} product`,
+        );
       }
 
       const result = await response.json();
-      setMessage("✓ Product created successfully!");
+      setMessage(
+        `✓ Product ${isEditMode ? "updated" : "created"} successfully!`,
+      );
 
-      // Reset form
-      setFormData({
-        name: "",
-        price: "",
-        description: "",
-        image: "",
-        category: "",
-        stock: "",
-      });
-      setImageFile(null);
-      setShowCustomCategory(false);
-      setCustomCategory("");
+      // Reset form (only if creating)
+      if (!isEditMode) {
+        setFormData({
+          name: "",
+          price: "",
+          description: "",
+          image: "",
+          category: "",
+          stock: "",
+        });
+        setImageFile(null);
+        setShowCustomCategory(false);
+        setCustomCategory("");
+
+        const fileInput = document.getElementById(
+          "imageFile",
+        ) as HTMLInputElement;
+        if (fileInput) fileInput.value = "";
+      }
 
       // Reload categories to include the new one
       fetchCategories();
 
-      const fileInput = document.getElementById(
-        "imageFile",
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = "";
+      console.log(
+        `${isEditMode ? "Updated" : "Created"} product:`,
+        result,
+      );
 
-      console.log("Created product:", result);
+      // Close modal after short delay
+      setTimeout(() => {
+        setIsModalOpen(false);
+      }, 1500);
     } catch (error) {
       setMessage(
         error instanceof Error
           ? `✗ ${error.message}`
-          : "✗ Failed to create product",
+          : `✗ Failed to ${isEditMode ? "update" : "create"} product`,
       );
     } finally {
       setLoading(false);
@@ -182,7 +235,10 @@ const ProductsModal = ({
 
   return (
     <div>
-      <Modal onClose={() => setIsModalOpen(false)} title="Add New Product">
+      <Modal
+        onClose={() => setIsModalOpen(false)}
+        title={isEditMode ? "Edit Product" : "Add New Product"}
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Product Name */}
           <InputField
@@ -395,10 +451,10 @@ const ProductsModal = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Creating Product...
+                {isEditMode ? "Updating Product..." : "Creating Product..."}
               </span>
             ) : (
-              "✓ Create Product"
+              `✓ ${isEditMode ? "Update Product" : "Create Product"}`
             )}
           </button>
         </form>

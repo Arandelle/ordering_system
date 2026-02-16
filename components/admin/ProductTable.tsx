@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Product } from "@/types/adminType";
 import StatusBadge from "../ui/StatusBadge";
 import {
@@ -9,8 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { PencilLine, Trash2 } from "lucide-react";
+import { PencilLine, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import ProductsModal from "@/app/admin/products/ProductsModal";
+import { he } from "date-fns/locale";
 
 interface ProductTableProps {
   products: Product[];
@@ -20,11 +22,15 @@ export default function ProductTable({ products }: ProductTableProps) {
   const productHeaders = [
     "Image",
     "Product",
+    "Description",
     "Category",
     "Price",
     "Stock",
     "Actions",
   ];
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleDeleteItem = async (id: string) => {
     if (!id) return;
@@ -41,8 +47,18 @@ export default function ProductTable({ products }: ProductTableProps) {
     }
   };
 
+  const handleEditItem = (id: string) => {
+    const selected = products.find((item) => item._id === id);
+    if (selected) {
+      setSelectedProduct(selected);
+      setIsEditMode(true);
+    } else {
+      console.error("Product not found");
+    }
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -50,79 +66,106 @@ export default function ProductTable({ products }: ProductTableProps) {
               {productHeaders.map((head, index) => (
                 <TableHead
                   key={index}
-                  className="font-semibold uppercase tracking-wider"
+                  className="font-semibold uppercase tracking-wider text-center"
                 >
                   {head}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-stone-100">
-            {products.map((product) => (
-              <TableRow
-                key={product._id}
-                className="hover:bg-stone-50 transition-colors"
-              >
-                <TableCell className="px-6 py-4 flex items-center justify-center">
-                  <div>
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-24 h-24"
-                    />
-                  </div>
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <div>
-                    <p className="text-sm font-semibold text-stone-800">
+
+          <TableBody className="divide-y divide-gray-100">
+            {products.length < 0 ? (
+              products.map((product) => (
+                <TableRow
+                  key={product._id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <TableCell className="px-6 py-4 flex items-center justify-center">
+                    <div>
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-18 h-18"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <p className="font-semibold text-gray-800">
                       {product.name}
                     </p>
-                    <p className="text-xs text-stone-500 mt-1">
-                      {product.description}
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <p className="text-gray-500 mt-1">
+                      {product.description.substring(0, 50) + "..."}
                     </p>
-                  </div>
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <span className="text-sm text-stone-600">
-                    {product.category}
-                  </span>
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <span className="text-sm font-semibold text-stone-800">
-                    ₱{product.price.toFixed(2)}
-                  </span>
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <span
-                    className={`text-sm font-medium ${
-                      product.stock === 0
-                        ? "text-red-600"
-                        : product.stock < 20
-                          ? "text-amber-600"
-                          : "text-emerald-600"
-                    }`}
-                  >
-                    {product.stock} left
-                  </span>
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <div className="flex gap-2">
-                    <button className="p-2 text-emerald-600 hover:bg-blue-50 rounded-lg transition-colors">
-                      <PencilLine size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteItem(product._id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <span className="text-sm text-gray-600">
+                      {product.category}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <span className="text-sm font-semibold text-gray-800">
+                      ₱{product.price.toFixed(2)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <span
+                      className={`text-sm font-medium ${
+                        product.stock === 0
+                          ? "text-red-600"
+                          : product.stock < 20
+                            ? "text-amber-600"
+                            : "text-emerald-600"
+                      }`}
                     >
-                      <Trash2 size={16} />
-                    </button>
+                      {product.stock} left
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleEditItem(product._id)}
+                        className="p-2 text-emerald-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <PencilLine size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteItem(product._id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={productHeaders.length}>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Search size={48} className="text-gray-300 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-700">
+                      No Products Found
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      There are currently no products available.
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </div>
+
+      {isEditMode && (
+        <ProductsModal
+          setIsModalOpen={setIsEditMode}
+          editProduct={selectedProduct}
+        />
+      )}
     </div>
   );
 }
