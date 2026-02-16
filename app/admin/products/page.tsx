@@ -5,28 +5,34 @@ import ProductTable from "@/components/admin/ProductTable";
 import { useEffect, useState } from "react";
 import ProductsModal from "./ProductsModal";
 import { Product } from "@/types/adminType";
+import { useProducts } from "@/hooks/useProducts";
 
 const ProductsPage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [productLoading, setProductLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  useEffect(() => {
-    fetchAllProducts();
-  }, []);
-
-  const fetchAllProducts = async () => {
-    try{  
-      const response = await fetch('api/products');
-      const data = await response.json();
-      setProducts(data);
-    }catch(error){
-      console.error("Failed to fetch products: ", error)
-    } finally{  
-      setProductLoading(false);
-    }
-  }
   
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const {data: products = [], isLoading, isError, error, refetch} = useProducts();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-xl">Loading products...</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-xl text-red-600">
+          Error:{" "}
+          {error instanceof Error ? error.message : "Failed to load products"}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="space-y-6">
       {/* Header */}
@@ -38,7 +44,10 @@ const ProductsPage = () => {
           <p className="text-stone-500">Manage your menu items and inventory</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setSelectedProduct(null);
+            setIsModalOpen(true);
+          }}
           className="px-6 py-3 bg-[#e13e00] text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
         >
           + Add New Product
@@ -49,36 +58,43 @@ const ProductsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Total Products</p>
-          <p className="text-2xl font-bold text-stone-800">
-            {products.length}
-          </p>
+          <p className="text-2xl font-bold text-stone-800">{products.length}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Active</p>
           <p className="text-2xl font-bold text-emerald-600">
-            {products.filter((p) => p.status === "active").length}
+            {products.filter((p: Product) => p.status === "active").length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Low Stock</p>
           <p className="text-2xl font-bold text-amber-600">
-            {products.filter((p) => p.stock < 20).length}
+            {products.filter((p: Product) => p.stock < 20).length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Out of Stock</p>
           <p className="text-2xl font-bold text-red-600">
-            {products.filter((p) => p.stock === 0).length}
+            {products.filter((p: Product) => p.stock === 0).length}
           </p>
         </div>
       </div>
 
       {/* Products Table */}
-      <ProductTable products={products} />
+      <ProductTable
+        products={products}
+        onEdit={(product) => {
+          setSelectedProduct(product);
+          setIsModalOpen(true);
+        }}
+      />
 
       {/* Add Product Modal */}
       {isModalOpen && (
-        <ProductsModal setIsModalOpen={setIsModalOpen}/>
+        <ProductsModal
+          setIsModalOpen={setIsModalOpen}
+          editProduct={selectedProduct}
+        />
       )}
     </section>
   );
