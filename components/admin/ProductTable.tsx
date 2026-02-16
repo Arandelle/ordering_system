@@ -86,10 +86,10 @@ export default function ProductTable({ products }: ProductTableProps) {
                 <TableCell className="px-6 py-4">
                   <div className="flex gap-2">
                     <button className="p-2 text-emerald-600 hover:bg-blue-50 rounded-lg transition-colors">
-                      <PencilLine />
+                      <PencilLine size={16}/>
                     </button>
                     <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 />
+                      <Trash2 size={16}/>
                     </button>
                   </div>
                 </TableCell>

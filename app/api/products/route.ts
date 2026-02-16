@@ -57,10 +57,10 @@ export async function POST(request: Request) {
   try {
     await connectDB();
 
-    const { name, price, description, image, category, imageFile } = await request.json();
+    const { name, price, description, image, category, imageFile, stock} = await request.json();
 
     // ✅ STEP 1: VALIDATE
-    if (!name || !price || !description || !category) {
+    if (!name || !price || !description || !category || !stock) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -90,6 +90,14 @@ export async function POST(request: Request) {
       );
     }
 
+     // Validate stock
+    if (isNaN(parseFloat(stock)) || parseFloat(stock) <= 0) {
+      return NextResponse.json(
+        { error: "Stock must be a positive number" },
+        { status: 400 }
+      );
+    }
+
     // ✅ STEP 2: Upload image (only after validation)
     let finalImageUrl = image;
 
@@ -115,6 +123,7 @@ export async function POST(request: Request) {
       description,
       image: finalImageUrl,
       category: normalizedCategory,
+      stock
     });
 
     return NextResponse.json(product, { status: 201 });
