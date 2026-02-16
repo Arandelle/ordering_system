@@ -9,7 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { Pencil, PencilLine, Trash, Trash2 } from "lucide-react";
+import { PencilLine, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface ProductTableProps {
   products: Product[];
@@ -17,13 +18,28 @@ interface ProductTableProps {
 
 export default function ProductTable({ products }: ProductTableProps) {
   const productHeaders = [
+    "Image",
     "Product",
     "Category",
     "Price",
     "Stock",
-    "Status",
     "Actions",
   ];
+
+  const handleDeleteItem = async (id: string) => {
+    if (!id) return;
+    try {
+      const response = await fetch(`api/products/${id}/`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        toast.success("Deleted Successfully!");
+      }
+    } catch (error) {
+      console.error("Error Deleting an item", error);
+      toast.error("Error deleting an Item");
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
@@ -44,9 +60,18 @@ export default function ProductTable({ products }: ProductTableProps) {
           <TableBody className="divide-y divide-stone-100">
             {products.map((product) => (
               <TableRow
-                key={product.id}
+                key={product._id}
                 className="hover:bg-stone-50 transition-colors"
               >
+                <TableCell className="px-6 py-4 flex items-center justify-center">
+                  <div>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-24 h-24"
+                    />
+                  </div>
+                </TableCell>
                 <TableCell className="px-6 py-4">
                   <div>
                     <p className="text-sm font-semibold text-stone-800">
@@ -77,19 +102,19 @@ export default function ProductTable({ products }: ProductTableProps) {
                           : "text-emerald-600"
                     }`}
                   >
-                    {product.stock} units
+                    {product.stock} left
                   </span>
-                </TableCell>
-                <TableCell className="px-6 py-4">
-                  <StatusBadge status={product.status} />
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <div className="flex gap-2">
                     <button className="p-2 text-emerald-600 hover:bg-blue-50 rounded-lg transition-colors">
-                      <PencilLine size={16}/>
+                      <PencilLine size={16} />
                     </button>
-                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 size={16}/>
+                    <button
+                      onClick={() => handleDeleteItem(product._id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </TableCell>

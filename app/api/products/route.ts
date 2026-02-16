@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     }
 
     // Regular product listing
-    const product = await Product.find({ isActive: true })
+    const product = await Product.find({})
       .sort({ createdAt: -1 })
       .lean();
     

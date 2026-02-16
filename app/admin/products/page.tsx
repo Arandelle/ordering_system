@@ -1,17 +1,31 @@
 "use client";
 
-import Modal from "@/components/ui/Modal";
 import ProductTable from "@/components/admin/ProductTable";
-import { mockProducts } from "@/data/mockData";
-import React from "react";
-import { useState } from "react";
-import { InputField } from "@/components/ui/InputField";
-import { Link } from "lucide-react";
+// import { mockProducts } from "@/data/mockData";
+import { useEffect, useState } from "react";
 import ProductsModal from "./ProductsModal";
+import { Product } from "@/types/adminType";
 
 const ProductsPage = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productLoading, setProductLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  useEffect(() => {
+    fetchAllProducts();
+  }, []);
+
+  const fetchAllProducts = async () => {
+    try{  
+      const response = await fetch('api/products');
+      const data = await response.json();
+      setProducts(data);
+    }catch(error){
+      console.error("Failed to fetch products: ", error)
+    } finally{  
+      setProductLoading(false);
+    }
+  }
   
   return (
     <section className="space-y-6">
@@ -36,31 +50,31 @@ const ProductsPage = () => {
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Total Products</p>
           <p className="text-2xl font-bold text-stone-800">
-            {mockProducts.length}
+            {products.length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Active</p>
           <p className="text-2xl font-bold text-emerald-600">
-            {mockProducts.filter((p) => p.status === "active").length}
+            {products.filter((p) => p.status === "active").length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Low Stock</p>
           <p className="text-2xl font-bold text-amber-600">
-            {mockProducts.filter((p) => p.stock < 20).length}
+            {products.filter((p) => p.stock < 20).length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Out of Stock</p>
           <p className="text-2xl font-bold text-red-600">
-            {mockProducts.filter((p) => p.stock === 0).length}
+            {products.filter((p) => p.stock === 0).length}
           </p>
         </div>
       </div>
 
       {/* Products Table */}
-      <ProductTable products={mockProducts} />
+      <ProductTable products={products} />
 
       {/* Add Product Modal */}
       {isModalOpen && (

@@ -16,12 +16,12 @@ export interface OrderItem {
 }
 
 export interface Product {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   category: string;
   price: number;
-  imageUrl: string;
+  image: string;
   stock: number;
   status: 'active' | 'inactive';
   isPopular?: boolean;
