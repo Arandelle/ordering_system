@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-query-devtools": "^5.91.3",
     "axios": "^1.13.4",
     "cloudinary": "^2.9.0",
     "date-fns": "^4.1.0",
