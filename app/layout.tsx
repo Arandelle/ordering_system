@@ -18,6 +18,36 @@ export const metadata: Metadata = {
   title: "Home | Harrison House of Inasal & BBQ",
   description:
     "Discover Harrison: proudly Filipino BBQ and Inasal, served with stories and barkada vibes. New branches, online orders, and collabs coming soon—follow the grill!",
+  keywords: ["filipino bbq", "inasal", "bbq", "restaurant", "makati", "food", "order"],
+  authors: [{name: "Harrison Inasal & BBQ"}],
+  creator: "Harrison Inasal & BBQ",
+  metadataBase : new URL("https://eris-admin.com"),
+
+  openGraph: {
+    title: "Harrison Inasal & BBQ",
+    description: "Filipino Inasal and BBQ",
+    url: "https://eris-admin.com",
+    siteName: "Harrison Inasal & BBQ",
+    images: [{
+      url: "/images/harrison_logo.png",
+      width: 120,
+      height: 630
+    }],
+    type: "website"
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Harrison Inasala & BBQ",
+    description: "Filipino Inasal and BBQ",
+    images: ["/images/harrison_logo.png"]
+  },
+
+  robots: {
+    index: true,
+    follow: true
+  },
+
   icons: {
     icon: "images/harrison_logo.png",
   },
