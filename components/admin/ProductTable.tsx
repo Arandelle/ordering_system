@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Product } from "@/types/adminType";
-import StatusBadge from "../ui/StatusBadge";
 import {
   Table,
   TableBody,
@@ -12,13 +11,13 @@ import {
 import { PencilLine, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import ProductsModal from "@/app/admin/products/ProductsModal";
-import { he } from "date-fns/locale";
 
 interface ProductTableProps {
   products: Product[];
+  onEdit?: (item: Product) => void
 }
 
-export default function ProductTable({ products }: ProductTableProps) {
+export default function ProductTable({ products, onEdit }: ProductTableProps) {
   const productHeaders = [
     "Image",
     "Product",
@@ -47,8 +46,7 @@ export default function ProductTable({ products }: ProductTableProps) {
     }
   };
 
-  const handleEditItem = (id: string) => {
-    const selected = products.find((item) => item._id === id);
+  const handleEditItem = (selected: Product) => {
     if (selected) {
       setSelectedProduct(selected);
       setIsEditMode(true);
@@ -75,7 +73,7 @@ export default function ProductTable({ products }: ProductTableProps) {
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100">
-            {products.length < 0 ? (
+            {products.length > 0 ? (
               products.map((product) => (
                 <TableRow
                   key={product._id}
@@ -126,7 +124,7 @@ export default function ProductTable({ products }: ProductTableProps) {
                   <TableCell className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={() => handleEditItem(product._id)}
+                        onClick={() => handleEditItem(product)}
                         className="p-2 text-emerald-600 hover:bg-blue-50 rounded-lg transition-colors"
                       >
                         <PencilLine size={16} />
