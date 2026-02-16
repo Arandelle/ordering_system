@@ -1,7 +1,7 @@
 'use client';
 
 import { InputField } from "@/components/ui/InputField";
-import OrdersTable from "@/components/OrdersTable";
+import OrdersTable from "@/components/admin/OrdersTable";
 import { mockOrders } from "@/data/mockData";
 import React, { useState } from "react";
 

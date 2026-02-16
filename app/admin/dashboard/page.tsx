@@ -1,7 +1,7 @@
 import React from 'react';
 import DashboardCards from '@/components/admin/DashboardCard';
 import SalesChart from '@/components/admin/SalesChart';
-import OrdersTable from '@/components/OrdersTable';
+import OrdersTable from '@/components/admin/OrdersTable';
 import { mockDashboardStats, mockSalesData, mockTopProducts, mockOrders } from '@/data/mockData'
 
 export default function DashboardPage() {

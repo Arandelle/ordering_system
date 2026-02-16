@@ -1,7 +1,7 @@
 "use client";
 
 import Modal from "@/components/ui/Modal";
-import ProductTable from "@/components/ProductTable";
+import ProductTable from "@/components/admin/ProductTable";
 import { mockProducts } from "@/data/mockData";
 import React from "react";
 import { useState } from "react";

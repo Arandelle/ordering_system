@@ -1,7 +1,7 @@
 import React from "react";
 import { Order } from "@/types/adminType";
-import StatusBadge from "./ui/StatusBadge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import StatusBadge from "../ui/StatusBadge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 interface OrdersTableProps {
   orders: Order[];

@@ -1,5 +1,6 @@
+'use client'
+
 import { SalesData, TopProduct } from "@/types/adminType";
-import React from "react";
 import {
   Bar,
   BarChart,

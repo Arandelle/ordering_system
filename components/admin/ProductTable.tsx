@@ -1,6 +1,6 @@
 import React from "react";
 import { Product } from "@/types/adminType";
-import StatusBadge from "./ui/StatusBadge";
+import StatusBadge from "../ui/StatusBadge";
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table";
+} from "../ui/table";
 import { Pencil, PencilLine, Trash, Trash2 } from "lucide-react";
 
 interface ProductTableProps {
