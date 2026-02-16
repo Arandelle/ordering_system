@@ -29,8 +29,8 @@ export const metadata: Metadata = {
     url: "https://eris-admin.com",
     siteName: "Harrison Inasal & BBQ",
     images: [{
-      url: "/images/harrison_logo.png",
-      width: 120,
+      url: "/images/mission-product-img.jpg",
+      width: 1200,
       height: 630
     }],
     type: "website"
@@ -38,14 +38,14 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Harrison Inasala & BBQ",
+    title: "Harrison Inasal & BBQ",
     description: "Filipino Inasal and BBQ",
     images: ["/images/harrison_logo.png"]
   },
 
   robots: {
-    index: true,
-    follow: true
+    index: false, // change to true once domain is final
+    follow: false // change to true once domain is final
   },
 
   icons: {
