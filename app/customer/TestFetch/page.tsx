@@ -16,8 +16,8 @@ const ProductsPage = async () => {
     price: product.price,
     description: product.description,
     image: product.image,
-    categoryId: product.categoryId.toString(), // ✅ Convert ObjectId to string
-    isBestSeller: product.isBestSeller,
+    category: product.categoryId.toString(), // ✅ Convert ObjectId to string
+    isPopular: product.isPopular,
     stock: product.stock,
     isActive: product.isActive,
     createdAt: product.createdAt.toISOString(), // ✅ Convert Date to string

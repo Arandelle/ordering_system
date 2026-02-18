@@ -1,12 +1,12 @@
 'use client'
 
 import { useCart } from "@/contexts/CartContext";
-import { MenuItem } from "@/types/MenuTypes";
+import { Product } from "@/types/adminType";
 import { Check, Plus, ShoppingBag } from "lucide-react";
 import React, { useState } from "react";
 
 interface ProductCardProps {
-  item: MenuItem;
+  item: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
@@ -18,8 +18,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
       _id: item._id,
       name: item.name,
       price: item.price,
-      image: item.image,
-      category: item.category ?? "No description",
+      image: item.image.url,
+      category: item.category.name ?? "No description",
     });
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 500);
@@ -30,13 +30,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
       {/** Image container */}
       <div className="relative overflow-hidden aspect-square">
         <img
-          src={item.image}
+          src={item.image.url}
           alt={item.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
 
         {/** Best Seller Badge */}
-        {item.isBestSeller && (
+        {item.isPopular && (
           <div className="absolute left-3 top-3 bg-[#e13e00] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
             Best Seller
           </div>

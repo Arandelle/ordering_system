@@ -8,6 +8,8 @@ import ProductCard from "../../ui/ProductCard";
 import PromoBanner from "./PromoBanner";
 import { LINKS } from "@/constant/links";
 import { useScrollToSection } from "@/hooks/useScrollToSection";
+import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/types/adminType";
 
 const MenuSection = ({
   variant = "full",
@@ -15,7 +17,7 @@ const MenuSection = ({
   variant?: "landing" | "full";
 }) => {
 
-
+  const {data: products = []} = useProducts();
   useScrollToSection();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,17 +31,8 @@ const MenuSection = ({
   const headerRef = useRef<HTMLDivElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
 
-  // convert menuData object into flattened array
-  const allItems: MenuItem[] = Object.entries(menuData).flatMap(
-    ([category, items]) =>
-      items.map((item) => ({
-        ...item,
-        category,
-      })),
-  );
-
   const computedItems = (() => {
-    let items = allItems;
+    let items: Product[] = products;
 
     // Landing page logic
     if (variant === "landing") {
@@ -51,8 +44,8 @@ const MenuSection = ({
       items = items
         .filter((item) => {
           if (activeCategory === "All") return true;
-          if (activeCategory === "Best Sellers") return item.isBestSeller;
-          return item.category === activeCategory;
+          if (activeCategory === "Best Sellers") return item.isPopular;
+          return item.category.name === activeCategory;
         })
         .filter((item) => {
           if (!searchQuery) return true;
@@ -348,7 +341,7 @@ const MenuSection = ({
             Object.entries(
               computedItems.reduce(
                 (acc, item) => {
-                  const category = item.category || "Uncategorized";
+                  const category = item.category.name || "Uncategorized";
                   if (!acc[category]) acc[category] = [];
                   acc[category].push(item);
                   return acc;

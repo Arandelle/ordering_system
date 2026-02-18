@@ -2,27 +2,32 @@ import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
+import "@/models/Category";
 
 // GET all products
 export async function GET() {
   try {
     await connectDB();
 
-    const products = await Product.find({})
-      .populate("category")
-      .sort({ createdAt: -1 });
+    const products = await Product.aggregate([
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: { path: "$category"} },
+      { $sort: { "category.position": 1, createdAt: -1 } },
+    ]);
 
     return NextResponse.json(products);
   } catch (error: any) {
     console.error("FULL ERROR:", error);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
-
 
 // POST create new product
 export async function POST(request: Request) {
