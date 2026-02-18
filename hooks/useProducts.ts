@@ -4,6 +4,7 @@
 
 import { Product } from "@/types/adminType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ProductPayload } from "@/types/adminType";
 
 /**
  * Fetch all product
@@ -70,7 +71,7 @@ export const useCreateProduct = () => {
 
   return useMutation({
     // The actual API call
-    mutationFn: async (productData: Partial<Product>) => {
+    mutationFn: async (productData: Partial<ProductPayload>) => {
       const response = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,7 +115,7 @@ export const useUpdateProduct = () => {
       data,
     }: {
       id: string;
-      data: Partial<Product>;
+      data: Partial<ProductPayload>;
     }) => {
       const response = await fetch(`/api/products/${id}`, {
         method: "PUT",
