@@ -19,7 +19,7 @@ export interface Product {
   _id: string;
   name: string;
   description: string;
-  category: string;
+  category: Category;
   price: number;
   image: {
     url: string,
@@ -40,10 +40,10 @@ export interface ProductPayload {
 }
 
 export interface Category {
-  id: string;
+  _id: string;
   name: string;
-  productCount: number;
-  createdAt: Date;
+  position: number,
+  createdAt?: Date;
 }
 
 export interface Customer {
