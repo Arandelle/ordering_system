@@ -11,6 +11,7 @@ import {
 import { PencilLine, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteProduct } from "@/hooks/useProducts";
+import Image from "next/image";
 
 interface ProductTableProps {
   products: Product[];
@@ -64,8 +65,8 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                 >
                   <TableCell className="px-6 py-4 flex items-center justify-center">
                     <div>
-                      <img
-                        src={product.image}
+                      <Image
+                        src={product.image.url}
                         alt={product.name}
                         className="w-18 h-18"
                       />
