@@ -2,7 +2,7 @@
 
 import ProductTable from "@/components/admin/ProductTable";
 // import { mockProducts } from "@/data/mockData";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ProductsModal from "./ProductsModal";
 import { Product } from "@/types/adminType";
 import { useProducts } from "@/hooks/useProducts";
@@ -61,9 +61,9 @@ const ProductsPage = () => {
           <p className="text-2xl font-bold text-stone-800">{products.length}</p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
-          <p className="text-sm text-stone-500 mb-1">Active</p>
+          <p className="text-sm text-stone-500 mb-1">Popular</p>
           <p className="text-2xl font-bold text-emerald-600">
-            {products.filter((p: Product) => p.status === "active").length}
+            {products.filter((p: Product) => p.isPopular).length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">

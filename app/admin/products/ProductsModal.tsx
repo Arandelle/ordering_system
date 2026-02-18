@@ -60,7 +60,7 @@ const ProductsModal = ({
         name: editProduct.name,
         price: editProduct.price.toString(),
         description: editProduct.description,
-        image: editProduct.image,
+        image: editProduct.image.url,
         category: editProduct.category,
         stock: editProduct.stock.toString(),
       });
