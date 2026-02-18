@@ -21,10 +21,22 @@ export interface Product {
   description: string;
   category: string;
   price: number;
-  image: string;
+  image: {
+    url: string,
+    public_id?: string
+  };
   stock: number;
-  status: 'active' | 'inactive';
   isPopular?: boolean;
+}
+
+export interface ProductPayload {
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  stock: number;
+  image?: string;
+  imageFile?: string;
 }
 
 export interface Category {
