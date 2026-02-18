@@ -7,8 +7,6 @@ export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-
-
   let uploadResult;
 
   try {
@@ -17,22 +15,20 @@ export async function PUT(
     const { id } = await context.params;
     const body = await request.json();
 
-    const { name, price, description,image, imageFile, category, stock } = body;
+    const { name, price, description, image, imageFile, category, stock } =
+      body;
 
     if (!id) {
       return NextResponse.json(
         { error: "Product ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const existingProduct = await Product.findById(id);
 
     if (!existingProduct) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     let finalImage = existingProduct.image;
@@ -51,23 +47,21 @@ export async function PUT(
 
       // 2️⃣ Delete old image
       if (existingProduct.image?.public_id) {
-        await cloudinary.uploader.destroy(
-          existingProduct.image.public_id
-        );
+        await cloudinary.uploader.destroy(existingProduct.image.public_id);
       }
-    }
+    } else if (image && image.startsWith("http")) {
+      const isSameImage = existingProduct.image?.url === image;
 
-    else if(image && image.startsWith("http")){
+      if (!isSameImage) {
+        if (existingProduct.image?.public_id) {
+          await cloudinary.uploader.destroy(existingProduct.image.public_id);
+        }
 
-      if(existingProduct.image?.public_id){
-        await cloudinary.uploader.destroy(existingProduct.image.public_id)
+        finalImage = {
+          url: image,
+          public_id: undefined,
+        };
       }
-
-      finalImage = {
-        url: image,
-        public_id: undefined
-      }
-
     }
 
     // 3️⃣ Update product
@@ -81,13 +75,11 @@ export async function PUT(
         category,
         stock: parseInt(stock),
       },
-      { new: true }
+      { new: true },
     );
 
     return NextResponse.json(updated, { status: 200 });
-
   } catch (error: any) {
-
     // 🔥 Rollback if DB update failed after upload
     if (uploadResult?.public_id) {
       await cloudinary.uploader.destroy(uploadResult.public_id);
@@ -95,11 +87,10 @@ export async function PUT(
 
     return NextResponse.json(
       { error: error.message || "Failed to update item" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
 
 export async function DELETE(
   request: NextRequest,
