@@ -1,10 +1,11 @@
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
+import cloudinary from "@/lib/cloudinary";
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
@@ -17,7 +18,7 @@ export async function PUT(
     if (!id) {
       return NextResponse.json(
         { error: "Product ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -31,22 +32,18 @@ export async function PUT(
         category,
         stock: Number(stock), // enforce number
       },
-      { new: true } // return updated document
+      { new: true }, // return updated document
     );
 
     if (!updated) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     return NextResponse.json(updated, { status: 200 });
-
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to update item" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -67,6 +64,21 @@ export async function DELETE(
       );
     }
 
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return NextResponse.json(
+        { error: "Product not found!" },
+        { status: 404 },
+      );
+    }
+
+    // Delete image from cloudinary
+    if (product.image?.public_id) {
+      await cloudinary.uploader.destroy(product.image.public_id);
+    }
+
+    // Then delete product from DB
     await Product.findByIdAndDelete(id);
 
     return new NextResponse(null, { status: 204 });
