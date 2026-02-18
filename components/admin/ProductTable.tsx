@@ -66,7 +66,9 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                   <TableCell className="px-6 py-4 flex items-center justify-center">
                     <div>
                       <Image
-                        src={product.image.url}
+                        width={200}
+                        height={200}
+                        src={product?.image?.url}
                         alt={product.name}
                         className="w-18 h-18"
                       />

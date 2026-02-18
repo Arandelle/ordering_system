@@ -48,6 +48,9 @@ export async function GET(request: Request) {
 
 // POST create new product
 export async function POST(request: Request) {
+
+  let uploadResult;
+
   try {
     await connectDB();
 
@@ -99,7 +102,7 @@ export async function POST(request: Request) {
     };
 
     if (imageFile) {
-      const uploadResult = await cloudinary.uploader.upload(imageFile, {
+      uploadResult = await cloudinary.uploader.upload(imageFile, {
         folder: 'products',
         transformation: [
           { width: 1200, height: 1200, crop: 'limit' },
@@ -119,17 +122,25 @@ export async function POST(request: Request) {
     // ✅ STEP 4: Create product
     const product = await Product.create({
       name,
-      price: parseInt(price),
+      price: parseFloat(price),
       description,
       image: finalImage,
       category: normalizedCategory,
       stock
     });
 
+    if(!product){
+      await cloudinary.uploader.destroy(finalImage.public_id);
+    }
+
     return NextResponse.json(product, { status: 201 });
 
   } catch (error: any) {
     console.error('Error creating product:', error);
+
+    if(uploadResult?.public_id){
+      await cloudinary.uploader.destroy(uploadResult.public_id);
+    }
 
     return NextResponse.json(
       { error: error.message || "Failed to create product!" },
