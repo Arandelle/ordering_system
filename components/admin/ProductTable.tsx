@@ -14,7 +14,7 @@ import { useDeleteProduct } from "@/hooks/useProducts";
 
 interface ProductTableProps {
   products: Product[];
-  onEdit: (item: Product) => void
+  onEdit: (item: Product) => void;
 }
 
 export default function ProductTable({ products, onEdit }: ProductTableProps) {
@@ -31,8 +31,11 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
   const deleteMutation = useDeleteProduct();
 
   const handleDeleteItem = async (id: string) => {
-   await deleteMutation.mutateAsync(id)
-   toast.success("Deleted successfully!")
+    if (confirm("Are you sure you want to delete this item?")) {
+      await deleteMutation.mutateAsync(id);
+      toast.success("Deleted successfully!");
+      return;
+    }
   };
 
   return (

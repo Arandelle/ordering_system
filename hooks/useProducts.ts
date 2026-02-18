@@ -179,7 +179,7 @@ export const useDeleteProduct = () => {
         throw new Error('Failed to delete product');
       }
       
-      return response.json();
+      return;
     },
     
     onSuccess: () => {
