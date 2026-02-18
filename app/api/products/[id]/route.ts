@@ -7,46 +7,99 @@ export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+
+
+  let uploadResult;
+
   try {
     await connectDB();
 
     const { id } = await context.params;
     const body = await request.json();
 
-    const { name, price, description, image, category, stock } = body;
+    const { name, price, description,image, imageFile, category, stock } = body;
 
     if (!id) {
       return NextResponse.json(
         { error: "Product ID required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
+    const existingProduct = await Product.findById(id);
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
+    }
+
+    let finalImage = existingProduct.image;
+
+    // ✅ If user uploaded new image
+    if (imageFile) {
+      // 1️⃣ Upload new image
+      uploadResult = await cloudinary.uploader.upload(imageFile, {
+        folder: "products",
+      });
+
+      finalImage = {
+        url: uploadResult.secure_url,
+        public_id: uploadResult.public_id,
+      };
+
+      // 2️⃣ Delete old image
+      if (existingProduct.image?.public_id) {
+        await cloudinary.uploader.destroy(
+          existingProduct.image.public_id
+        );
+      }
+    }
+
+    else if(image && image.startsWith("http")){
+
+      if(existingProduct.image?.public_id){
+        await cloudinary.uploader.destroy(existingProduct.image.public_id)
+      }
+
+      finalImage = {
+        url: image,
+        public_id: undefined
+      }
+
+    }
+
+    // 3️⃣ Update product
     const updated = await Product.findByIdAndUpdate(
       id,
       {
         name,
-        price: Number(price), // enforce number
+        price: parseFloat(price),
         description,
-        image,
+        image: finalImage,
         category,
-        stock: Number(stock), // enforce number
+        stock: parseInt(stock),
       },
-      { new: true }, // return updated document
+      { new: true }
     );
 
-    if (!updated) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    return NextResponse.json(updated, { status: 200 });
+
+  } catch (error: any) {
+
+    // 🔥 Rollback if DB update failed after upload
+    if (uploadResult?.public_id) {
+      await cloudinary.uploader.destroy(uploadResult.public_id);
     }
 
-    return NextResponse.json(updated, { status: 200 });
-  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to update item" },
-      { status: 500 },
+      { error: error.message || "Failed to update item" },
+      { status: 500 }
     );
   }
 }
+
 
 export async function DELETE(
   request: NextRequest,

@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     }
 
      // Validate stock
-    if (isNaN(parseFloat(stock)) || parseFloat(stock) <= 0) {
+    if (isNaN(parseFloat(stock))) {
       return NextResponse.json(
         { error: "Stock must be a positive number" },
         { status: 400 }

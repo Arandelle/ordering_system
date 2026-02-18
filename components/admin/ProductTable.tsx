@@ -68,7 +68,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                       <Image
                         width={200}
                         height={200}
-                        src={product?.image?.url}
+                        src={product?.image?.url || "/images/harrison_logo.png"}
                         alt={product.name}
                         className="w-18 h-18"
                       />

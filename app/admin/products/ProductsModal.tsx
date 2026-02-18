@@ -57,12 +57,12 @@ const ProductsModal = ({
   useEffect(() => {
     if (editProduct) {
       setFormData({
-        name: editProduct.name,
-        price: editProduct.price.toString(),
-        description: editProduct.description,
-        image: editProduct.image.url,
-        category: editProduct.category,
-        stock: editProduct.stock.toString(),
+        name: editProduct.name || "",
+        price: editProduct.price.toString() || "",
+        description: editProduct.description || "",
+        image: editProduct.image.url || "",
+        category: editProduct.category || "",
+        stock: editProduct.stock.toString() || "",
       });
     }
   }, [editProduct]);
@@ -149,7 +149,7 @@ const ProductsModal = ({
         name: formData.name,
         price: parseFloat(formData.price),
         description: formData.description,
-        image: imageData.startsWith("http") ? imageData : undefined,
+        image: imageData.startsWith("https") ? imageData : undefined,
         imageFile: imageData.startsWith("data:") ? imageData : undefined,
         category: formData.category,
         stock: parseFloat(formData.stock),
