@@ -1,7 +1,6 @@
 "use client";
 
 import ProductTable from "@/components/admin/ProductTable";
-// import { mockProducts } from "@/data/mockData";
 import { useState } from "react";
 import ProductsModal from "./ProductsModal";
 import { Product } from "@/types/adminType";
