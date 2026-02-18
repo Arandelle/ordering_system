@@ -86,7 +86,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <span className="text-sm text-gray-600">
-                      {product.category}
+                      {product.category?.name}
                     </span>
                   </TableCell>
                   <TableCell className="px-6 py-4">
