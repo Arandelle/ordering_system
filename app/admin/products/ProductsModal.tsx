@@ -3,7 +3,7 @@ import { InputField } from "@/components/ui/InputField";
 import Modal from "@/components/ui/Modal";
 import { Beef, DollarSign, Layers, Link } from "lucide-react";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
-import { Product } from "@/types/adminType";
+import { Category, Product } from "@/types/adminType";
 import { toast } from "sonner";
 
 interface ProductFormData {
@@ -40,7 +40,7 @@ const ProductsModal = ({
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState("");
@@ -61,7 +61,7 @@ const ProductsModal = ({
         price: editProduct.price.toString() || "",
         description: editProduct.description || "",
         image: editProduct.image.url || "",
-        category: editProduct.category || "",
+        category: editProduct.category._id || "",
         stock: editProduct.stock.toString() || "",
       });
     }
@@ -69,9 +69,9 @@ const ProductsModal = ({
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`api/products?action=categories`);
+      const response = await fetch(`api/categories`);
       const data = await response.json();
-      setCategories(data.categories || []);
+      setCategories(data || []);
     } catch (error) {
       console.error("Failed to fetch categories: ", error);
     } finally {
@@ -136,6 +136,7 @@ const ProductsModal = ({
 
     try {
       let imageData = formData.image;
+      let categoryId = formData.category;
 
       if (imageFile) {
         imageData = await fileToBase64(imageFile);
@@ -145,13 +146,24 @@ const ProductsModal = ({
         throw new Error("Please provide an image URL or upload an image");
       }
 
+      if (showCustomCategory && customCategory) {
+        const res = await fetch("/api/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: customCategory }),
+        });
+
+        const newCat = await res.json();
+        categoryId = newCat._id;
+      }
+
       const payload = {
         name: formData.name,
         price: parseFloat(formData.price),
         description: formData.description,
         image: imageData.startsWith("https") ? imageData : undefined,
         imageFile: imageData.startsWith("data:") ? imageData : undefined,
-        category: formData.category,
+        category: categoryId,
         stock: parseFloat(formData.stock),
       };
 
@@ -162,11 +174,11 @@ const ProductsModal = ({
           data: payload,
         });
 
-        toast.success("Update Successfully!")
+        toast.success("Update Successfully!");
       } else {
         // USE THE CREATE MUTATION
         await createMutation.mutateAsync(payload);
-        toast.success("Created Successfull!")
+        toast.success("Created Successfull!");
       }
 
       setIsModalOpen(false);
@@ -238,8 +250,8 @@ const ProductsModal = ({
                 >
                   <option value="">Select a category</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name
                         .replace(/-/g, " ")
                         .split(" ")
                         .map(
