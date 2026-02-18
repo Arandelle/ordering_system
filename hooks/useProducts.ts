@@ -143,7 +143,14 @@ export const useUpdateProduct = () => {
 
       // Optimistically update cache
       queryClient.setQueryData(['products'], (old: Product[] = []) => {
-        return old.map(p => p._id === id ? { ...p, ...data } : p);
+        return old.map(p => {
+          if(p._id !== id) return p;
+          return {
+            ...p,
+            ...data,
+            category: p.category
+          }
+        });
       });
 
        // Return context with previous data
