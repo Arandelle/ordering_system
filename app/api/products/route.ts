@@ -1,13 +1,7 @@
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { NextResponse } from "next/server";
-import { v2 as cloudinary } from 'cloudinary';
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import cloudinary from "@/lib/cloudinary";
 
 // GET all products
 export async function GET(request: Request) {
@@ -60,7 +54,7 @@ export async function POST(request: Request) {
     const { name, price, description, image, category, imageFile, stock} = await request.json();
 
     // ✅ STEP 1: VALIDATE
-    if (!name || !price || !description || !category || !stock) {
+    if (!name || !price || !description || !category || stock === undefined || stock === null) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -99,7 +93,10 @@ export async function POST(request: Request) {
     }
 
     // ✅ STEP 2: Upload image (only after validation)
-    let finalImageUrl = image;
+    let finalImage = {
+      url: "",
+      public_id: ""
+    };
 
     if (imageFile) {
       const uploadResult = await cloudinary.uploader.upload(imageFile, {
@@ -110,7 +107,10 @@ export async function POST(request: Request) {
         ],
       });
 
-      finalImageUrl = uploadResult.secure_url;
+      finalImage = {
+        url: uploadResult.secure_url,
+        public_id: uploadResult.public_id
+      };
     }
 
     // ✅ STEP 3: Normalize category (lowercase, trim spaces)
@@ -119,9 +119,9 @@ export async function POST(request: Request) {
     // ✅ STEP 4: Create product
     const product = await Product.create({
       name,
-      price: parseFloat(price),
+      price: parseInt(price),
       description,
-      image: finalImageUrl,
+      image: finalImage,
       category: normalizedCategory,
       stock
     });
