@@ -10,11 +10,11 @@ import {
 } from "../ui/table";
 import { PencilLine, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import ProductsModal from "@/app/admin/products/ProductsModal";
+import { useDeleteProduct } from "@/hooks/useProducts";
 
 interface ProductTableProps {
   products: Product[];
-  onEdit?: (item: Product) => void
+  onEdit: (item: Product) => void
 }
 
 export default function ProductTable({ products, onEdit }: ProductTableProps) {
@@ -28,31 +28,11 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
     "Actions",
   ];
 
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const deleteMutation = useDeleteProduct();
 
   const handleDeleteItem = async (id: string) => {
-    if (!id) return;
-    try {
-      const response = await fetch(`api/products/${id}/`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        toast.success("Deleted Successfully!");
-      }
-    } catch (error) {
-      console.error("Error Deleting an item", error);
-      toast.error("Error deleting an Item");
-    }
-  };
-
-  const handleEditItem = (selected: Product) => {
-    if (selected) {
-      setSelectedProduct(selected);
-      setIsEditMode(true);
-    } else {
-      console.error("Product not found");
-    }
+   await deleteMutation.mutateAsync(id)
+   toast.success("Deleted successfully!")
   };
 
   return (
@@ -124,7 +104,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                   <TableCell className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={() => handleEditItem(product)}
+                        onClick={() => onEdit(product)}
                         className="p-2 text-emerald-600 hover:bg-blue-50 rounded-lg transition-colors"
                       >
                         <PencilLine size={16} />
@@ -157,13 +137,6 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
           </TableBody>
         </Table>
       </div>
-
-      {isEditMode && (
-        <ProductsModal
-          setIsModalOpen={setIsEditMode}
-          editProduct={selectedProduct}
-        />
-      )}
     </div>
   );
 }
