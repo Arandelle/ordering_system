@@ -15,7 +15,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
   const { placedOrders } = useOrder();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const order = placedOrders.find(o => o.id === orderId);
+  const order = placedOrders.find(o => o._id === orderId);
 
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;
@@ -56,7 +56,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
         <div className="flex justify-between items-start mb-2">
           <div>
             <h2 className={`font-bold`}>
-              Order #{order.id}
+              Order # <span className='uppercase text-gray-400'>{order.paymentInfo.referenceNumber}</span>
             </h2>
             <p className="text-sm text-gray-500">
               Placed {timeAgo} • {formatDate(order.createdAt)}
@@ -135,8 +135,8 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
       <div>
         <h3 className="font-semibold mb-3">Order Items</h3>
         <div className="space-y-3">
-          {(showAllItems ? order.items : order.items.slice(0, ITEMS_TO_SHOW)).map((item) => (
-            <div key={item._id} className="flex gap-3 border-b pb-3">
+          {(showAllItems ? order.items : order.items.slice(0, ITEMS_TO_SHOW)).map((item, index) => (
+            <div key={`${item._id}-${index}`} className="flex gap-3 border-b pb-3">
               <div className="relative w-16 h-16 shrink-0 rounded overflow-hidden bg-gray-100">
                 <Image
                   src={item.image}
@@ -173,25 +173,17 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
           )}
         </div>
       </div>
-      {/* Payment Information */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h3 className="font-semibold mb-3">💳 Payment</h3>
-        <div className="space-y-1 text-sm">
-          <p><strong>Method:</strong> {order.paymentInfo.label}</p>
-        </div>
-      </div>
-
       {/* Order Summary */}
-      <div className="border-t pt-4">
+      <div className="pt-4">
         <h3 className="font-semibold mb-3">Order Summary</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Subtotal</span>
-            <span>₱{order.totals.subTotal.toFixed(2)}</span>
+            <span>₱{order.total?.subTotal?.toFixed(2)}</span>
           </div>
           <div className="flex justify-between font-semibold text-base pt-2 border-t">
             <span>Total</span>
-            <span>₱{order.totals.total.toFixed(2)}</span>
+            <span>₱{order.total?.total?.toFixed(2)}</span>
           </div>
         </div>
       </div>
