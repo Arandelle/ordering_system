@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  ExternalLink,
   Eye,
   MapPin,
   Package,
@@ -184,8 +185,8 @@ const Orders = () => {
               const hasMoreItems = order.items.length > 3;
               const hiddenItemsCount = order.items.length - 3;
 
-              console.log(order.items)
-             
+              console.log(order.items);
+
               return (
                 <div
                   key={order._id}
@@ -196,7 +197,10 @@ const Orders = () => {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-bold text-slate-700 text-lg">
-                          Order # <span className="uppercase text-gray-400">{order.paymentInfo.referenceNumber}</span>
+                          Order #{" "}
+                          <span className="uppercase text-gray-400">
+                            {order.paymentInfo.referenceNumber}
+                          </span>
                         </p>
                         <div className="flex text-sm text-gray-600 items-center gap-4 py-2">
                           <p className="flex items-center gap-1">
@@ -212,14 +216,10 @@ const Orders = () => {
                               },
                             )}
                           </p>
-
-                          <p className="flex items-center gap-1 capitalize">
-                            <Banknote size={16} />
-                            {order.paymentInfo.method}
-                          </p>
+                       
                           <p className="flex items-center gap-1">
                             <MapPin size={16} />
-                              Pickup
+                            Pickup
                           </p>
                         </div>
                       </div>
@@ -231,7 +231,10 @@ const Orders = () => {
                   <div className="px-6 py-4">
                     <div className="space-y-4">
                       {itemsToShow.map((item, index) => (
-                        <div key={`${item._id}-${index}`} className="flex gap-4">
+                        <div
+                          key={`${item._id}-${index}`}
+                          className="flex gap-4"
+                        >
                           {/** Item Image */}
                           <div className="w-20 h-20 flex shrink-0 bg-gray-100 rounded-xl overflow-hidden">
                             {item.image ? (
@@ -289,13 +292,13 @@ const Orders = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">SubTotal</span>
                         <span className="font-[550]">
-                          ₱{order.totals?.subTotal?.toFixed(2)}
+                          ₱{order.total?.subTotal?.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                         <span className="text-gray-900">Total</span>
                         <span className="text-[#e13e00]">
-                          ₱{order.totals?.total?.toFixed(2)}
+                          ₱{order.total?.total?.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -304,6 +307,22 @@ const Orders = () => {
                   {/** Action Buttons */}
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                     <div className="flex flex-wrap gap-3 justify-end">
+                      {/** Cancel Order - Only for pending orders */}
+                      {order.status === "pending" && (
+                        <>
+                          <a 
+                          href={order.paymentInfo.checkoutUrl}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 border text-white text-sm font-semibold transition-all">
+                            <ExternalLink size={16} /> Pay Order!
+                          </a>
+                          <button
+                            onClick={() => handleCancelOrder(order._id)}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"
+                          >
+                            <X size={16} /> Cancel Order
+                          </button>
+                        </>
+                      )}
                       {/** View Details - Always Available */}
                       <button
                         onClick={() => handleViewDetails(order._id)}
@@ -311,16 +330,6 @@ const Orders = () => {
                       >
                         <Eye size={16} /> View Details
                       </button>
-
-                      {/** Cancel Order - Only for pending orders */}
-                      {order.status === "pending" && (
-                        <button
-                          onClick={() => handleCancelOrder(order._id)}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"
-                        >
-                          <X size={16} /> Cancel Order
-                        </button>
-                      )}
 
                       {/** Track Order - For paid and preparing order */}
                       {(order.status === "paid" ||
