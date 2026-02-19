@@ -57,11 +57,6 @@ const OrderSchema = new Schema({
     },
 
     paymentInfo : {
-        method: {
-            type: String,
-            enum: ["gcash", "maya", "qr"],
-            required: true
-        },
         label: String,
         paymentLinkId: String,
         checkoutUrl: String,

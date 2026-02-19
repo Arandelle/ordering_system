@@ -14,13 +14,12 @@ export interface OrderType {
 
   items: CartItem[];
   paymentInfo: {
-    method: "cod" | "gcash" | "card" | "qrph";
     label: string;
     paymentLinkId?: string;
     checkoutUrl?: string;
     referenceNumber?: string
   };
-  totals: {
+  total: {
     subTotal: number;
     total: number;
   };
