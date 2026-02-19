@@ -8,7 +8,10 @@ export interface MenuItem {
   name: string;
   price: number;
   description?: string;
-  category?: string;
+  category?: {
+    _id: string,
+    name: string
+  };
   isBestSeller?: boolean;
   image: string;
 }

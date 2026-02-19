@@ -19,7 +19,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
       name: item.name,
       price: item.price,
       image: item.image.url,
-      category: item.category.name ?? "N/a",
+      category: {
+        _id: item.category._id,
+        name: item.category.name
+      },
       description: item.description ?? "N/a"
     });
     setIsAdded(true);

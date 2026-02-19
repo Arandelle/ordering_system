@@ -166,7 +166,7 @@ const OrderSummaryStep = ({
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                  <p className="text-sm text-gray-500">{item.category}</p>
+                  <p className="text-sm text-gray-500">{item.category?.name}</p>
                    <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
                 <button
