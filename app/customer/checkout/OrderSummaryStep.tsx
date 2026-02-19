@@ -5,16 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-interface OrderSummaryStepProps {
-  onNext: () => void;
-  onBack: () => void;
-  onSetCheckoutUrl: (url: string) => void;
-}
-
-const OrderSummaryStep = ({
-  onNext,
-  onSetCheckoutUrl,
-}: OrderSummaryStepProps) => {
+const OrderSummaryStep = () => {
   const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const router = useRouter()
   
@@ -118,22 +109,8 @@ const OrderSummaryStep = ({
         );
       }
 
-      // Simulate order processing
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Save payment link info for persistence
-      localStorage.setItem(
-        "active_payment",
-        JSON.stringify({
-          linkId: data.id,
-          checkoutUrl: data.checkoutUrl,
-          createdAt: Date.now(),
-        }),
-      );
-
       clearCart();
-      router.push("/orders")
-      window.scrollTo(0, 0);
+      router.push("/orders");
     } catch (error: any) {
       // Error already shown via toast
       console.error("Payment error:", error);

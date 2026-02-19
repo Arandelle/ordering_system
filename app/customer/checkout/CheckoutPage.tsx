@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  ArrowLeft,
-} from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import OrderSummaryStep from "./OrderSummaryStep";
 import PayToLink from "./PayToLink";
@@ -14,36 +12,6 @@ const CheckoutPage: React.FC = () => {
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
-
-  useEffect(() => {
-    const savedPayment = localStorage.getItem("active_payment");
-
-    if (!savedPayment) {
-      // No active payment → stay on order summary
-      setCurrentStep("summary");
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(savedPayment);
-
-      // Optional: expire abandoned links after 30 minutes
-      const MAX_AGE = 30 * 60 * 1000;
-      if (Date.now() - parsed.createdAt > MAX_AGE) {
-        localStorage.removeItem("active_payment");
-        setCurrentStep("summary");
-        return;
-      }
-
-      // Active payment exists → resume payment step
-      setCheckoutUrl(parsed.checkoutUrl);
-      setCurrentStep("payment");
-    } catch {
-      // Corrupted data → reset safely
-      localStorage.removeItem("active_payment");
-      setCurrentStep("summary");
-    }
-  }, [currentStep]);
 
   const handleNext = (from: CheckoutStep) => {
     switch (from) {
@@ -99,13 +67,7 @@ const CheckoutPage: React.FC = () => {
 
       {/** Step Content */}
       <div className="max-w-xl mx-auto px-4 py-6">
-        {currentStep === "summary" && (
-          <OrderSummaryStep
-            onNext={() => handleNext("summary")}
-            onBack={() => handleBack("summary")}
-            onSetCheckoutUrl={setCheckoutUrl}
-          />
-        )}
+        {currentStep === "summary" && <OrderSummaryStep />}
 
         {currentStep === "payment" && (
           <PayToLink
