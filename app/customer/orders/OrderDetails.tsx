@@ -137,7 +137,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
         <div className="space-y-3">
           {(showAllItems ? order.items : order.items.slice(0, ITEMS_TO_SHOW)).map((item) => (
             <div key={item._id} className="flex gap-3 border-b pb-3">
-              <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+              <div className="relative w-16 h-16 shrink-0 rounded overflow-hidden bg-gray-100">
                 <Image
                   src={item.image}
                   alt={item.name}
@@ -156,16 +156,16 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
             </div>
           ))}
            
-          {/* View more/less button with gradient overlay */}
+          {/* View more/less button with linear overlay */}
           {order.items.length > ITEMS_TO_SHOW && (
             <div className="relative -mx-4">
               {!showAllItems && (
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white via-white/60 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white via-white/60 to-transparent pointer-events-none" />
               )}
               <button
                 type="button"
                 onClick={() => setShowAllItems(!showAllItems)}
-                className="relative bg-gradient-to-b from-white to-gray-200 w-full py-3 text-sm text-[#e13e00] hover:text-[#c13500] font-semibold transition-colors cursor-pointer border-t border-gray-200"
+                className="relative bg-linear-to-b from-white to-gray-200 w-full py-3 text-sm text-[#e13e00] hover:text-[#c13500] font-semibold transition-colors cursor-pointer border-t border-gray-200"
               >
                 {showAllItems ? "Show Less" : `+${order.items.length - ITEMS_TO_SHOW} More Item/s`}
               </button>
@@ -173,33 +173,6 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
           )}
         </div>
       </div>
-
-      {/* Delivery Information */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h3 className="font-semibold mb-3">
-          {order.deliveryInfo.type === 'delivery' ? '📦 Delivery Address' : '🏪 Pickup Details'}
-        </h3>
-        <div className="space-y-1 text-sm">
-          <p><strong>Name:</strong> {order.deliveryInfo.fullname}</p>
-          <p><strong>Phone:</strong> {order.deliveryInfo.phone}</p>
-          {order.deliveryInfo.type === 'delivery' && (
-            <>
-              <p><strong>Address:</strong> {order.deliveryInfo.address}</p>
-              <p><strong>Barangay:</strong> {order.deliveryInfo.barangay}</p>
-              <p><strong>City:</strong> {order.deliveryInfo.city}</p>
-              {order.deliveryInfo.landmark && (
-                <p><strong>Landmark:</strong> {order.deliveryInfo.landmark}</p>
-              )}
-            </>
-          )}
-          {order.deliveryInfo.instructions && (
-            <p className="mt-2 text-gray-600">
-              <strong>Instructions:</strong> {order.deliveryInfo.instructions}
-            </p>
-          )}
-        </div>
-      </div>
-
       {/* Payment Information */}
       <div className="bg-gray-50 rounded-lg p-4">
         <h3 className="font-semibold mb-3">💳 Payment</h3>

@@ -3,119 +3,29 @@
 import {
   ArrowLeft,
   Check,
-  CheckCircle,
   CreditCard,
   ShoppingBag,
-  Truck,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/contexts/CartContext";
 import OrderSummaryStep from "./OrderSummaryStep";
-import DeliveryStep, { DeliveryInfo } from "./DeliveryStep";
-import PaymentStep, { PaymentInfo } from "./PaymentStep";
-import ConfirmationStep from "./ConfirmationStep";
 import PayToLink from "./PayToLink";
 
-type CheckoutStep =
-  | "summary"
-  | "delivery"
-  | "payment"
-  | "confirmation"
-  | "success";
+type CheckoutStep = "summary" | "payment" | "success";
 
 const CheckoutPage: React.FC = () => {
   const [checkoutUrl, setCheckoutUrl] = useState("");
   const router = useRouter();
-  const { totalPrice } = useCart();
   const [currentStep, setCurrentStep] = useState<CheckoutStep>("summary");
-  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
-    type: "delivery",
-    fullname: "",
-    phone: "",
-    address: "",
-    city: "",
-    barangay: "",
-    landmark: "",
-    instructions: "",
-  });
-
-  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    method: "cod",
-  });
 
   const steps = [
     { id: "summary", label: "Order", icon: ShoppingBag },
-    // { id: "delivery", label: "Delivery", icon: Truck },
     { id: "payment", label: "Payment", icon: CreditCard },
-    { id: "confirmation", label: "Confirm", icon: CheckCircle },
   ];
 
   const getStepIndex = (step: CheckoutStep) => {
     const index = steps.findIndex((s) => s.id === step);
     return index === -1 ? steps.length : index;
-  };
-
-  const isValidExpiry = (expiry: string): string | null => {
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-      return "Invalid format (MM/YY)";
-    }
-
-    const [month, year] = expiry.split("/").map(Number);
-    if (month < 1 || month > 12) {
-      return "Invalid month or year";
-    }
-
-    const now = new Date();
-    const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear() % 100;
-
-    if (year < currentYear || (year === currentYear && month < currentMonth)) {
-      return "Card has expired!";
-    }
-
-    return null;
-  };
-
-  const validatePayment = (): boolean => {
-    const errors: Record<string, string> = {};
-    if (paymentInfo.method === "gcash") {
-      if (!paymentInfo.gcashNumber?.trim()) {
-        errors.gcashNumber = "Gcash number is required!";
-      } else if (
-        !/^(\+63|0|63)?[0-9]{10,11}$/.test(
-          paymentInfo.gcashNumber.replace(/\s/g, ""),
-        )
-      ) {
-        errors.gcashNumber = "Please enter a valid GCash number.";
-      }
-    }
-
-    if (paymentInfo.method === "card") {
-      if (!paymentInfo.cardName?.trim()) {
-        errors.cardName = "Cardholder name is required!";
-      }
-      if (!paymentInfo.cardNumber?.trim()) {
-        errors.cardNumber = "Card Number is required!";
-      } else if (paymentInfo.cardNumber.replace(/\s/g, "").length < 16) {
-        errors.cardNumber = "Please enter a valid number";
-      }
-      if (!paymentInfo.cardExpiry?.trim()) {
-        errors.cardExpiry = "Expiry date is required";
-      } else {
-        const expiryError = isValidExpiry(paymentInfo.cardExpiry);
-        if (expiryError) {
-          errors.cardExpiry = expiryError;
-        }
-      }
-      if (!paymentInfo.cardCvv?.trim()) {
-        errors.cardCvv = "CVV is required";
-      } else if (paymentInfo.cardCvv.length < 3) {
-        errors.cardCvv = "Invalid CVV";
-      }
-    }
-
-    return Object.keys(errors).length === 0;
   };
 
   useEffect(() => {
@@ -146,22 +56,12 @@ const CheckoutPage: React.FC = () => {
       localStorage.removeItem("active_payment");
       setCurrentStep("summary");
     }
-  }, []);
+  }, [currentStep]);
+
   const handleNext = (from: CheckoutStep) => {
     switch (from) {
       case "summary":
-        // setCurrentStep("delivery");
         setCurrentStep("payment");
-        break;
-      // case "delivery":
-      //   if (validateDelivery()) {
-      //     setCurrentStep("payment");
-      //   }
-      //   break;
-      case "payment":
-        if (validatePayment()) {
-          setCurrentStep("confirmation");
-        }
         break;
       case "success":
         setCurrentStep("success");
@@ -176,17 +76,10 @@ const CheckoutPage: React.FC = () => {
       case "summary":
         router.push("/");
         break;
-      // case "delivery":
-      //   setCurrentStep("summary");
-      //   break;
       case "payment":
-        // setCurrentStep("delivery");
         localStorage.removeItem("active_payment");
         setCheckoutUrl("");
         setCurrentStep("summary");
-        break;
-      case "confirmation":
-        setCurrentStep("payment");
         break;
       case "success":
         router.push("/");
@@ -212,14 +105,13 @@ const CheckoutPage: React.FC = () => {
               {currentStep === "summary" && "Review your order"}
               {/* {currentStep === "delivery" && "Delivery options"} */}
               {currentStep === "payment" && "Payment method"}
-              {currentStep === "confirmation" && "Confirm order"}
             </p>
           </div>
         </div>
       </header>
 
       {/** Progress steps */}
-      <div className="bg-white border-b border-gray-100 sticky top-[72px] z-40">
+      <div className="bg-white border-b border-gray-100 sticky top-18 z-40">
         <div className="max-w-lg mx-auto p-4">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => {
@@ -266,38 +158,11 @@ const CheckoutPage: React.FC = () => {
             onSetCheckoutUrl={setCheckoutUrl}
           />
         )}
-        {/* {currentStep === "delivery" && (
-          <DeliveryStep
-            deliveryInfo={deliveryInfo}
-            setDeliveryInfo={setDeliveryInfo}
-            errors={deliveryErrors}
-            onNext={() => handleNext("delivery")}
-            onBack={() => handleBack("delivery")}
-          />
-        )} */}
-        {/* 
+
         {currentStep === "payment" && (
-          <PaymentStep
-            paymentInfo={paymentInfo}
-            setPaymentInfo={setPaymentInfo}
-            errors={paymentErrors}
-            onNext={() => handleNext("payment")}
-            onBack={() => handleBack("payment")}
-            totalAmount={totalAmount}
-          />
-        )} */}
-
-        {currentStep === "payment" && <PayToLink checkoutUrl={checkoutUrl} setCurrentStep={setCurrentStep} />}
-
-        {(currentStep === "confirmation" || currentStep === "success") && (
-          <ConfirmationStep
-            deliveryInfo={deliveryInfo}
-            paymentInfo={paymentInfo}
-            onNext={() => handleNext("success")}
-            onBack={() => handleBack("confirmation")}
-            onEditDelivery={() => setCurrentStep("delivery")}
-            onEditPayment={() => setCurrentStep("payment")}
-            currentStep={currentStep}
+          <PayToLink
+            checkoutUrl={checkoutUrl}
+            setCurrentStep={setCurrentStep}
           />
         )}
       </div>

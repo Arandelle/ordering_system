@@ -116,7 +116,7 @@ const Orders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8 space-y-2">
           <h1 className="text-3xl font-bold text-slate-800">My Orders</h1>
@@ -190,7 +190,7 @@ const Orders = () => {
                   className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow border border-gray-100 overflow-hidden"
                 >
                   {/** Header */}
-                  <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-100">
+                  <div className="bg-linear-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-100">
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-bold text-slate-700 text-lg">
@@ -217,9 +217,7 @@ const Orders = () => {
                           </p>
                           <p className="flex items-center gap-1">
                             <MapPin size={16} />
-                            {order.deliveryInfo.type === "delivery"
-                              ? "Delivery"
-                              : "Pickup"}
+                              Pickup
                           </p>
                         </div>
                       </div>

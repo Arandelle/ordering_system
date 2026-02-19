@@ -1,4 +1,3 @@
-import { DeliveryInfo } from "@/app/customer/checkout/DeliveryStep";
 import { CartItem } from "./MenuTypes";
 
 export interface OrderType {
@@ -14,8 +13,6 @@ export interface OrderType {
     | "cancelled";
 
   items: CartItem[];
-
-  deliveryInfo: DeliveryInfo;
   paymentInfo: {
     method: "cod" | "gcash" | "card" | "qrph";
     label: string;
