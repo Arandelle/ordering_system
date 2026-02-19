@@ -177,16 +177,18 @@ const Orders = () => {
         ) : (
           <div className="space-y-6">
             {filteredOrders.map((order) => {
-              const isExpanded = expandedOrders.has(order.id);
+              const isExpanded = expandedOrders.has(order._id);
               const itemsToShow = isExpanded
                 ? order.items
                 : order.items.slice(0, 3);
               const hasMoreItems = order.items.length > 3;
               const hiddenItemsCount = order.items.length - 3;
 
+              console.log(order.items)
+             
               return (
                 <div
-                  key={order.id}
+                  key={order._id}
                   className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow border border-gray-100 overflow-hidden"
                 >
                   {/** Header */}
@@ -194,7 +196,7 @@ const Orders = () => {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-bold text-slate-700 text-lg">
-                          Order #{order.id}
+                          Order # <span className="uppercase text-gray-400">{order.paymentInfo.referenceNumber}</span>
                         </p>
                         <div className="flex text-sm text-gray-600 items-center gap-4 py-2">
                           <p className="flex items-center gap-1">
@@ -211,9 +213,9 @@ const Orders = () => {
                             )}
                           </p>
 
-                          <p className="flex items-center gap-1">
+                          <p className="flex items-center gap-1 capitalize">
                             <Banknote size={16} />
-                            {order.paymentInfo.label}
+                            {order.paymentInfo.method}
                           </p>
                           <p className="flex items-center gap-1">
                             <MapPin size={16} />
@@ -265,7 +267,7 @@ const Orders = () => {
                     {hasMoreItems && (
                       <button
                         type="button"
-                        onClick={() => toggleOrderExpansion(order.id)}
+                        onClick={() => toggleOrderExpansion(order._id)}
                         className="w-full py-2 text-sm text-[#e13e00] hover:text-[#c13500] font-semibold transition-colors cursor-pointer text-center flex items-center justify-center gap-2"
                       >
                         {isExpanded ? (
@@ -287,13 +289,13 @@ const Orders = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">SubTotal</span>
                         <span className="font-[550]">
-                          ₱{order.totals.subTotal.toFixed(2)}
+                          ₱{order.totals?.subTotal?.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                         <span className="text-gray-900">Total</span>
                         <span className="text-[#e13e00]">
-                          ₱{order.totals.total.toFixed(2)}
+                          ₱{order.totals?.total?.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -304,7 +306,7 @@ const Orders = () => {
                     <div className="flex flex-wrap gap-3 justify-end">
                       {/** View Details - Always Available */}
                       <button
-                        onClick={() => handleViewDetails(order.id)}
+                        onClick={() => handleViewDetails(order._id)}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-300 hover:border-gray-400 text-gray-700 text-sm font-semibold transition-all"
                       >
                         <Eye size={16} /> View Details
@@ -313,7 +315,7 @@ const Orders = () => {
                       {/** Cancel Order - Only for pending orders */}
                       {order.status === "pending" && (
                         <button
-                          onClick={() => handleCancelOrder(order.id)}
+                          onClick={() => handleCancelOrder(order._id)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"
                         >
                           <X size={16} /> Cancel Order
@@ -335,7 +337,7 @@ const Orders = () => {
                       {order.status === "completed" && !order.isReviewed && (
                         <button
                           onClick={() =>
-                            router.push(`/orders/${order.id}/review`)
+                            router.push(`/orders/${order._id}/review`)
                           }
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e13e00] hover:bg-[#c53600] text-white text-sm font-semibold transition-all shadow-md"
                         >

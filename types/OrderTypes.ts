@@ -1,7 +1,7 @@
 import { CartItem } from "./MenuTypes";
 
 export interface OrderType {
-  id: string;
+  _id: string;
   createdAt: string;
   status:
     | "pending"

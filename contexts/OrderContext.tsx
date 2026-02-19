@@ -1,10 +1,12 @@
 "use client";
 
 import { OrderType } from "@/types/OrderTypes";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 interface OrderContextType {
   placedOrders: OrderType[];
+  isLoading: boolean;
+  error: string | null;
   addOrder: (order: OrderType) => void;
   updateOrderStatus: (orderId: string, status: OrderType["status"]) => void;
   markAsReviewed: (orderId: string) => void;
@@ -18,41 +20,40 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [placedOrders, setPlacedOrders] = useState<OrderType[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+   const [error, setError] = useState<string | null>(null);
 
-  // Load order on mount
-  useEffect(() => {
-    const storedOrder = localStorage.getItem("orders");
-    if (storedOrder) {
-      try {
-        const parsed = JSON.parse(storedOrder);
+  const fetchOrders = useCallback(async () => {
+    try{
+      setIsLoading(true);
+      setError(null);
 
-        if (Array.isArray(parsed)) {
-          setPlacedOrders(parsed);
-        } else {
-          setPlacedOrders([]);
-        }
-      } catch (e) {
-        console.error("Failed to parsed stored order", e);
-        setPlacedOrders([]);
-      }
+      const response = await fetch('api/orders');
+
+      if(!response.ok) throw new Error("Failed to fetch orders");
+
+      const data = await response.json();
+
+      setPlacedOrders(data);
+
+    }catch(error: any){
+      setError(error.message ?? "Something went wrong")
+    } finally{
+      setIsLoading(false);
     }
-    setIsHydrated(true);
-  }, []);
+  }, [])
 
-  // Save order when it changes
+  // Fetch on mount
   useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem("orders", JSON.stringify(placedOrders));
-    }
-  }, [placedOrders, isHydrated]);
+    fetchOrders();
+  }, [fetchOrders]);
 
   const updateOrderStatus = (orderId: string, status: OrderType["status"]) => {
     if (!orderId) return;
 
     setPlacedOrders((prev) =>
       prev.map((order) =>
-        order.id === orderId ? { ...order, status } : order,
+        order._id === orderId ? { ...order, status } : order,
       ),
     );
   };
@@ -62,7 +63,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setPlacedOrders((prev) =>
       prev.map((order) =>
-        order.id === orderId
+        order._id === orderId
           ? {
               ...order,
               isReviewed: true,
@@ -83,6 +84,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({
     <OrderContext.Provider
       value={{
         placedOrders,
+        isLoading,
+        error,
         addOrder: (order) => setPlacedOrders((prev) => [...prev, order]),
         updateOrderStatus,
         markAsReviewed,
