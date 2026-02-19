@@ -8,14 +8,12 @@ import React from "react";
 export default function layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <OrderProvider>
-        <CartProvider>
-          <Header />
-          <CartDrawer />
-          {children}
-          <Footer />
-        </CartProvider>
-      </OrderProvider>
+      <CartProvider>
+        <Header />
+        <CartDrawer />
+        {children}
+        <Footer />
+      </CartProvider>
     </>
   );
 }
