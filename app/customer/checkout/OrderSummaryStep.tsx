@@ -1,5 +1,6 @@
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
+import { useCreateOrder } from "@/hooks/useOrders";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 
 const OrderSummaryStep = () => {
   const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const {mutateAsync, isPending} = useCreateOrder();
   const router = useRouter()
   
   if (cartItems.length === 0) {

@@ -45,3 +45,18 @@ export interface OrderType {
   isReviewed?: boolean;
   reviewedAt?: string;
 }
+
+export interface CreateOrderPayload {
+  items: CartItem[];
+  subTotal: number;
+  total: number;
+}
+
+export interface CreateOrderResponse {
+  orderId: string;
+  checkoutUrl: string;
+  referenceNumber: string;
+  status: OrderType["status"];
+}
+
+
