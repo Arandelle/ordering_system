@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { items, note, method, subTotal, total } = body;
+    const { items, subTotal, total } = body;
 
-    if (!items?.length || !note || !method || !subTotal || !total) {
+    if (!items?.length || !subTotal || !total) {
       return NextResponse.json(
         {
           error: "Form should be completed!",
@@ -69,9 +69,7 @@ export async function POST(request: NextRequest) {
     const order = await Order.create({
       status: "pending",
       items,
-      note,
       paymentInfo: {
-        method,
         paymentLinkId: id,
         checkoutUrl: attributes.checkout_url,
         referenceNumber: attributes.reference_number,
