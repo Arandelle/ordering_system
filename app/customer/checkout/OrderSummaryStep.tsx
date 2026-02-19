@@ -1,6 +1,7 @@
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -187,7 +188,7 @@ const OrderSummaryStep = ({
       </div>
 
       {/**Order Totals */}
-      <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+      <div className="bg-gray-50 rounded-xl py-4 space-y-3">
         <div className="border-t border-gray-200 pt-3 flex justify-between">
           <span className="font-bold text-gray-900">Total</span>
           <span className="font-bold text-xl text-[#e13e00]">
@@ -196,22 +197,21 @@ const OrderSummaryStep = ({
         </div>
       </div>
 
-      <div className="flex gap-4">
-        <button
-          onClick={() => router.push("/menu")}
-          className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 rounded-xl font-semibold transition-colors cursor-pointer"
-        >
-          Order more
-        </button>
-        {/** Continue Button */}
+      <div className="flex flex-col gap-6">
         <button
           onClick={() => {
             handlePlaceOrder();
           }}
-          className="flex-1 bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer"
+          className="flex-1 bg-[#e13e00]/90 hover:bg-[#c13500] text-white py-3 rounded-full font-bold transition-colors cursor-pointer"
         >
-          Continue to Payment
+          Place Order
         </button>
+        <Link
+          href={"/menu"}
+           className="flex-1 text-gray-700 hover:text-gray-800 text-center py-4 rounded-xl font-semibold transition-colors cursor-pointer underline"
+        >
+          Need More?
+        </Link> 
       </div>
     </div>
   );
