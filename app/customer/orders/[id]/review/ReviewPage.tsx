@@ -31,7 +31,7 @@ const ReviewPage = () => {
       return () => clearTimeout(timer);
     }
 
-    const foundOrder = placedOrders.find((o) => o.id === params.id);
+    const foundOrder = placedOrders.find((o) => o._id === params.id);
     if (foundOrder) {
       setOrder(foundOrder);
       setIsLoading(false);
@@ -115,7 +115,7 @@ const ReviewPage = () => {
             <h1 className="text-[#e13e00] text-2xl md:text-3xl font-bold mb-2">
               Rate Your Experience
             </h1>
-            <p className="text-slate-600 font-semibold">Order #{order.id}</p>
+            <p className="text-slate-600 font-semibold">Order #{order.paymentInfo.referenceNumber}</p>
             <p className="text-sm text-gray-500 mt-1">
               Completed on {new Date(order.createdAt).toLocaleDateString()}
             </p>
@@ -156,7 +156,7 @@ const ReviewPage = () => {
                   </div>
 
                   {/**Item Price */}
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-right shrink-0">
                     <p className="text-sm font-semibold text-[#e13e00]">
                       ₱{(item.price * item.quantity).toFixed(2)}
                     </p>
@@ -182,7 +182,7 @@ const ReviewPage = () => {
             <div className="border-t mt-4 pt-3 flex justify-between font-semibold text-gray-900">
               <span>Total</span>
               <span className="text-[#e13e00]">
-                ₱{order.totals.total.toFixed(2)}
+                ₱{order.total.total.toFixed(2)}
               </span>
             </div>
           </div>
