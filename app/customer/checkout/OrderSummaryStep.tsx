@@ -15,9 +15,9 @@ const OrderSummaryStep = ({
   onNext,
   onSetCheckoutUrl,
 }: OrderSummaryStepProps) => {
-  const { cartItems, removeFromCart, updateQuantity, totalPrice } = useCart();
-  const router = useRouter();
-
+  const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const router = useRouter()
+  
   if (cartItems.length === 0) {
     return (
       <div className="text-center p-12">
@@ -30,8 +30,6 @@ const OrderSummaryStep = ({
       </div>
     );
   }
-
-  console.table(cartItems)
 
   const handlePlaceOrder = async () => {
     try {
@@ -48,7 +46,7 @@ const OrderSummaryStep = ({
 
       const subTotal = totalPrice;
       const tax = totalPrice * 0.12;
-      const total = subTotal * tax;
+      const total = subTotal + tax;
 
       // Call PayMongo API to create payment link
       const response = await fetch("/api/paymongo/create-payment", {
@@ -62,11 +60,9 @@ const OrderSummaryStep = ({
             price: item.price,
             description: item.description ?? "",
             image: item.image ?? "",
-            category: "6995826e92535926861f59b7",
+            category: item.category?._id,
             quantity: item.quantity,
           })),
-          method: "gcash",
-          note: "n/a",
           subTotal,
           total,
         }),
@@ -135,7 +131,8 @@ const OrderSummaryStep = ({
         }),
       );
 
-      
+      clearCart();
+      router.push("/orders")
       window.scrollTo(0, 0);
     } catch (error: any) {
       // Error already shown via toast
