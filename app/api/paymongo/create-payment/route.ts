@@ -1,3 +1,5 @@
+import { connectDB } from "@/lib/mongodb";
+import { Order } from "@/models/Orders";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
@@ -6,13 +8,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { amount, description } = body;
+    await connectDB();
 
-    if (!amount || !description) {
+    const body = await request.json();
+    const { items, note, method, subTotal, total } = body;
+
+    if (!items?.length || !note || !method || !subTotal || !total) {
       return NextResponse.json(
         {
-          error: "Amount and description is required!",
+          error: "Form should be completed!",
         },
         {
           status: 400,
@@ -33,6 +37,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // --- 1. Create PayMongo Link ---
+    const description = `Order - ${items.map((i: any) => i.name).join(", ")}`;
+
     const response = await fetch("https://api.paymongo.com/v1/links", {
       method: "POST",
       headers: {
@@ -43,7 +50,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         data: {
           attributes: {
-            amount: Number(amount * 100), // in cents
+            amount: Math.round(total * 100), // convert to cents
             description,
           },
         },
@@ -56,14 +63,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: data }, { status: response.status });
     }
 
+    const { id, attributes } = data.data;
+
+     // --- 2. Create Order in DB ---
+    const order = await Order.create({
+      status: "pending",
+      items,
+      note,
+      paymentInfo: {
+        method,
+        paymentLinkId: id,
+        checkoutUrl: attributes.checkout_url,
+        referenceNumber: attributes.reference_number,
+      },
+      total: {
+        subTotal,
+        total,
+      },
+      timeline: {}, // empty, filled as order progresses
+    });
+
     return NextResponse.json({
-        id: data.data.id, 
-        checkout_url: data.data.attributes.checkout_url,
-        amount: data.data.attributes.amount,
-        description: data.data.attributes.description,
-        status: data.data.attributes.status,
-        reference_number: data.data.attributes.reference_number,
-        live_mode: data.data.attributes.livemode
+      // id: data.data.id,
+      // checkout_url: data.data.attributes.checkout_url,
+      // amount: data.data.attributes.amount,
+      // description: data.data.attributes.description,
+      // status: data.data.attributes.status,
+      // reference_number: data.data.attributes.reference_number,
+      // live_mode: data.data.attributes.livemode,
+
+      orderId: order._id,
+      checkoutUrl: attributes.checkout_url,
+      referenceNumber: attributes.reference_number,
+      status: order.status,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

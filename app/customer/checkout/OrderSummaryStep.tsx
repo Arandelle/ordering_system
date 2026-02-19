@@ -31,6 +31,8 @@ const OrderSummaryStep = ({
     );
   }
 
+  console.table(cartItems)
+
   const handlePlaceOrder = async () => {
     try {
       // FRONTEND VALIDATION - Check minimum amount before API call
@@ -44,6 +46,10 @@ const OrderSummaryStep = ({
         return;
       }
 
+      const subTotal = totalPrice;
+      const tax = totalPrice * 0.12;
+      const total = subTotal * tax;
+
       // Call PayMongo API to create payment link
       const response = await fetch("/api/paymongo/create-payment", {
         method: "POST",
@@ -51,8 +57,18 @@ const OrderSummaryStep = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: Number(totalPrice + totalPrice * 0.12),
-          description: `Harrison BBQ Order - ${new Date().toLocaleDateString()}`,
+          items: cartItems.map((item) => ({
+            name: item.name,
+            price: item.price,
+            description: item.description ?? "",
+            image: item.image ?? "",
+            category: "6995826e92535926861f59b7",
+            quantity: item.quantity,
+          })),
+          method: "gcash",
+          note: "n/a",
+          subTotal,
+          total,
         }),
       });
 
@@ -100,7 +116,7 @@ const OrderSummaryStep = ({
       }
 
       // Validate the response has the checkout_url
-      if (!data.checkout_url) {
+      if (!data.checkoutUrl) {
         throw new Error(
           "Payment link was not generated. Please try again or contact support.",
         );
@@ -114,12 +130,12 @@ const OrderSummaryStep = ({
         "active_payment",
         JSON.stringify({
           linkId: data.id,
-          checkoutUrl: data.checkout_url,
+          checkoutUrl: data.checkoutUrl,
           createdAt: Date.now(),
         }),
       );
 
-      onNext();
+      
       window.scrollTo(0, 0);
     } catch (error: any) {
       // Error already shown via toast
@@ -151,6 +167,7 @@ const OrderSummaryStep = ({
                 <div>
                   <h4 className="font-semibold text-gray-900">{item.name}</h4>
                   <p className="text-sm text-gray-500">{item.category}</p>
+                   <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
                 <button
                   onClick={() => removeFromCart(item._id)}
@@ -208,10 +225,10 @@ const OrderSummaryStep = ({
         </button>
         <Link
           href={"/menu"}
-           className="flex-1 text-gray-700 hover:text-gray-800 text-center py-4 rounded-xl font-semibold transition-colors cursor-pointer underline"
+          className="flex-1 text-gray-700 hover:text-gray-800 text-center py-4 rounded-xl font-semibold transition-colors cursor-pointer underline"
         >
           Need More?
-        </Link> 
+        </Link>
       </div>
     </div>
   );
