@@ -1,10 +1,8 @@
 "use client";
 
 import { useCart } from "@/contexts/CartContext";
-import { useOrder } from "@/contexts/OrderContext";
 import { StatusBadge } from "./StatusBadge";
 import {
-  Banknote,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -18,6 +16,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import { useOrders } from "@/hooks/useOrders";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -29,7 +28,7 @@ const TABS = [
 ];
 
 const Orders = () => {
-  const { placedOrders, updateOrderStatus } = useOrder();
+  const {data: placedOrders} = useOrders();
   const { addToCart, setIsCartOpen } = useCart();
   const router = useRouter();
   const pathname = usePathname();
@@ -43,7 +42,7 @@ const Orders = () => {
 
   const filteredOrders = useMemo(() => {
     if (activeTab === "all") {
-      return placedOrders.sort((a, b) => {
+      return placedOrders?.sort((a, b) => {
         // Pushed cancelled to bottom
         if (a.status === "cancelled" && b.status !== "cancelled") return 1;
         if (a.status !== "cancelled" && b.status === "cancelled") return -1;
@@ -57,10 +56,10 @@ const Orders = () => {
 
     const currentTab = TABS.find((tab) => tab.key === activeTab);
     return currentTab?.statuses
-      ? placedOrders.filter((order) =>
+      ? placedOrders?.filter((order) =>
           currentTab.statuses.includes(order.status),
         )
-      : placedOrders.filter((order) => order.status === activeTab);
+      : placedOrders?.filter((order) => order.status === activeTab);
   }, [placedOrders, activeTab]);
 
   const handleViewDetails = (orderId: string) => {
@@ -82,11 +81,11 @@ const Orders = () => {
     router.push(newUrl);
   };
 
-  const handleCancelOrder = (orderId: string) => {
-    if (confirm(`Are you sure you want to cancel order ${orderId} ? `)) {
-      updateOrderStatus(orderId, "cancelled");
-    }
-  };
+  // const handleCancelOrder = (orderId: string) => {
+  //   if (confirm(`Are you sure you want to cancel order ${orderId} ? `)) {
+  //     updateOrderStatus(orderId, "cancelled");
+  //   }
+  // };
 
   const handleBuyAgain = (orderItems: any[]) => {
     orderItems.forEach((item) => {
@@ -129,14 +128,14 @@ const Orders = () => {
             {TABS.map((tab) => {
               const count =
                 tab.key === "completed"
-                  ? placedOrders.filter(
+                  ? placedOrders?.filter(
                       (o) => o.status === "completed" && !o.isReviewed,
                     ).length
                   : tab.statuses
-                    ? placedOrders.filter((o) =>
+                    ? placedOrders?.filter((o) =>
                         tab.statuses.includes(o.status),
                       ).length
-                    : placedOrders.filter((o) => o.status === tab.key).length;
+                    : placedOrders?.filter((o) => o.status === tab.key).length;
 
               return (
                 <button
@@ -145,7 +144,7 @@ const Orders = () => {
                   className={`relative px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.key ? "bg-[#e13e00] text-white" : "bg-white text-gray-600 border border-gray-700 hover:border-[#e13e00] hover:text-[#e13e00]"}`}
                 >
                   {tab.label}
-                  {count > 0 && tab.key !== "cancelled" && (
+                  {count && count > 0 && tab.key !== "cancelled" && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center border border-white">
                       {count}
                     </span>
@@ -163,7 +162,7 @@ const Orders = () => {
         </div>
 
         {/** Orders */}
-        {filteredOrders.length === 0 ? (
+        {filteredOrders?.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Package size={40} className="text-gray-400" />
@@ -177,7 +176,7 @@ const Orders = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {filteredOrders.map((order) => {
+            {filteredOrders?.map((order) => {
               const isExpanded = expandedOrders.has(order._id);
               const itemsToShow = isExpanded
                 ? order.items
@@ -316,7 +315,7 @@ const Orders = () => {
                             <ExternalLink size={16} /> Pay Order!
                           </a>
                           <button
-                            onClick={() => handleCancelOrder(order._id)}
+                            // onClick={() => handleCancelOrder(order._id)}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"
                           >
                             <X size={16} /> Cancel Order

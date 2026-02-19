@@ -3,16 +3,22 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag, Menu, X, User, LogIn, Package } from "lucide-react";
-import { useOrder } from "@/contexts/OrderContext";
 import Image from "next/image";
 import Link from "next/link";
+import { useOrders } from "@/hooks/useOrders";
 
 const Header = () => {
 
   const { totalItems, setIsCartOpen } = useCart();
-  const { activeOrdersCount } = useOrder();
+  const { data: placedOrders } = useOrders();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const activeOrdersCount = placedOrders?.filter(
+    (order) =>
+      order.status !== "cancelled" &&
+      (order.status !== "completed" || !order.isReviewed),
+  ).length;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -108,7 +114,7 @@ const Header = () => {
                 size={20}
                 className={`group-hover:scale-110 transition-transform darkText`}
               />
-              {activeOrdersCount > 0 && (
+              {activeOrdersCount && activeOrdersCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
                   {activeOrdersCount}
                 </span>

@@ -1,21 +1,22 @@
 'use client';
 
-import { useOrder } from '@/contexts/OrderContext';
+
 import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { StatusBadge } from './StatusBadge';
+import { useOrders } from '@/hooks/useOrders';
 
 interface OrderDetailsProps {
   orderId: string;
 }
 
 export default function OrderDetails({ orderId }: OrderDetailsProps) {
-  const { placedOrders } = useOrder();
+  const { data: placedOrders } = useOrders();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const order = placedOrders.find(o => o._id === orderId);
+  const order = placedOrders?.find(o => o._id === orderId);
 
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;
