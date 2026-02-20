@@ -2,9 +2,10 @@ import React from "react";
 import { Order } from "@/types/adminType";
 import StatusBadge from "../ui/StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { OrderType } from "@/types/OrderTypes";
 
 interface OrdersTableProps {
-  orders: Order[];
+  orders: OrderType[];
   showActions?: boolean;
 }
 
@@ -12,7 +13,8 @@ export default function OrdersTable({
   orders,
   showActions = true,
 }: OrdersTableProps) {
-  const formatDate = (date: Date) => {
+
+  const formatDate = (date: string) => {
     return new Date(date).toLocaleString("en-US", {
       month: "short",
       day: "numeric",
@@ -23,10 +25,10 @@ export default function OrdersTable({
 
   const headerTitles = [
     "Order ID",
-    "Customer",
+    // "Customer",
     "Items",
     "Total",
-    "Payment",
+    "Reference",
     "Status",
     "Time",
   ];
@@ -43,7 +45,7 @@ export default function OrdersTable({
           <TableHeader>
             <TableRow>
               {headerTitles.map((head, index) => (
-                <TableHead key={index} className="px-4 py-4 uppercase text-xs font-semibold tracking-wider">
+                <TableHead key={index} className="px-4 py-4 uppercase text-xs font-semibold tracking-wider text-center">
                   {head}
                 </TableHead>
               ))}
@@ -58,19 +60,19 @@ export default function OrdersTable({
           <TableBody className="divide-y divide-stone-100">
             {orders.map((order) => (
               <TableRow
-                key={order.id}
+                key={order._id}
                 className="hover:bg-stone-50 transition-colors"
               >
                 <TableCell>
                   <span className="text-sm font-semibold text-stone-800">
-                    {order.id}
+                    {order._id}
                   </span>
                 </TableCell>
-                <TableCell className="px-6 py-4">
+                {/* <TableCell className="px-6 py-4">
                  
                     {order.customerName}
                   
-                </TableCell>
+                </TableCell> */}
                 <TableCell className="px-6 py-4">
                   <span className="text-sm text-stone-600">
                     {order.items.length} item{order.items.length > 1 ? "s" : ""}
@@ -78,12 +80,12 @@ export default function OrdersTable({
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <span className="text-sm font-semibold text-stone-800">
-                    ₱{order.totalPrice.toFixed(2)}
+                    ₱{order.total.total.toFixed(2)}
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <span className="text-xs font-medium text-stone-600 uppercase">
-                    {order.paymentMethod}
+                    {order.paymentInfo.referenceNumber}
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4">
