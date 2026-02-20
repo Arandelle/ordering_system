@@ -1,11 +1,15 @@
+'use client';
+
 import React from 'react';
 import DashboardCards from '@/components/admin/DashboardCard';
 import SalesChart from '@/components/admin/SalesChart';
 import OrdersTable from '@/components/admin/OrdersTable';
-import { mockDashboardStats, mockSalesData, mockTopProducts, mockOrders } from '@/data/mockData'
+import { mockDashboardStats, mockSalesData, mockTopProducts } from '@/data/mockData'
+import { useOrders } from '@/hooks/useOrders';
 
 export default function DashboardPage() {
-  const recentOrders = mockOrders.slice(0, 5);
+  const {data: placedOrders = []} = useOrders();
+  const recentOrders = placedOrders.slice(0, 5);
 
   return (
     <div className="space-y-8">
