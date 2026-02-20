@@ -2,8 +2,8 @@
 
 import { InputField } from "@/components/ui/InputField";
 import OrdersTable from "@/components/admin/OrdersTable";
-import { mockOrders } from "@/data/mockData";
 import React, { useState } from "react";
+import { useOrders } from "@/hooks/useOrders";
 
 const OrdersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -11,8 +11,10 @@ const OrdersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
-  const filteredOrders = mockOrders.filter((order) => {
-    const matchesSearch = order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) || order.id.toLowerCase().includes(searchQuery.toLowerCase());
+  const {data: placedOrders = []} = useOrders();
+
+  const filteredOrders = placedOrders.filter((order) => {
+    const matchesSearch =  order._id.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus
@@ -100,7 +102,7 @@ const OrdersPage = () => {
               onClick={() => setCurrentPage(page)}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 currentPage === page
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+                  ? 'bg-linear-to-r from-orange-500 to-red-500 text-white'
                   : 'border border-stone-200 text-stone-600 hover:bg-stone-100'
               }`}
             >
