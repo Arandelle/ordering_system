@@ -28,7 +28,7 @@ const TABS = [
 ];
 
 const Orders = () => {
-  const {data: placedOrders} = useOrders();
+  const { data: placedOrders = [] } = useOrders();
   const { addToCart, setIsCartOpen } = useCart();
   const router = useRouter();
   const pathname = usePathname();
@@ -215,7 +215,7 @@ const Orders = () => {
                               },
                             )}
                           </p>
-                       
+
                           <p className="flex items-center gap-1">
                             <MapPin size={16} />
                             Pickup
@@ -289,9 +289,18 @@ const Orders = () => {
                     {/** Order Summary */}
                     <div className="mt-6 pt-4 border-t border-gray-100 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">SubTotal</span>
+                        <span className="text-gray-600">Subtotal</span>
                         <span className="font-[550]">
                           ₱{order.total?.subTotal?.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Tax (12%)</span>
+                        <span className="font-[550]">
+                          ₱
+                          {(order.total.total - order.total.subTotal).toFixed(
+                            2,
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
@@ -309,9 +318,10 @@ const Orders = () => {
                       {/** Cancel Order - Only for pending orders */}
                       {order.status === "pending" && (
                         <>
-                          <a 
-                          href={order.paymentInfo.checkoutUrl}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 border text-white text-sm font-semibold transition-all">
+                          <a
+                            href={order.paymentInfo.checkoutUrl}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 border text-white text-sm font-semibold transition-all"
+                          >
                             <ExternalLink size={16} /> Pay Order!
                           </a>
                           <button
