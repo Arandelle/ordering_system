@@ -320,6 +320,7 @@ const Orders = () => {
                         <>
                           <a
                             href={order.paymentInfo.checkoutUrl}
+                            target="_blank"
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 border text-white text-sm font-semibold transition-all"
                           >
                             <ExternalLink size={16} /> Pay Order!
