@@ -1,3 +1,4 @@
+import { useOrders } from "@/hooks/useOrders";
 import { getLucideIcon } from "@/lib/iconUtils";
 import { LogOut, X } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +21,9 @@ const navItems = [
 
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   const pathname = usePathname();
+  const {data: placedOrders = []} = useOrders();
+
+  const pendingCount = placedOrders.filter(order => order.status === 'pending').length;
 
   return (
     <>
@@ -59,7 +63,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
               const isActive = pathname === item.path;
               const Icon = getLucideIcon(item.icon);
               return (
-                <li key={item.path}>
+                <li key={item.path} className="relative">
                   <Link
                     href={item.path}
                     onClick={onClose}
@@ -70,6 +74,12 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                     {isActive && (
                       <span className="ml-auto w-2 h-2 rounded-full bg-white" />
                     )}
+                    {item.name === "Orders" && pendingCount > 0 && (
+                       <div className="absolute -top-1 right-0 flex items-center justify-center w-5 h-5 text-xs bg-red-600 text-white rounded-full">
+                      {pendingCount}
+                    </div>
+                    )}
+                   
                   </Link>
                 </li>
               );
