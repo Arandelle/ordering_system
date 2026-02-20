@@ -14,28 +14,28 @@ const DashboardCard = ({stats} : DashboardCardsProps) => {
       value: stats.totalOrders,
       icon: "Package",
       color: "bg-blue-600",
-      change: "+12%",
+      change: "",
     },
     {
       title: "Total Revenue",
       value: `₱${stats.totalRevenue.toLocaleString()}`,
       icon: "CircleDollarSign",
       color: "bg-emerald-600",
-      change: "+8.5%",
+      change: "",
     },
     {
       title: "Pending Orders",
       value: stats.pendingOrders,
       icon: "ClockAlert",
       color: "bg-[#e13e00]",
-      change: "+3",
+      change: "",
     },
     {
       title: "Best Seller",
       value: stats.bestSellingProduct,
       icon: "Trophy",
       color: "bg-amber-600",
-      change: "247 sold",
+      change: `${stats.bestSellingCount} sold`,
     },
   ];
 

@@ -61,6 +61,7 @@ export interface DashboardStats {
   totalRevenue: number;
   pendingOrders: number;
   bestSellingProduct: string;
+  bestSellingCount: number
 }
 
 export interface SalesData {

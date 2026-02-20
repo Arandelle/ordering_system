@@ -65,7 +65,7 @@ export default function OrdersTable({
               >
                 <TableCell>
                   <span className="text-sm font-semibold text-stone-800">
-                    {order._id}
+                    {order._id.substring(0, 8) + "..."}
                   </span>
                 </TableCell>
                 {/* <TableCell className="px-6 py-4">

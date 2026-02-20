@@ -66,7 +66,8 @@ export const mockDashboardStats: DashboardStats = {
   totalOrders: 128,
   totalRevenue: 45670,
   pendingOrders: 7,
-  bestSellingProduct: 'Chicken Inasal'
+  bestSellingProduct: 'Chicken Inasal',
+  bestSellingCount: 0
 };
 
 export const mockSalesData: SalesData[] = [
