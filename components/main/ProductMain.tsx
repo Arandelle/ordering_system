@@ -1,18 +1,23 @@
 "use client";
 
-import { menuData } from "@/data/menuData";
 import {
   useIntersectionAnimation,
   useIntersectionAnimationList,
 } from "@/hooks/useIntersectionAnimation";
+import { useProducts } from "@/hooks/useProducts";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
 const ProductMain = () => {
-  const menuList = Object.values(menuData)
-    .flatMap((items) =>
-      items.filter((item) => item.price > 100 && item.description),
+  const { data: menuData = [] } = useProducts();
+
+  const menuList = menuData
+    .filter(
+      (item) =>
+        item.price > 100 &&
+        item.description !== "No description" &&
+        item.description !== "N/a",
     )
     .slice(0, 4);
 
@@ -89,7 +94,7 @@ const ProductMain = () => {
       rootMargin: "0px 0px -50px 0px",
       triggerOnce: false,
     });
-  
+
   const { itemRefs: mobileCardRef, visibleItems: mobileVisibleCards } =
     useIntersectionAnimationList<HTMLElement>(visibleProducts.length, {
       threshold: 0.15,
@@ -151,7 +156,7 @@ const ProductMain = () => {
               >
                 <div className="aspect-square overflow-hidden">
                   <img
-                    src={product.image}
+                    src={product.image.url}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
@@ -194,7 +199,7 @@ const ProductMain = () => {
                 >
                   <div className="aspect-square overflow-hidden">
                     <img
-                      src={product.image}
+                      src={product.image.url}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
