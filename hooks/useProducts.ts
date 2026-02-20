@@ -17,7 +17,7 @@ import { ProductPayload } from "@/types/adminType";
  */
 
 export const useProducts = () => {
-  return useQuery({
+  return useQuery<Product[]>({
     // unique key for this query - like an ID for the cache
     queryKey: ["products"],
 
