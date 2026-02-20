@@ -1,3 +1,4 @@
+import PromoBannerV2 from "@/components/customer/homepage/PromoBannerV2";
 import BestSellers from "@/components/customer/homepage/BestSellers";
 import HeroPromo from "@/components/customer/homepage/HeroPromo";
 import LocationsSection from "@/components/customer/homepage/Location";
@@ -11,8 +12,9 @@ import { Suspense } from "react";
 export default function Home() {
   return (
     <>
-      <HeroPromo />
+      {/* <HeroPromo /> */}
       {/* <Hero /> */}
+      <PromoBannerV2 />
       <Suspense fallback={<MenuSectionSkeleton />}>
         <MenuSection variant="landing" />
       </Suspense>
