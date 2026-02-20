@@ -7,10 +7,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const OrderSummaryStep = () => {
-  const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
-  const {mutateAsync, isPending} = useCreateOrder();
-  const router = useRouter()
-  
+  const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } =
+    useCart();
+  const { mutateAsync: createOrder, isPending } = useCreateOrder();
+  const router = useRouter();
+
   if (cartItems.length === 0) {
     return (
       <div className="text-center p-12">
@@ -25,84 +26,27 @@ const OrderSummaryStep = () => {
   }
 
   const handlePlaceOrder = async () => {
+    const MINIMUM_AMOUNT = 100;
+    if (totalPrice < MINIMUM_AMOUNT) {
+      toast.error("Minimum Order Amount", {
+        description: `Your order total is ₱${totalPrice.toFixed(2)}. The minimum amount for online payment is ₱${MINIMUM_AMOUNT.toFixed(2)}. Please add more items to your cart.`,
+        duration: 6000,
+      });
+      return;
+    }
+
+    const subTotal = totalPrice;
+    const tax = totalPrice * 0.12;
+    const total = subTotal + tax;
+
     try {
-      // FRONTEND VALIDATION - Check minimum amount before API call
-      const MINIMUM_AMOUNT = 100;
-
-      if (totalPrice < MINIMUM_AMOUNT) {
-        toast.error("Minimum Order Amount", {
-          description: `Your order total is ₱${totalPrice.toFixed(2)}. The minimum amount for online payment is ₱${MINIMUM_AMOUNT.toFixed(2)}. Please add more items to your cart.`,
-          duration: 6000,
-        });
-        return;
-      }
-
-      const subTotal = totalPrice;
-      const tax = totalPrice * 0.12;
-      const total = subTotal + tax;
-
-      // Call PayMongo API to create payment link
-      const response = await fetch("/api/paymongo/create-payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: cartItems.map((item) => ({
-            name: item.name,
-            price: item.price,
-            description: item.description ?? "",
-            image: item.image ?? "",
-            category: item.category?._id,
-            quantity: item.quantity,
-          })),
-          subTotal,
-          total,
-        }),
+      const data = await createOrder({
+        items: cartItems,
+        subTotal,
+        total,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Parse user-friendly error messages from PayMongo
-        let userMessage = "Unable to create payment link. Please try again.";
-
-        if (data.error?.errors && Array.isArray(data.error.errors)) {
-          const errorDetails = data.error.errors[0];
-
-          // Handle specific PayMongo error codes
-          switch (errorDetails.code) {
-            case "parameter_below_minimum":
-              userMessage = `Order amount is below the minimum requirement of ₱100.00. Please add more items to your cart.`;
-              break;
-            case "parameter_above_maximum":
-              userMessage = `Order amount exceeds the maximum limit. Please contact support.`;
-              break;
-            case "parameter_invalid":
-              userMessage = `Invalid payment details. Please check your information and try again.`;
-              break;
-            case "authentication_failed":
-              userMessage = `Payment service is temporarily unavailable. Please try again later or contact support.`;
-              break;
-            default:
-              // Show the actual error detail if it's user-friendly
-              if (errorDetails.detail && errorDetails.detail.length < 100) {
-                userMessage = errorDetails.detail;
-              }
-          }
-        } else if (data.error) {
-          // Fallback for simple error messages
-          userMessage =
-            typeof data.error === "string" ? data.error : userMessage;
-        }
-
-        toast.error("Payment Error", {
-          description: userMessage,
-          duration: 6000,
-        });
-
-        throw new Error(userMessage);
-      }
+     
 
       // Validate the response has the checkout_url
       if (!data.checkoutUrl) {
@@ -143,7 +87,7 @@ const OrderSummaryStep = () => {
                 <div>
                   <h4 className="font-semibold text-gray-900">{item.name}</h4>
                   <p className="text-sm text-gray-500">{item.category?.name}</p>
-                   <p className="text-sm text-gray-500">{item.description}</p>
+                  <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
                 <button
                   onClick={() => removeFromCart(item._id)}
