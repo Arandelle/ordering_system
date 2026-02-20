@@ -10,10 +10,13 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const body = await request.json();
-    const { items, subTotal, total } = body;
+    const MINIMUM_AMOUNT = 100;
+    const TAX_RATE = 0.12;
 
-    if (!items?.length || !subTotal || !total) {
+    const body = await request.json();
+    const { items, subTotal } = body;
+
+    if (!items?.length || !subTotal) {
       return NextResponse.json(
         {
           error: "Form should be completed!",
@@ -23,6 +26,17 @@ export async function POST(request: NextRequest) {
         },
       );
     }
+
+    // Enforce minimum (can't be bypassed)
+    if (subTotal < MINIMUM_AMOUNT) {
+      return NextResponse.json(
+        { error: `Minimum order amount is ₱${MINIMUM_AMOUNT}` },
+        { status: 400 },
+      );
+    }
+
+    const tax = subTotal * TAX_RATE;
+    const total = subTotal + tax;
 
     const secretKey = process.env.SK_TEST_KEY_PAYMONGO;
 
@@ -65,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     const { id, attributes } = data.data;
 
-     // --- 2. Create Order in DB ---
+    // --- 2. Create Order in DB ---
     const order = await Order.create({
       status: "pending",
       items,
@@ -82,18 +96,21 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      // id: data.data.id,
-      // checkout_url: data.data.attributes.checkout_url,
-      // amount: data.data.attributes.amount,
-      // description: data.data.attributes.description,
-      // status: data.data.attributes.status,
-      // reference_number: data.data.attributes.reference_number,
-      // live_mode: data.data.attributes.livemode,
+      id: attributes.id,
+      checkout_url: attributes.checkout_url,
+      amount: attributes.amount,
+      description: attributes.description,
+      status_from_paymongo: attributes.status,
+      reference_number: attributes.reference_number,
+      live_mode: attributes.livemode,
+      paymentLinkId: data.data.id,
 
       orderId: order._id,
       checkoutUrl: attributes.checkout_url,
       referenceNumber: attributes.reference_number,
       status: order.status,
+      
+
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

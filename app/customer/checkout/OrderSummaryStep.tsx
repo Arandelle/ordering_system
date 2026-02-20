@@ -1,7 +1,7 @@
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { useCreateOrder } from "@/hooks/useOrders";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { Loader, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -26,29 +26,24 @@ const OrderSummaryStep = () => {
   }
 
   const handlePlaceOrder = async () => {
+
     const MINIMUM_AMOUNT = 100;
+
     if (totalPrice < MINIMUM_AMOUNT) {
-      toast.error("Minimum Order Amount", {
-        description: `Your order total is ₱${totalPrice.toFixed(2)}. The minimum amount for online payment is ₱${MINIMUM_AMOUNT.toFixed(2)}. Please add more items to your cart.`,
+      toast.warning("Minimum Order Amount", {
+        description: `The minimum amount for online payment is ₱${MINIMUM_AMOUNT.toFixed(2)}.`,
         duration: 6000,
       });
       return;
     }
 
-    const subTotal = totalPrice;
-    const tax = totalPrice * 0.12;
-    const total = subTotal + tax;
-
     try {
       const data = await createOrder({
         items: cartItems,
-        subTotal,
-        total,
+        subTotal: totalPrice,
       });
 
-     
-
-      // Validate the response has the checkout_url
+      // Validate the response has the checkoutUrl
       if (!data.checkoutUrl) {
         throw new Error(
           "Payment link was not generated. Please try again or contact support.",
@@ -139,9 +134,10 @@ const OrderSummaryStep = () => {
           onClick={() => {
             handlePlaceOrder();
           }}
-          className="flex-1 bg-[#e13e00]/90 hover:bg-[#c13500] text-white py-3 rounded-full font-bold transition-colors cursor-pointer"
+          disabled={isPending}
+          className={`flex-1 text-white py-3 rounded-full font-bold transition-colors ${isPending ? "cursor-not-allowed bg-gray-400" : "cursor-pointer bg-[#e13e00]/90 hover:bg-[#c13500]"}`}
         >
-          Place Order
+          {!isPending ? "Place Order" : <span className="flex items-center gap-4 justify-center">Placing Order... <Loader size={16} className="animate-spin"/></span>}
         </button>
         <Link
           href={"/menu"}

@@ -49,7 +49,6 @@ export interface OrderType {
 export interface CreateOrderPayload {
   items: CartItem[];
   subTotal: number;
-  total: number;
 }
 
 export interface CreateOrderResponse {
