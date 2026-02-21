@@ -12,6 +12,37 @@ const allowedTransitions : Record<string, string[]> = {
   cancelled: [],
 };
 
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDB();
+
+    const { id } = await context.params;
+    const order = await Order.findById(id);
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+    
+    return NextResponse.json({
+      _id: order._id.toString(),
+      createdAt: order.createdAt,
+      status: order.status,
+      items: order.items,
+      paymentInfo: order.paymentInfo,
+      total: order.total,
+      estimatedTime: order.estimatedTime,
+      timeline: order.timeline,
+      notes: order.note,
+      isReviewed: order.isReviewed,
+      reviewedAt: order.reviewedAt,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }  
+}
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
