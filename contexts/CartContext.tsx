@@ -10,6 +10,8 @@ interface CartContextType {
   updateQuantity: (id: string | number, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
+  subTotal: number;
+  tax: number;
   totalPrice: number;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
@@ -85,7 +87,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 
   const totalItems = cartItems?.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subTotal = cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const tax = subTotal * 0.12
+  const totalPrice = subTotal + tax
 
   return (
     <CartContext.Provider value={{
@@ -95,6 +99,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateQuantity,
       clearCart,
       totalItems,
+      subTotal,
+      tax,
       totalPrice,
       isCartOpen,
       setIsCartOpen
