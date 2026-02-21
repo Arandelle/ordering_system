@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, ExternalLink, Loader, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ExternalLink,
+  Loader,
+  Minus,
+  Plus,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import OrderNowButton from "@/components/ui/OrderNowButton";
@@ -11,11 +19,19 @@ import { toast } from "sonner";
 const PENDING_CHECKOUT_KEY = "pendingCheckoutUrl";
 
 const OrderSummaryStep = () => {
-  const { cartItems, removeFromCart, updateQuantity, subTotal, tax, totalPrice, clearCart } =
-    useCart();
+  const {
+    cartItems,
+    removeFromCart,
+    updateQuantity,
+    subTotal,
+    tax,
+    totalPrice,
+    clearCart,
+  } = useCart();
   const { mutateAsync: createOrder, isPending } = useCreateOrder();
   const router = useRouter();
   const [checkoutUrl, setCheckoutUrl] = useState<string>("");
+  const [placedTotalPrice, setPlaceTotalPrice] = useState(0);
 
   // On mount: if there's a stored checkout URL (from a refresh mid-payment),
   // redirect to /orders immediately.
@@ -63,13 +79,9 @@ const OrderSummaryStep = () => {
         );
       }
 
-      // 1. Show the modal by setting the URL
       setCheckoutUrl(data.checkoutUrl);
-
-      // 2. Persist so a refresh redirects to /orders
       localStorage.setItem(PENDING_CHECKOUT_KEY, data.checkoutUrl);
-
-      // 3. Clear the cart last
+      setPlaceTotalPrice(totalPrice);
       clearCart();
     } catch (error: any) {
       console.error("Payment error:", error);
@@ -110,9 +122,15 @@ const OrderSummaryStep = () => {
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                      <p className="text-sm text-gray-500">{item.category?.name}</p>
-                      <p className="text-sm text-gray-500">{item.description}</p>
+                      <h4 className="font-semibold text-gray-900">
+                        {item.name}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        {item.category?.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {item.description}
+                      </p>
                     </div>
                     <button
                       onClick={() => removeFromCart(item._id)}
@@ -125,7 +143,9 @@ const OrderSummaryStep = () => {
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200">
                       <button
-                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                        onClick={() =>
+                          updateQuantity(item._id, item.quantity - 1)
+                        }
                         className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                       >
                         <Minus size={14} />
@@ -134,7 +154,9 @@ const OrderSummaryStep = () => {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(item._id, item.quantity + 1)
+                        }
                         className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
                       >
                         <Plus size={14} />
@@ -197,7 +219,10 @@ const OrderSummaryStep = () => {
             {/* Animated check */}
             <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-green-50 ring-8 ring-green-50/50">
               <div className="absolute inset-0 rounded-full bg-green-200 animate-ping opacity-50" />
-              <CheckCircle2 size={88} className="text-green-500 relative z-10" />
+              <CheckCircle2
+                size={88}
+                className="text-green-500 relative z-10"
+              />
             </div>
 
             {/* Text */}
@@ -210,9 +235,11 @@ const OrderSummaryStep = () => {
 
             {/* Total pill */}
             <div className="bg-stone-50 border border-stone-100 rounded-full px-5 py-2 flex items-center gap-2">
-              <span className="text-xs text-stone-600 font-medium">Amount due</span>
+              <span className="text-xs text-stone-600 font-medium">
+                Amount due
+              </span>
               <span className="text-base font-bold text-[#e13e00]">
-                ₱{totalPrice.toFixed(2)}
+                ₱{placedTotalPrice.toFixed(2)}
               </span>
             </div>
 
