@@ -14,10 +14,15 @@ export interface OrderType {
 
   items: CartItem[];
   paymentInfo: {
-    label: string;
+    method: string;
     paymentLinkId?: string;
     checkoutUrl?: string;
-    referenceNumber?: string
+    referenceNumber?: string;
+
+    paidAt: Date;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
   };
   total: {
     subTotal: number;
@@ -59,12 +64,10 @@ export interface CreateOrderResponse {
 }
 
 export interface UpdateOrderPayLoad {
-  status: OrderType["status"]
+  status: OrderType["status"];
 }
 
 export interface UpdateOrderResponse {
-  _id: string,
-  status: OrderType["status"]
+  _id: string;
+  status: OrderType["status"];
 }
-
-
