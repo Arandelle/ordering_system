@@ -10,6 +10,7 @@ import {
   Phone,
   Twitter,
 } from "lucide-react";
+import Image from "next/image";
 import React from "react";
 
 const Footer = ({
@@ -55,7 +56,7 @@ const Footer = ({
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-[#e13e00] rounded-full flex items-center justify-center">
-                <img src="images/harrison_logo.png" alt="harrison_logo" />
+                <Image height={200} width={200} src="/images/harrison_logo.png" alt="harrison_logo" />
               </div>
               <div>
                 <h3 className="font-bold text-lg">Harrison</h3>
