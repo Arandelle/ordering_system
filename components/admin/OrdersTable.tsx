@@ -31,7 +31,7 @@ export default function OrdersTable({
 
   const headerTitles = [
     "Order ID",
-    // "Customer",
+    "Customer",
     "Items",
     "Total",
     "Reference",
@@ -77,11 +77,19 @@ export default function OrdersTable({
                     {order._id.substring(0, 8) + "..."}
                   </span>
                 </TableCell>
-                {/* <TableCell className="px-6 py-4">
-                 
-                    {order.customerName}
-                  
-                </TableCell> */}
+                <TableCell className="px-6 py-4">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-gray-900">
+                      {order.paymentInfo.customerName ?? "—"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {order.paymentInfo.customerEmail ?? "—"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {order.paymentInfo.customerPhone ?? "—"}
+                    </span>
+                  </div>
+                </TableCell>
                 <TableCell className="px-6 py-4">
                   <span className="text-sm text-stone-600">
                     {order.items.length} item{order.items.length > 1 ? "s" : ""}
