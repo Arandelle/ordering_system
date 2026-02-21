@@ -57,10 +57,15 @@ const OrderSchema = new Schema({
     },
 
     paymentInfo : {
-        label: String,
+        method: String,
         paymentLinkId: String,
         checkoutUrl: String,
-        referenceNumber: String
+        referenceNumber: String,
+
+        paidAt: Date,
+        customerName: String,
+        customerEmail: String,
+        customerPhone: String
     },
 
     total: {
