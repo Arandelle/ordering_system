@@ -9,7 +9,10 @@ import {
 } from "../ui/table";
 import { OrderType } from "@/types/OrderTypes";
 import { OrderActionButton } from "./OrderActionButton";
-import { EyeIcon } from "lucide-react";
+import { useState } from "react";
+import Modal from "../ui/Modal";
+import { useOrder } from "@/hooks/useOrders";
+import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
 
 interface OrdersTableProps {
   orders: OrderType[];
@@ -20,6 +23,9 @@ export default function OrdersTable({
   orders,
   showActions = true,
 }: OrdersTableProps) {
+  const [orderToViewId, setOrderToViewId] = useState<string>("");
+  const { data: orderToView, isLoading, isError } = useOrder(orderToViewId);
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString("en-US", {
       month: "short",
@@ -117,7 +123,10 @@ export default function OrdersTable({
                 {showActions && (
                   <TableCell className="px-6 py-4">
                     <div className="flex gap-2 items-center justify-center">
-                      <button className="font-bold bg-blue-700 hover:bg-blue-800 py-2 px-3 text-white">
+                      <button
+                        onClick={() => setOrderToViewId(order._id)}
+                        className="font-bold bg-blue-700 hover:bg-blue-800 py-2 px-3 text-white"
+                      >
                         View Details
                       </button>
 
@@ -132,6 +141,153 @@ export default function OrdersTable({
             ))}
           </TableBody>
         </Table>
+
+       {orderToViewId && (
+  <Modal title="Order Details" onClose={() => setOrderToViewId("")}>
+    {isLoading && (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )}
+    {isError && (
+      <p className="text-center text-sm text-red-500 py-8">Failed to load order.</p>
+    )}
+    {orderToView && (
+      <div className="flex flex-col gap-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-400">Order ID</p>
+            <p className="text-sm font-mono font-medium text-gray-700">{orderToView._id}</p>
+          </div>
+          <StatusBadge status={orderToView.status} />
+        </div>
+
+        <hr className="border-stone-100" />
+
+        {/* Customer Info */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+            Customer
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <UserIcon size={14} className="text-gray-400" />
+              <span className="text-sm text-gray-700">
+                {orderToView.paymentInfo?.customerName ?? "—"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MailIcon size={14} className="text-gray-400" />
+              <span className="text-sm text-gray-700">
+                {orderToView.paymentInfo?.customerEmail ?? "—"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <PhoneIcon size={14} className="text-gray-400" />
+              <span className="text-sm text-gray-700">
+                {orderToView.paymentInfo?.customerPhone ?? "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-stone-100" />
+
+        {/* Order Items */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+            Items
+          </p>
+          <div className="flex flex-col gap-2">
+            {orderToView.items.map((item, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {item.image && (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-12 h-12 rounded-lg object-cover bg-stone-100"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{item.name}</p>
+                    <p className="text-xs text-gray-400">x{item.quantity}</p>
+                  </div>
+                </div>
+                <p className="text-sm font-medium text-gray-700">
+                  ₱{(item.price * item.quantity).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <hr className="border-stone-100" />
+
+        {/* Total */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex justify-between text-sm text-gray-500">
+            <span>Subtotal</span>
+            <span>₱{orderToView.total.subTotal.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between text-sm font-semibold text-gray-900">
+            <span>Total</span>
+            <span>₱{orderToView.total.total.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <hr className="border-stone-100" />
+
+        {/* Payment Info */}
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+            Payment
+          </p>
+          <div className="flex flex-col gap-1.5 text-sm text-gray-700">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Method</span>
+              <span className="capitalize font-medium">
+                {orderToView.paymentInfo?.method ?? "—"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Reference</span>
+              <span className="font-mono text-xs">
+                {orderToView.paymentInfo?.referenceNumber ?? "—"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Paid At</span>
+              <span>
+                {orderToView.paymentInfo?.paidAt
+                  ? new Date(orderToView.paymentInfo.paidAt).toLocaleString()
+                  : "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Note */}
+        {orderToView.notes && (
+          <>
+            <hr className="border-stone-100" />
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                Note
+              </p>
+              <p className="text-sm text-gray-600 bg-stone-50 rounded-lg px-3 py-2">
+                {orderToView.notes}
+              </p>
+            </div>
+          </>
+        )}
+
+      </div>
+    )}
+  </Modal>
+)}
       </div>
     </div>
   );
