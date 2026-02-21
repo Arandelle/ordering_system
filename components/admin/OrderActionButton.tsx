@@ -21,13 +21,15 @@ export function OrderActionButton({ orderId, status }: Props) {
     });
   };
 
-  return (
-    <button
-      onClick={handleClick}
-      disabled={isPending}
-      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${transition.variant}`}
-    >
-      {isPending ? "Updating..." : transition.label}
-    </button>
-  );
+  // OrderActionButton.tsx
+return (
+  <button
+    onClick={handleClick}
+    disabled={isPending}
+    className={`font-bold text-white py-2 px-2.5 cursor-pointer ${transition.variant}`}
+  >
+    {isPending ? "Updating..." : transition.label}
+
+  </button>
+);
 }

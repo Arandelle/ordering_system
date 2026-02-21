@@ -8,6 +8,17 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+const STATUS_PRIORITY: Record<OrderType["status"], number> = {
+  paid:       0, // needs immediate attention
+  pending:    1,
+  preparing:  2,
+  ready:      3,
+  dispatched: 4,
+  completed:  5,
+  cancelled:  6,
+};
+
+
 export const useOrders = () => {
   return useQuery<OrderType[]>({
     // unique query
@@ -23,6 +34,15 @@ export const useOrders = () => {
     },
 
     staleTime: 30000,
+    select: (data) => 
+      [...data].sort((a, b) => {
+        const priorityDiff = STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
+
+        // if same status, keep most recent first
+        if(priorityDiff !== 0) return priorityDiff;
+
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })
   });
 };
 

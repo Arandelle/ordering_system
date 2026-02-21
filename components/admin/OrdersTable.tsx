@@ -1,8 +1,15 @@
-import React from "react";
-import { Order } from "@/types/adminType";
 import StatusBadge from "../ui/StatusBadge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 import { OrderType } from "@/types/OrderTypes";
+import { OrderActionButton } from "./OrderActionButton";
+import { EyeIcon } from "lucide-react";
 
 interface OrdersTableProps {
   orders: OrderType[];
@@ -13,7 +20,6 @@ export default function OrdersTable({
   orders,
   showActions = true,
 }: OrdersTableProps) {
-
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString("en-US", {
       month: "short",
@@ -45,13 +51,16 @@ export default function OrdersTable({
           <TableHeader>
             <TableRow>
               {headerTitles.map((head, index) => (
-                <TableHead key={index} className="px-4 py-4 uppercase text-xs font-semibold tracking-wider text-center">
+                <TableHead
+                  key={index}
+                  className="px-4 py-4 uppercase text-xs font-semibold tracking-wider text-center"
+                >
                   {head}
                 </TableHead>
               ))}
 
               {showActions && (
-                <th className="px-6 py-4 text-left text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-stone-600 uppercase tracking-wider">
                   Actions
                 </th>
               )}
@@ -96,15 +105,18 @@ export default function OrdersTable({
                     {formatDate(order.createdAt)}
                   </span>
                 </TableCell>
+
                 {showActions && (
                   <TableCell className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <button className="px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
-                        View
+                    <div className="flex gap-2 items-center justify-center">
+                      <button className="font-bold bg-blue-700 hover:bg-blue-800 py-2 px-3 text-white">
+                        View Details
                       </button>
-                      <button className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                        Update
-                      </button>
+
+                      <OrderActionButton
+                        orderId={order._id}
+                        status={order.status}
+                      />
                     </div>
                   </TableCell>
                 )}

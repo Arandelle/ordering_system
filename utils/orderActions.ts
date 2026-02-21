@@ -3,12 +3,12 @@ import { OrderType } from "@/types/OrderTypes";
 // utils/orderActions.ts
 export type OrderStatus = OrderType["status"];
 
+// utils/orderActions.ts
 const VARIANT_STYLES = {
-  blue: "text-blue-600 hover:bg-blue-50",
-  orange: "text-orange-600 hover:bg-orange-50",
-  green: "text-green-600 hover:bg-green-50",
-  red: "text-red-600 hover:bg-red-50",
-  purple: "text-purple-600 hover:bg-purple-50",
+  accept:   "bg-[#e13e00] hover:bg-[#c13500]",
+  ready: "bg-green-700 hover:bg-green-800",
+  dispatched:  "bg-orange-500 hover:bg-orange-600",
+  complete:    "bg-amber-500 hover:bg-amber-600",
 };
 
 export const ORDER_TRANSITIONS: Record<
@@ -23,22 +23,22 @@ export const ORDER_TRANSITIONS: Record<
   paid: {
     label: "Accept Order",
     nextStatus: "preparing",
-    variant: VARIANT_STYLES["blue"],
+    variant: VARIANT_STYLES["accept"],
   },
   preparing: {
-    label: "Mark Ready",
+    label: "Mark as Ready",
     nextStatus: "ready",
-    variant: VARIANT_STYLES["orange"],
+    variant: VARIANT_STYLES["ready"],
   },
   ready: {
     label: "Dispatch",
     nextStatus: "dispatched",
-    variant: VARIANT_STYLES["purple"],
+    variant: VARIANT_STYLES["dispatched"],
   },
   dispatched: {
     label: "Mark Completed",
     nextStatus: "completed",
-    variant: VARIANT_STYLES["green"],
+    variant: VARIANT_STYLES["complete"],
   },
   completed: null,
   cancelled: null,
