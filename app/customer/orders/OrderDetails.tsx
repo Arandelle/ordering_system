@@ -12,18 +12,12 @@ interface OrderDetailsProps {
 }
 
 export default function OrderDetails({ orderId }: OrderDetailsProps) {
-  const { data: placedOrders } = useOrders();
+  const { data: placedOrders, isLoading } = useOrders();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
   const order = placedOrders?.find((o) => o._id === orderId);
 
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;
-
-  useEffect(() => {
-    // Wait for hydration
-    setIsLoading(false);
-  }, []);
 
   useEffect(() => {
     // After hydration, if no order found, redirect
