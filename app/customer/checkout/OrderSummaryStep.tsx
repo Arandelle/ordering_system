@@ -1,22 +1,14 @@
+import { useEffect, useState } from "react";
+import { CheckCircle2, ExternalLink, Loader, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { useCreateOrder } from "@/hooks/useOrders";
-import { CartItem } from "@/types/MenuTypes";
-import { CheckCircle2, ExternalLink, Loader, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const PENDING_CHECKOUT_KEY = "pendingCheckoutUrl";
-
-type CartItemWithTotal = {
-  cartItems: CartItem[];
-  subTotal: number;
-  tax: number;
-  totalPrice: number
-}
 
 const OrderSummaryStep = () => {
   const { cartItems, removeFromCart, updateQuantity, subTotal, tax, totalPrice, clearCart } =
@@ -24,7 +16,6 @@ const OrderSummaryStep = () => {
   const { mutateAsync: createOrder, isPending } = useCreateOrder();
   const router = useRouter();
   const [checkoutUrl, setCheckoutUrl] = useState<string>("");
-  const [orderedItems, setOrderedItems] = useState<CartItemWithTotal | null>(null);
 
   // On mount: if there's a stored checkout URL (from a refresh mid-payment),
   // redirect to /orders immediately.
@@ -72,21 +63,13 @@ const OrderSummaryStep = () => {
         );
       }
 
-      // 1. Snapshot the cart before clearing so the modal can display the items
-      setOrderedItems({
-        cartItems,
-        subTotal,
-        tax,
-        totalPrice
-      });
-
-      // 2. Show the modal by setting the URL
+      // 1. Show the modal by setting the URL
       setCheckoutUrl(data.checkoutUrl);
 
-      // 3. Persist so a refresh redirects to /orders
+      // 2. Persist so a refresh redirects to /orders
       localStorage.setItem(PENDING_CHECKOUT_KEY, data.checkoutUrl);
 
-      // 4. Clear the cart last
+      // 3. Clear the cart last
       clearCart();
     } catch (error: any) {
       console.error("Payment error:", error);
@@ -209,66 +192,32 @@ const OrderSummaryStep = () => {
       )}
 
       {checkoutUrl && (
-        <Modal title="Order Placed!" onClose={handleModalClose}>
-          <div className="space-y-5">
-            {/* Success header */}
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
-              <CheckCircle2 size={22} className="text-green-500 shrink-0" />
-              <p className="text-sm text-green-700 font-medium">
-                Your order was successfully created. Complete payment to confirm it.
+        <Modal title="" onClose={handleModalClose}>
+          <div className="flex flex-col items-center text-center gap-5 py-4">
+            {/* Animated check */}
+            <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-green-50 ring-8 ring-green-50/50">
+              <div className="absolute inset-0 rounded-full bg-green-200 animate-ping opacity-50" />
+              <CheckCircle2 size={88} className="text-green-500 relative z-10" />
+            </div>
+
+            {/* Text */}
+            <div className="space-y-1.5">
+              <h3 className="text-xl font-bold text-gray-900">Order Placed!</h3>
+              <p className="text-sm text-gray-400 max-w-220px leading-relaxed">
+                Complete your payment to confirm and prepare your order.
               </p>
             </div>
 
-            {/* Ordered items list */}
-            <div className="space-y-3 max-h-56 overflow-y-auto hide-scrollbar">
-              {orderedItems?.cartItems.map((item) => (
-                <div
-                  key={item._id}
-                  className="flex items-center gap-3 bg-stone-50 rounded-xl p-3"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-12 h-12 object-cover rounded-lg shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm truncate">
-                      {item.name}
-                    </p>
-                    {item.category?.name && (
-                      <p className="text-xs text-gray-400">{item.category.name}</p>
-                    )}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-xs text-gray-400">x{item.quantity}</p>
-                    <p className="text-sm font-bold text-[#e13e00]">
-                      ₱{(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Order totals */}
-            <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-2">
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>Subtotal</span>
-                <span>₱{orderedItems?.subTotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>VAT (12%)</span>
-                <span>₱{orderedItems?.tax.toFixed(2)}</span>
-              </div>
-              <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
-                <span className="text-sm font-bold text-gray-900">Order Total</span>
-                <span className="text-lg font-bold text-[#e13e00]">
-                  ₱{orderedItems?.totalPrice.toFixed(2)}
-                </span>
-              </div>
+            {/* Total pill */}
+            <div className="bg-stone-50 border border-stone-100 rounded-full px-5 py-2 flex items-center gap-2">
+              <span className="text-xs text-stone-600 font-medium">Amount due</span>
+              <span className="text-base font-bold text-[#e13e00]">
+                ₱{totalPrice.toFixed(2)}
+              </span>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-3 pt-1">
+            <div className="flex flex-col gap-3 w-full pt-1">
               <a
                 href={checkoutUrl}
                 target="_blank"
@@ -278,7 +227,6 @@ const OrderSummaryStep = () => {
               >
                 Pay Now <ExternalLink size={15} />
               </a>
-
               <button
                 onClick={handleModalClose}
                 className="mx-auto text-xs text-gray-400 hover:text-gray-600 transition-colors cursor-pointer py-1"
