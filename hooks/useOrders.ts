@@ -2,6 +2,8 @@ import {
   CreateOrderPayload,
   CreateOrderResponse,
   OrderType,
+  UpdateOrderPayLoad,
+  UpdateOrderResponse,
 } from "@/types/OrderTypes";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -94,6 +96,38 @@ export const useCreateOrder = () => {
 
     onSuccess: () => {
       // Refresh orders list
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+};
+
+export const useUpdateOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    UpdateOrderResponse,
+    Error,
+    { id: string; data: UpdateOrderPayLoad }
+  >({
+    mutationFn: async ({ id, data }) => {
+      const response = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update order!");
+      }
+
+      return result;
+    },
+
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });

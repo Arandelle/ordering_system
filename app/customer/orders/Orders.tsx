@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { useOrders } from "@/hooks/useOrders";
+import { useOrders, useUpdateOrder } from "@/hooks/useOrders";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -29,6 +29,8 @@ const TABS = [
 
 const Orders = () => {
   const { data: placedOrders = [] } = useOrders();
+  const updateOrder = useUpdateOrder();
+  
   const { addToCart, setIsCartOpen } = useCart();
   const router = useRouter();
   const pathname = usePathname();
@@ -81,11 +83,14 @@ const Orders = () => {
     router.push(newUrl);
   };
 
-  // const handleCancelOrder = (orderId: string) => {
-  //   if (confirm(`Are you sure you want to cancel order ${orderId} ? `)) {
-  //     updateOrderStatus(orderId, "cancelled");
-  //   }
-  // };
+  const handleCancelOrder = (orderId: string) => {
+    if (confirm(`Are you sure you want to cancel order ${orderId} ? `)) {
+     updateOrder.mutate({
+      id: orderId,
+      data: {status: "cancelled"}
+     })
+    }
+  };
 
   const handleBuyAgain = (orderItems: any[]) => {
     orderItems.forEach((item) => {
@@ -326,7 +331,7 @@ const Orders = () => {
                             <ExternalLink size={16} /> Pay Order!
                           </a>
                           <button
-                            // onClick={() => handleCancelOrder(order._id)}
+                            onClick={() => handleCancelOrder(order._id)}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"
                           >
                             <X size={16} /> Cancel Order

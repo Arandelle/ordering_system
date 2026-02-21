@@ -58,4 +58,13 @@ export interface CreateOrderResponse {
   status: OrderType["status"];
 }
 
+export interface UpdateOrderPayLoad {
+  status: OrderType["status"]
+}
+
+export interface UpdateOrderResponse {
+  _id: string,
+  status: OrderType["status"]
+}
+
 
