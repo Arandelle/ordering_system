@@ -46,6 +46,21 @@ export const useOrders = () => {
   });
 };
 
+export const useOrder = (id: string) => {
+  return useQuery<OrderType>({
+    queryKey: ["orders", id],
+    queryFn: async () => {
+      const response = await fetch(`/api/orders/${id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch order details");
+      }
+
+      return response.json();
+    },
+    staleTime: 30000,
+  });
+};
+
 // ============================================
 // MUTATIONS (CREATE/UPDATE/DELETE data)
 // ============================================
