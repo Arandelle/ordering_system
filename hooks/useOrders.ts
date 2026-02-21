@@ -130,5 +130,8 @@ export const useUpdateOrder = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
 };

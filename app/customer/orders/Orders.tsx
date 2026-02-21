@@ -17,6 +17,7 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { useOrders, useUpdateOrder } from "@/hooks/useOrders";
+import { toast } from "sonner";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -88,7 +89,12 @@ const Orders = () => {
      updateOrder.mutate({
       id: orderId,
       data: {status: "cancelled"}
-     })
+     },
+     {
+      onSuccess: () => toast.success("Order cancelled!")
+     }
+    
+    );
     }
   };
 
