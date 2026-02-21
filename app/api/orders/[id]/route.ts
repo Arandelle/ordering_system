@@ -2,6 +2,16 @@ import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
 import { NextRequest, NextResponse } from "next/server";
 
+const allowedTransitions : Record<string, string[]> = {
+  pending: ["cancelled"],
+  paid: ["preparing"],
+  preparing: ["ready"],
+  ready: ["dispatched"],
+  dispatched: ["completed"],
+  completed: [],
+  cancelled: [],
+};
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -12,24 +22,39 @@ export async function PATCH(
 
     const {id} = await context.params;
     const body = await request.json();
-    const {status} = body;
+    const {status: newStatus} = body;
 
-    if(!status){
+    if(!newStatus){
         return NextResponse.json({
             error: "Status is required!"
         }, {status: 400})
     }
 
-    const updateOrder = await Order.findByIdAndUpdate(id, {status}, {new: true});
-    if(!updateOrder){
+    const order = await Order.findById(id);
+
+    if(!order){
         return NextResponse.json({
             error: "Order Not found!"
         }, {status: 404})
     };
 
+
+    const allowedStatuses = allowedTransitions[order.status] ?? [];
+    if (!allowedStatuses.includes(newStatus)) {
+        return NextResponse.json({
+            error: `Invalid status transition from ${order?.status} to ${newStatus}`,
+            allowedTransitions: allowedStatuses
+        }, {status: 400})
+
+    }
+
+    order.status = newStatus;
+    order.statusUpdatedAt = new Date();
+    await order.save();
+
     return NextResponse.json({
-        _id: updateOrder._id.toString(),
-        status: updateOrder.status
+        _id: order._id.toString(),
+        status: order.status
     });
     
   } catch (error: any) {
