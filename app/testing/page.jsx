@@ -8,7 +8,8 @@ import {
   LayoutDashboard, UtensilsCrossed, ShoppingBag, Settings, Bell, Search, 
   MoreVertical, CheckCircle, Clock, Package, DollarSign, TrendingUp, Menu, X,
   Users, Plus, Edit, Trash2, Save, XCircle, Eye, Mail, Phone, MapPin, Calendar,
-  Filter, Download, RefreshCw, AlertCircle
+  Filter, Download, RefreshCw, AlertCircle,
+  LucideIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -154,7 +155,8 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, badge }) => (
   </button>
 );
 
-const StatCard = ({ title, value, trend, icon: Icon, color, trendValue }) => (
+
+const StatCard = ({ title, value, trend, icon: Icon, color, trendValue = 0 }) => (
   <motion.div 
     whileHover={{ y: -5 }}
     className="bg-slate-800 border border-slate-700 p-6 rounded-2xl relative overflow-hidden group hover:border-slate-600 transition-all"
@@ -164,7 +166,7 @@ const StatCard = ({ title, value, trend, icon: Icon, color, trendValue }) => (
     </div>
     <div className="relative z-10">
       <div className="flex items-center gap-3 mb-2">
-        <div className={`p-2 rounded-lg ${color.replace('text-', 'bg-')} bg-opacity-20`}>
+        <div className={`p-2 rounded-lg ${color?.replace('text-', 'bg-')} bg-opacity-20`}>
           <Icon size={20} className={color} />
         </div>
         <span className="text-slate-400 font-medium">{title}</span>
@@ -181,7 +183,7 @@ const StatCard = ({ title, value, trend, icon: Icon, color, trendValue }) => (
 );
 
 const StatusBadge = ({ status }) => {
-  const styles = {
+  const styles= {
     Pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
     Cooking: "bg-blue-500/10 text-blue-500 border-blue-500/20",
     Ready: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
@@ -234,6 +236,7 @@ const Modal = ({ isOpen, onClose, title, children }) => (
     )}
   </AnimatePresence>
 );
+
 
 const Toast = ({ message, type, onClose }) => (
   <motion.div
