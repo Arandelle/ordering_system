@@ -12,6 +12,9 @@ const ProductsPage = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const {data: products = [], isLoading, isError, error, refetch} = useProducts();
+  
+  const sortedProducts = products.sort((a, b) => a.stock - b.stock)
+
 
   if (isLoading) {
     return (
@@ -81,7 +84,7 @@ const ProductsPage = () => {
 
       {/* Products Table */}
       <ProductTable
-        products={products}
+        products={sortedProducts}
         onEdit={(product) => {
           setSelectedProduct(product);
           setIsModalOpen(true);

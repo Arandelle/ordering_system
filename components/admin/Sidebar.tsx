@@ -1,4 +1,5 @@
 import { useOrders } from "@/hooks/useOrders";
+import { useProducts } from "@/hooks/useProducts";
 import { getLucideIcon } from "@/lib/iconUtils";
 import { LogOut, X } from "lucide-react";
 import Link from "next/link";
@@ -22,8 +23,11 @@ const navItems = [
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   const pathname = usePathname();
   const {data: placedOrders = []} = useOrders();
+  const {data: products = []} = useProducts();
 
   const pendingCount = placedOrders.filter(order => order.status === 'pending').length;
+  const lowProductStock = products.filter(order => order.stock <= 10).length;
+
 
   return (
     <>
@@ -77,6 +81,12 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                     {item.name === "Orders" && pendingCount > 0 && (
                        <div className="absolute -top-1 right-0 flex items-center justify-center w-5 h-5 text-xs bg-red-600 text-white rounded-full">
                       {pendingCount}
+                    </div>
+                    )}
+
+                    {item.name === "Products" && lowProductStock > 0 && (
+                       <div className="absolute -top-1 right-0 flex items-center justify-center w-5 h-5 text-xs bg-red-600 text-white rounded-full">
+                      {lowProductStock}
                     </div>
                     )}
                    
