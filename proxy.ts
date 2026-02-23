@@ -21,7 +21,7 @@ export function proxy(request: NextRequest) {
   
   // Skip rewriting if already routed to /main or /customer
   // This prevents infinite rewrite loops
-  if (pathname.startsWith('/main') || pathname.startsWith('/customer') || pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/main') || pathname.startsWith('/customer') || pathname.startsWith('/admin') || pathname.startsWith('harrison-testing')) {
     return NextResponse.next()
   }
   
@@ -33,6 +33,12 @@ export function proxy(request: NextRequest) {
 
   if (subdomain === 'admin') {
     url.pathname = `/admin${pathname}`
+    return NextResponse.rewrite(url)
+  }
+
+
+  if (subdomain === 'harrison-testing') {
+    url.pathname = `/harrison-testing${pathname}`
     return NextResponse.rewrite(url)
   }
   
@@ -55,6 +61,6 @@ export function proxy(request: NextRequest) {
  */
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos|privacy-policy|paymongo|admin|testing).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos|privacy-policy|paymongo|admin|testing|harrison-testing).*)',
   ],
 }
