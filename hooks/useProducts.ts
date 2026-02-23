@@ -5,6 +5,7 @@
 import { Product } from "@/types/adminType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProductPayload } from "@/types/adminType";
+import { toast } from "sonner";
 
 /**
  * Fetch all product
@@ -24,11 +25,14 @@ export const useProducts = () => {
     // Function that fetches the data
     queryFn: async () => {
       const response = await fetch("/api/products");
+
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to fetch products");
+        throw new Error(responseData.details || "Failed to fetch products");
       }
 
-      return response.json();
+      return responseData.data;
     },
 
     // Optional: Custom settings for this specific query
@@ -78,12 +82,13 @@ export const useCreateProduct = () => {
         body: JSON.stringify(productData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create product");
+        throw data
       }
 
-      return response.json();
+      return data;
     },
 
     // what happens after successful creation
@@ -91,11 +96,21 @@ export const useCreateProduct = () => {
       // Invalidate products cache - forces a refetch
       // This ensures the list shows the new product
       queryClient.invalidateQueries({ queryKey: ["products"] });
+       toast.success("Product created successfully");
     },
 
     // What happens if creation fails
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Create failed:", error);
+       if (error?.details?.length) {
+        const message = error.details
+          .map((issue: any) => issue.message)
+          .join("\n");
+
+        toast.error(message);
+      } else {
+        toast.error(error?.error || "Something went wrong");
+      }
     },
   });
 };

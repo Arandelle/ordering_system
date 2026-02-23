@@ -2,7 +2,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { NextResponse, NextRequest } from "next/server";
 import cloudinary from "@/lib/cloudinary";
-import { success, z } from "zod";
+import { z } from "zod";
 import "@/models/Category";
 
 // ZOD Schema
@@ -16,7 +16,7 @@ const productCreateSchema = z
     description: z
       .string()
       .min(10, "Description is required")
-      .max(500, "Description must be less than 500 characters"),
+      .max(300, "Description must be less than 300 characters"),
     price: z.coerce.number().positive("Price must be a positive number"),
     category: z.string().min(1, "Category is required"),
     stock: z.coerce

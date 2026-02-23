@@ -47,7 +47,7 @@ const ProductsModal = ({
 
   // Loading/error states come from mutations
   const isLoading = createMutation.isPending || updateMutation.isPending;
-  const error = createMutation.error || updateMutation.error;
+  const error = (createMutation.error as any) || (updateMutation.error as any);
   const isSuccess = createMutation.isSuccess || updateMutation.isSuccess;
 
   useEffect(() => {
@@ -422,12 +422,6 @@ const ProductsModal = ({
         {isSuccess && (
           <div className="mt-6 p-4 rounded-lg font-medium bg-green-50 text-green-700 border border-green-200">
             ✓ Product {isEditMode ? "updated" : "created"} successfully!
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-6 p-4 rounded-lg font-medium bg-red-50 text-red-700 border border-red-200">
-            ✗ {error instanceof Error ? error.message : "An error occurred"}
           </div>
         )}
 
