@@ -1,8 +1,35 @@
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import cloudinary from "@/lib/cloudinary";
+import { success, z } from "zod";
 import "@/models/Category";
+
+// ZOD Schema
+
+const productCreateSchema = z
+  .object({
+    name: z
+      .string()
+      .min(3, "Name is required")
+      .max(30, "Name must be less than 30 characters"),
+    description: z
+      .string()
+      .min(10, "Description is required")
+      .max(500, "Description must be less than 500 characters"),
+    price: z.coerce.number().positive("Price must be a positive number"),
+    category: z.string().min(1, "Category is required"),
+    stock: z.coerce
+      .number()
+      .int()
+      .nonnegative("Stock must be a non-negative integer"),
+    image: z.string().optional(),
+    imageFile: z.string().optional(),
+  })
+  .refine((data) => data.image || data.imageFile, {
+    message: "Image is required",
+    path: ["image"],
+  });
 
 // GET all products
 export async function GET() {
@@ -18,11 +45,14 @@ export async function GET() {
           as: "category",
         },
       },
-      { $unwind: { path: "$category"} },
+      { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
       { $sort: { "category.position": 1, createdAt: -1 } },
     ]);
 
-    return NextResponse.json(products);
+    return NextResponse.json(
+      { success: true, data: products },
+      { status: 200 },
+    );
   } catch (error: any) {
     console.error("FULL ERROR:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -30,59 +60,26 @@ export async function GET() {
 }
 
 // POST create new product
-export async function POST(request: Request) {
-  let uploadResult;
+export async function POST(request: NextRequest) {
+  let uploadResult: any;
 
   try {
     await connectDB();
 
-    const { name, price, description, image, category, imageFile, stock } =
-      await request.json();
+    const body = await request.json();
 
-    // ✅ STEP 1: VALIDATE
-    if (
-      !name ||
-      !price ||
-      !description ||
-      !category ||
-      stock === undefined ||
-      stock === null
-    ) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 },
-      );
-    }
+    // runtime validation using ZOD
+    const validateData = productCreateSchema.parse(body);
 
-    if (!image && !imageFile) {
-      return NextResponse.json({ error: "Image is required" }, { status: 400 });
-    }
+    const { name, description, price, category, stock, imageFile } =
+      validateData;
 
-    // Validate category is not empty
-    if (category.trim() === "") {
-      return NextResponse.json(
-        { error: "Category cannot be empty" },
-        { status: 400 },
-      );
-    }
+    const normalizedCategory = category
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-");
 
-    // Validate price
-    if (isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
-      return NextResponse.json(
-        { error: "Price must be a positive number" },
-        { status: 400 },
-      );
-    }
-
-    // Validate stock
-    if (isNaN(parseFloat(stock))) {
-      return NextResponse.json(
-        { error: "Stock must be a positive number" },
-        { status: 400 },
-      );
-    }
-
-    // ✅ STEP 2: Upload image (only after validation)
+    // Upload Image
     let finalImage = {
       url: "",
       public_id: "",
@@ -103,16 +100,10 @@ export async function POST(request: Request) {
       };
     }
 
-    // ✅ STEP 3: Normalize category (lowercase, trim spaces)
-    const normalizedCategory = category
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-");
-
     // ✅ STEP 4: Create product
     const product = await Product.create({
       name,
-      price: parseFloat(price),
+      price,
       description,
       image: finalImage,
       category: normalizedCategory,
@@ -123,12 +114,31 @@ export async function POST(request: Request) {
       await cloudinary.uploader.destroy(finalImage.public_id);
     }
 
-    return NextResponse.json(product, { status: 201 });
+    return NextResponse.json({ success: true, data: product }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating product:", error);
 
     if (uploadResult?.public_id) {
       await cloudinary.uploader.destroy(uploadResult.public_id);
+    }
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: error?.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+      // Duplicate name handling
+    if (error?.code === 11000) {
+      return NextResponse.json(
+        { success: false, error: "Product already exists" },
+        { status: 409 }
+      );
     }
 
     return NextResponse.json(
