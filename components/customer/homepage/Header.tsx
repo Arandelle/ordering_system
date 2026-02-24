@@ -3,12 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag, Menu, X, User, LogIn, Package } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useOrders } from "@/hooks/useOrders";
+import HeaderLogo from "@/components/HeaderLogo";
 
 const Header = () => {
-
   const { totalItems, setIsCartOpen } = useCart();
   const { data: placedOrders } = useOrders();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -49,34 +48,8 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-18 lg:h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Link
-              href={"/"}
-              className="cursor-pointer w-12 h-12 bg-[#ef4501] rounded-full flex items-center justify-center"
-            >
-              <Image
-                src="/images/harrison_logo.png"
-                alt="..."
-                width={500}
-                height={500}
-                priority // or add error handling
-                onError={(e) => {
-                  console.log("Image failed to load");
-                  e.currentTarget.src = "images/harrison_logo.png.jpg"; // Optional fallback
-                }}
-              />
-            </Link>
-            <div className="sm:block">
-              <h1 className="text-[#ef4501] font-bold text-lg leading-tight">
-                Harrison
-              </h1>
-              <p
-                className={`${isScrolled && "text-slate-600"} text-xs`}
-              >
-                House of Inasal & BBQ
-              </p>
-            </div>
-          </div>
+
+          <HeaderLogo />
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
@@ -86,19 +59,14 @@ const Header = () => {
                 // onClick={onLoginClick}
                 className="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-lg transition-colors"
               >
-                <LogIn
-                  size={18}
-                  className={`text-slate-600`}
-                />
-                <span
-                  className={`text-sm font-medium text-slate-600`}
-                >
+                <LogIn size={18} className={`text-slate-600`} />
+                <span className={`text-sm font-medium text-slate-600`}>
                   Login
                 </span>
               </button>
               <button
                 // onClick={onSignupClick}
-                className="flex items-center gap-2 bg-[#ef4501] hover:bg-[#c13500] text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 bg-brand-color-500 hover:bg-brand-color-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
               >
                 <User size={18} />
                 <span>Sign Up</span>
@@ -115,7 +83,7 @@ const Header = () => {
                 className={`group-hover:scale-110 transition-transform darkText`}
               />
               {activeOrdersCount && activeOrdersCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#ef4501] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
                   {activeOrdersCount}
                 </span>
               )}
@@ -131,7 +99,7 @@ const Header = () => {
                 className={`group-hover:scale-110 transition-transform darkText`}
               />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#ef4501] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
                   {totalItems}
                 </span>
               )}
@@ -163,7 +131,7 @@ const Header = () => {
               </button>
               <button
                 // onClick={() => { onSignupClick(); setIsMobileMenuOpen(false); }}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#ef4501] text-white px-4 py-3 rounded-lg"
+                className="flex-1 flex items-center justify-center gap-2 bg-brand-color-500 text-white px-4 py-3 rounded-lg"
               >
                 <User size={18} />
                 <span>Sign Up</span>

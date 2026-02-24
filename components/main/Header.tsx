@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import { useScrollToSection } from "@/hooks/useScrollToSection";
-import { usePathname, useRouter } from "next/navigation";
-import Image from "next/image";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
+import HeaderLogo from "../HeaderLogo";
 
 const Header = () => {
   useScrollToSection();
@@ -38,30 +38,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 p-4">
         <div className="flex items-center justify-between h-10 md:h-12">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="cursor-pointer w-12 h-12 bg-[#ef4501] rounded-full flex items-center justify-center"
-            >
-              <Image
-                src="/images/harrison_logo.png"
-                alt="..."
-                width={500}
-                height={500}
-                priority // or add error handling
-                onError={(e) => {
-                  console.log("Image failed to load");
-                  e.currentTarget.src = "images/harrison_logo.png.jpg"; // Optional fallback
-                }}
-              />
-            </Link>
-            <div className="">
-              <h1 className="text-[#ef4501] font-bold text-lg leading-tight">
-                Harrison
-              </h1>
-              <p className={`text-slate text-sm`}>House of Inasal & BBQ</p>
-            </div>
-          </div>
+          <HeaderLogo />
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
@@ -70,14 +47,14 @@ const Header = () => {
                 key={item.section}
                 href={`/?section=${item.section}`}
                 onClick={useScrollLink(item.section)}
-                className="text-gray-800 font-[550] hover:text-[#ef4501] transition-colors"
+                className="text-gray-800 font-[550] hover:text-brand-color-500 transition-colors"
               >
                 {item.label}
               </Link>
             ))}
             <a
               href={orderUrl}
-              className="block w-full bg-[#ef4501] text-white px-6 py-2 font-bold text-center hover:bg-[#b83200] transition-colors"
+              className="block w-full bg-brand-color-500 text-white px-6 py-2 font-bold text-center hover:bg-brand-color-600 transition-colors"
             >
               Order Now
             </a>
@@ -125,7 +102,7 @@ const Header = () => {
             ))}
             <a
               href={orderUrl}
-              className="block w-full bg-[#ef4501] text-white px-6 py-3 font-bold text-center hover:bg-[#b83200] transition-colors"
+              className="block w-full bg-brand-color-500 text-white px-6 py-3 font-bold text-center hover:bg-brand-color-600 transition-colors"
             >
               Order Now
             </a>
