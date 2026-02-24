@@ -2,11 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-const HeaderLogo = () => {
+const BrandLogo = () => {
   return (
     <Link
       href={"/"}
-      className="cursor-pointer flex items-center justify-center"
+      className="cursor-pointer"
     >
       <div className="flex items-center">
         <Image
@@ -24,4 +24,4 @@ const HeaderLogo = () => {
   );
 };
 
-export default HeaderLogo;
+export default BrandLogo;

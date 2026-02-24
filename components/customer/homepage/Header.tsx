@@ -5,7 +5,7 @@ import { useCart } from "@/contexts/CartContext";
 import { ShoppingBag, Menu, X, User, LogIn, Package } from "lucide-react";
 import Link from "next/link";
 import { useOrders } from "@/hooks/useOrders";
-import HeaderLogo from "@/components/HeaderLogo";
+import BrandLogo from "@/components/BrandLogo";
 
 const Header = () => {
   const { totalItems, setIsCartOpen } = useCart();
@@ -49,7 +49,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-18 lg:h-20">
           {/* Logo */}
 
-          <HeaderLogo />
+          <BrandLogo />
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-4">

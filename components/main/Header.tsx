@@ -4,7 +4,7 @@ import { useScrollToSection } from "@/hooks/useScrollToSection";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
-import HeaderLogo from "../HeaderLogo";
+import BrandLogo from "../BrandLogo";
 
 const Header = () => {
   useScrollToSection();
@@ -38,7 +38,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 p-4">
         <div className="flex items-center justify-between h-10 md:h-12">
           {/* Logo */}
-          <HeaderLogo />
+          <BrandLogo />
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
