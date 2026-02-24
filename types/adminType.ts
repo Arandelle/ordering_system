@@ -27,6 +27,7 @@ export interface Product {
   };
   stock: number;
   isPopular?: boolean;
+  isSignature?: boolean;
 }
 
 export interface ProductPayload {
@@ -37,6 +38,7 @@ export interface ProductPayload {
   stock: number;
   image?: string;
   imageFile?: string;
+  isSignature?: boolean;
 }
 
 export interface Category {
