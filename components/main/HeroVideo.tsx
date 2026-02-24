@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
+import { ArrowBigDown, ArrowDown, ChevronDown } from "lucide-react";
 
 const HeroVideo = () => {
   // Navigate to food subdomain
@@ -35,26 +36,29 @@ const HeroVideo = () => {
               {/* Main Heading */}
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-tight">
                 HARRISON HOUSE OF
-                <span className="block text-[#ef4501] mt-2">INASAL & BBQ</span>
+                <span className="block text-brand-color-500 mt-2">INASAL & BBQ</span>
               </h1>
 
               {/* Subheading */}
-              <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 max-w-xl">
-                Experience authentic Filipino BBQ and Inasal. Grilled to
-                perfection, served with love.
-              </p>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="h-px w-12 bg-linear-to-r from-transparent to-brand-color-500"></div>
+                <span className="text-brand-color-500 font-bold tracking-wider uppercase text-sm">
+                  Every Bite Tells a Story
+                </span>
+                <div className="h-px w-12 bg-linear-to-r from-brand-color-500 to-transparent"></div>
+              </div>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
                   href={orderUrl}
-                  className="w-full sm:w-auto bg-[#ef4501] text-white px-8 py-4 text-lg font-bold hover:bg-[#b83200] transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  className="w-full sm:w-auto bg-brand-color-500 text-white px-8 py-4 text-lg font-bold hover:bg-brand-color-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
                 >
                   Order Now
                 </a>
                 <a
                   href={menuUrl}
-                  className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-4 text-lg font-bold hover:bg-white hover:text-[#ef4501] transition-all duration-300"
+                  className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-4 text-lg font-bold hover:bg-white hover:text-dark-green transition-all duration-300"
                 >
                   View Menu
                 </a>
@@ -63,18 +67,9 @@ const HeroVideo = () => {
           </div>
 
           {/* Scroll Down Indicator */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-            </svg>
+          <div className="flex flex-col items-center justify-center gap-2 absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce text-white">
+             <p className="text-sm">Scroll down</p>
+            <ChevronDown size={30}/>
           </div>
         </div>
       </div>

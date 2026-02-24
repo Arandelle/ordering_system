@@ -6,7 +6,78 @@
   --darkColor: #1a1a1a;
   --grabColor: #009B3D;
   --foodpandaColor: #D6005F;
+}
 
+@theme {
+  /* =========================
+     Brand Color (#ef4501)
+  ========================== */
+  --color-brand-color-50:  #fff4ee;
+  --color-brand-color-100: #ffe6d9;
+  --color-brand-color-200: #ffc9b3;
+  --color-brand-color-300: #ff9f80;
+  --color-brand-color-400: #ff6f40;
+  --color-brand-color-500: #ef4501;
+  --color-brand-color-600: #cc3b01;
+  --color-brand-color-700: #a53101;
+  --color-brand-color-800: #7f2600;
+  --color-brand-color-900: #5c1b00;
+
+  /* =========================
+     Dark Green (#093500)
+  ========================== */
+  --color-dark-green-50:  #eef7ed;
+  --color-dark-green-100: #d7ebd5;
+  --color-dark-green-200: #add8a9;
+  --color-dark-green-300: #7fbe79;
+  --color-dark-green-400: #4f9f4a;
+  --color-dark-green-500: #1f7a1a;
+  --color-dark-green-600: #145f10;
+  --color-dark-green-700: #0f4a0c;
+  --color-dark-green-800: #093500;
+  --color-dark-green-900: #062800;
+
+  /* =========================
+     Mustard (#f8b31f)
+  ========================== */
+  --color-mustard-50:  #fff9e6;
+  --color-mustard-100: #fff1bf;
+  --color-mustard-200: #ffe38a;
+  --color-mustard-300: #ffd24d;
+  --color-mustard-400: #f8c233;
+  --color-mustard-500: #f8b31f;
+  --color-mustard-600: #d99817;
+  --color-mustard-700: #b37e12;
+  --color-mustard-800: #8c630e;
+  --color-mustard-900: #664809;
+
+  /* =========================
+     Brand Yellow (#f8f801)
+  ========================== */
+  --color-brand-yellow-50:  #ffffe6;
+  --color-brand-yellow-100: #ffffb3;
+  --color-brand-yellow-200: #ffff80;
+  --color-brand-yellow-300: #ffff4d;
+  --color-brand-yellow-400: #ffff1a;
+  --color-brand-yellow-500: #f8f801;
+  --color-brand-yellow-600: #d6d600;
+  --color-brand-yellow-700: #adad00;
+  --color-brand-yellow-800: #858500;
+  --color-brand-yellow-900: #5c5c00;
+
+  /* =========================
+     Brand Brown (#501200)
+  ========================== */
+  --color-brand-brown-50:  #f6ebe7;
+  --color-brand-brown-100: #e4c9c1;
+  --color-brand-brown-200: #c98f82;
+  --color-brand-brown-300: #a95a4a;
+  --color-brand-brown-400: #7a2d1f;
+  --color-brand-brown-500: #501200;
+  --color-brand-brown-600: #421000;
+  --color-brand-brown-700: #340c00;
+  --color-brand-brown-800: #260900;
+  --color-brand-brown-900: #190500;
 }
 
 @theme inline {
