@@ -25,6 +25,7 @@ const productCreateSchema = z
       .nonnegative("Stock must be a non-negative integer"),
     image: z.string().optional(),
     imageFile: z.string().optional(),
+    isSignature: z.boolean().optional(),
   })
   .refine((data) => data.image || data.imageFile, {
     message: "Image is required",
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     // runtime validation using ZOD
     const validateData = productCreateSchema.parse(body);
 
-    const { name, description, price, category, stock, imageFile } =
+    const { name, description, price, category, stock, imageFile, isSignature } =
       validateData;
 
     const normalizedCategory = category
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
       image: finalImage,
       category: normalizedCategory,
       stock,
+      isSignature
     });
 
     if (!product) {

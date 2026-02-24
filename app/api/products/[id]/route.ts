@@ -15,7 +15,7 @@ export async function PUT(
     const { id } = await context.params;
     const body = await request.json();
 
-    const { name, price, description, image, imageFile, category, stock } =
+    const { name, price, description, image, imageFile, category, stock, isSignature } =
       body;
 
     if (!id) {
@@ -74,6 +74,7 @@ export async function PUT(
         image: finalImage,
         category,
         stock: parseInt(stock),
+        isSignature
       },
       { new: true },
     );
