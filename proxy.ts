@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
+ * This middleware function acts as a proxy to route requests based on the subdomain of the incoming request. It checks the hostname and rewrites the URL path accordingly to serve different parts of the application from specific folders.
  * Proxy to handle subdomain-based routing
  * - localhost:3000 → routes to /main (company site)
  * - food.localhost:3000 → routes to /customer (ordering app)
@@ -61,6 +62,6 @@ export function proxy(request: NextRequest) {
  */
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos|privacy-policy|paymongo|admin|testing|harrison-testing).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|main|customer|videos|promos|privacy-policy|admin).*)',
   ],
 }
