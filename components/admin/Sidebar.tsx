@@ -5,6 +5,7 @@ import { LogOut, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import BrandLogo from "../BrandLogo";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -43,14 +44,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
       >
         {/** Logo */}
         <div className="h-20 flex items-center justify-between px-4 border-b border-gray-200">
-          <div className="text-center flex-1">
-            <h1 className="text-lg font-bold text-[#ef4501] leading-tight">
-              Harrison
-            </h1>
-            <p className="text-xs font-semibold text-slate-900">
-              Mang Inasal and BBQ
-            </p>
-          </div>
+          <BrandLogo />
 
           {/** Mobile close button */}
           <button

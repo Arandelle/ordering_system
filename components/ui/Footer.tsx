@@ -67,19 +67,19 @@ const Footer = ({
             <div className="flex gap-3">
               <a
                 href="#"
-                className="w-10 h-10 bg-white/10 hover:bg-dark-green-800 rounded-full flex items-center justify-center transition-colors"
+                className="w-10 h-10 bg-white/10 hover:bg-brand-color-500 rounded-full flex items-center justify-center transition-colors"
               >
                 <Facebook size={18} />
               </a>
               <a
                 href=""
-                className="w-10 h-10 bg-white/10 hover:bg-dark-green-800 rounded-full flex items-center justify-center transition-colors"
+                className="w-10 h-10 bg-white/10 hover:bg-brand-color-500 rounded-full flex items-center justify-center transition-colors"
               >
                 <Instagram size={18} />
               </a>
               <a
                 href=""
-                className="w-10 h-10 bg-white/10 hover:bg-dark-green-800 rounded-full flex items-center justify-center transition-colors"
+                className="w-10 h-10 bg-white/10 hover:bg-brand-color-500 rounded-full flex items-center justify-center transition-colors"
               >
                 <Twitter size={18} />
               </a>
@@ -94,7 +94,7 @@ const Footer = ({
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-dark-green-800 transition-colors text-sm"
+                    className="text-gray-400 hover:text-brand-color-500 transition-colors text-sm"
                   >
                     {link.name}
                   </a>
@@ -111,7 +111,7 @@ const Footer = ({
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-dark-green-800 transition-colors text-sm"
+                    className="text-gray-400 hover:text-brand-color-500 transition-colors text-sm"
                   >
                     {link.name}
                   </a>
@@ -127,14 +127,14 @@ const Footer = ({
               <li className="flex items-start gap-3">
                 <MapPin
                   size={18}
-                  className="text-dark-green-800 shrink-0 mt-0.5"
+                  className="text-brand-color-500 shrink-0 mt-0.5"
                 />
                 <span className="text-gray-400 text-sm">
                   Makati, Metro Manila, Philippines
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone size={18} className="text-dark-green-800 shrink-0" />
+                <Phone size={18} className="text-brand-color-500 shrink-0" />
                 <a
                   href="tel:+639123456789"
                   className="text-gray-400 hover:text-white text-sm transition-colors"
@@ -143,7 +143,7 @@ const Footer = ({
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={18} className="text-dark-green-800 shrink-0" />
+                <Mail size={18} className="text-brand-color-500 shrink-0" />
                 <a
                   href="mailto:hello@harrison.ph"
                   className="text-gray-400 hover:text-white text-sm transition-colors"
@@ -152,7 +152,7 @@ const Footer = ({
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Clock size={18} className="text-dark-green-800 shrink-0" />
+                <Clock size={18} className="text-brand-color-500 shrink-0" />
                 <span className="text-gray-400 text-sm">
                   Daily: 10:00 AM - 10:00 PM
                 </span>

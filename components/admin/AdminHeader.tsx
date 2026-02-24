@@ -1,5 +1,4 @@
-import { Bell, Menu } from "lucide-react";
-import Image from "next/image";
+import { Bell, CircleUser, Menu } from "lucide-react";
 import React from "react";
 
 const AdminHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
@@ -44,12 +43,7 @@ const AdminHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
             <p className="text-xs text-gray-500">Restaurant Manager</p>
           </div>
 
-          <Image
-            height={40}
-            width={40}
-            src={"/images/harrison_logo.png"}
-            alt="Harrison logo"
-          />
+          <CircleUser size={24}/>
         </div>
       </div>
     </header>
