@@ -13,6 +13,7 @@ interface ProductFormData {
   image: string;
   category: string;
   stock: string;
+  isSignature: boolean
 }
 
 interface ProductsModalProps {
@@ -37,6 +38,7 @@ const ProductsModal = ({
     image: "",
     category: "",
     stock: "",
+    isSignature: false
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -63,6 +65,7 @@ const ProductsModal = ({
         image: editProduct.image.url || "",
         category: editProduct.category._id || "",
         stock: editProduct.stock.toString() || "",
+        isSignature: editProduct.isSignature || false
       });
     }
   }, [editProduct]);
@@ -82,9 +85,12 @@ const ProductsModal = ({
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
+
+    const {name, value, type} = e.target;
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
     });
   };
 
@@ -165,6 +171,7 @@ const ProductsModal = ({
         imageFile: imageData.startsWith("data:") ? imageData : undefined,
         category: categoryId,
         stock: parseFloat(formData.stock),
+        isSignature: formData.isSignature
       };
 
       if (isEditMode && editProduct) {
@@ -381,6 +388,30 @@ const ProductsModal = ({
               />
             </div>
           )}
+
+          {/* Signature Product */}
+<div className="flex items-center justify-between border border-gray-200 rounded-lg p-4 bg-gray-50">
+  <div>
+    <p className="text-sm font-semibold text-gray-800">
+      Mark as Signature Product
+    </p>
+    <p className="text-xs text-gray-500">
+      This product will appear in the "Our Signature Products" section.
+    </p>
+  </div>
+
+  <label className="relative inline-flex items-center cursor-pointer">
+    <input
+      type="checkbox"
+      name="isSignature"
+      checked={formData.isSignature}
+      onChange={handleChange}
+      className="sr-only peer"
+    />
+    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-[#e13e00] transition"></div>
+    <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition peer-checked:translate-x-5"></div>
+  </label>
+</div>
 
           {/* Submit Button */}
           <button
