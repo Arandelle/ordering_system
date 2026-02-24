@@ -64,7 +64,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                   className="hover:bg-gray-50 transition-colors"
                 >
                   <TableCell className="px-6 py-4 flex items-center justify-center">
-                    <div>
+                    <div className="relative w-18 h-18">
                       <Image
                         width={200}
                         height={200}
@@ -72,6 +72,19 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                         alt={product.name}
                         className="w-18 h-18"
                       />
+                      {/* Badges overlaid on image */}
+                      <div className="absolute top-0 left-0 flex flex-col gap-1">
+                        {product.isPopular && (
+                          <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-br-md leading-tight">
+                            🔥 Popular
+                          </span>
+                        )}
+                        {product.isSignature && (
+                          <span className="bg-[#e13e00] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-br-md leading-tight">
+                            ✦ Signature
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">
