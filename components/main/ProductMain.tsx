@@ -14,10 +14,7 @@ const ProductMain = () => {
 
   const menuList = menuData
     .filter(
-      (item) =>
-        item.price > 100 &&
-        item.description !== "No description" &&
-        item.description !== "N/a",
+      (item) => item.isSignature
     )
     .slice(0, 4);
 
