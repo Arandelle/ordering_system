@@ -116,7 +116,7 @@ const Testimonials: React.FC = () => {
             isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
           }`}
         >
-          <span className="text-[#e13e00] font-semibold text-sm uppercase tracking-wider">
+          <span className="text-[#ef4501] font-semibold text-sm uppercase tracking-wider">
             Testimonials
           </span>
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">
@@ -135,7 +135,7 @@ const Testimonials: React.FC = () => {
           }`}
         >
           {/* Quote Icon */}
-          <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-[#e13e00] rounded-full flex items-center justify-center shadow-lg shadow-[#e13e00]/30 z-10">
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-[#ef4501] rounded-full flex items-center justify-center shadow-lg shadow-[#ef4501]/30 z-10">
             <Quote size={24} className="text-white" />
           </div>
 
@@ -166,7 +166,7 @@ const Testimonials: React.FC = () => {
 
               {/* Author */}
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-[#e13e00] rounded-full flex items-center justify-center text-white font-bold text-xl mb-3">
+                <div className="w-16 h-16 bg-[#ef4501] rounded-full flex items-center justify-center text-white font-bold text-xl mb-3">
                   {currentTestimonial.avatar}
                 </div>
                 <h4 className="font-semibold text-gray-900 text-lg">
@@ -183,7 +183,7 @@ const Testimonials: React.FC = () => {
           <div className="flex items-center justify-center gap-4 mt-8">
             <button
               onClick={handlePrev}
-              className="w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[#e13e00] hover:shadow-lg transition-all"
+              className="w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[#ef4501] hover:shadow-lg transition-all"
             >
               <ChevronLeft size={24} />
             </button>
@@ -196,7 +196,7 @@ const Testimonials: React.FC = () => {
                   onClick={() => setCurrentIndex(index)}
                   className={`w-2.5 h-2.5 rounded-full transition-all ${
                     index === currentIndex
-                      ? "bg-[#e13e00] w-8"
+                      ? "bg-[#ef4501] w-8"
                       : "bg-gray-300 hover:bg-gray-400"
                   }`}
                 />
@@ -205,7 +205,7 @@ const Testimonials: React.FC = () => {
 
             <button
               onClick={handleNext}
-              className="w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[#e13e00] hover:shadow-lg transition-all"
+              className="w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-[#ef4501] hover:shadow-lg transition-all"
             >
               <ChevronRight size={24} />
             </button>

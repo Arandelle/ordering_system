@@ -115,7 +115,7 @@ const SettingsPage = () => {
           </div>
 
           <div className="mt-4 p-4 bg-gray-50">
-            <p className="text-sm text-[#e13e00]">
+            <p className="text-sm text-[#ef4501]">
               <span className="font-semibold">Current hours:</span>{" "}
               {settings.openTime} - {settings.closeTime}
             </p>
@@ -175,7 +175,7 @@ const SettingsPage = () => {
           </button>
           <button
             type="submit"
-            className="flex-1 px-8 py-3 rounded-xl bg-[#e13e00] text-white font-semibold hover:shadow-lg hover:scale-[1.02] transition-all"
+            className="flex-1 px-8 py-3 rounded-xl bg-[#ef4501] text-white font-semibold hover:shadow-lg hover:scale-[1.02] transition-all"
           >
             Save Changes
           </button>

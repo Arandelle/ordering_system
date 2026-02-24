@@ -33,7 +33,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
             ref={ref}
             {...props}
             className={clsx(
-              "w-full pr-4 py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20",
+              "w-full pr-4 py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-2 focus:ring-[#ef4501] focus:border-[#ef4501]/20",
               leftIcon ? "pl-10" : "pl-4",
               error && "border-red-500 focus:ring-red-500",
               className

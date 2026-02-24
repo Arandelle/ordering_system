@@ -229,7 +229,7 @@ const ProductsModal = ({
               onChange={handleChange}
               required
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ef4501] focus:border-[#ef4501]/20 outline-none transition"
               placeholder="Describe your dish in detail..."
             />
           </div>
@@ -253,7 +253,7 @@ const ProductsModal = ({
                   onChange={handleCategoryChange}
                   value={showCustomCategory ? "__add_new__" : formData.category}
                   required={!showCustomCategory}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition cursor-pointer"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ef4501] focus:border-[#ef4501]/20 outline-none transition cursor-pointer"
                 >
                   <option value="">Select a category</option>
                   {categories.map((cat) => (
@@ -270,7 +270,7 @@ const ProductsModal = ({
                   ))}
                   <option
                     value="__add_new__"
-                    className="text-[#e13e00] semi-font-bold"
+                    className="text-[#ef4501] semi-font-bold"
                   >
                     Add New Category +{" "}
                   </option>
@@ -283,7 +283,7 @@ const ProductsModal = ({
                       onChange={handleCustomCategoryChange}
                       required
                       placeholder="Enter new category name"
-                      className="w-full px-4 py-3 border border-[#e13e00] rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition"
+                      className="w-full px-4 py-3 border border-[#ef4501] rounded-lg focus:ring-2 focus:ring-[#ef4501] focus:border-[#ef4501]/20 outline-none transition"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Tip: Use simple names like "Full Plates", "Favourites",
@@ -339,7 +339,7 @@ const ProductsModal = ({
                 id="imageFile"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e13e00] focus:border-[#e13e00]/20 outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#e13e00]/20 file:text-[#e13e00] hover:file:bg-[#e13e00]/30 cursor-pointer"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ef4501] focus:border-[#ef4501]/20 outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#ef4501]/20 file:text-[#ef4501] hover:file:bg-[#ef4501]/30 cursor-pointer"
               />
               {imageFile && (
                 <p className="text-sm text-green-600 mt-2">
@@ -408,7 +408,7 @@ const ProductsModal = ({
       onChange={handleChange}
       className="sr-only peer"
     />
-    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-[#e13e00] transition"></div>
+    <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-[#ef4501] transition"></div>
     <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition peer-checked:translate-x-5"></div>
   </label>
 </div>
@@ -417,7 +417,7 @@ const ProductsModal = ({
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#e13e00] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+            className="w-full bg-[#ef4501] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">

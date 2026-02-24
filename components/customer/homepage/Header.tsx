@@ -52,7 +52,7 @@ const Header = () => {
           <div className="flex items-center gap-2">
             <Link
               href={"/"}
-              className="cursor-pointer w-12 h-12 bg-[#e13e00] rounded-full flex items-center justify-center"
+              className="cursor-pointer w-12 h-12 bg-[#ef4501] rounded-full flex items-center justify-center"
             >
               <Image
                 src="/images/harrison_logo.png"
@@ -67,7 +67,7 @@ const Header = () => {
               />
             </Link>
             <div className="sm:block">
-              <h1 className="text-[#e13e00] font-bold text-lg leading-tight">
+              <h1 className="text-[#ef4501] font-bold text-lg leading-tight">
                 Harrison
               </h1>
               <p
@@ -98,7 +98,7 @@ const Header = () => {
               </button>
               <button
                 // onClick={onSignupClick}
-                className="flex items-center gap-2 bg-[#e13e00] hover:bg-[#c13500] text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 bg-[#ef4501] hover:bg-[#c13500] text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
               >
                 <User size={18} />
                 <span>Sign Up</span>
@@ -115,7 +115,7 @@ const Header = () => {
                 className={`group-hover:scale-110 transition-transform darkText`}
               />
               {activeOrdersCount && activeOrdersCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#ef4501] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
                   {activeOrdersCount}
                 </span>
               )}
@@ -131,7 +131,7 @@ const Header = () => {
                 className={`group-hover:scale-110 transition-transform darkText`}
               />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#ef4501] text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
                   {totalItems}
                 </span>
               )}
@@ -163,7 +163,7 @@ const Header = () => {
               </button>
               <button
                 // onClick={() => { onSignupClick(); setIsMobileMenuOpen(false); }}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#e13e00] text-white px-4 py-3 rounded-lg"
+                className="flex-1 flex items-center justify-center gap-2 bg-[#ef4501] text-white px-4 py-3 rounded-lg"
               >
                 <User size={18} />
                 <span>Sign Up</span>

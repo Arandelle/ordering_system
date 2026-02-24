@@ -50,8 +50,8 @@ const PromoBannerV2 = () => {
       {/* Promos Section */}
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="space-y-2">
-          <h1 className="text-[#e13e00] font-bold text-4xl">Promos</h1>
-          <p className="text-[#e13e00]/80 text-lg font-[550]">
+          <h1 className="text-[#ef4501] font-bold text-4xl">Promos</h1>
+          <p className="text-[#ef4501]/80 text-lg font-[550]">
             These deals and discounts are waiting for you!
           </p>
         </div>

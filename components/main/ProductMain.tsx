@@ -140,7 +140,7 @@ const ProductMain = () => {
                   <div className="flex text-center">
                     <a
                       href={orderUrl}
-                      className="w-full bg-[#e13e00] text-white py-3 font-bold hover:bg-[#b83200] transition-colors"
+                      className="w-full bg-[#ef4501] text-white py-3 font-bold hover:bg-[#b83200] transition-colors"
                     >
                       Order Now
                     </a>
@@ -183,7 +183,7 @@ const ProductMain = () => {
                     <div className="flex text-center">
                       <a
                         href={orderUrl}
-                        className="w-full bg-[#e13e00] text-white py-2 text-sm font-bold hover:bg-[#b83200] transition-colors"
+                        className="w-full bg-[#ef4501] text-white py-2 text-sm font-bold hover:bg-[#b83200] transition-colors"
                       >
                         Order Now
                       </a>
@@ -247,7 +247,7 @@ const ProductMain = () => {
                     onClick={() => setProductIndex(idx * 2)}
                     className={`w-2 h-2 rounded-full transition-all ${
                       productIndex === idx * 2
-                        ? "bg-[#e13e00] w-8"
+                        ? "bg-[#ef4501] w-8"
                         : "bg-gray-300"
                     }`}
                     aria-label={`Go to product page ${idx + 1}`}

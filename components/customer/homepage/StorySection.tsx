@@ -63,11 +63,11 @@ const StorySection: React.FC = () => {
             <span className="inline-block text-sm font-semibold text-gray-400 uppercase tracking-widest">
               Our Story
             </span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-[#e13e00] mt-2 mb-2">
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#ef4501] mt-2 mb-2">
               Why Harrison?
             </h2>
             {/* Accent line */}
-            <div className="w-10 h-0.5 bg-[#e13e00] rounded-full mb-6" />
+            <div className="w-10 h-0.5 bg-[#ef4501] rounded-full mb-6" />
 
             <div className="space-y-4 text-gray-500 leading-relaxed">
               <p>
@@ -90,7 +90,7 @@ const StorySection: React.FC = () => {
                 our pork BBQ, we use only the freshest ingredients and
                 time-honored recipes. Because at Harrison, we don't just serve
                 food –{" "}
-                <span className="text-[#e13e00] font-semibold">
+                <span className="text-[#ef4501] font-semibold">
                   we serve memories.
                 </span>
               </p>
@@ -107,7 +107,7 @@ const StorySection: React.FC = () => {
                   key={stat.label}
                   className="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm"
                 >
-                  <div className="text-2xl lg:text-3xl font-bold text-[#e13e00]">
+                  <div className="text-2xl lg:text-3xl font-bold text-[#ef4501]">
                     {stat.value}
                   </div>
                   <div className="text-gray-400 text-xs mt-0.5">
@@ -139,11 +139,11 @@ const StorySection: React.FC = () => {
                   }}
                 >
                   {/* Left accent bar */}
-                  <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-[#e13e00] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-[#ef4501] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                   <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 bg-[#e13e00]/10 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-[#e13e00]/20 transition-colors duration-300">
-                      <pillar.icon className="text-[#e13e00]" size={22} />
+                    <div className="w-11 h-11 bg-[#ef4501]/10 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-[#ef4501]/20 transition-colors duration-300">
+                      <pillar.icon className="text-[#ef4501]" size={22} />
                     </div>
                     <div>
                       <h3 className="text-[#1a1a1a] font-semibold text-base mb-0.5">

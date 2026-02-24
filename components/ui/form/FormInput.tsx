@@ -38,7 +38,7 @@ export const FormInput = ({
         onChange={onChange} // ✅ Pass event directly
         placeholder={placeholder}
         maxLength={maxLength}
-        className={`w-full px-4 py-3 rounded-xl border ${error ? "border-red-500" : "border-gray-200"} focus:border-[#e13e00] focus:ring-2 focus:ring-[#e13e00]/20 outline-none transition-all`}
+        className={`w-full px-4 py-3 rounded-xl border ${error ? "border-red-500" : "border-gray-200"} focus:border-[#ef4501] focus:ring-2 focus:ring-[#ef4501]/20 outline-none transition-all`}
       />
       {error && (
         <p className="text-red-500 text-xs mt-1 flex items-center gap-1">

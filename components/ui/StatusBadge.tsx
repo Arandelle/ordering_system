@@ -13,7 +13,7 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
     dispatched: "bg-red-500",
     ready: "bg-orange-500",
     cancelled: "bg-gray-500",
-    completed: "bg-[#e13e00]",
+    completed: "bg-[#ef4501]",
   };
 
   return (

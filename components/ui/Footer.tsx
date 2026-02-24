@@ -55,7 +55,7 @@ const Footer = ({
           {/** Brand Columns */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-[#e13e00] rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#ef4501] rounded-full flex items-center justify-center">
                 <Image height={200} width={200} src="/images/harrison_logo.png" alt="harrison_logo" />
               </div>
               <div>
@@ -73,19 +73,19 @@ const Footer = ({
             <div className="flex gap-3">
               <a
                 href="#"
-                className="w-10 h-10 bg-white/10 hover:bg-[#e13e00] rounded-full flex items-center justify-center transition-colors"
+                className="w-10 h-10 bg-white/10 hover:bg-[#ef4501] rounded-full flex items-center justify-center transition-colors"
               >
                 <Facebook size={18} />
               </a>
               <a
                 href=""
-                className="w-10 h-10 bg-white/10 hover:bg-[#e13e00] rounded-full flex items-center justify-center transition-colors"
+                className="w-10 h-10 bg-white/10 hover:bg-[#ef4501] rounded-full flex items-center justify-center transition-colors"
               >
                 <Instagram size={18} />
               </a>
               <a
                 href=""
-                className="w-10 h-10 bg-white/10 hover:bg-[#e13e00] rounded-full flex items-center justify-center transition-colors"
+                className="w-10 h-10 bg-white/10 hover:bg-[#ef4501] rounded-full flex items-center justify-center transition-colors"
               >
                 <Twitter size={18} />
               </a>
@@ -100,7 +100,7 @@ const Footer = ({
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-[#e13e00] transition-colors text-sm"
+                    className="text-gray-400 hover:text-[#ef4501] transition-colors text-sm"
                   >
                     {link.name}
                   </a>
@@ -117,7 +117,7 @@ const Footer = ({
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-[#e13e00] transition-colors text-sm"
+                    className="text-gray-400 hover:text-[#ef4501] transition-colors text-sm"
                   >
                     {link.name}
                   </a>
@@ -131,13 +131,13 @@ const Footer = ({
             <h4 className="font-semibold text-lg mb-4">Contact Us</h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <MapPin size={18} className="text-[#e13e00] shrink-0 mt-0.5" />
+                <MapPin size={18} className="text-[#ef4501] shrink-0 mt-0.5" />
                 <span className="text-gray-400 text-sm">
                   Makati, Metro Manila, Philippines
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone size={18} className="text-[#e13e00] shrink-0" />
+                <Phone size={18} className="text-[#ef4501] shrink-0" />
                 <a
                   href="tel:+639123456789"
                   className="text-gray-400 hover:text-white text-sm transition-colors"
@@ -146,7 +146,7 @@ const Footer = ({
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={18} className="text-[#e13e00] shrink-0" />
+                <Mail size={18} className="text-[#ef4501] shrink-0" />
                 <a
                   href="mailto:hello@harrison.ph"
                   className="text-gray-400 hover:text-white text-sm transition-colors"
@@ -155,7 +155,7 @@ const Footer = ({
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Clock size={18} className="text-[#e13e00] shrink-0" />
+                <Clock size={18} className="text-[#ef4501] shrink-0" />
                 <span className="text-gray-400 text-sm">
                   Daily: 10:00 AM - 10:00 PM
                 </span>
@@ -188,11 +188,11 @@ const Footer = ({
                 type="email"
                 placeholder="Enter your email"
                 required
-                className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#e13e00] transition-colors"
+                className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-[#ef4501] transition-colors"
               />
               <button
                 type="submit"
-                className="bg-[#e13e00] hover:bg-[#c13500] text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap"
+                className="bg-[#ef4501] hover:bg-[#c13500] text-white px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap"
               >
                 Subscribe
               </button>

@@ -32,7 +32,7 @@ const Hero = () => {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold darkText leading-tight">
               Bawat Kagat,
               <br />
-              <span className="text-[#e13e00]">May Kwento.</span>
+              <span className="text-[#ef4501]">May Kwento.</span>
             </h1>
 
             {/**Sub headline */}
@@ -46,7 +46,7 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <button 
               onClick={scrollToMenu}
-              className="group bg-[#e13e00] hover:bg-[#c1350] text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg shadow-[#e13e00]/30 hover:scale-105 cursor-pointer">
+              className="group bg-[#ef4501] hover:bg-[#c1350] text-white px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg shadow-[#ef4501]/30 hover:scale-105 cursor-pointer">
                 <span className="flex items-center justify-center gap-2">
                   <Utensils size={20} />
                   Order Now
@@ -62,11 +62,11 @@ const Hero = () => {
             {/** Quick info */}
             <div className="flex flex-wrap justify-center lg:justify-start gap-6 pt-4">
               <div className="flex items-center gap-2 text-gray-400">
-                <Clock size={18} className="text-[#e13e00]" />
+                <Clock size={18} className="text-[#ef4501]" />
                 <span className="text-sm">Open 10am - 10pm</span>
               </div>
               <div className="flex items-center gap-2 text-gray-400">
-                <MapPin size={18} className="text-[#e13e00]" />
+                <MapPin size={18} className="text-[#ef4501]" />
                 <span className="text-sm">Delivery & Pickup</span>
               </div>
             </div>

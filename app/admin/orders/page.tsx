@@ -94,7 +94,7 @@ const OrdersPage = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-6 py-3 rounded-xl border border-gray-200 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#e13e00]"
+            className="px-6 py-3 rounded-xl border border-gray-200 bg-white font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ef4501]"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -161,7 +161,7 @@ const OrdersPage = () => {
                 onClick={() => setCurrentPage(page as number)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   currentPage === page
-                    ? "bg-[#e13e00] text-white"
+                    ? "bg-[#ef4501] text-white"
                     : "border border-stone-200 text-stone-600 hover:bg-stone-100 cursor-pointer"
                 }`}
               >

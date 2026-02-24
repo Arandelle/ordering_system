@@ -5,7 +5,7 @@ export type OrderStatus = OrderType["status"];
 
 // utils/orderActions.ts
 const VARIANT_STYLES = {
-  accept:   "bg-[#e13e00] hover:bg-[#c13500]",
+  accept:   "bg-[#ef4501] hover:bg-[#c13500]",
   ready: "bg-green-700 hover:bg-green-800",
   dispatched:  "bg-orange-500 hover:bg-orange-600",
   complete:    "bg-amber-500 hover:bg-amber-600",

@@ -80,7 +80,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                           </span>
                         )}
                         {product.isSignature && (
-                          <span className="bg-[#e13e00] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-br-md leading-tight">
+                          <span className="bg-[#ef4501] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-br-md leading-tight">
                             ✦ Signature
                           </span>
                         )}

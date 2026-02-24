@@ -35,7 +35,7 @@ const HeroVideo = () => {
               {/* Main Heading */}
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-tight">
                 HARRISON HOUSE OF
-                <span className="block text-[#e13e00] mt-2">INASAL & BBQ</span>
+                <span className="block text-[#ef4501] mt-2">INASAL & BBQ</span>
               </h1>
 
               {/* Subheading */}
@@ -48,13 +48,13 @@ const HeroVideo = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
                   href={orderUrl}
-                  className="w-full sm:w-auto bg-[#e13e00] text-white px-8 py-4 text-lg font-bold hover:bg-[#b83200] transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  className="w-full sm:w-auto bg-[#ef4501] text-white px-8 py-4 text-lg font-bold hover:bg-[#b83200] transition-all duration-300 transform hover:scale-105 shadow-lg"
                 >
                   Order Now
                 </a>
                 <a
                   href={menuUrl}
-                  className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-4 text-lg font-bold hover:bg-white hover:text-[#e13e00] transition-all duration-300"
+                  className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-4 text-lg font-bold hover:bg-white hover:text-[#ef4501] transition-all duration-300"
                 >
                   View Menu
                 </a>

@@ -51,7 +51,7 @@ const MainLocationSection = () => {
   return (
     <>
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-[#e13e00]/90">
+      <section className="py-20 px-4 bg-[#ef4501]/90">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Craving Authentic Mang Inasal BBQ?
@@ -60,7 +60,7 @@ const MainLocationSection = () => {
             Order now and experience the bold, smoky flavors of our
             charcoal-grilled Filipino favorites.
           </p>
-          <button className="w-48 h-14 bg-white text-[#e13e00] font-bold text-lg hover:bg-gray-100 transition-colors">
+          <button className="w-48 h-14 bg-white text-[#ef4501] font-bold text-lg hover:bg-gray-100 transition-colors">
             Order Now
           </button>
         </div>
@@ -88,7 +88,7 @@ const MainLocationSection = () => {
                   key={item.title}
                   className="bg-gray-50 p-6 border border-gray-200"
                 >
-                  <div className="w-12 h-12 bg-[#e13e00] text-white flex items-center justify-center font-bold text-xl mb-4">
+                  <div className="w-12 h-12 bg-[#ef4501] text-white flex items-center justify-center font-bold text-xl mb-4">
                     <Icon />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -105,14 +105,14 @@ const MainLocationSection = () => {
               Ready to start your franchise journey? Contact us at{" "}
               <a
                 href="mailto:franchise@harrisonmanginasal.com"
-                className="text-[#e13e00] font-medium hover:underline"
+                className="text-[#ef4501] font-medium hover:underline"
               >
                 franchise@harrisonmanginasal.com
               </a>
             </p>
             <a
               href="mailto:franchise@harrisonmanginasal.com?subject=Franchise%20Application"
-              className="inline-block bg-[#e13e00] text-white px-8 py-4 font-bold text-lg hover:bg-[#b83200] transition-colors"
+              className="inline-block bg-[#ef4501] text-white px-8 py-4 font-bold text-lg hover:bg-[#b83200] transition-colors"
             >
               Apply for Franchise
             </a>
@@ -136,7 +136,7 @@ const MainLocationSection = () => {
                 className="bg-white p-6 border border-gray-200"
               >
                 <div className="flex items-start gap-3 mb-4">
-                  <MapPin className="w-5 h-5 text-[#e13e00] shrink-0 mt-1" />
+                  <MapPin className="w-5 h-5 text-[#ef4501] shrink-0 mt-1" />
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
                       {location.name}

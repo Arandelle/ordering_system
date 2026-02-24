@@ -88,7 +88,7 @@ const LocationsSection = () => {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <span className="inline-block bg-[#e13e00]/10 text-[#e13e00] px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wider mb-4">
+          <span className="inline-block bg-[#ef4501]/10 text-[#ef4501] px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wider mb-4">
             Our Locations
           </span>
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
@@ -125,10 +125,10 @@ const LocationsSection = () => {
 
                   {/* Info Card Overlay - Centered on Map Marker */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                    <div className="bg-white rounded-xl shadow-2xl p-5 border-2 border-[#e13e00]/20 transform transition-all duration-300 hover:scale-105 pointer-events-auto">
+                    <div className="bg-white rounded-xl shadow-2xl p-5 border-2 border-[#ef4501]/20 transform transition-all duration-300 hover:scale-105 pointer-events-auto">
                       <div className="flex items-center gap-4">
                         {/* Logo/Icon */}
-                        <div className="w-14 h-14 bg-linear-to-br from-[#e13e00] to-[#ff4500] rounded-lg flex items-center justify-center shadow-lg p-1">
+                        <div className="w-14 h-14 bg-linear-to-br from-[#ef4501] to-[#ff4500] rounded-lg flex items-center justify-center shadow-lg p-1">
                           <img
                             src="/images/harrison_logo.png"
                             alt="Harrison's Logo"
@@ -143,7 +143,7 @@ const LocationsSection = () => {
                               Harrison's Inasal
                             </h3>
                             {location.isNew && (
-                              <span className="bg-linear-to-r from-[#e13e00] to-[#ff4500] text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
+                              <span className="bg-linear-to-r from-[#ef4501] to-[#ff4500] text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
                                 NEW
                               </span>
                             )}
@@ -161,11 +161,11 @@ const LocationsSection = () => {
                       <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
                         <div className="relative">
                           {/* Pulsing marker */}
-                          <div className="w-8 h-8 bg-[#e13e00] rounded-full border-4 border-white shadow-lg" />
-                          <div className="absolute inset-0 w-8 h-8 bg-[#e13e00] rounded-full animate-ping opacity-50" />
+                          <div className="w-8 h-8 bg-[#ef4501] rounded-full border-4 border-white shadow-lg" />
+                          <div className="absolute inset-0 w-8 h-8 bg-[#ef4501] rounded-full animate-ping opacity-50" />
 
                           {/* Arrow/Triangle pointing down */}
-                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-12 border-t-[#e13e00]" />
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-12 border-t-[#ef4501]" />
                         </div>
                       </div>
                     </div>
@@ -187,7 +187,7 @@ const LocationsSection = () => {
                     {location.status === "open" ? "Open Now" : "Opening Soon"}
                   </p>
                   {location.isNew && (
-                    <span className="bg-linear-to-r from-[#e13e00] to-[#ff4500] text-white text-xs font-bold px-2 py-1 rounded-full ml-1">
+                    <span className="bg-linear-to-r from-[#ef4501] to-[#ff4500] text-white text-xs font-bold px-2 py-1 rounded-full ml-1">
                       NOW OPEN!
                     </span>
                   )}
@@ -207,10 +207,10 @@ const LocationsSection = () => {
                 <div className="space-y-4 pt-2">
                   {/* Address */}
                   <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#e13e00]/10 rounded-lg flex items-center justify-center group-hover:bg-[#e13e00] transition-colors">
+                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
                       <MapPin
                         size={20}
-                        className="text-[#e13e00] group-hover:text-white transition-colors"
+                        className="text-[#ef4501] group-hover:text-white transition-colors"
                       />
                     </div>
                     <div>
@@ -226,10 +226,10 @@ const LocationsSection = () => {
 
                   {/* Hours */}
                   <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#e13e00]/10 rounded-lg flex items-center justify-center group-hover:bg-[#e13e00] transition-colors">
+                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
                       <Clock
                         size={20}
-                        className="text-[#e13e00] group-hover:text-white transition-colors"
+                        className="text-[#ef4501] group-hover:text-white transition-colors"
                       />
                     </div>
                     <div>
@@ -244,10 +244,10 @@ const LocationsSection = () => {
 
                   {/* Cuisine */}
                   <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#e13e00]/10 rounded-lg flex items-center justify-center group-hover:bg-[#e13e00] transition-colors">
+                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
                       <Utensils
                         size={20}
-                        className="text-[#e13e00] group-hover:text-white transition-colors"
+                        className="text-[#ef4501] group-hover:text-white transition-colors"
                       />
                     </div>
                     <div>
@@ -260,17 +260,17 @@ const LocationsSection = () => {
 
                   {/* Phone */}
                   <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#e13e00]/10 rounded-lg flex items-center justify-center group-hover:bg-[#e13e00] transition-colors">
+                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
                       <Phone
                         size={20}
-                        className="text-[#e13e00] group-hover:text-white transition-colors"
+                        className="text-[#ef4501] group-hover:text-white transition-colors"
                       />
                     </div>
                     <div>
                       <p className="text-sm text-gray-500 mb-0.5">Contact</p>
                       <a
                         href={`tel:${location.phone}`}
-                        className="text-gray-900 font-semibold hover:text-[#e13e00] transition-colors"
+                        className="text-gray-900 font-semibold hover:text-[#ef4501] transition-colors"
                       >
                         {location.phone}
                       </a>
@@ -284,7 +284,7 @@ const LocationsSection = () => {
                     href={location.mapLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-[#e13e00] hover:bg-[#c13500] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 group"
+                    className="inline-flex items-center justify-center gap-2 bg-[#ef4501] hover:bg-[#c13500] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 group"
                   >
                     <Navigation
                       size={20}
@@ -316,9 +316,9 @@ const LocationsSection = () => {
             label="Harrison’s Menu"
             href={LINKS.MENU}
             imgSrc="/images/harrison_logo.png"
-            bgColor="bg-[#e13e00]"
+            bgColor="bg-[#ef4501]"
             imgSize="h-14 w-14"
-            hoverTextColor="group-hover:text-[#e13e00]"
+            hoverTextColor="group-hover:text-[#ef4501]"
           />
 
           <DeliveryButton

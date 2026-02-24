@@ -10,40 +10,36 @@ const About = () => {
     <>
       <section id="about-section" className="py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                ABOUT HARRISON MANG INASAL BBQ
+              <h2
+                className="text-3xl md:text-4xl font-bold text-[#ef4501] mb-6"
+              >
+                Brand Story
               </h2>
               <div className="space-y-4 text-gray-700">
                 <p>
-                  Harrison Mang Inasal BBQ has been serving authentic Filipino
-                  charcoal-grilled dishes since its founding. Our commitment to
-                  quality and tradition has made us a trusted name in Filipino
-                  BBQ cuisine.
+                  Everyone has that one brother who runs the grill at every
+                  gathering — steady hand, serious tongs, always cracking jokes.
+                  That’s Harrison.
                 </p>
                 <p>
-                  Every piece of chicken inasal, liempo, and pork BBQ is
-                  marinated in our signature blend of spices and grilled over
-                  real charcoal to achieve that distinctive smoky flavor that
-                  Filipinos love.
+                  He’s not the loudest in the family, but he’s the one people
+                  gather around. Over the years, his inihaw became legend among
+                  friends and neighbors — not because it was fancy, but because
+                  it was exactly what you needed, when you needed it.
                 </p>
+                <p>So when people said,</p>
                 <p>
-                  We source only the freshest ingredients and maintain strict
-                  quality standards across all our branches. Our recipes have
-                  been perfected over years of serving satisfied customers who
-                  keep coming back for more.
-                </p>
-                <p>
-                  From our humble beginnings to multiple branches nationwide,
-                  Harrison Mang Inasal BBQ continues to bring the authentic
-                  taste of Filipino BBQ to communities across the Philippines.
+                  “You should open a place, Harrison, ” he finally did. Now,
+                  he's grilling for everyone. Still with the same care. Still
+                  doing the first flip.
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-6">
               <div className="bg-white p-6 border border-gray-200">
-                <div className="w-12 h-12 bg-[#e13e00] flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-[#ef4501] flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -73,7 +69,7 @@ const About = () => {
                 </p>
               </div>
               <div className="bg-white p-6 border border-gray-200">
-                <div className="w-12 h-12 bg-[#e13e00] flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-[#ef4501] flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -97,7 +93,7 @@ const About = () => {
                 </p>
               </div>
               <div className="bg-white p-6 border border-gray-200">
-                <div className="w-12 h-12 bg-[#e13e00] flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-[#ef4501] flex items-center justify-center mb-4">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"

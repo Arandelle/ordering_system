@@ -101,7 +101,7 @@ const CustomersPage = () => {
 
         <div className="bg-white rounded-xl p-6 border border-stone-100">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#e13e00] text-white flex items-center justify-center text-2xl">
+            <div className="w-12 h-12 rounded-xl bg-[#ef4501] text-white flex items-center justify-center text-2xl">
               <Wallet />
             </div>
             <div>
@@ -176,7 +176,7 @@ const CustomersPage = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <button className="px-4 py-2 text-sm font-semibold text-[#e13e00] hover:bg-[#e13e00]/20 rounded-lg transition-colors cursor-pointer">
+                    <button className="px-4 py-2 text-sm font-semibold text-[#ef4501] hover:bg-[#ef4501]/20 rounded-lg transition-colors cursor-pointer">
                       View Details
                     </button>
                   </TableCell>

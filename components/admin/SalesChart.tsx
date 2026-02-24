@@ -29,7 +29,7 @@ const SalesChart = ({ salesData, topProducts }: SalesChartProps) => {
             <p className="text-sm text-gray-500 mt-1">Weekly revenue trend</p>
           </div>
 
-          <select className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-[#e13e00]">
+          <select className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-[#ef4501]">
             <option value="">This Week</option>
             <option value="">This Month</option>
             <option value="">This Year</option>
@@ -56,7 +56,7 @@ const SalesChart = ({ salesData, topProducts }: SalesChartProps) => {
             <Line
               type="monotone"
               dataKey="sales"
-              stroke="#e13e00"
+              stroke="#ef4501"
               strokeWidth={2}
               dot={{ fill: "#dc2626", r: 3 }}
               activeDot={{ r: 7 }}
@@ -97,7 +97,7 @@ const SalesChart = ({ salesData, topProducts }: SalesChartProps) => {
             {/* <Bar dataKey="sales" fill="url(#colorGradient)" radius={[8,8,0,0]} /> */}
             {/* <defs>
               <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2={"1"}>
-                <stop offset={"0%"} stopColor="#e13e00"/>
+                <stop offset={"0%"} stopColor="#ef4501"/>
                 <stop offset={"100%"} stopColor="#c13500"/>
               </linearGradient>
             </defs> */}

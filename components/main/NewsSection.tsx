@@ -137,13 +137,13 @@ const NewsSection = () => {
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#e13e00]"></div>
-              <span className="text-[#e13e00] font-bold tracking-wider uppercase text-sm">
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#ef4501]"></div>
+              <span className="text-[#ef4501] font-bold tracking-wider uppercase text-sm">
                 Latest Updates
               </span>
-              <div className="h-px w-12 bg-gradient-to-r from-[#e13e00] to-transparent"></div>
+              <div className="h-px w-12 bg-gradient-to-r from-[#ef4501] to-transparent"></div>
             </div>
-            <h2 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#e13e00] via-[#c13500] to-[#e13e00]/60 bg-clip-text text-transparent mb-4">
+            <h2 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#ef4501] via-[#c13500] to-[#ef4501]/60 bg-clip-text text-transparent mb-4">
               News & Events
             </h2>
             <p className="text-stone-600 text-lg max-w-2xl mx-auto">
@@ -178,7 +178,7 @@ const NewsSection = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 {/* Category Badge */}
                 <div className="absolute top-4 left-4">
-                  <span className="inline-block px-4 py-1.5 bg-[#e13e00] text-white text-xs font-bold rounded-full shadow-lg">
+                  <span className="inline-block px-4 py-1.5 bg-[#ef4501] text-white text-xs font-bold rounded-full shadow-lg">
                     {article.category}
                   </span>
                 </div>
@@ -188,7 +188,7 @@ const NewsSection = () => {
               <div className="p-6">
                 {/* Date */}
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar size={14} className="text-[#e13e00]" />
+                  <Calendar size={14} className="text-[#ef4501]" />
                   <time className="text-sm text-stone-500 font-medium">
                     {formatDate(article.date)}
                   </time>

@@ -44,7 +44,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
         {/** Logo */}
         <div className="h-20 flex items-center justify-between px-4 border-b border-gray-200">
           <div className="text-center flex-1">
-            <h1 className="text-lg font-bold text-[#e13e00] leading-tight">
+            <h1 className="text-lg font-bold text-[#ef4501] leading-tight">
               Harrison
             </h1>
             <p className="text-xs font-semibold text-slate-900">
@@ -71,7 +71,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                   <Link
                     href={item.path}
                     onClick={onClose}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duratin-200 group ${isActive ? "bg-[#e13e00]/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-[#e13e00]"}`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duratin-200 group ${isActive ? "bg-[#ef4501]/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-[#ef4501]"}`}
                   >
                     <Icon size={18} />
                     <span className="font-semibold text-sm">{item.name}</span>

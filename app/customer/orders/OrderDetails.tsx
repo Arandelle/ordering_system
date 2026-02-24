@@ -182,7 +182,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
               <button
                 type="button"
                 onClick={() => setShowAllItems(!showAllItems)}
-                className="relative bg-linear-to-b from-white to-gray-200 w-full py-3 text-sm text-[#e13e00] hover:text-[#c13500] font-semibold transition-colors cursor-pointer border-t border-gray-200"
+                className="relative bg-linear-to-b from-white to-gray-200 w-full py-3 text-sm text-[#ef4501] hover:text-[#c13500] font-semibold transition-colors cursor-pointer border-t border-gray-200"
               >
                 {showAllItems
                   ? "Show Less"
@@ -211,7 +211,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
           </div>
           <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
             <span className="text-gray-900">Total</span>
-            <span className="text-[#e13e00]">
+            <span className="text-[#ef4501]">
               ₱{order.total?.total?.toFixed(2)}
             </span>
           </div>

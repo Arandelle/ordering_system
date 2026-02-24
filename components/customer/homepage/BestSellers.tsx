@@ -53,9 +53,9 @@ const BestSellers: React.FC = () => {
         <div className={`text-center mb-12 transform transition-all duration-700 ${
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
-          <div className="inline-flex items-center gap-2 bg-[#e13e00]/10 rounded-full px-4 py-2 mb-4">
-            <TrendingUp size={18} className="text-[#e13e00]" />
-            <span className="text-[#e13e00] font-semibold text-sm">Most Ordered Today</span>
+          <div className="inline-flex items-center gap-2 bg-[#ef4501]/10 rounded-full px-4 py-2 mb-4">
+            <TrendingUp size={18} className="text-[#ef4501]" />
+            <span className="text-[#ef4501] font-semibold text-sm">Most Ordered Today</span>
           </div>
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
             Mga Paborito ng Bayan
@@ -84,7 +84,7 @@ const BestSellers: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   {/* Rank Badge */}
-                  <div className="absolute top-2 left-2 w-8 h-8 bg-[#e13e00] text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
+                  <div className="absolute top-2 left-2 w-8 h-8 bg-[#ef4501] text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
                     #{index + 1}
                   </div>
                 </div>
@@ -106,14 +106,14 @@ const BestSellers: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center justify-between mt-3">
-                    <span className="text-[#e13e00] font-bold text-lg">₱{item.price}</span>
+                    <span className="text-[#ef4501] font-bold text-lg">₱{item.price}</span>
                     <button
                       onClick={() => handleAddToCart(item)}
                       disabled={addedItems.has(item._id)}
                       className={`${
                         addedItems.has(item._id)
                           ? 'bg-green-500'
-                          : 'bg-[#1a1a1a] hover:bg-[#e13e00]'
+                          : 'bg-[#1a1a1a] hover:bg-[#ef4501]'
                       } text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2`}
                     >
                       {addedItems.has(item._id) ? (
@@ -136,7 +136,7 @@ const BestSellers: React.FC = () => {
         </div>
         
         {/* Daily Special Banner */}
-        <div className={`mt-12 bg-linear-to-r from-[#e13e00] to-[#ff6b35] rounded-2xl p-6 lg:p-8 text-white transform transition-all duration-700 delay-500 ${
+        <div className={`mt-12 bg-linear-to-r from-[#ef4501] to-[#ff6b35] rounded-2xl p-6 lg:p-8 text-white transform transition-all duration-700 delay-500 ${
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
         }`}>
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -157,7 +157,7 @@ const BestSellers: React.FC = () => {
               </div>
               <button 
                 onClick={() => handleAddToCart(bestSellers[2])}
-                className="bg-white text-[#e13e00] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-lg"
+                className="bg-white text-[#ef4501] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-lg"
               >
                 Order Now
               </button>

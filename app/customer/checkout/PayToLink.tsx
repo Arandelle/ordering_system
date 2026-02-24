@@ -60,7 +60,7 @@ const PayToLink = ({ checkoutUrl, setCurrentStep }: { checkoutUrl: string, setCu
 
     <div className="border-t border-white/20 mt-4 pt-4 flex justify-between items-center">
       <span className="text-base font-medium">Total Amount</span>
-      <span className="text-3xl font-bold text-[#e13e00]">
+      <span className="text-3xl font-bold text-[#ef4501]">
         ₱{totalAmount.toFixed(2)}
       </span>
     </div>
@@ -69,8 +69,8 @@ const PayToLink = ({ checkoutUrl, setCurrentStep }: { checkoutUrl: string, setCu
   {/* Payment Card */}
   <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-md">
     <div className="flex items-center gap-3 mb-3">
-      <div className="p-2 rounded-full bg-[#e13e00]/10">
-        <CreditCard size={22} className="text-[#e13e00]" />
+      <div className="p-2 rounded-full bg-[#ef4501]/10">
+        <CreditCard size={22} className="text-[#ef4501]" />
       </div>
       <h3 className="text-lg font-semibold text-gray-900">
         Secure Checkout
@@ -85,7 +85,7 @@ const PayToLink = ({ checkoutUrl, setCurrentStep }: { checkoutUrl: string, setCu
       href={checkoutUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative inline-flex w-full items-center justify-center gap-3 bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-all"
+      className="group relative inline-flex w-full items-center justify-center gap-3 bg-[#ef4501] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-all"
     >
       <span>Pay ₱{totalAmount.toFixed(2)}</span>
       <ExternalLink

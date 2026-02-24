@@ -64,7 +64,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
 
         {/** Best Seller Badge */}
         {item.isPopular && item.stock <= 0 && (
-          <div className="absolute left-3 top-3 bg-[#e13e00] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
+          <div className="absolute left-3 top-3 bg-[#ef4501] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
             Best Seller
           </div>
         )}
@@ -78,7 +78,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
               ? "bg-green-500 scale-110" 
               : item.stock === 0 
                 ? "bg-gray-400 cursor-not-allowed" 
-                : "bg-[#e13e00] hover:bg-[#c13500]"} 
+                : "bg-[#ef4501] hover:bg-[#c13500]"} 
               text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transform transition-all duration-300 hover:scale-105 shadow-lg`}
           >
             {isAdded ? (
@@ -111,7 +111,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
         </p>
 
         <div className="flex items-center justify-between mt-auto">
-          <span className="text-[#e13e00] font-bold text-xl">
+          <span className="text-[#ef4501] font-bold text-xl">
             ₱{item.price}
           </span>
 
@@ -122,7 +122,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
               ? "bg-green-500" 
               : item.stock === 0 
                 ? "bg-gray-300 cursor-not-allowed" 
-                : "bg-[#1a1a1a] hover:bg-[#e13e00]"} 
+                : "bg-[#1a1a1a] hover:bg-[#ef4501]"} 
               text-white p-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg`}
           >
             {isAdded ? <Check size={18} /> : 

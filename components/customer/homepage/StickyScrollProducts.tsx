@@ -18,7 +18,7 @@ const products = [
       "Served with garlic rice & sawsawan",
     ],
     image: "/images/140.png", // replace with your actual image
-    color: "#e13e00",
+    color: "#ef4501",
   },
   {
     id: 2,
@@ -91,11 +91,11 @@ const StickyScrollProducts = () => {
           <div className="relative w-full max-w-lg mx-auto">
             {/** Section header — now inside the sticky panel */}
             <div className="mb-8">
-              <span className="text-sm font-semibold text-[#e13e00] uppercase tracking-widest">
+              <span className="text-sm font-semibold text-[#ef4501] uppercase tracking-widest">
                 Check this out!
               </span>
               <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 mt-2">
-                Grilled to <span className="text-[#e13e00]">perfection.</span>
+                Grilled to <span className="text-[#ef4501]">perfection.</span>
               </h2>
             </div>
 
@@ -120,7 +120,7 @@ const StickyScrollProducts = () => {
                       style={{ objectFit: "cover" }}
                     >
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-white border border-gray-200 rounded-2xl shadow-sm">
-                        <Flame size={56} className="text-[#e13e00] mb-3" />
+                        <Flame size={56} className="text-[#ef4501] mb-3" />
                         <span className="text-gray-600 text-sm font-[550]">
                           No image found
                         </span>
@@ -145,7 +145,7 @@ const StickyScrollProducts = () => {
                       width: i === activeIndex ? "32px" : "8px",
                       opacity: i === activeIndex ? "1" : "0.25",
                       backgroundColor:
-                        i === activeIndex ? "#e13e00" : "#1a1a1a",
+                        i === activeIndex ? "#ef4501" : "#1a1a1a",
                     }}
                   />
                 </button>
@@ -172,7 +172,7 @@ const StickyScrollProducts = () => {
                       : "opacity-100 h-auto"
                   }`}
                 >
-                  <span className="text-md text-[#e13e00] font-medium uppercase tracking-widest">
+                  <span className="text-md text-[#ef4501] font-medium uppercase tracking-widest">
                     ↑↓ Scroll to view the correct product details
                   </span>
                 </div>
@@ -202,7 +202,7 @@ const StickyScrollProducts = () => {
                   <h3 className="text-3xl lg:text-4xl font-bold text-slate-900">
                     {product.title}
                   </h3>
-                  <span className="text-xl font-semibold text-[#e13e00]">
+                  <span className="text-xl font-semibold text-[#ef4501]">
                     {product.price}
                   </span>
                 </div>
@@ -225,14 +225,14 @@ const StickyScrollProducts = () => {
                       key={d}
                       className="flex items-center gap-1.5 border border-gray-200 bg-white text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full"
                     >
-                      <ChefHat size={11} className="text-[#e13e00]" />
+                      <ChefHat size={11} className="text-[#ef4501]" />
                       {d}
                     </span>
                   ))}
                 </div>
 
                 {/* CTA */}
-                <button className="group relative overflow-hidden mt-8 bg-[#e13e00] text-white font-semibold px-7 py-3 rounded-full shadow-lg shadow-[#e13e00]/20 hover:shadow-[#e13e00]/40 hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
+                <button className="group relative overflow-hidden mt-8 bg-[#ef4501] text-white font-semibold px-7 py-3 rounded-full shadow-lg shadow-[#ef4501]/20 hover:shadow-[#ef4501]/40 hover:scale-[1.03] active:scale-[0.97] transition-all duration-300">
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-linear-to-r from-transparent via-white/20 to-transparent transition-transform duration-500" />
                   <span className="relative z-10">Add to Order</span>
                 </button>

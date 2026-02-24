@@ -129,7 +129,7 @@ const MenuSection = ({
           ref={headerRef}
           className="text-center mb-12 opacity-0 transition-all duration-700"
         >
-          <p className="text-[#e13e00] font-semibold text-xl uppercase tracking-widest">
+          <p className="text-[#ef4501] font-semibold text-xl uppercase tracking-widest">
             Our Menu
           </p>
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">
@@ -195,7 +195,7 @@ const MenuSection = ({
                     onClick={() => handleChangeCategory(category.title)}
                     className={`px-4 py-2 cursor-pointer rounded-full text-sm font-medium transition-all duration-300 ${
                       activeCategory === category.title
-                        ? "bg-[#e13e00] text-white shadow-lg shadow-[#e13e00]/30"
+                        ? "bg-[#ef4501] text-white shadow-lg shadow-[#ef4501]/30"
                         : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                     }`}
                   >
@@ -216,7 +216,7 @@ const MenuSection = ({
                     placeholder="Search Menu..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="text-gray-600 w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 focus:border=[#e13e00] focus:ring-2 focus:ring-[#e13e00]/20 outline-none transition-all"
+                    className="text-gray-600 w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 focus:border=[#ef4501] focus:ring-2 focus:ring-[#ef4501]/20 outline-none transition-all"
                   />
                   {searchQuery && (
                     <button
@@ -234,7 +234,7 @@ const MenuSection = ({
                     id=""
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="appearance-none bg-white pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 focus:border-[#e13e00] focus:ring-2 focus:ring-[#e13e00]/20 outline-none transition-all cursor-pointer"
+                    className="appearance-none bg-white pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 focus:border-[#ef4501] focus:ring-2 focus:ring-[#ef4501]/20 outline-none transition-all cursor-pointer"
                   >
                     <option value="default">Sort By: </option>
                     <option value="price-low">Price: Low to High</option>
@@ -270,7 +270,7 @@ const MenuSection = ({
                 <h2 className="text-[1.75rem] font-bold text-[#1a1a1a] tracking-tight">
                   Customer Favourites 🔥
                 </h2>
-                <div className="w-10 h-0.75 bg-[#e13e00] mt-4 rounded-full" />
+                <div className="w-10 h-0.75 bg-[#ef4501] mt-4 rounded-full" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -309,10 +309,10 @@ const MenuSection = ({
                   <a
                     aria-label="View full menu"
                     href="/menu"
-                    className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#e13e00] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#e13e00]/30 transition-all duration-300 hover:scale-105 overflow-hidden"
+                    className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#ef4501] text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:shadow-[#ef4501]/30 transition-all duration-300 hover:scale-105 overflow-hidden"
                   >
                     {/* Animated background gradient */}
-                    <span className="absolute inset-0 bg-linear-to-r from-[#ff4500] to-[#e13e00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <span className="absolute inset-0 bg-linear-to-r from-[#ff4500] to-[#ef4501] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                     {/* Content */}
                     <span className="relative z-10">View Full Menu</span>
@@ -355,7 +355,7 @@ const MenuSection = ({
                   <h2 className="text-[1.75rem] font-bold text-[#1a1a1a] tracking-tight">
                     {category}
                   </h2>
-                  <div className="w-10 h-0.75 bg-[#e13e00] mt-4 rounded-full" />
+                  <div className="w-10 h-0.75 bg-[#ef4501] mt-4 rounded-full" />
                 </div>
 
                 {/* Items Grid */}

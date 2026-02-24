@@ -162,7 +162,7 @@ const OrderSummaryStep = () => {
                         <Plus size={14} />
                       </button>
                     </div>
-                    <span className="font-bold text-[#e13e00]">
+                    <span className="font-bold text-[#ef4501]">
                       ₱{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
@@ -183,7 +183,7 @@ const OrderSummaryStep = () => {
             </div>
             <div className="border-t border-gray-200 pt-2 flex justify-between">
               <span className="font-bold text-gray-900">Total</span>
-              <span className="font-bold text-xl text-[#e13e00]">
+              <span className="font-bold text-xl text-[#ef4501]">
                 ₱{totalPrice.toFixed(2)}
               </span>
             </div>
@@ -193,7 +193,7 @@ const OrderSummaryStep = () => {
             <button
               onClick={handlePlaceOrder}
               disabled={isPending}
-              className={`flex-1 text-white py-3 rounded-full font-bold transition-colors ${isPending ? "cursor-not-allowed bg-gray-400" : "cursor-pointer bg-[#e13e00]/90 hover:bg-[#c13500]"}`}
+              className={`flex-1 text-white py-3 rounded-full font-bold transition-colors ${isPending ? "cursor-not-allowed bg-gray-400" : "cursor-pointer bg-[#ef4501]/90 hover:bg-[#c13500]"}`}
             >
               {!isPending ? (
                 "Place Order"
@@ -238,7 +238,7 @@ const OrderSummaryStep = () => {
               <span className="text-xs text-stone-600 font-medium">
                 Amount due
               </span>
-              <span className="text-base font-bold text-[#e13e00]">
+              <span className="text-base font-bold text-[#ef4501]">
                 ₱{placedTotalPrice.toFixed(2)}
               </span>
             </div>
@@ -250,7 +250,7 @@ const OrderSummaryStep = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={handlePayNow}
-                className="w-full flex items-center justify-center gap-2 bg-[#e13e00] hover:bg-[#c13500] active:scale-[0.98] text-white py-4 rounded-xl font-bold text-base shadow-md shadow-[#e13e00]/30 transition-all"
+                className="w-full flex items-center justify-center gap-2 bg-[#ef4501] hover:bg-[#c13500] active:scale-[0.98] text-white py-4 rounded-xl font-bold text-base shadow-md shadow-[#ef4501]/30 transition-all"
               >
                 Pay Now <ExternalLink size={15} />
               </a>

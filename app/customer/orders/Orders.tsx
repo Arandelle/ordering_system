@@ -152,11 +152,11 @@ const Orders = () => {
                 <button
                   key={tab.key}
                   onClick={() => handleTabChange(tab.key)}
-                  className={`relative px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.key ? "bg-[#e13e00] text-white" : "bg-white text-gray-600 border border-gray-700 hover:border-[#e13e00] hover:text-[#e13e00]"}`}
+                  className={`relative px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.key ? "bg-[#ef4501] text-white" : "bg-white text-gray-600 border border-gray-700 hover:border-[#ef4501] hover:text-[#ef4501]"}`}
                 >
                   {tab.label}
                   {count > 0 && tab.key !== "cancelled" && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#e13e00] text-white text-xs font-bold rounded-full flex items-center justify-center border border-white">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#ef4501] text-white text-xs font-bold rounded-full flex items-center justify-center border border-white">
                       {count}
                     </span>
                   )}
@@ -165,7 +165,7 @@ const Orders = () => {
             })}
             <button
               onClick={() => router.push("/menu")}
-              className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer bg-[#e13e00] text-white hover:bg-[#c13500]"
+              className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer bg-[#ef4501] text-white hover:bg-[#c13500]"
             >
               Add new order!
             </button>
@@ -268,7 +268,7 @@ const Orders = () => {
                             <p className="text-sm text-gray-500">
                               Quanity: {item.quantity}
                             </p>
-                            <p className="text-sm font-semibold text-[#e13e00]">
+                            <p className="text-sm font-semibold text-[#ef4501]">
                               ₱{item.price.toFixed(2)} each
                             </p>
                           </div>
@@ -281,7 +281,7 @@ const Orders = () => {
                       <button
                         type="button"
                         onClick={() => toggleOrderExpansion(order._id)}
-                        className="w-full py-2 text-sm text-[#e13e00] hover:text-[#c13500] font-semibold transition-colors cursor-pointer text-center flex items-center justify-center gap-2"
+                        className="w-full py-2 text-sm text-[#ef4501] hover:text-[#c13500] font-semibold transition-colors cursor-pointer text-center flex items-center justify-center gap-2"
                       >
                         {isExpanded ? (
                           <>
@@ -316,7 +316,7 @@ const Orders = () => {
                       </div>
                       <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                         <span className="text-gray-900">Total</span>
-                        <span className="text-[#e13e00]">
+                        <span className="text-[#ef4501]">
                           ₱{order.total?.total?.toFixed(2)}
                         </span>
                       </div>
@@ -369,7 +369,7 @@ const Orders = () => {
                           onClick={() =>
                             router.push(`/orders/${order._id}/review`)
                           }
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#e13e00] hover:bg-[#c53600] text-white text-sm font-semibold transition-all shadow-md"
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ef4501] hover:bg-[#c53600] text-white text-sm font-semibold transition-all shadow-md"
                         >
                           <Star size={16} /> Leave Review
                         </button>
@@ -379,7 +379,7 @@ const Orders = () => {
                         order.status === "cancelled") && (
                         <button
                           onClick={() => handleBuyAgain(order.items)}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#e13e00] hover:bg-orange-50 text-[#e13e00] text-sm font-semibold transition-all"
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#ef4501] hover:bg-orange-50 text-[#ef4501] text-sm font-semibold transition-all"
                         >
                           <ShoppingCart size={16} /> Buy Again
                         </button>

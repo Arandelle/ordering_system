@@ -27,7 +27,7 @@ const DashboardCard = ({stats} : DashboardCardsProps) => {
       title: "Pending Orders",
       value: stats.pendingOrders,
       icon: "ClockAlert",
-      color: "bg-[#e13e00]",
+      color: "bg-[#ef4501]",
       change: "",
     },
     {

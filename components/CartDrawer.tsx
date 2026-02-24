@@ -38,11 +38,11 @@ const CartDrawer = () => {
         {/** Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <ShoppingBag className="text-[#e13e00]" size={24} />
+            <ShoppingBag className="text-[#ef4501]" size={24} />
             <h2 className="text-xl font-bold text-gray-900">Your order</h2>
 
             {cartItems.length > 0 && (
-              <span className="bg-[#e13e00] text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-[#ef4501] text-white text-xs font-bold px-2 py-0.5 rounded-full">
                 {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
               </span>
             )}
@@ -86,7 +86,7 @@ const CartDrawer = () => {
                     <h4 className="font-semibold text-gray-900 mb-1">
                       {item.name}
                     </h4>
-                    <p className="text-[#e13e00] font-bold">₱{item.price}</p>
+                    <p className="text-[#ef4501] font-bold">₱{item.price}</p>
 
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200">
@@ -139,14 +139,14 @@ const CartDrawer = () => {
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <span className="font-semibold text-gray-900">Total</span>
-                <span className="font-bold text-xl text-[#e13e00]">
+                <span className="font-bold text-xl text-[#ef4501]">
                   ₱{(totalPrice + (totalPrice >= 500 ? 0 : 50)).toFixed(2)}
                 </span>
               </div>
             </div>
             <button
               onClick={handleCheckout}
-              className="w-full bg-[#e13e00] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-[#ef4501] hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer"
             >
               Proceed to checkout
               <ArrowRight size={20} />

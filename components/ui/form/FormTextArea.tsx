@@ -37,7 +37,7 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({
         rows={rows}
         className={`w-full px-4 py-3 rounded-xl border ${
           error ? "border-red-500" : "border-gray-200"
-        } focus:border-[#e13e00] focus:ring-2 focus:ring-[#e13e00]/20 outline-none transition-all resize-none`}
+        } focus:border-[#ef4501] focus:ring-2 focus:ring-[#ef4501]/20 outline-none transition-all resize-none`}
       />
       {error && (
         <p className="text-red-500 text-xs mt-1 flex items-center gap-1">

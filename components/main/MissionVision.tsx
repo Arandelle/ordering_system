@@ -36,21 +36,9 @@ export default function MissionVision() {
 
               <div className="space-y-4 text-stone-600 leading-relaxed">
                 <p className="text-lg">
-                  To serve authentic Filipino inasal and barbecue crafted with
-                  care, quality ingredients, and time-honored techniques that
-                  highlight the true taste of local flavors.
-                </p>
-
-                <p className="text-lg">
-                  We aim to create a warm and welcoming dining experience where
-                  families, friends, and communities can come together over
-                  great food.
-                </p>
-
-                <p className="text-lg">
-                  Guided by integrity and passion for Filipino cuisine, we
-                  continuously improve our processes and offerings to ensure
-                  quality, affordability, and trust in every plate we serve.
+                  To serve proudly Filipino grilled food that brings people
+                  together — always marinated with care, grilled to perfection,
+                  and served with a smile as warm as Harrison himself.
                 </p>
               </div>
 
@@ -63,7 +51,7 @@ export default function MissionVision() {
                   "Serving and Supporting Local Communities",
                 ].map((item, index) => (
                   <li key={index} className="flex items-center gap-3 group">
-                    <div className="shrink-0 w-7 h-7 rounded-full bg-[#e13e00] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+                    <div className="shrink-0 w-7 h-7 rounded-full bg-[#ef4501] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
                       <svg
                         className="w-4 h-4 text-white"
                         fill="none"
@@ -99,15 +87,10 @@ export default function MissionVision() {
 
               <div className="space-y-4 text-stone-600 leading-relaxed">
                 <p className="text-lg">
-                  To become a beloved Filipino food brand recognized for
-                  authentic inasal, flavorful barbecue, and consistent quality
-                  across every location.
-                </p>
-
-                <p className="text-lg">
-                  We aspire to grow through responsible franchising, empowering
-                  entrepreneurs while maintaining strong standards in food
-                  preparation, service, and brand identity.
+                  To become the Philippines' most loved inasal
+                  and BBQ destination, known for its homey flavor,
+                  genuine hospitality, and the everyday joy that
+                  comes with being welcomed to Harrison's table.
                 </p>
               </div>
 
@@ -137,7 +120,7 @@ export default function MissionVision() {
                 ].map((highlight, index) => (
                   <div
                     key={index}
-                    className="bg-linear-to-br from-stone-100 to-amber-100/50 p-5 border-l-4 border-[#e13e00] hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                    className="bg-linear-to-br from-stone-100 to-amber-100/50 p-5 border-l-4 border-[#ef4501] hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                   >
                     <h3 className="text-stone-900 font-bold text-lg mb-2">
                       {highlight.title}

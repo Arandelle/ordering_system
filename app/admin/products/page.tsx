@@ -50,7 +50,7 @@ const ProductsPage = () => {
             setSelectedProduct(null);
             setIsModalOpen(true);
           }}
-          className="px-6 py-3 bg-[#e13e00] text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+          className="px-6 py-3 bg-[#ef4501] text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
         >
           + Add New Product
         </button>

@@ -12,7 +12,7 @@ const OrderNowButton = () => {
   return (
     <button
       onClick={navigateToOrder}
-      className="px-4 py-2 mt-4 rounded-xl bg-[#e13e00] hover:bg-[#c13500] text-white transition-colors shadow-xl cursor-pointer"
+      className="px-4 py-2 mt-4 rounded-xl bg-[#ef4501] hover:bg-[#c13500] text-white transition-colors shadow-xl cursor-pointer"
     >
       Order Now!
     </button>
