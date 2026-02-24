@@ -12,6 +12,7 @@ const ProductSchema = new Schema(
     category: { type: Schema.Types.ObjectId, ref: 'Category'},
 
     isPopular: { type: Boolean, default: false },
+    isSignature: { type: Boolean, default: false },
     stock: { type: Number, default: 0 },
   },
   { timestamps: true }, 
