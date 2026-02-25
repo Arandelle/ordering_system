@@ -65,7 +65,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                   <Link
                     href={item.path}
                     onClick={onClose}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duratin-200 group ${isActive ? "bg-[#ef4501]/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-[#ef4501]"}`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duratin-200 group ${isActive ? "bg-brand-color-500/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-brand-color-500"}`}
                   >
                     <Icon size={18} />
                     <span className="font-semibold text-sm">{item.name}</span>

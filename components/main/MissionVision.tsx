@@ -2,6 +2,7 @@ import { getLucideIcon } from "@/lib/iconUtils";
 import { BrushCleaning, Crown, FlameKindling, Heart, HeartHandshake } from "lucide-react";
 import Image from "next/image";
 import React from "react";
+import About from "./About";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -88,77 +89,8 @@ export default function MissionVision() {
   return (
     <div className="min-h-screen bg-white py-16 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-28">
-        {/* ── WHO WE ARE ─────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden bg-white shadow-sm">
-          <div className="grid lg:grid-cols-2 items-stretch">
-            {/* Image side */}
-            <div className="relative h-100 sm:h-96 lg:h-auto lg:min-h-200 overflow-hidden">
-              <Image
-                src="/images/harrison_holding_tray.png"
-                alt="Harrison at the grill"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-                quality={92}
-                className="object-cover hover:scale-105 transition-transform duration-700 ease-out"
-              />
-            </div>
 
-            {/* Text side */}
-            <div className="p-10 lg:p-16 flex flex-col justify-center space-y-6 bg-gray-100">
-              <p className="text-brand-color-500 font-bold tracking-[0.2em] uppercase text-sm">
-                Who We Are
-              </p>
-              <h2 className="text-4xl lg:text-5xl font-black leading-tight text-brand-brown-800">
-                Your kwelang <br />
-                <span className="text-brand-color-500">kuya</span> at the grill.
-              </h2>
-              <p className="text-brown-300 text-lg leading-relaxed">
-                We’re a Filipino BBQ brand built around the character, care, and
-                cooking of Harrison — your dependable, grill-loving, kwelang
-                kuya-type who makes every bite taste like home.
-              </p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="w-12 h-1 bg-brand-color-500 rounded-full" />
-                <div className="w-4 h-1 bg-brand-color-500/40 rounded-full" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── PURPOSE ────────────────────────────────────────────────────── */}
-
-        <section className="overflow-hidden">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 p-8 lg:p-16 items-center">
-            {/* Text */}
-            <div className="order-2 lg:order-1 space-y-7">
-              <p className="text-brand-color-500 font-semibold tracking-wider uppercase text-sm">
-                Purpose
-              </p>
-              <h2 className="text-4xl lg:text-5xl font-bold text-brand-brown-900 leading-tight">
-                Food that feeds
-                <br />
-                connections.
-              </h2>
-              <p className="text-lg text-brand-brown-600 leading-relaxed max-w-2xl">
-                To feed not just appetites, but connections — through familiar
-                food, Filipino warmth, and the storytelling spirit of every
-                shared skewer.
-              </p>
-            </div>
-
-            {/* Image */}
-            <div className="relative h-80 lg:h-120 order-1 lg:order-2 rounded-2xl overflow-hidden shadow-sm">
-              <img
-                src="/images/purpose-sharing.jpg"
-                alt="Friends and family sharing grilled Filipino food"
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 ease-out"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ── MISSION ────────────────────────────────────────────────────── */}
+          {/* ── MISSION ────────────────────────────────────────────────────── */}
         <section className="overflow-hidden">
           <div className="grid lg:grid-cols-2 gap-12 p-8 lg:p-16 items-center">
             {/* Images */}
@@ -291,52 +223,7 @@ export default function MissionVision() {
           </div>
         </section>
 
-        {/* ── CORE VALUES ────────────────────────────────────────────────── */}
-        <section className="space-y-12">
-          <div className="text-center space-y-3">
-            <p className="text-brand-color-500 font-bold tracking-[0.2em] uppercase text-sm">
-              What We Stand For
-            </p>
-            <h2 className="text-5xl lg:text-6xl font-black text-brand-brown-900">
-              Core Values
-            </h2>
-          </div>
-
-          {/* Values grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {coreValues.map((v, i) => {
-              const Icon = getLucideIcon(v.icon);
-
-              return (
-                <div
-                  key={i}
-                  className={`bg-white border border-gray-100 group relative overflow-hidden p-8 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default
-                  ${i === 4 ? "sm:col-span-2 lg:col-span-1" : ""}
-                `}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="self-start flex items-center justify-center h-12 w-12 shrink-0 bg-brand-color-500 rounded-full">
-                      <Icon size={24} className="text-white" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-stone-900 font-black text-xl">
-                        {v.title}
-                      </h3>
-                      <p className="text-stone-600 text-base leading-relaxed">
-                        {v.tagline}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Hover decoration */}
-                  <div className="absolute bottom-3 right-4 text-brand-color-500/10 text-6xl font-black select-none group-hover:text-brand-color-500/20 transition-colors duration-300">
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <About />
 
         {/* ── WHAT WE BRING TO THE TABLE ─────────────────────────────────── */}
         <section className="space-y-12">

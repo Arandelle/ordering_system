@@ -137,13 +137,13 @@ const NewsSection = () => {
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#ef4501]"></div>
-              <span className="text-[#ef4501] font-bold tracking-wider uppercase text-sm">
+              <div className="h-px w-12 bg-linear-to-r from-transparent to-brand-color-500"></div>
+              <span className="text-brand-color-500 font-bold tracking-wider uppercase text-sm">
                 Latest Updates
               </span>
-              <div className="h-px w-12 bg-gradient-to-r from-[#ef4501] to-transparent"></div>
+              <div className="h-px w-12 bg-linear-to-r from-brand-color-500 to-transparent"></div>
             </div>
-            <h2 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#ef4501] via-[#c13500] to-[#ef4501]/60 bg-clip-text text-transparent mb-4">
+            <h2 className="text-5xl lg:text-6xl font-bold bg-linear-to-r from-brand-color-500 via-[#c13500] to-brand-color-500/60 bg-clip-text text-transparent mb-4">
               News & Events
             </h2>
             <p className="text-stone-600 text-lg max-w-2xl mx-auto">
@@ -155,7 +155,7 @@ const NewsSection = () => {
 
         {/* News Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {newsArticles.map((article, index) => (
+          {newsArticles.slice(0, 3).map((article, index) => (
             <article
               key={article.id}
               ref={(el) => {cardRefs.current[index] = el}}
@@ -175,10 +175,10 @@ const NewsSection = () => {
                   alt={article.title}
                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 {/* Category Badge */}
                 <div className="absolute top-4 left-4">
-                  <span className="inline-block px-4 py-1.5 bg-[#ef4501] text-white text-xs font-bold rounded-full shadow-lg">
+                  <span className="inline-block px-4 py-1.5 bg-brand-color-500 text-white text-xs font-bold rounded-full shadow-lg">
                     {article.category}
                   </span>
                 </div>
@@ -188,7 +188,7 @@ const NewsSection = () => {
               <div className="p-6">
                 {/* Date */}
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar size={14} className="text-[#ef4501]" />
+                  <Calendar size={14} className="text-brand-color-500" />
                   <time className="text-sm text-stone-500 font-medium">
                     {formatDate(article.date)}
                   </time>
