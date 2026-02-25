@@ -145,10 +145,10 @@ const Footer = ({
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-brand-color-500 shrink-0" />
                 <a
-                  href="mailto:hello@harrison.ph"
+                  href="mailto:harrisoninasal@gmail.com"
                   className="text-gray-400 hover:text-white text-sm transition-colors"
                 >
-                  hello@harrison.ph
+                  harrisoninasal@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-3">
@@ -207,7 +207,7 @@ const Footer = ({
               reserved.
             </p>
             <p className="text-gray-500 text-xs">
-              Made with 🔥 in the Philippines
+              Every bite, tells a story 🥩
             </p>
           </div>
         </div>
