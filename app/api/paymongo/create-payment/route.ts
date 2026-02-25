@@ -22,10 +22,7 @@ export async function POST(request: NextRequest) {
     const { items } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: "Cart is empty." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
     }
 
     // 🔒 NEVER trust frontend price or subtotal
@@ -52,12 +49,12 @@ export async function POST(request: NextRequest) {
         {
           $inc: { stock: -cartItem.quantity },
         },
-        { session }
+        { session },
       );
 
       if (updateResult.modifiedCount === 0) {
         throw new Error(
-          `${product.name} only has ${product.stock} item(s) left in stock`
+          `${product.name} only has ${product.stock} item(s) left in stock`,
         );
       }
 
@@ -67,14 +64,15 @@ export async function POST(request: NextRequest) {
         productId: product._id,
         name: product.name,
         price: product.price,
+        description: product.description,
+        image: product.image.url,
+        category: product.category,
         quantity: cartItem.quantity,
       });
     }
 
     if (recalculatedSubTotal < MINIMUM_AMOUNT) {
-      throw new Error(
-        `Minimum order amount is ₱${MINIMUM_AMOUNT}`
-      );
+      throw new Error(`Minimum order amount is ₱${MINIMUM_AMOUNT}`);
     }
 
     const tax = recalculatedSubTotal * TAX_RATE;
@@ -91,26 +89,22 @@ export async function POST(request: NextRequest) {
       .map((i) => i.name)
       .join(", ")}`;
 
-    const paymongoResponse = await fetch(
-      "https://api.paymongo.com/v1/links",
-      {
-        method: "POST",
-        headers: {
-          Authorization:
-            "Basic " +
-            Buffer.from(secretKey + ":").toString("base64"),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: {
-            attributes: {
-              amount: Math.round(total * 100), // cents
-              description,
-            },
+    const paymongoResponse = await fetch("https://api.paymongo.com/v1/links", {
+      method: "POST",
+      headers: {
+        Authorization:
+          "Basic " + Buffer.from(secretKey + ":").toString("base64"),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: {
+          attributes: {
+            amount: Math.round(total * 100), // cents
+            description,
           },
-        }),
-      }
-    );
+        },
+      }),
+    });
 
     const paymongoData = await paymongoResponse.json();
 
@@ -141,7 +135,7 @@ export async function POST(request: NextRequest) {
           },
         },
       ],
-      { session }
+      { session },
     );
 
     await session.commitTransaction();
@@ -159,9 +153,6 @@ export async function POST(request: NextRequest) {
     await session.abortTransaction();
     session.endSession();
 
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

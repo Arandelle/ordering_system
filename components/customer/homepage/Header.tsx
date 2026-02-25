@@ -17,7 +17,7 @@ const Header = () => {
     (order) =>
       order.status !== "cancelled" &&
       (order.status !== "completed" || !order.isReviewed),
-  ).length;
+  ).length || 0;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,9 +82,9 @@ const Header = () => {
                 size={20}
                 className={`group-hover:scale-110 transition-transform darkText`}
               />
-              {activeOrdersCount && activeOrdersCount > 0 && (
+              {activeOrdersCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
-                  {activeOrdersCount}
+               {activeOrdersCount}
                 </span>
               )}
             </Link>

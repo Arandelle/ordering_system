@@ -152,7 +152,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
             >
               <div className="relative w-16 h-16 shrink-0 rounded overflow-hidden bg-gray-100">
                 <Image
-                  src={item.image}
+                  src={item.image || "/images/harrison_logo.png"}
                   alt={item.name}
                   fill
                   className="object-cover"
