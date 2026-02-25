@@ -90,7 +90,7 @@ const ProductMain = () => {
   return (
     <section
       id="products-main-section"
-      className="pt-20 bg-white gap-8 flex flex-col"
+      className="py-20 bg-white gap-8 flex flex-col"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
