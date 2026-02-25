@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
-  DoughnutChart, Doughnut, PieChart, Pie, Cell, BarChart, Bar, Legend
+ XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import {
   LayoutDashboard, Users, UserPlus, Package, Calendar, CheckSquare, FileText,
   Megaphone, Settings, Bell, Search, Plus, Download, Edit, Trash2, Eye, X,
   ChevronLeft, ChevronRight, Menu, CheckCircle, AlertCircle, Laptop, MonitorCheck,
-  Smartphone, CardSim, Key, Building, Mail, Phone, MapPin, Save, Upload,
-  Filter, MoreVertical, Clock, DollarSign, TrendingUp, ArrowUp, ArrowDown
+  Smartphone, CardSim, Key, Building,Save, Upload, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,25 +27,6 @@ const STORAGE_KEYS = {
   SETTINGS: 'jpsc_settings'
 };
 
-const loadFromStorage = (key, defaultValue) => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (error) {
-    console.error(`Error loading ${key}:`, error);
-    return defaultValue;
-  }
-};
-
-const saveToStorage = (key, value) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    return true;
-  } catch (error) {
-    console.error(`Error saving ${key}:`, error);
-    return false;
-  }
-};
 
 // --- Initial Data ---
 
@@ -1441,34 +1420,80 @@ const SettingsPage = ({ showToast }) => {
 
 // --- Main App Component ---
 
-const App = () => {
+const ClientPage = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
+  useEffect(() => {
+  setEmployees(loadFromStorage(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES));
+  setOnboarding(loadFromStorage(STORAGE_KEYS.ONBOARDING, INITIAL_ONBOARDING));
+  setAssets(loadFromStorage(STORAGE_KEYS.ASSETS, INITIAL_ASSETS));
+  setLeaves(loadFromStorage(STORAGE_KEYS.LEAVES, INITIAL_LEAVES));
+  setTasks(loadFromStorage(STORAGE_KEYS.TASKS, INITIAL_TASKS));
+  setDocuments(loadFromStorage(STORAGE_KEYS.DOCUMENTS, INITIAL_DOCUMENTS));
+  setAnnouncements(loadFromStorage(STORAGE_KEYS.ANNOUNCEMENTS, INITIAL_ANNOUNCEMENTS));
+  setNotifications(loadFromStorage(STORAGE_KEYS.NOTIFICATIONS, INITIAL_NOTIFICATIONS));
+  setActivities(loadFromStorage(STORAGE_KEYS.ACTIVITIES, INITIAL_ACTIVITIES));
+}, []);
+
+ const loadFromStorage = (key, defaultValue) => {
+  if (typeof window === "undefined") {
+    return defaultValue;
+  }
+
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+const saveToStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (error) {
+    console.error(`Error saving ${key}:`, error);
+    return false;
+  }
+};
+
   // Data State
-  const [employees, setEmployees] = useState(() => loadFromStorage(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES));
-  const [onboarding, setOnboarding] = useState(() => loadFromStorage(STORAGE_KEYS.ONBOARDING, INITIAL_ONBOARDING));
-  const [assets, setAssets] = useState(() => loadFromStorage(STORAGE_KEYS.ASSETS, INITIAL_ASSETS));
-  const [leaves, setLeaves] = useState(() => loadFromStorage(STORAGE_KEYS.LEAVES, INITIAL_LEAVES));
-  const [tasks, setTasks] = useState(() => loadFromStorage(STORAGE_KEYS.TASKS, INITIAL_TASKS));
-  const [documents, setDocuments] = useState(() => loadFromStorage(STORAGE_KEYS.DOCUMENTS, INITIAL_DOCUMENTS));
-  const [announcements, setAnnouncements] = useState(() => loadFromStorage(STORAGE_KEYS.ANNOUNCEMENTS, INITIAL_ANNOUNCEMENTS));
-  const [notifications, setNotifications] = useState(() => loadFromStorage(STORAGE_KEYS.NOTIFICATIONS, INITIAL_NOTIFICATIONS));
-  const [activities, setActivities] = useState(() => loadFromStorage(STORAGE_KEYS.ACTIVITIES, INITIAL_ACTIVITIES));
+  const [employees, setEmployees] = useState(INITIAL_EMPLOYEES);
+  const [onboarding, setOnboarding] = useState(INITIAL_ONBOARDING);
+  const [assets, setAssets] = useState(INITIAL_ASSETS);
+  const [leaves, setLeaves] = useState(INITIAL_LEAVES);
+  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+  const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [activities, setActivities] = useState(INITIAL_ACTIVITIES);
 
   // Save data when changed
-  useEffect(() => { saveToStorage(STORAGE_KEYS.EMPLOYEES, employees); }, [employees]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.ONBOARDING, onboarding); }, [onboarding]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.ASSETS, assets); }, [assets]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.LEAVES, leaves); }, [leaves]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.TASKS, tasks); }, [tasks]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.DOCUMENTS, documents); }, [documents]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.ANNOUNCEMENTS, announcements); }, [announcements]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.NOTIFICATIONS, notifications); }, [notifications]);
-  useEffect(() => { saveToStorage(STORAGE_KEYS.ACTIVITIES, activities); }, [activities]);
+ useEffect(() => {
+  saveToStorage(STORAGE_KEYS.EMPLOYEES, employees);
+  saveToStorage(STORAGE_KEYS.ONBOARDING, onboarding);
+  saveToStorage(STORAGE_KEYS.ASSETS, assets);
+  saveToStorage(STORAGE_KEYS.LEAVES, leaves);
+  saveToStorage(STORAGE_KEYS.TASKS, tasks);
+  saveToStorage(STORAGE_KEYS.DOCUMENTS, documents);
+  saveToStorage(STORAGE_KEYS.ANNOUNCEMENTS, announcements);
+  saveToStorage(STORAGE_KEYS.NOTIFICATIONS, notifications);
+  saveToStorage(STORAGE_KEYS.ACTIVITIES, activities);
+}, [
+  employees,
+  onboarding,
+  assets,
+  leaves,
+  tasks,
+  documents,
+  announcements,
+  notifications,
+  activities
+]);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
@@ -1649,4 +1674,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default ClientPage;
