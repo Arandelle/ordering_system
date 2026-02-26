@@ -1,9 +1,15 @@
+'use client';
+
 import { LINKS } from "@/constant/links";
-import { getLucideIcon } from "@/lib/iconUtils";
+import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import { MapPin } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 const MainLocationSection = () => {
+
+  const orderUrl = useSubdomainPath("/", "food")
+
   // Locations data
   const locations = [
     {
@@ -73,9 +79,11 @@ const MainLocationSection = () => {
             Order now and experience the bold, smoky flavors of our
             charcoal-grilled Filipino favorites.
           </p>
-          <button className="w-48 h-14 bg-white text-brand-color-500 font-bold text-lg hover:bg-gray-100 transition-colors">
+          <Link 
+          href={orderUrl}
+          className="w-48 h-14 py-4 px-6 bg-white text-brand-color-500 hover:text-brand-color-600 font-bold text-2xl hover:bg-gray-100 transition-colors">
             Order Now
-          </button>
+          </Link>
         </div>
       </section>
     </>
