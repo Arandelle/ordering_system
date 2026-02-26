@@ -19,14 +19,36 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  await connectDB();
-  
-  const { name } = await request.json();
+  try {
+    await connectDB();
 
-  const last = await Category.findOne({}).sort({ position: -1 });
-  const position = last ? last.position + 1 : 1;
+    const { name } = await request.json();
+    const trimmedName = name?.trim().replace(/\s+/g, " ");
 
-  const category = await Category.create({ name, position });
+    if (!trimmedName) {
+      return NextResponse.json(
+        { error: "Category name is required" },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json(category, { status: 201 });
+    const last = await Category.findOne({}).sort({ position: -1 });
+    const position = last ? last.position + 1 : 1;
+
+    const category = await Category.create({ name: trimmedName, position });
+
+    return NextResponse.json(category, { status: 201 });
+
+  } catch (error: any) {
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { error: "Category name already exists" },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Failed to create category" },
+      { status: 500 }
+    );
+  }
 }
