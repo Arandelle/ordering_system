@@ -1,6 +1,8 @@
 'use client';
 
 import { LINKS } from "@/constant/links";
+import { animationStyle } from "@/helper/animationStyle";
+import { useIntersectionAnimation, useIntersectionAnimationList } from "@/hooks/useIntersectionAnimation";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import { MapPin } from "lucide-react";
 import Link from "next/link";
@@ -8,7 +10,7 @@ import React from "react";
 
 const MainLocationSection = () => {
 
-  const orderUrl = useSubdomainPath("/", "food")
+  const orderUrl = useSubdomainPath("/", "food");
 
   // Locations data
   const locations = [
@@ -26,11 +28,15 @@ const MainLocationSection = () => {
     },
   ];
 
+  const {ref: locationRef, isVisible} = useIntersectionAnimation();
+  const {ref: ctaRef, isVisible: isCTAVisible} = useIntersectionAnimation();
+  const {itemRefs: mapRef, visibleItems} = useIntersectionAnimationList(locations.length);
+
   return (
     <>
       <section id="locations-section" className="py-20 px-4 bg-gray-50 w-full">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div ref={locationRef} className={`text-center mb-16 ${animationStyle(isVisible).className}`}>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               OUR LOCATIONS
             </h2>
@@ -39,10 +45,12 @@ const MainLocationSection = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {locations.map((location) => (
+            {locations.map((location, index) => (
               <div
-                key={location.id}
-                className="bg-white p-6 border border-gray-200"
+                key={index}
+                ref={(el) => {mapRef.current[index] =  el;}}
+                className={`bg-white p-6 border border-gray-200 ${animationStyle(visibleItems[index]).className}`}
+                style={animationStyle(visibleItems[index]).style}
               >
                 <div className="flex items-start gap-3 mb-4">
                   <MapPin className="w-5 h-5 text-brand-color-500 shrink-0 mt-1" />
@@ -67,10 +75,9 @@ const MainLocationSection = () => {
         </div>
       </section>
         
-        
 
             {/* CTA Section */}
-      <section className="py-20 px-4 bg-brand-color-500/90">
+      <section ref={ctaRef} className={`py-20 px-4 bg-brand-color-500/90 ${animationStyle(isCTAVisible).className}`}>
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Craving Authentic Mang Inasal BBQ?

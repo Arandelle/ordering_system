@@ -14,7 +14,7 @@ interface UseIntersectionAnimationOptions {
 export const useIntersectionAnimation = (
   options: UseIntersectionAnimationOptions = {},
 ) => {
-  const { threshold = 0.2, rootMargin = "0px", triggerOnce = true } = options;
+  const { threshold = 0.2, rootMargin = "0px", triggerOnce = false } = options;
 
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -57,7 +57,7 @@ export const useIntersectionAnimationList = <T = HTMLElement>(
   const {
     threshold = 0.15,
     rootMargin = "0px 0px -50px 0px",
-    triggerOnce = true,
+    triggerOnce = false,
   } = options;
 
   const [visibleItems, setVisibleItems] = useState<{ [key: number]: boolean }>(

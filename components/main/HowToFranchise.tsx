@@ -1,3 +1,7 @@
+'use client'
+
+import { animationStyle } from '@/helper/animationStyle';
+import { useIntersectionAnimation, useIntersectionAnimationList } from '@/hooks/useIntersectionAnimation';
 import { getLucideIcon } from '@/lib/iconUtils';
 import React from 'react'
 
@@ -31,10 +35,14 @@ const HowToFranchise = () => {
     },
   ];
 
+  const {ref: franchiseRef, isVisible} = useIntersectionAnimation();
+  const {ref: ctaRef, isVisible: isCTAVisible} = useIntersectionAnimation();
+  const {itemRefs: pillarRefs, visibleItems: visiblePillars} = useIntersectionAnimationList(franchiseSteps.length);
+
   return (
       <section id="franchise-section" className="pb-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div ref={franchiseRef} className={`text-center mb-16 ${animationStyle(isVisible).className}`}>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               HOW TO FRANCHISE
             </h2>
@@ -45,13 +53,14 @@ const HowToFranchise = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {franchiseSteps.map((item) => {
+            {franchiseSteps.map((item, index) => {
               const Icon = getLucideIcon(item.icon);
-
               return (
                 <div
                   key={item.title}
-                  className="bg-gray-50 p-6 border border-gray-200"
+                  ref={(el) => {pillarRefs.current[index] = el;}}
+                  className={`bg-gray-50 p-6 border border-gray-200 ${animationStyle(visiblePillars[index]).className}`}
+                  style={animationStyle(visiblePillars[index]).style}
                 >
                   <div className="w-12 h-12 bg-brand-color-500 text-white flex items-center justify-center font-bold text-xl mb-4">
                     <Icon />
@@ -65,7 +74,7 @@ const HowToFranchise = () => {
             })}
           </div>
 
-          <div className="text-center">
+          <div ref={ctaRef} className={`text-center ${animationStyle(isCTAVisible).className}`}>
             <p className="text-gray-600 mb-6">
               Ready to start your franchise journey? Contact us at{" "}
               <a

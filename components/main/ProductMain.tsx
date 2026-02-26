@@ -1,5 +1,6 @@
 "use client";
 
+import { animationStyle } from "@/helper/animationStyle";
 import { useIntersectionAnimation, useIntersectionAnimationList } from "@/hooks/useIntersectionAnimation";
 import { useProducts } from "@/hooks/useProducts";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
@@ -9,12 +10,6 @@ import { useState, useEffect } from "react";
 const SIGNATURE_LIMIT = 4;
 const CAROUSEL_STEP = 2;
 const MOBILE_BREAKPOINT = 768;
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-const animationStyle = (visible: boolean) =>
-  `transform transition-all duration-700 ${
-    visible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-  }`;
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 const ProductCardSkeleton = () => (
@@ -114,10 +109,10 @@ const ProductMain = () => {
       ref={options.ref}
       className={`bg-white border border-gray-200 ${
         options.mobile
-          ? `shrink-0 w-[calc(50%-8px)] ${animationStyle(cardsVisible)}`
-          : animationStyle(visibleCards[index])
+          ? `shrink-0 w-[calc(50%-8px)] ${animationStyle(cardsVisible).className}`
+          : animationStyle(visibleCards[index]).className
       }`}
-      style={{ transitionDelay: `${index * 100}ms` }}
+      style={animationStyle(cardsVisible).style}
     >
       <div className="aspect-square overflow-hidden">
         <img src={product.image.url} alt={product.name} className="w-full h-full object-cover" />
@@ -148,7 +143,7 @@ const ProductMain = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
-        <div ref={headerRef} className={`text-center mb-16 ${animationStyle(isHeaderVisible)}`}>
+        <div ref={headerRef} className={`text-center mb-16 ${animationStyle(isHeaderVisible).className}`}>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             OUR SIGNATURE PRODUCTS
           </h2>
