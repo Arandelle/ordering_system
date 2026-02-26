@@ -1,14 +1,22 @@
 "use client";
 
-import {
-  useIntersectionAnimation,
-  useIntersectionAnimationList,
-} from "@/hooks/useIntersectionAnimation";
+import { useIntersectionAnimation, useIntersectionAnimationList } from "@/hooks/useIntersectionAnimation";
 import { useProducts } from "@/hooks/useProducts";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import { useState, useEffect } from "react";
 
-// ── Skeleton card ────────────────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────────────────────
+const SIGNATURE_LIMIT = 4;
+const CAROUSEL_STEP = 2;
+const MOBILE_BREAKPOINT = 768;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const animationStyle = (visible: boolean) =>
+  `transform transition-all duration-700 ${
+    visible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+  }`;
+
+// ── Sub-components ───────────────────────────────────────────────────────────
 const ProductCardSkeleton = () => (
   <div className="bg-white border border-gray-200 animate-pulse">
     <div className="aspect-square bg-gray-200" />
@@ -23,16 +31,10 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
-// ── Error state ──────────────────────────────────────────────────────────────
 const ProductsError = ({ onRetry }: { onRetry: () => void }) => (
   <div className="flex flex-col items-center justify-center py-16 text-center">
     <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
-      <svg
-        className="w-8 h-8 text-red-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -41,12 +43,9 @@ const ProductsError = ({ onRetry }: { onRetry: () => void }) => (
         />
       </svg>
     </div>
-    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-      Failed to load products
-    </h3>
+    <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load products</h3>
     <p className="text-sm text-gray-500 mb-6 max-w-xs">
-      We couldn't fetch our signature products right now. Please check your
-      connection and try again.
+      We couldn't fetch our signature products right now. Please check your connection and try again.
     </p>
     <button
       onClick={onRetry}
@@ -60,44 +59,40 @@ const ProductsError = ({ onRetry }: { onRetry: () => void }) => (
 // ── Main component ───────────────────────────────────────────────────────────
 const ProductMain = () => {
   const { data: menuData = [], isLoading, isError, refetch } = useProducts();
-
-  const menuList = menuData.filter((item) => item.isSignature).slice(0, 4);
-
   const orderUrl = useSubdomainPath("/menu", "food");
 
-  // Carousel state for products
-  const [productIndex, setProductIndex] = useState(0);
+  const menuList = menuData.filter((item) => item.isSignature).slice(0, SIGNATURE_LIMIT);
+
+  // ── Mobile detection ──
   const [isMobile, setIsMobile] = useState(false);
-
-  // Check screen size
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const checkMobile = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Products carousel — show 2 items on mobile
+  // ── Carousel state (mobile only) ──
+  const [productIndex, setProductIndex] = useState(0);
+  const [cardsVisible, setCardsVisible] = useState(true);
+
+  const navigate = (direction: "next" | "prev") => {
+    const canNext = direction === "next" && productIndex + CAROUSEL_STEP < menuList.length;
+    const canPrev = direction === "prev" && productIndex > 0;
+    if (!canNext && !canPrev) return;
+
+    setCardsVisible(false);
+    setTimeout(() => {
+      setProductIndex((i) => i + (direction === "next" ? CAROUSEL_STEP : -CAROUSEL_STEP));
+      setCardsVisible(true);
+    }, 150);
+  };
+
   const visibleProducts = isMobile
-    ? menuList.slice(productIndex, productIndex + 2)
+    ? menuList.slice(productIndex, productIndex + CAROUSEL_STEP)
     : menuList;
 
-  const nextProducts = () => {
-    if (productIndex + 2 < menuList.length) {
-      setProductIndex(productIndex + 2);
-    }
-  };
-
-  const prevProducts = () => {
-    if (productIndex > 0) {
-      setProductIndex(productIndex - 2);
-    }
-  };
-
-  // Intersection animations
+  // ── Scroll-triggered animations (desktop only) ──
   const { ref: headerRef, isVisible: isHeaderVisible } =
     useIntersectionAnimation({ threshold: 0.2, triggerOnce: false });
 
@@ -108,45 +103,52 @@ const ProductMain = () => {
       triggerOnce: false,
     });
 
-  const { itemRefs: mobileCardRef, visibleItems: mobileVisibleCards } =
-    useIntersectionAnimationList<HTMLElement>(visibleProducts.length, {
-      threshold: 0.15,
-      rootMargin: "0px 0px -50px 0px",
-      triggerOnce: false,
-    });
-
-  const headerAnimationStyle = `transform transition-all duration-700 ${
-    isHeaderVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-  }`;
-
-  const cardAnimationStyle = (
+  // ── Shared card renderer ──
+  const renderProductCard = (
+    product: (typeof menuList)[number],
     index: number,
-    type: "mobileVisibleCards" | "visibleCards" = "visibleCards",
-  ) => {
-    const visibilityMap =
-      type === "mobileVisibleCards" ? mobileVisibleCards : visibleCards;
+    options: { mobile?: boolean; ref?: (el: HTMLElement | null) => void } = {},
+  ) => (
+    <div
+      key={product._id}
+      ref={options.ref}
+      className={`bg-white border border-gray-200 ${
+        options.mobile
+          ? `shrink-0 w-[calc(50%-8px)] ${animationStyle(cardsVisible)}`
+          : animationStyle(visibleCards[index])
+      }`}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      <div className="aspect-square overflow-hidden">
+        <img src={product.image.url} alt={product.name} className="w-full h-full object-cover" />
+      </div>
+      <div className="p-4">
+        <h3 className={`font-bold text-gray-900 mb-2 ${options.mobile ? "text-base" : "text-lg"}`}>
+          {product.name}
+        </h3>
+        <p className={`text-gray-600 mb-4 line-clamp-2 ${options.mobile ? "text-xs" : "text-sm"}`}>
+          {product.description}
+        </p>
+        <a
+          href={orderUrl}
+          className={`block w-full text-center bg-brand-color-500 text-white font-bold hover:bg-brand-color-600 transition-colors ${
+            options.mobile ? "py-2 text-sm" : "py-3"
+          }`}
+        >
+          Order Now
+        </a>
+      </div>
+    </div>
+  );
 
-    return `transform transition-all duration-700 ${
-      visibilityMap[index]
-        ? "translate-y-0 opacity-100"
-        : "translate-y-10 opacity-0"
-    }`;
-  };
-
-  // Number of skeleton cards to render while loading
-  const SKELETON_COUNT = 4;
+  const totalDots = Math.ceil(menuList.length / CAROUSEL_STEP);
 
   return (
-    <section
-      id="products-main-section"
-      className="py-20 bg-white gap-8 flex flex-col"
-    >
+    <section id="products-main-section" className="py-20 bg-white gap-8 flex flex-col">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Header */}
-        <div
-          ref={headerRef}
-          className={`text-center mb-16 ${headerAnimationStyle}`}
-        >
+        <div ref={headerRef} className={`text-center mb-16 ${animationStyle(isHeaderVisible)}`}>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             OUR SIGNATURE PRODUCTS
           </h2>
@@ -156,22 +158,19 @@ const ProductMain = () => {
           </p>
         </div>
 
-        {/* ── Error state ── */}
+        {/* Error */}
         {isError && !isLoading && <ProductsError onRetry={refetch} />}
 
-        {/* ── Loading skeletons ── */}
+        {/* Loading skeletons */}
         {isLoading && (
           <>
-            {/* Desktop */}
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+              {Array.from({ length: SIGNATURE_LIMIT }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
-
-            {/* Mobile */}
             <div className="md:hidden flex gap-4 overflow-hidden">
-              {Array.from({ length: 2 }).map((_, i) => (
+              {Array.from({ length: CAROUSEL_STEP }).map((_, i) => (
                 <div key={i} className="shrink-0 w-[calc(50%-8px)]">
                   <ProductCardSkeleton />
                 </div>
@@ -180,157 +179,70 @@ const ProductMain = () => {
           </>
         )}
 
-        {/* ── Products ── */}
+        {/* Products */}
         {!isLoading && !isError && (
           <div className="relative">
-            {/* Desktop & Tablet: Grid */}
+
+            {/* Desktop grid */}
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {menuList.map((product, index) => (
-                <div
-                  key={product._id}
-                  ref={(el) => {
-                    cardRefs.current[index] = el;
-                  }}
-                  className={`bg-white border border-gray-200 ${cardAnimationStyle(index)}`}
-                  style={{
-                    transitionDelay: visibleCards[index]
-                      ? `${index * 100}ms`
-                      : "0ms",
-                  }}
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img
-                      src={product.image.url}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
-                      {product.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                      {product.description}
-                    </p>
-                    <div className="flex text-center">
-                      <a
-                        href={orderUrl}
-                        className="w-full bg-brand-color-500 text-white py-3 font-bold hover:bg-brand-color-600 transition-colors"
-                      >
-                        Order Now
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              {menuList.map((product, index) =>
+                renderProductCard(product, index, {
+                  ref: (el) => { cardRefs.current[index] = el; },
+                })
+              )}
             </div>
 
-            {/* Mobile: Carousel with 2 items */}
+            {/* Mobile carousel */}
             <div className="md:hidden relative">
               <div className="flex gap-4 overflow-hidden">
-                {visibleProducts.map((product, index) => (
-                  <div
-                    key={product._id}
-                    ref={(el) => {
-                      mobileCardRef.current[index] = el;
-                    }}
-                    className={`bg-white border border-gray-200 shrink-0 w-[calc(50%-8px)] ${cardAnimationStyle(index, "mobileVisibleCards")}`}
-                    style={{
-                      transitionDelay: mobileVisibleCards[index]
-                        ? `${index * 100}ms`
-                        : "0ms",
-                    }}
-                  >
-                    <div className="aspect-square overflow-hidden">
-                      <img
-                        src={product.image.url}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-base font-bold text-gray-900 mb-2">
-                        {product.name}
-                      </h3>
-                      <p className="text-xs text-gray-600 mb-4 line-clamp-2">
-                        {product.description}
-                      </p>
-                      <div className="flex text-center">
-                        <a
-                          href={orderUrl}
-                          className="w-full bg-brand-color-500 text-white py-2 text-sm font-bold hover:bg-brand-color-600 transition-colors"
-                        >
-                          Order Now
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {visibleProducts.map((product, index) =>
+                  renderProductCard(product, index, { mobile: true })
+                )}
               </div>
 
-              {/* Navigation Arrows */}
+              {/* Prev arrow */}
               {productIndex > 0 && (
                 <button
-                  onClick={prevProducts}
+                  onClick={() => navigate("prev")}
                   className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors z-10"
                   aria-label="Previous products"
                 >
-                  <svg
-                    className="w-6 h-6 text-gray-800"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
+                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
               )}
 
-              {productIndex + 2 < menuList.length && (
+              {/* Next arrow */}
+              {productIndex + CAROUSEL_STEP < menuList.length && (
                 <button
-                  onClick={nextProducts}
+                  onClick={() => navigate("next")}
                   className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors z-10"
                   aria-label="Next products"
                 >
-                  <svg
-                    className="w-6 h-6 text-gray-800"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
+                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               )}
 
-              {/* Dots Indicator */}
+              {/* Dots */}
               <div className="flex justify-center gap-2 mt-6">
-                {Array.from({ length: Math.ceil(menuList.length / 2) }).map(
-                  (_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setProductIndex(idx * 2)}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        productIndex === idx * 2
-                          ? "bg-brand-color-500 w-8"
-                          : "bg-gray-300"
-                      }`}
-                      aria-label={`Go to product page ${idx + 1}`}
-                    />
-                  ),
-                )}
+                {Array.from({ length: totalDots }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setProductIndex(idx * CAROUSEL_STEP)}
+                    className={`h-2 rounded-full transition-all ${
+                      productIndex === idx * CAROUSEL_STEP
+                        ? "bg-brand-color-500 w-8"
+                        : "bg-gray-300 w-2"
+                    }`}
+                    aria-label={`Go to product page ${idx + 1}`}
+                  />
+                ))}
               </div>
             </div>
+
           </div>
         )}
       </div>
