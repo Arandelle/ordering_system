@@ -50,7 +50,7 @@ const Footer = ({
   return (
     <footer className="bg-[#1a1a1a] text-white">
       {/** Main footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6   py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/** Brand Columns */}
           <div className="lg:col-span-1">
@@ -164,7 +164,7 @@ const Footer = ({
 
       {/* Newsletter Section */}
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="text-center lg:text-left">
               <h4 className="font-semibold text-lg mb-1">
