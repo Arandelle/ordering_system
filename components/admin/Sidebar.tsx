@@ -16,6 +16,7 @@ const navItems = [
   { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
   { name: "Orders", path: "/orders", icon: "ShoppingCart" },
   { name: "Products", path: "/products", icon: "Package" },
+  { name: "Category", path: "/category", icon: "Folder" },
   { name: "Customers", path: "/accounts", icon: "Users" },
   { name: "Reports", path: "/reports", icon: "ChartLine" },
   { name: "Settings", path: "/settings", icon: "Settings" },
