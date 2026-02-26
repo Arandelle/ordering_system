@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { CheckIcon } from "lucide-react";
 import About from "./About";
@@ -40,19 +40,23 @@ const missionItems = [
 const visionCards = [
   {
     title: "Authenticity",
-    description: "Honoring traditional Filipino inasal and barbecue through time-tested recipes and techniques",
+    description:
+      "Honoring traditional Filipino inasal and barbecue through time-tested recipes and techniques",
   },
   {
     title: "Quality",
-    description: "Delivering consistently flavorful food made with care, fresh ingredients, and attention to detail",
+    description:
+      "Delivering consistently flavorful food made with care, fresh ingredients, and attention to detail",
   },
   {
     title: "Integrity",
-    description: "Serving our customers with honesty, fairness, and respect in every interaction",
+    description:
+      "Serving our customers with honesty, fairness, and respect in every interaction",
   },
   {
     title: "Community",
-    description: "Bringing people together through food and supporting the communities we serve",
+    description:
+      "Bringing people together through food and supporting the communities we serve",
   },
 ];
 
@@ -72,7 +76,7 @@ export default function MissionVision() {
 
   // Mission checklist items
   const { itemRefs: missionItemRefs, visibleItems: visibleMissionItems } =
-    useIntersectionAnimationList<HTMLLIElement>(missionItems.length);
+    useIntersectionAnimationList<HTMLLIElement | HTMLDivElement>(missionItems.length);
 
   // Vision cards
   const { itemRefs: visionCardRefs, visibleItems: visibleVisionCards } =
@@ -87,137 +91,124 @@ export default function MissionVision() {
   const fade = animationStyle; // alias for brevity
 
   return (
-    <div className="bg-white py-16 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="bg-white px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-28">
 
-        {/* ── MISSION ──────────────────────────────────────────────────────── */}
-        <section className="overflow-hidden">
-          <div className="grid lg:grid-cols-2 gap-12 p-8 items-center">
+<section className="pt-16 pb-4 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
 
-            {/* Images */}
-            <div
-              ref={missionImgRef}
-              {...fade(isMissionImgVisible)}
-              className={`relative h-96 lg:h-125 order-2 lg:order-1 ${fade(isMissionImgVisible).className}`}
-              style={fade(isMissionImgVisible).style}
-            >
-              <div className="absolute left-0 top-0 w-[85%] h-full overflow-hidden transform hover:scale-[1.02] transition-transform duration-500">
-                <img
-                  src="/images/mission-chefs-img.jpg"
-                  alt="Chefs grilling the inasal"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute right-0 bottom-8 w-[48%] h-52 overflow-hidden p-1 bg-gray-50 transform hover:scale-105 transition-transform duration-500 z-10 shadow-xl">
-                <img
-                  src="/images/mission-product-img.jpg"
-                  alt="Harrison Inasal product"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
+    {/* ── LEFT COLUMN: Mission ── */}
+    <div className="flex flex-col pb-12 lg:pb-0 lg:pr-8 xl:pr-12">
 
-            {/* Text */}
-            <div
-              ref={missionTextRef}
-              className={`order-1 lg:order-2 space-y-6 ${fade(isMissionTextVisible, 150).className}`}
-              style={fade(isMissionTextVisible, 150).style}
-            >
-              <p className="text-brand-color-500 font-bold tracking-[0.2em] uppercase text-sm">
-                Our Mission
-              </p>
-              <h2 className="text-5xl lg:text-6xl font-black text-stone-900 leading-tight">
-                Grilled with purpose.
-              </h2>
-              <p className="text-lg text-stone-600 leading-relaxed">
-                To serve proudly Filipino grilled food that brings people
-                together — always marinated with care, grilled to perfection,
-                and served with a smile as warm as Harrison himself.
-              </p>
-              <ul className="space-y-3 mt-8">
-                {missionItems.map((item, i) => (
-                  <li
-                    key={i}
-                    ref={(el) => { missionItemRefs.current[i] = el; }}
-                    className={`flex items-center gap-3 group ${fade(visibleMissionItems[i], i * 80).className}`}
-                    style={fade(visibleMissionItems[i], i * 80).style}
-                  >
-                    <div className="shrink-0 w-7 h-7 rounded-full bg-brand-color-500 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
-                      <CheckIcon size={14} className="text-white" />
-                    </div>
-                    <span className="text-stone-700 font-medium text-base lg:text-lg">
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {/* Label pill */}
+      <span className="inline-flex items-center gap-2 text-xl font-semibold tracking-[0.2em] uppercase text-brand-color-500 mb-6">
+        <span className="w-6 h-px bg-brand-color-500 inline-block" />
+        Our Mission
+      </span>
+
+      {/* Mission text block with image as background */}
+      <div
+        ref={missionTextRef}
+        className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 mb-8"
+      >
+        {/* Background image */}
+        <img
+          src="https://cdn.apartmenttherapy.info/image/upload/v1747078194/tk/photo/2025/05-2025/2025-05-filipino-chicken-inasal/filipino-chicken-inasal-581.jpg"
+          alt="Grilled Filipino chicken inasal with atchara, rice, and spiced vinegar dip on banana leaf"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+        {/* Dark overlay for text legibility */}
+        <div className="absolute inset-0 bg-black/55" />
+
+        {/* Text content on top */}
+        <div className={`relative z-10 p-8 ${animationStyle(isMissionTextVisible).className}`}>
+          <p className="text-white leading-relaxed text-lg">
+            To serve proudly Filipino grilled food that brings people together —
+            always marinated with care, grilled to perfection, and served with a
+            smile as warm as Harrison himself.
+          </p>
+        </div>
+      </div>
+
+      {/* Mission items */}
+      <div className="mt-8 space-y-3">
+        {missionItems.map((item, index) => (
+          <div
+            ref={(el) => { missionItemRefs.current[index] = el; }}
+            key={index}
+            className={`group flex items-start gap-3 ${animationStyle(visibleMissionItems[index]).className}`}
+            style={animationStyle(visibleMissionItems[index]).style}
+          >
+            <span className="mt-1.5 flex-shrink-0 w-2 h-2 rounded-full bg-brand-color-500 group-hover:scale-125 transition-transform duration-200" />
+            <p className="text-stone-700 text-lg leading-relaxed">{item}</p>
           </div>
-        </section>
+        ))}
+      </div>
+    </div>
 
-        {/* ── VISION ───────────────────────────────────────────────────────── */}
-        <section className="overflow-hidden">
-          <div className="grid lg:grid-cols-2 gap-12 p-8 items-center">
+    {/* ── RIGHT COLUMN: Vision ── */}
+    <div className="flex flex-col pt-12 lg:pt-0 lg:pl-8 xl:pl-12">
 
-            {/* Text */}
-            <div
-              ref={visionTextRef}
-              className={`space-y-6 ${fade(isVisionTextVisible).className}`}
-              style={fade(isVisionTextVisible).style}
-            >
-              <p className="text-brand-color-500 font-bold tracking-[0.2em] uppercase text-sm">
-                Our Vision
-              </p>
-              <h2 className="text-5xl lg:text-6xl font-black text-brand-brown-800 leading-tight">
-                Everyone's
-                <br />
-                favorite table.
-              </h2>
-              <p className="text-lg text-brand-brown-600 leading-relaxed">
-                To become the Philippines' most loved inasal and BBQ
-                destination, known for its homey flavor, genuine hospitality,
-                and the everyday joy that comes with being welcomed to
-                Harrison's table.
-              </p>
+      {/* Label pill */}
+      <span className="inline-flex items-center gap-2 text-xl font-semibold tracking-[0.2em] uppercase text-brand-color-500 mb-6">
+        <span className="w-6 h-px bg-brand-color-500 inline-block" />
+        Our Vision
+      </span>
 
-              <div className="grid sm:grid-cols-2 gap-4 mt-8">
-                {visionCards.map((card, i) => (
-                  <div
-                    key={i}
-                    ref={(el) => { visionCardRefs.current[i] = el; }}
-                    className={`bg-gray-100 p-5 border-l-4 border-brand-color-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${fade(visibleVisionCards[i], i * 100).className}`}
-                    style={fade(visibleVisionCards[i], i * 100).style}
-                  >
-                    <h3 className="text-stone-900 font-bold text-lg mb-2">{card.title}</h3>
-                    <p className="text-stone-600 text-sm leading-relaxed">{card.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Vision text block with image as background */}
+      <div className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 mb-10">
+        {/* Background image */}
+        <img
+          src="https://panlasangpinoy.com/wp-content/uploads/2010/04/Pinoy-Pork-Barbeque.jpg"
+          alt="Classic Filipino pork barbecue skewers grilled to perfection with dipping sauce and sides"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+        {/* Dark overlay for text legibility */}
+        <div className="absolute inset-0 bg-black/55" />
 
-            {/* Images */}
-            <div
-              ref={visionImgRef}
-              className={`relative h-96 lg:h-125 ${fade(isVisionImgVisible, 150).className}`}
-              style={fade(isVisionImgVisible, 150).style}
-            >
-              <div className="absolute left-0 top-0 w-[85%] h-full overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
-                <img
-                  src="/images/vision-building.jpg"
-                  alt="Store Building"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute right-0 bottom-1/2 translate-y-1/2 w-[48%] h-52 overflow-hidden p-1 bg-gray-50 transform hover:scale-105 transition-transform duration-500 z-10 shadow-xl">
-                <img
-                  src="/images/vision-store.jpg"
-                  alt="Store with staffs"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
+        {/* Text content on top */}
+        <div className="relative z-10 p-8">
+          <p className="text-white leading-relaxed text-lg">
+            To become the Philippines' most loved inasal and BBQ destination, known
+            for its homey flavor, genuine hospitality, and the everyday joy that
+            comes with being welcomed to Harrison's table.
+          </p>
+        </div>
+      </div>
+
+      {/* Vision cards with large ghost number accent */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {visionCards.map((item, index) => (
+          <div
+            key={index}
+            className="
+              relative overflow-hidden
+              bg-gray-50 hover:bg-brand-color-500/5
+              border border-gray-100 hover:border-brand-color-500/30
+              rounded-2xl p-5
+              transition-all duration-300 group
+            "
+          >
+            {/* Ghost number background texture */}
+            <span className="absolute -top-3 -right-1 text-7xl font-black text-gray-100 group-hover:text-brand-color-500/10 transition-colors duration-300 leading-none select-none pointer-events-none">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+
+            <h3 className="relative text-gray-900 font-bold text-base mb-1.5 group-hover:text-brand-color-500 transition-colors duration-200">
+              {item.title}
+            </h3>
+            <p className="relative text-gray-500 text-sm leading-relaxed">
+              {item.description}
+            </p>
           </div>
-        </section>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</section>
 
         {/* About the company */}
         <About />
@@ -253,12 +244,16 @@ export default function MissionVision() {
             {tablePillars.map((p, i) => (
               <div
                 key={i}
-                ref={(el) => { pillarRefs.current[i] = el; }}
+                ref={(el) => {
+                  pillarRefs.current[i] = el;
+                }}
                 className={`group relative overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${fade(visiblePillars[i], i * 120).className}`}
                 style={fade(visiblePillars[i], i * 120).style}
               >
                 <div className="p-8 space-y-4">
-                  <p className="text-5xl font-black text-brand-brown-100">{p.number}</p>
+                  <p className="text-5xl font-black text-brand-brown-100">
+                    {p.number}
+                  </p>
                   <div>
                     <p className="text-xs font-bold tracking-widest uppercase mb-1 text-brand-color-500">
                       {p.audience}
@@ -267,13 +262,14 @@ export default function MissionVision() {
                       {p.headline}
                     </h3>
                   </div>
-                  <p className="text-brand-brown-600 text-base leading-relaxed">{p.body}</p>
+                  <p className="text-brand-brown-600 text-base leading-relaxed">
+                    {p.body}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         </section>
-
       </div>
     </div>
   );
