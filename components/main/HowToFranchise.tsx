@@ -32,7 +32,7 @@ const HowToFranchise = () => {
   ];
 
   return (
-      <section id="franchise-section" className="py-20 px-4 bg-white">
+      <section id="franchise-section" className="pb-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">

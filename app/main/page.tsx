@@ -16,7 +16,7 @@ const MainPage = () => {
     <MissionVision />
     <NewsSection />
     <HowToFranchise />
-    <MainLocationSection /> {/** Included how to franchise and CTA button*/}
+    <MainLocationSection /> {/** Includes order now CTA */}
     {/* <ContactUs /> */}
   </>
   )

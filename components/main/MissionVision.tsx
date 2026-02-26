@@ -1,62 +1,5 @@
-import { getLucideIcon } from "@/lib/iconUtils";
-import { BrushCleaning, Crown, FlameKindling, Heart, HeartHandshake } from "lucide-react";
-import Image from "next/image";
-import React from "react";
+import { CheckIcon } from "lucide-react";
 import About from "./About";
-
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-const CheckIcon = () => (
-  <svg
-    className="w-4 h-4 text-white"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={3}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-);
-
-const FlameIcon = () => (
-  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 2c0 0-5 4-5 9a5 5 0 0010 0c0-5-5-9-5-9zm0 14a3 3 0 01-3-3c0-2.5 2-5 3-6.5 1 1.5 3 4 3 6.5a3 3 0 01-3 3z" />
-  </svg>
-);
-
-// ─── Core Values data ────────────────────────────────────────────────────────
-const coreValues = [
-  {
-    title: "Alaga (Care)",
-    tagline:
-      "We marinate, grill, and serve with the kind of care you'd give family.",
-    icon: "BrushCleaning",
-  },
-  {
-    title: "Warmth",
-    tagline: "Everyone is welcome; no one leaves feeling out of place.",
-    icon: "FlameKindling",
-  },
-  {
-    title: "Filipino Flavor Pride",
-    tagline: "Rooted in heritage, shared with pride.",
-    icon: "Crown",
-  },
-  {
-    title: "Simplicity",
-    tagline: "Honest food, no frills — just flavor that speaks for itself.",
-    icon: "Heart",
-  },
-  {
-    title: "Togetherness",
-    tagline: "Because food tastes better when shared.",
-    icon: "HeartHandshake",
-  },
-];
 
 // ─── What We Bring data ──────────────────────────────────────────────────────
 const tablePillars = [
@@ -83,30 +26,29 @@ const tablePillars = [
   },
 ];
 
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function MissionVision() {
   return (
-    <div className="min-h-screen bg-white py-16 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="bg-white py-16 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-28">
 
           {/* ── MISSION ────────────────────────────────────────────────────── */}
         <section className="overflow-hidden">
-          <div className="grid lg:grid-cols-2 gap-12 p-8 lg:p-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 p-8 items-center">
             {/* Images */}
-            <div className="relative h-96 lg:h-[500px] order-2 lg:order-1">
-              <div className="absolute left-0 top-0 w-[85%] h-full rounded-xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
+            <div className="relative h-96 lg:h-125 order-2 lg:order-1">
+              <div className="absolute left-0 top-0 w-[85%] h-full overflow-hidden transform hover:scale-[1.02] transition-transform duration-500">
                 <img
                   src="/images/mission-chefs-img.jpg"
                   alt="Chefs grilling the inasal"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute right-0 bottom-8 w-[48%] h-52 rounded-xl overflow-hidden p-2 bg-gradient-to-br from-stone-100 to-amber-100/50 transform hover:scale-105 transition-transform duration-500 z-10 shadow-xl">
+              <div className="absolute right-0 bottom-8 w-[48%] h-52 overflow-hidden p-1 bg-gray-50 transform hover:scale-105 transition-transform duration-500 z-10 shadow-xl">
                 <img
                   src="/images/mission-product-img.jpg"
                   alt="Harrison Inasal product"
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
@@ -133,7 +75,7 @@ export default function MissionVision() {
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 group">
                     <div className="shrink-0 w-7 h-7 rounded-full bg-brand-color-500 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
-                      <CheckIcon />
+                      <CheckIcon size={14} className="text-white"/>
                     </div>
                     <span className="text-stone-700 font-medium text-base lg:text-lg">
                       {item}
@@ -147,7 +89,7 @@ export default function MissionVision() {
 
         {/* ── VISION ─────────────────────────────────────────────────────── */}
         <section className="overflow-hidden">
-          <div className="grid lg:grid-cols-2 gap-12 p-8 lg:p-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 p-8 items-center">
             {/* Text */}
             <div className="space-y-6">
               <p className="text-brand-color-500 font-bold tracking-[0.2em] uppercase text-sm">
@@ -190,7 +132,7 @@ export default function MissionVision() {
                 ].map((h, i) => (
                   <div
                     key={i}
-                    className="bg-gradient-to-br from-stone-100 to-amber-100/50 p-5 border-l-4 border-brand-color-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-r-xl"
+                    className="bg-gray-100 p-5 border-l-4 border-brand-color-500 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                   >
                     <h3 className="text-stone-900 font-bold text-lg mb-2">
                       {h.title}
@@ -204,24 +146,26 @@ export default function MissionVision() {
             </div>
 
             {/* Images */}
-            <div className="relative h-96 lg:h-[500px]">
-              <div className="absolute left-0 top-0 w-[85%] h-full rounded-xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
+            <div className="relative h-96 lg:h-125">
+              <div className="absolute left-0 top-0 w-[85%] h-full overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
                 <img
                   src="/images/vision-building.jpg"
                   alt="Store Building"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="absolute right-0 bottom-1/2 translate-y-1/2 w-[48%] h-52 rounded-xl overflow-hidden p-2 bg-gradient-to-br from-stone-100 to-amber-100/50 transform hover:scale-105 transition-transform duration-500 z-10 shadow-xl">
+              <div className="absolute right-0 bottom-1/2 translate-y-1/2 w-[48%] h-52 overflow-hidden p-1 bg-gray-50 transform hover:scale-105 transition-transform duration-500 z-10 shadow-xl">
                 <img
                   src="/images/vision-store.jpg"
                   alt="Store with staffs"
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover"
                 />
               </div>
             </div>
           </div>
         </section>
+        
+        {/** About the company */}
 
         <About />
 

@@ -1,14 +1,12 @@
 "use client";
 
 import { useScrollToSection } from "@/hooks/useScrollToSection";
-import { getLucideIcon } from "@/lib/iconUtils";
-import MissionVision from "./MissionVision";
 
 const About = () => {
   useScrollToSection();
   return (
     <>
-      <section id="about-section" className="py-20 px-4">
+      <section id="about-section" className="py-10 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
