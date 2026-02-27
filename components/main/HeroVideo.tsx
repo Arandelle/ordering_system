@@ -1,80 +1,89 @@
-"use client";
-import React from "react";
-import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
-import { ArrowBigDown, ArrowDown, ChevronDown } from "lucide-react";
+'use client'
 
-const HeroVideo = () => {
-  // Navigate to food subdomain
-  const orderUrl = useSubdomainPath("/", "food");
-  const menuUrl = useSubdomainPath("/menu", "food");
+import { useState, useEffect, useCallback } from "react";
 
-  // Or if you want to go back to main domain from food subdomain:
-  // const homeUrl = useSubdomainPath('/', undefined) // goes to domain.com
+const images = [
+  "/images/BANNER 1.png",
+  "/images/BANNER 2.png",
+  "/images/BANNER 3.png",
+];
+
+export default function CarouselBanner() {
+  const [current, setCurrent] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const DURATION = 4000;
+
+  const goTo = (idx: number) => setCurrent((idx + images.length) % images.length);
+
+  const next = useCallback(() => {
+    setCurrent((c) => (c + 1) % images.length);
+    setProgress(0);
+  }, []);
+
+  useEffect(() => {
+    setProgress(0);
+    const start = performance.now();
+    let raf : any;
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / DURATION, 1);
+      setProgress(p);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else next();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [current, next]);
 
   return (
-    <section className="relative w-full">
-      <div className="max-w-8xl mx-auto">
-        <div className="relative h-[70vh] md:h-[80vh] w-full overflow-hidden shadow-2xl">
-          {/* Video Background */}
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute top-0 left-0 w-full h-full object-cover"
-          >
-            <source src="/videos/hero-ads.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+    <div className="w-full flex items-center justify-center">
+      <div className="relative w-full h-[70vh] md:h-[60vh] overflow-hidden" style={{ aspectRatio: "16/9" }}>
 
-          {/* Dark Overlay */}
-          <div className="absolute top-0 left-0 w-full h-full bg-black/40" />
+        {/* Images */}
+        {images.map((src, i) => (
+          <img
+            key={i}
+            src={src}
+            alt={`Slide ${i + 1}`}
+            className="absolute inset-0 w-full h-[70vh] md:h-[60vh] object-cover transition-opacity duration-700"
+            style={{ opacity: i === current ? 1 : 0 }}
+          />
+        ))}
 
-          {/* Content Overlay - Left Aligned */}
-          <div className="relative z-10 flex items-center h-full px-6 sm:px-10 lg:px-16">
-            <div className="">
-              {/* Main Heading */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-tight">
-                HARRISON HOUSE OF
-                <span className="block text-brand-color-500 mt-2">INASAL & BBQ</span>
-              </h1>
+        {/* Prev / Next */}
+        <button
+          onClick={() => goTo(current - 1)}
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm text-lg"
+        >
+          ‹
+        </button>
+        <button
+          onClick={() => goTo(current + 1)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all backdrop-blur-sm text-lg"
+        >
+          ›
+        </button>
 
-              {/* Subheading */}
-              <div className="flex items-center gap-3 mb-8">
-                <div className="h-px w-12 bg-linear-to-r from-transparent to-brand-color-500"></div>
-                <span className="text-brand-color-500 font-bold tracking-wider uppercase text-sm">
-                  Every Bite Tells a Story
-                </span>
-                <div className="h-px w-12 bg-linear-to-r from-brand-color-500 to-transparent"></div>
-              </div>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a
-                  href={orderUrl}
-                  className="w-full sm:w-auto bg-brand-color-500 text-white px-8 py-4 text-lg font-bold hover:bg-brand-color-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                >
-                  Order Now
-                </a>
-                <a
-                  href={menuUrl}
-                  className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-4 text-lg font-bold hover:bg-white hover:text-dark-green transition-all duration-300"
-                >
-                  View Menu
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Scroll Down Indicator */}
-          <div className="flex flex-col items-center justify-center gap-2 absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce text-white">
-             <p className="text-sm">Scroll down</p>
-            <ChevronDown size={30}/>
-          </div>
+        {/* Dots */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className="relative h-2 rounded-full bg-dark-green-200 overflow-hidden transition-all duration-300"
+              style={{ width: i === current ? 28 : 8
+               }}
+            >
+              {i === current && (
+                <div
+                  className="absolute inset-y-0 left-0 bg-dark-green-900 rounded-full"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              )}
+            </button>
+          ))}
         </div>
-      </div>
-    </section>
-  );
-};
 
-export default HeroVideo;
+      </div>
+    </div>
+  );
+}

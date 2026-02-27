@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/testing/page.jsx", "app/admin-testing/ClientPage.jsx"  ],
+, "app/testing/page.jsx", "app/admin-testing/ClientPage.jsx", "components/main/HeroVideo.tsx"  ],
   "exclude": ["node_modules"]
 }

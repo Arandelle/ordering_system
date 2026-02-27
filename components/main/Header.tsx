@@ -14,10 +14,8 @@ const Header = () => {
   const NAV_ITEMS = [
     { label: "Products", section: "products-main" },
     { label: "About", section: "about" },
-    { label: "News", section: "news" },
     { label: "Franchise", section: "franchise" },
     { label: "Locations", section: "locations" },
-    { label: "Contact", section: "contact" },
   ];
 
   function useScrollLink(section: string) {

@@ -88,7 +88,7 @@ const Footer = ({
 
           {/** Quick Links */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
+            <h4 className="font-semibold text-lg mb-4">Company</h4>
             <ul className="space-y-3">
               {footerQuickLinks[variant].map((link) => (
                 <li key={link.name}>
