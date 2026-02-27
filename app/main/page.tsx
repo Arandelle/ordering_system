@@ -14,8 +14,8 @@ const MainPage = () => {
     <ProductMain />
     {/* <About /> */}
     <MissionVision />
-    <NewsSection />
-    <HowToFranchise />
+    {/* <NewsSection />
+    <HowToFranchise /> */}
     <MainLocationSection /> {/** Includes order now CTA */}
     {/* <ContactUs /> */}
   </>

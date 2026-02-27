@@ -43,15 +43,15 @@ export default function MissionVision() {
   const fade = animationStyle; // alias for brevity
 
   return (
-    <div className="bg-white px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-28">
+    <div className="max-w-7xl bg-white px-4 sm:px-6 lg:px-8 mx-auto font-sans pt-10 pb-20">
+      <div className="mx-auto space-y-28">
         <section
           ref={missionvisionRef}
           className={`${animationStyle(isMissionVisionVisible).className}`}
         >
           <div className="grid grid-cols-2">
             <div className="flex flex-col">
-              <div className="flex-1 flex flex-col justify-center px-16 py-20 border-b border-stone-200">
+              <div className="flex-1 flex flex-col justify-center py-20 border-b border-stone-200">
                 <p className="text-xs tracking-widest text-brand-color-500 uppercase mb-4">
                   Our Purpose
                 </p>
@@ -62,7 +62,7 @@ export default function MissionVision() {
                   and served with a smile as warm as Harrison himself.
                 </p>
               </div>
-              <div className="flex-1 flex flex-col justify-center px-16 py-20">
+              <div className="flex-1 flex flex-col justify-center py-20">
                 <p className="text-xs tracking-widest text-brand-color-500 uppercase mb-4">
                   Our Future
                 </p>

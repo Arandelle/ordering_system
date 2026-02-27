@@ -34,7 +34,7 @@ const MainLocationSection = () => {
 
   return (
     <>
-      <section id="locations-section" className="py-20 px-4 bg-gray-50 w-full">
+      <section id="locations-section" className="py-20 px-4 bg-white w-full">
         <div className="max-w-7xl mx-auto">
           <div ref={locationRef} className={`text-center mb-16 ${animationStyle(isVisible).className}`}>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">

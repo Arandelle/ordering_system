@@ -57,8 +57,8 @@ const About = () => {
 
   return (
     <>
-      <section id="about-section" className="py-10 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section id="about-section" className="max-w-7xl mx-auto py-10">
+        <div className="">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div ref={brandRef} className={animationStyle(isVisible).className}>
               <h2 className="text-3xl md:text-4xl font-bold text-brand-color-500 mb-6">
