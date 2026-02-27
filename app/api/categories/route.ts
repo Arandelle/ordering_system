@@ -1,3 +1,4 @@
+import cloudinary from "@/lib/cloudinary";
 import { connectDB } from "@/lib/mongodb";
 import { Category } from "@/models/Category";
 import { NextRequest, NextResponse } from "next/server";
@@ -22,7 +23,17 @@ export async function POST(request: Request) {
   try {
     await connectDB();
 
-    const { name } = await request.json();
+    const { name, imageFile } = await request.json();
+
+    let image = {url: "", public_id: ""};
+    if(!imageFile){
+      const uploaded = await cloudinary.uploader.upload(imageFile, {
+        folder: "categories",
+        transformation: [{width: 400, height: 400, crop: "limit"}, {quality: "auto"}],
+      });
+      image = {url: uploaded.secure_url, public_id: uploaded.public_id}
+    }
+
     const trimmedName = name?.trim().replace(/\s+/g, " ");
 
     if (!trimmedName) {
@@ -35,7 +46,7 @@ export async function POST(request: Request) {
     const last = await Category.findOne({}).sort({ position: -1 });
     const position = last ? last.position + 1 : 1;
 
-    const category = await Category.create({ name: trimmedName, position });
+    const category = await Category.create({ name: trimmedName, position, image });
 
     return NextResponse.json(category, { status: 201 });
 

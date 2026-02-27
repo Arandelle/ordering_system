@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { GripVertical, Pencil, Trash2, Plus, X, Check, Loader2 } from "lucide-react";
+import { GripVertical, Pencil, Trash2, Plus, X, Check, Loader2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -10,7 +10,20 @@ interface Category {
   _id: string;
   name: string;
   position: number;
+  image?: {
+    url: string;
+    public_id: string;
+  };
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 const api = {
@@ -19,7 +32,7 @@ const api = {
     if (!res.ok) throw new Error("Failed to fetch categories");
     return res.json();
   },
-  create: async (data: { name: string; position: number }) => {
+  create: async (data: { name: string; position: number; imageFile?: string }) => {
     const res = await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -28,7 +41,7 @@ const api = {
     if (!res.ok) throw new Error("Failed to create category");
     return res.json();
   },
-  update: async ({ id, data }: { id: string; data: Partial<Category> }) => {
+  update: async ({ id, data }: { id: string; data: Partial<Category> & { imageFile?: string } }) => {
     const res = await fetch(`/api/categories/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -38,15 +51,13 @@ const api = {
     return res.json();
   },
   delete: async (id: string) => {
-  const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
-  
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error); // ← this is what onError receives
-  }
-  
-  return res.json();
-},
+    const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error);
+    }
+    return res.json();
+  },
   reorder: async (categories: { id: string; position: number }[]) => {
     const res = await fetch("/api/categories/reorder", {
       method: "PATCH",
@@ -58,6 +69,74 @@ const api = {
   },
 };
 
+// ── Image Upload Button ───────────────────────────────────────────────────────
+const ImageUploadButton = ({
+  preview,
+  onChange,
+  size = "sm",
+}: {
+  preview: string | null;
+  onChange: (base64: string | null) => void;
+  size?: "sm" | "md";
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 27 * 1024 * 1024) {
+      toast.error("Image must be under 10MB");
+      return;
+    }
+    const base64 = await toBase64(file);
+    onChange(base64);
+    // reset so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const dim = size === "sm" ? "w-9 h-9" : "w-12 h-12";
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className={`${dim} border-2 border-dashed border-gray-200 hover:border-brand-color-400 flex items-center justify-center overflow-hidden transition-colors group`}
+        title="Upload category image"
+      >
+        {preview ? (
+          <img src={preview} alt="preview" className="w-full h-full object-cover" />
+        ) : (
+          <ImagePlus
+            size={size === "sm" ? 14 : 18}
+            className="text-gray-300 group-hover:text-brand-color-400 transition-colors"
+          />
+        )}
+      </button>
+
+      {/* Remove image button */}
+      {preview && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white flex items-center justify-center rounded-full hover:bg-red-600 transition-colors"
+          title="Remove image"
+        >
+          <X size={9} />
+        </button>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFile}
+      />
+    </div>
+  );
+};
+
 // ── Inline edit row ───────────────────────────────────────────────────────────
 const EditRow = ({
   category,
@@ -66,28 +145,50 @@ const EditRow = ({
   isSaving,
 }: {
   category: Category;
-  onSave: (name: string) => void;
+  onSave: (name: string, imageFile: string | null) => void;
   onCancel: () => void;
   isSaving: boolean;
 }) => {
   const [value, setValue] = useState(category.name);
+  // preview: existing URL (string) or new base64 (string) or null
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    category.image?.url ?? null
+  );
+  // track whether user picked a NEW file (to send as base64) vs kept old URL
+  const [newImageBase64, setNewImageBase64] = useState<string | null>(null);
+
+  const handleImageChange = (base64: string | null) => {
+    setNewImageBase64(base64);
+    setImagePreview(base64);
+  };
+
+  const handleSave = () => {
+    // If user cleared the image, pass empty string to signal removal
+    // If user picked new image, send base64
+    // If user didn't touch image, pass undefined (no change)
+    onSave(value, newImageBase64);
+  };
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-brand-color-50 border border-brand-color-200">
       <GripVertical className="text-gray-300 shrink-0" size={18} />
       <span className="text-xs font-mono text-gray-400 w-6">{category.position}</span>
+
+      {/* Image upload */}
+      <ImageUploadButton preview={imagePreview} onChange={handleImageChange} />
+
       <input
         autoFocus
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") onSave(value);
+          if (e.key === "Enter") handleSave();
           if (e.key === "Escape") onCancel();
         }}
         className="flex-1 bg-white border border-brand-color-300 px-3 py-1.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-brand-color-500"
       />
       <button
-        onClick={() => onSave(value)}
+        onClick={handleSave}
         disabled={isSaving || !value.trim()}
         className="p-1.5 bg-brand-color-500 text-white hover:bg-brand-color-600 disabled:opacity-50 transition-colors"
       >
@@ -140,6 +241,20 @@ const CategoryRow = ({
       size={18}
     />
     <span className="text-xs font-mono text-gray-300 w-6">{category.position}</span>
+
+    {/* Category thumbnail */}
+    <div className="w-9 h-9 shrink-0 bg-gray-100 border border-gray-100 overflow-hidden flex items-center justify-center">
+      {category.image?.url ? (
+        <img
+          src={category.image.url}
+          alt={category.name}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <ImagePlus size={13} className="text-gray-300" />
+      )}
+    </div>
+
     <span className="flex-1 text-sm font-medium text-gray-800">{category.name}</span>
     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
       <button
@@ -168,6 +283,7 @@ const Page = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newImageBase64, setNewImageBase64] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -186,7 +302,10 @@ const Page = () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setIsAdding(false);
       setNewName("");
+      setNewImageBase64(null);
+      toast.success("Category created!");
     },
+    onError: () => toast.error("Failed to create category"),
   });
 
   const updateMutation = useMutation({
@@ -194,30 +313,30 @@ const Page = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setEditingId(null);
+      toast.success("Category updated!");
     },
+    onError: () => toast.error("Failed to update category"),
   });
 
   const deleteMutation = useMutation({
-  mutationFn: api.delete,
-  onMutate: (id) => setDeletingId(id),
-  onSettled: () => setDeletingId(null),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["categories"] });
-    toast.success("Category deleted successfully!");
-  },
-  onError: (error: any) => {
-    toast.error(error.message || "Failed to delete category");
-  },
-});
+    mutationFn: api.delete,
+    onMutate: (id) => setDeletingId(id),
+    onSettled: () => setDeletingId(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category deleted!");
+    },
+    onError: (error: any) => toast.error(error.message || "Failed to delete category"),
+  });
 
-const reorderMutation = useMutation({
-  mutationFn: api.reorder,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["categories"] });
-    queryClient.invalidateQueries({ queryKey: ["products"] });
-    toast.success("Reordered successfully!");
-  },
-});
+  const reorderMutation = useMutation({
+    mutationFn: api.reorder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Reordered successfully!");
+    },
+  });
 
   // ── Drag & drop ──
   const handleDrop = (targetId: string) => {
@@ -233,7 +352,6 @@ const reorderMutation = useMutation({
 
     const updates = reordered.map((c, i) => ({ id: c._id, position: i + 1 }));
 
-    // Optimistic update
     queryClient.setQueryData(["categories"], () =>
       reordered.map((c, i) => ({ ...c, position: i + 1 }))
     );
@@ -249,12 +367,20 @@ const reorderMutation = useMutation({
     createMutation.mutate({
       name: newName.trim(),
       position: categories.length + 1,
+      ...(newImageBase64 ? { imageFile: newImageBase64 } : {}),
     });
   };
 
-  const handleUpdate = (id: string, name: string) => {
+  const handleUpdate = (id: string, name: string, imageFile: string | null) => {
     if (!name.trim()) return;
-    updateMutation.mutate({ id, data: { name: name.trim() } });
+    updateMutation.mutate({
+      id,
+      data: {
+        name: name.trim(),
+        // Only include imageFile if a new one was chosen
+        ...(imageFile !== null ? { imageFile } : {}),
+      },
+    });
   };
 
   // ── Render ──
@@ -280,6 +406,7 @@ const reorderMutation = useMutation({
           <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 bg-gray-50">
             <span className="w-4.5" />
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest w-6">#</span>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest w-9">Img</span>
             <span className="flex-1 text-xs font-bold text-gray-400 uppercase tracking-widest">Name</span>
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Actions</span>
           </div>
@@ -314,7 +441,7 @@ const reorderMutation = useMutation({
               <EditRow
                 key={category._id}
                 category={category}
-                onSave={(name) => handleUpdate(category._id, name)}
+                onSave={(name, imageFile) => handleUpdate(category._id, name, imageFile)}
                 onCancel={() => setEditingId(null)}
                 isSaving={updateMutation.isPending}
               />
@@ -341,13 +468,20 @@ const reorderMutation = useMutation({
               <span className="text-xs font-mono text-gray-300 w-6">
                 {categories.length + 1}
               </span>
+
+              {/* Image upload for new category */}
+              <ImageUploadButton
+                preview={newImageBase64}
+                onChange={setNewImageBase64}
+              />
+
               <input
                 autoFocus
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleCreate();
-                  if (e.key === "Escape") { setIsAdding(false); setNewName(""); }
+                  if (e.key === "Escape") { setIsAdding(false); setNewName(""); setNewImageBase64(null); }
                 }}
                 placeholder="Category name..."
                 className="flex-1 bg-white border border-brand-color-300 px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-300 outline-none focus:ring-2 focus:ring-brand-color-500"
@@ -363,7 +497,7 @@ const reorderMutation = useMutation({
                 }
               </button>
               <button
-                onClick={() => { setIsAdding(false); setNewName(""); }}
+                onClick={() => { setIsAdding(false); setNewName(""); setNewImageBase64(null); }}
                 className="p-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
               >
                 <X size={14} />

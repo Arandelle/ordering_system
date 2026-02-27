@@ -1,3 +1,4 @@
+import cloudinary from "@/lib/cloudinary";
 import { connectDB } from "@/lib/mongodb";
 import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
@@ -8,54 +9,79 @@ export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  let uploadResult: any;
+
   try {
     await connectDB();
 
     const { id } = await context.params;
     const body = await request.json();
 
-    const { name: newName } = body;
+    const { name: newName, imageFile } = body;
     const trimmedName = newName?.trim().replace(/\s+/g, " ");
 
     if (!trimmedName) {
       return NextResponse.json(
-        {
-          error: "Category name is required!",
-        },
+        { error: "Category name is required!" },
         { status: 400 },
       );
     }
 
+    // Build update payload
+    const updateData: Record<string, any> = { name: trimmedName };
+
+    if (imageFile) {
+      // Fetch existing category to delete old Cloudinary image
+      const existing = await Category.findById(id);
+      if (existing?.image?.public_id) {
+        await cloudinary.uploader.destroy(existing.image.public_id);
+      }
+
+      // Upload new image
+      uploadResult = await cloudinary.uploader.upload(imageFile, {
+        folder: "categories",
+        transformation: [
+          { width: 400, height: 400, crop: "limit" },
+          { quality: "auto" },
+        ],
+      });
+
+      updateData.image = {
+        url: uploadResult.secure_url,
+        public_id: uploadResult.public_id,
+      };
+    }
+
     const category = await Category.findByIdAndUpdate(
       id,
-      {
-        name: trimmedName,
-      },
+      updateData,
       { new: true, runValidators: true },
     );
 
     if (!category) {
+      // Clean up uploaded image if category wasn't found
+      if (uploadResult?.public_id) {
+        await cloudinary.uploader.destroy(uploadResult.public_id);
+      }
       return NextResponse.json(
-        {
-          error: "Category not found",
-        },
+        { error: "Category not found" },
         { status: 404 },
       );
     }
 
     return NextResponse.json(
-      {
-        success: "Category updated successfully!",
-        data: category,
-      },
+      { success: "Category updated successfully!", data: category },
       { status: 200 },
     );
   } catch (error: any) {
+    // Clean up uploaded image on any error
+    if (uploadResult?.public_id) {
+      await cloudinary.uploader.destroy(uploadResult.public_id);
+    }
+
     if (error.code === 11000) {
       return NextResponse.json(
-        {
-          error: "Category name already exist!",
-        },
+        { error: "Category name already exists!" },
         { status: 409 },
       );
     }
