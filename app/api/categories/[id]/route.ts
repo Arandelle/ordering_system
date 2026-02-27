@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import { Category } from "@/models/Category";
+import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import { success } from "zod";
 
@@ -75,35 +76,35 @@ export async function DELETE(
 
     const { id } = await context.params;
 
-    if (!id) {
-      return NextResponse.json(
-        {
-          error: "Category ID is required!",
-        },
-        { status: 400 },
-      );
-    }
-
-    const category = await Category.findByIdAndDelete(id);
+    const category = await Category.findById(id);
 
     if (!category) {
       return NextResponse.json(
         { error: "Category not found!" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
+    const productCount = await Product.countDocuments({ category: id });
+
+    if (productCount > 0) {
+      return NextResponse.json(
+        { error: `Cannot delete — ${productCount} product(s) are using this category` },
+        { status: 409 }
+      );
+    }
+
+    await Category.findByIdAndDelete(id);
+
     return NextResponse.json(
       { success: "Category deleted successfully!" },
-      { status: 200 },
+      { status: 200 }
     );
 
   } catch (error) {
     return NextResponse.json(
-      {
-        error: "Failed to delete the category",
-      },
-      { status: 500 },
+      { error: "Failed to delete the category" },
+      { status: 500 }
     );
   }
 }

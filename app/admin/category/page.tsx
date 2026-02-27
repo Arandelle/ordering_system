@@ -38,10 +38,15 @@ const api = {
     return res.json();
   },
   delete: async (id: string) => {
-    const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Failed to delete category");
-    return res.json();
-  },
+  const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+  
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error); // ← this is what onError receives
+  }
+  
+  return res.json();
+},
   reorder: async (categories: { id: string; position: number }[]) => {
     const res = await fetch("/api/categories/reorder", {
       method: "PATCH",
@@ -193,11 +198,17 @@ const Page = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: api.delete,
-    onMutate: (id) => setDeletingId(id),
-    onSettled: () => setDeletingId(null),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
-  });
+  mutationFn: api.delete,
+  onMutate: (id) => setDeletingId(id),
+  onSettled: () => setDeletingId(null),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+    toast.success("Category deleted successfully!");
+  },
+  onError: (error: any) => {
+    toast.error(error.message || "Failed to delete category");
+  },
+});
 
 const reorderMutation = useMutation({
   mutationFn: api.reorder,
@@ -267,7 +278,7 @@ const reorderMutation = useMutation({
 
           {/* Table header */}
           <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 bg-gray-50">
-            <span className="w-[18px]" />
+            <span className="w-4.5" />
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest w-6">#</span>
             <span className="flex-1 text-xs font-bold text-gray-400 uppercase tracking-widest">Name</span>
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Actions</span>
