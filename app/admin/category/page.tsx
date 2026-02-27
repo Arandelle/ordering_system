@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { GripVertical, Pencil, Trash2, Plus, X, Check, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Category {
@@ -198,10 +199,14 @@ const Page = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
   });
 
-  const reorderMutation = useMutation({
-    mutationFn: api.reorder,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["categories"] }),
-  });
+const reorderMutation = useMutation({
+  mutationFn: api.reorder,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+    toast.success("Reordered successfully!");
+  },
+});
 
   // ── Drag & drop ──
   const handleDrop = (targetId: string) => {
