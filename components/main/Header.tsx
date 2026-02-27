@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import BrandLogo from "../BrandLogo";
+import { ShoppingCart } from "lucide-react";
 
 const Header = () => {
   useScrollToSection();
@@ -14,7 +15,7 @@ const Header = () => {
   const NAV_ITEMS = [
     { label: "Products", section: "products-main" },
     { label: "About", section: "about" },
-    { label: "Franchise", section: "franchise" },
+    { label: "Franchise Now", section: "franchise" },
     { label: "Locations", section: "locations" },
   ];
 
@@ -45,16 +46,17 @@ const Header = () => {
                 key={item.section}
                 href={`/?section=${item.section}`}
                 onClick={useScrollLink(item.section)}
-                className="text-gray-800 font-[550] hover:text-brand-color-500 transition-colors"
+                className="text-gray-800 font-[550] hover:text-brand-color-500 transition-colors text-nowrap text-sm"
               >
                 {item.label}
               </Link>
             ))}
             <a
               href={orderUrl}
-              className="block w-full bg-brand-color-500 text-white px-6 py-2 font-bold text-center hover:bg-brand-color-600 transition-colors"
+              className="flex items-center justify-center gap-2 w-full bg-brand-color-500 text-white px-4 py-2 text-sm font-bold text-center hover:bg-brand-color-600 transition-colors rounded-full"
             >
-              Order Now
+              <ShoppingCart size={16}/>
+              <p>Order Now</p>
             </a>
           </div>
 
