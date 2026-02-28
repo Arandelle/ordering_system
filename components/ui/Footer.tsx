@@ -36,7 +36,7 @@ const Footer = ({
     marketing: [
       { name: "Menu", href: menuUrl },
       { name: "News", href: "/news" },
-      { name: "Franchise", href: "?section=franchise" },
+      { name: "Franchise", href: "/franchise" },
     ],
   };
 
