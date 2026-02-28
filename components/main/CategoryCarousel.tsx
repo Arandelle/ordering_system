@@ -4,8 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
-import { MOBILE_BREAKPOINT } from "@/constant/mobile-breakpoint";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useBreakpoint } from "@/hooks/useBreakPoint";
 
 const VISIBLE_COUNT = 6;
 
@@ -26,7 +25,7 @@ export const useMenuCategories = () => {
 const CategoryCarousel = () => {
   const { data: categories = [] } = useMenuCategories();
   const [startIndex, setStartIndex] = useState(0);
-  const { isMobile } = useIsMobile();
+  const { isMobile } = useBreakpoint();
 
   const visibleItems = useMemo(() => {
     const total = categories.length;
@@ -70,7 +69,7 @@ const CategoryCarousel = () => {
           </button>
 
           {/* Items */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 flex-1">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 flex-1">
             {visibleItems?.map((category, i) => (
               <button
                 key={`${category._id}-${startIndex}-${i}`}
