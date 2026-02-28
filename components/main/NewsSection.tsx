@@ -155,7 +155,7 @@ const NewsSection = () => {
 
         {/* News Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {newsArticles.slice(0, 3).map((article, index) => (
+          {newsArticles.map((article, index) => (
             <article
               key={article.id}
               ref={(el) => {cardRefs.current[index] = el}}

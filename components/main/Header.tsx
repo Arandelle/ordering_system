@@ -1,11 +1,11 @@
 "use client";
+
 import React, { useState } from "react";
 import { useScrollToSection } from "@/hooks/useScrollToSection";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import BrandLogo from "../BrandLogo";
-import { ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart, X } from "lucide-react";
 
 const Header = () => {
   useScrollToSection();
@@ -13,24 +13,11 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const NAV_ITEMS = [
-    { label: "Products", section: "products-main" },
-    { label: "About", section: "about" },
-    { label: "Franchise Now", section: "franchise" },
-    { label: "Locations", section: "locations" },
+    { label: "Products", section: "/#products-main-section" },
+    { label: "About", section: "/#about-section" },
+    { label: "Franchise Now", section: "/franchise" },
+    { label: "Locations", section: "/#locations-section" },
   ];
-
-  function useScrollLink(section: string) {
-    const pathname = usePathname();
-
-    return (e: React.MouseEvent) => {
-      if (pathname === "/") {
-        e.preventDefault();
-        document
-          .getElementById(`${section}-section`)
-          ?.scrollIntoView({ behavior: "smooth" });
-      }
-    };
-  }
 
   return (
     <nav className="sticky top-0 bg-white z-50 border-b border-gray-200">
@@ -44,8 +31,7 @@ const Header = () => {
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.section}
-                href={`/?section=${item.section}`}
-                onClick={useScrollLink(item.section)}
+                href={item.section}
                 className="text-gray-800 font-[550] hover:text-brand-color-500 transition-colors text-nowrap text-sm"
               >
                 {item.label}
@@ -55,7 +41,7 @@ const Header = () => {
               href={orderUrl}
               className="flex items-center justify-center gap-2 w-full bg-brand-color-500 text-white px-4 py-2 text-sm font-bold text-center hover:bg-brand-color-600 transition-colors rounded-full"
             >
-              <ShoppingCart size={16}/>
+              <ShoppingCart size={16} />
               <p>Order Now</p>
             </a>
           </div>
@@ -64,23 +50,9 @@ const Header = () => {
           <div className="flex lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-gray-800 p-2 cursor-pointer"
+              className="text-gray-800 p-2 cursor-pointer transition-transform"
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {mobileMenuOpen ? (
-                  <path d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+              {mobileMenuOpen ? <X /> : <Menu />}
             </button>
           </div>
         </div>
@@ -93,7 +65,7 @@ const Header = () => {
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.section}
-                href={`/?section=${item.section}`}
+                href={item.section}
                 className="block w-full text-left text-gray-800 font-[550] py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
