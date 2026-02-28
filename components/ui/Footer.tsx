@@ -145,10 +145,11 @@ const Footer = ({
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-brand-color-500 shrink-0" />
                 <a
-                  href="mailto:harrisoninasal@gmail.com"
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=harrisoninasalbbq@gmail.com&subject=Inquiry"
+                  target="_blank"
                   className="text-gray-400 hover:text-white text-sm transition-colors"
                 >
-                  harrisoninasal@gmail.com
+                  harrisoninasalbbq@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-3">
