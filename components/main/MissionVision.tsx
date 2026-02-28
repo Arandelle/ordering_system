@@ -6,6 +6,7 @@ import {
   useIntersectionAnimationList,
 } from "@/hooks/useIntersectionAnimation";
 import { animationStyle } from "@/helper/animationStyle";
+import Image from "next/image";
 
 // ── What We Bring data ───────────────────────────────────────────────────────
 const tablePillars = [
@@ -43,30 +44,34 @@ export default function MissionVision() {
   const fade = animationStyle; // alias for brevity
 
   return (
-    <div className="max-w-7xl bg-white px-4 sm:px-6 lg:px-8 mx-auto font-sans pt-10 pb-20">
-      <div className="mx-auto space-y-28">
+    <div className="max-w-7xl bg-white px-4 sm:px-6 lg:px-8 mx-auto font-sans mt-0 lg:mt-10">
+      <div className="mx-auto space-y-12">
         <section
           ref={missionvisionRef}
           className={`${animationStyle(isMissionVisionVisible).className}`}
         >
-          <div className="grid grid-cols-2">
-            <div className="flex flex-col">
-              <div className="flex-1 flex flex-col justify-center py-20 border-b border-stone-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            <div className="flex flex-col md:flex-row lg:flex-col">
+              {/** Mission */}
+              <div className="flex-1 flex flex-col justify-center py-10 border-b border-stone-200">
                 <p className="text-xs tracking-widest text-brand-color-500 uppercase mb-4">
                   Our Purpose
                 </p>
-                <h2 className="text-5xl font-bold mb-4">Mission</h2>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                  Mission
+                </h2>
                 <p className="text-base leading-relaxed text-stone-500 max-w-sm">
                   To serve proudly Filipino grilled food that brings people
                   together — always marinated with care, grilled to perfection,
                   and served with a smile as warm as Harrison himself.
                 </p>
               </div>
+              {/** Vision */}
               <div className="flex-1 flex flex-col justify-center py-20">
                 <p className="text-xs tracking-widest text-brand-color-500 uppercase mb-4">
                   Our Future
                 </p>
-                <h2 className="text-5xl font-bold mb-4">Vision</h2>
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Vision</h2>
                 <p className="text-base leading-relaxed text-stone-500 max-w-sm">
                   To become the Philippines' most loved inasal and BBQ
                   destination, known for its homey flavor, genuine hospitality,
@@ -75,11 +80,16 @@ export default function MissionVision() {
                 </p>
               </div>
             </div>
-            <img
-              src="/images/mission-vission-banner.jpg"
-              alt="Our office"
-              className="w-full h-full object-cover sticky top-0"
-            />
+            <div className="relative w-full h-75 md:h-100 lg:h-auto">
+              <Image
+                src="/images/mission-vission-banner.jpg"
+                alt=""
+                fill
+                className="object-cover lg:sticky lg:top-0"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+              />
+            </div>
           </div>
         </section>
 
