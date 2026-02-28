@@ -66,10 +66,10 @@ const Header = () => {
               </button>
               <button
                 // onClick={onSignupClick}
-                className="flex items-center gap-2 bg-brand-color-500 hover:bg-brand-color-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center justify-center gap-2 w-full bg-brand-color-500 text-white px-4 py-2 text-sm font-bold text-center hover:bg-brand-color-600 transition-colors rounded-full"
               >
-                <User size={18} />
-                <span>Sign Up</span>
+                <User size={16} />
+                <p className="">Sign Up</p>
               </button>
             </div>
 
