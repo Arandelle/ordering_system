@@ -3,20 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
-interface Category {
-  _id: string;
-  name: string;
-  position: number;
-  thumbnail: string;
-  productCount: number;
-  image?: { url: string };
-}
-
-interface CategoryCarouselProps {
-  categories: Category[];
-  onSelect?: (category: Category) => void;
-}
+import Image from "next/image";
 
 const VISIBLE_COUNT = 6;
 
@@ -86,9 +73,11 @@ const CategoryCarousel = () => {
               >
                 {/* Image — transparent bg, no box */}
                 <div className="w-full aspect-square flex items-center justify-center mb-2 overflow-hidden">
-                  <img
+                  <Image
                     src={category.image?.url ?? "/images/harrison_logo.png"}
                     alt={category.name}
+                    height={100}
+                    width={100}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>

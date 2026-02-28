@@ -3,6 +3,7 @@
 import { useCart } from "@/contexts/CartContext";
 import { Product } from "@/types/adminType";
 import { Check, Plus, ShoppingBag, AlertTriangle } from "lucide-react";
+import Image from "next/image";
 import React, { useState } from "react";
 
 interface ProductCardProps {
@@ -42,10 +43,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
     <div className={`group h-full bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1 ${item.stock <= 0 ? 'opacity-70' : ''}`}>
       {/** Image container */}
       <div className="relative overflow-hidden aspect-square">
-        <img
+        <Image
           src={item.image.url}
           alt={item.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          height={200}
+          width={200}
+          quality={92}
+          className="w-full h-full object-content group-hover:scale-110 transition-transform duration-500"
         />
 
         {/** Stock Status Badges */}
@@ -64,7 +68,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
 
         {/** Best Seller Badge */}
         {item.isPopular && item.stock <= 0 && (
-          <div className="absolute left-3 top-3 bg-[#ef4501] text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
+          <div className="absolute left-3 top-3 bg-brand-color-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg z-10">
             Best Seller
           </div>
         )}
@@ -78,7 +82,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
               ? "bg-green-500 scale-110" 
               : item.stock === 0 
                 ? "bg-gray-400 cursor-not-allowed" 
-                : "bg-[#ef4501] hover:bg-[#c13500]"} 
+                : "bg-brand-color-500 hover:bg-[#c13500]"} 
               text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transform transition-all duration-300 hover:scale-105 shadow-lg`}
           >
             {isAdded ? (
@@ -111,7 +115,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
         </p>
 
         <div className="flex items-center justify-between mt-auto">
-          <span className="text-[#ef4501] font-bold text-xl">
+          <span className="text-brand-color-500 font-bold text-xl">
             ₱{item.price}
           </span>
 
@@ -122,7 +126,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
               ? "bg-green-500" 
               : item.stock === 0 
                 ? "bg-gray-300 cursor-not-allowed" 
-                : "bg-[#1a1a1a] hover:bg-[#ef4501]"} 
+                : "bg-[#1a1a1a] hover:bg-brand-color-500"} 
               text-white p-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg`}
           >
             {isAdded ? <Check size={18} /> : 
