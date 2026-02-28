@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { MOBILE_BREAKPOINT } from "@/constant/mobile-breakpoint";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const VISIBLE_COUNT = 6;
 
@@ -24,26 +26,30 @@ export const useMenuCategories = () => {
 const CategoryCarousel = () => {
   const { data: categories = [] } = useMenuCategories();
   const [startIndex, setStartIndex] = useState(0);
+  const { isMobile } = useIsMobile();
 
-  if (categories.length === 0) return null;
+  const visibleItems = useMemo(() => {
+    const total = categories.length;
+    if(!total) return [];
 
-  const visibleItems = Array.from({ length: Math.min(VISIBLE_COUNT, categories.length) }, (_, i) => {
-    const index = (startIndex + i) % categories.length;
-    return categories[index];
-  });
+    const count = isMobile ? 3 : VISIBLE_COUNT;
+
+    return Array.from(
+      { length: Math.min(count, total) },
+      (_, i) => categories[(startIndex + i) % total],
+    );
+  }, [categories, startIndex, isMobile]);
 
   const next = () => setStartIndex((prev) => (prev + 1) % categories.length);
-  const prev = () => setStartIndex((prev) => (prev - 1 + categories.length) % categories.length);
+  const prev = () =>
+    setStartIndex((prev) => (prev - 1 + categories.length) % categories.length);
 
   return (
     <section className="py-10 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Featured Menu
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Featured Menu</h2>
           <a
             href="/menu"
             className="text-sm font-semibold text-brand-color-500 hover:underline"
@@ -54,7 +60,6 @@ const CategoryCarousel = () => {
 
         {/* Carousel */}
         <div className="flex items-center gap-3">
-
           {/* Prev */}
           <button
             onClick={prev}
@@ -66,7 +71,7 @@ const CategoryCarousel = () => {
 
           {/* Items */}
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 flex-1">
-            {visibleItems.map((category, i) => (
+            {visibleItems?.map((category, i) => (
               <button
                 key={`${category._id}-${startIndex}-${i}`}
                 className="group text-left focus:outline-none flex flex-col items-center"
@@ -96,9 +101,7 @@ const CategoryCarousel = () => {
           >
             <ChevronRight size={22} />
           </button>
-
         </div>
-
       </div>
     </section>
   );
