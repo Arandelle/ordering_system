@@ -12,10 +12,10 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-bold text-stone-800 mb-2">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
           Dashboard Overview
         </h1>
-        <p className="text-stone-500">
+        <p className="text-gray-500">
           Monitor your restaurant performance and operations
         </p>
       </div>
