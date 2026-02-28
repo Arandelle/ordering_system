@@ -45,6 +45,10 @@ export interface Category {
   _id: string;
   name: string;
   position: number,
+  image: {
+    url: string,
+    public_id: string
+  }
   createdAt?: Date;
 }
 
