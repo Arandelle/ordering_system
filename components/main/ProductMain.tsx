@@ -123,8 +123,8 @@ const ProductMain = () => {
           : undefined
       }
     >
-      <div className="aspect-square overflow-hidden bg-white p-4 md:p-6 flex items-center justify-center">
-        <img src={product.image.url} alt={product.name} className="w-full h-full object-contain" />
+      <div className="aspect-square overflow-hidden bg-white flex items-center justify-center">
+        <img src={product.image.url} alt={product.name} className="w-full h-full object-cover" />
       </div>
       <div className="px-4 pt-3 pb-4 flex flex-col gap-2 flex-1">
         <h3 className="font-semibold text-gray-900 leading-snug text-sm md:text-base">
