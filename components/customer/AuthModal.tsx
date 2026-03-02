@@ -1,0 +1,294 @@
+import React, { useState } from "react";
+import { X, Mail, Lock, User, Eye, EyeOff, Phone } from "lucide-react";
+import { InputField } from "../ui/InputField";
+
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialMode: "login" | "signup";
+}
+
+const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
+  initialMode,
+}) => {
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
+  const [showPassword, setShowPassword] = useState({
+    password: false,
+    confirmPassword: false
+  });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
+
+  if (!isOpen) return null;
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (mode === "signup" && !formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (mode === "signup" && !formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (mode === "signup" && formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    setIsSubmitting(false);
+    alert(
+      mode === "login" ? "Login successful!" : "Account created successfully!",
+    );
+    onClose();
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+    });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="relative bg-[#1a1a1a] p-6 text-center">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-16 h-16 bg-brand-color-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <img src={"/images/harrison_logo.png"} alt="harrison_logo" />
+            </div>
+            <h2 className="text-xl font-bold text-white">
+              {mode === "login" ? "Welcome Back!" : "Join Harrison"}
+            </h2>
+            <p className="text-gray-400 text-sm mt-1">
+              {mode === "login"
+                ? "Sign in to continue ordering"
+                : "Create an account to start your story"}
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {mode === "signup" && (
+              <InputField
+                label="Full Name"
+                leftIcon={<User size={18} />}
+                placeholder="Juan Dela Cruz"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                error={errors.name}
+              />
+            )}
+
+            <InputField
+              label="Email Address"
+              leftIcon={<Mail size={18} />}
+              placeholder="juan@gmail.com"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              error={errors.email}
+            />
+
+            {mode === "signup" && (
+              <InputField
+                label="Phone Number"
+                leftIcon={<Phone size={18} />}
+                placeholder="+63 912 345 6789"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                error={errors.phone}
+              />
+            )}
+
+            <InputField
+              id="password"
+              label="Password"
+              name="password"
+              type={showPassword.password ? "text" : "password"}
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              error={errors.password}
+              leftIcon={<Lock size={18} />}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => ({
+                    ...prev,
+                    password: !showPassword.password
+                  }))}
+                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  {!showPassword.password ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              }
+            />
+
+            {mode === "signup" && (
+             
+              <InputField 
+               id="confirm_password"
+              label="Confirm Password"
+              name="confirmPassword"
+              type={showPassword.confirmPassword ? "text" : "password"}
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              placeholder="••••••••"
+              error={errors.confirmPassword}
+              leftIcon={<Lock size={18} />}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => ({
+                    ...prev,
+                    confirmPassword: !showPassword.confirmPassword
+                  }))}
+                  className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  {!showPassword.confirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              }
+              
+              />
+            )}
+
+            {mode === "login" && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="text-sm text-brand-color-500 hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-brand-color-500 hover:bg-[#c13500] disabled:bg-gray-400 text-white py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {mode === "login" ? "Signing in..." : "Creating account..."}
+                </>
+              ) : mode === "login" ? (
+                "Sign In"
+              ) : (
+                "Create Account"
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="px-6 pb-6 text-center">
+            <p className="text-gray-500 text-sm">
+              {mode === "login"
+                ? "Don't have an account? "
+                : "Already have an account? "}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                className="text-brand-color-500 font-semibold hover:underline"
+              >
+                {mode === "login" ? "Sign up" : "Sign in"}
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Animation */}
+      <style>{`
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-scale-in {
+          animation: scale-in 0.2s ease-out;
+        }
+      `}</style>
+    </>
+  );
+};
+
+export default AuthModal;

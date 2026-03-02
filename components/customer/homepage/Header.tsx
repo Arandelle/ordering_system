@@ -6,6 +6,7 @@ import { ShoppingBag, Menu, X, User, LogIn, Package } from "lucide-react";
 import Link from "next/link";
 import { useOrders } from "@/hooks/useOrders";
 import BrandLogo from "@/components/BrandLogo";
+import AuthModal from "../AuthModal";
 
 const Header = () => {
   const { totalItems, setIsCartOpen } = useCart();
@@ -13,11 +14,15 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const activeOrdersCount = placedOrders?.filter(
-    (order) =>
-      order.status !== "cancelled" &&
-      (order.status !== "completed" || !order.isReviewed),
-  ).length || 0;
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+
+  const activeOrdersCount =
+    placedOrders?.filter(
+      (order) =>
+        order.status !== "cancelled" &&
+        (order.status !== "completed" || !order.isReviewed),
+    ).length || 0;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,16 +32,9 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToMenu = () => {
-    const menuSection = document.getElementById("menu-section");
-    if (menuSection) {
-      menuSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  const handleCategoryClick = (category: string) => {
-    scrollToMenu();
-    setIsMobileMenuOpen(false);
+  const handleAuthClick = (mode: typeof authMode = "login") => {
+    setAuthModalOpen(true);
+    setAuthMode(mode);
   };
 
   return (
@@ -56,8 +54,8 @@ const Header = () => {
             {/* Login/Signup - Desktop */}
             <div className="hidden md:flex items-center gap-2">
               <button
-                // onClick={onLoginClick}
-                className="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-lg transition-colors"
+                onClick={() => handleAuthClick("login")}
+                className="flex items-center gap-2 text-gray-300 hover:text-white px-3 py-2 rounded-lg transition-colors cursor-pointer"
               >
                 <LogIn size={18} className={`text-slate-600`} />
                 <span className={`text-sm font-medium text-slate-600`}>
@@ -65,8 +63,8 @@ const Header = () => {
                 </span>
               </button>
               <button
-                // onClick={onSignupClick}
-                className="flex items-center justify-center gap-2 w-full bg-brand-color-500 text-white px-4 py-2 text-sm font-bold text-center hover:bg-brand-color-600 transition-colors rounded-full"
+                onClick={() => handleAuthClick("signup")}
+                className="flex items-center justify-center gap-2 w-full bg-brand-color-500 text-white px-4 py-2 text-sm font-bold text-center hover:bg-brand-color-600 transition-colors rounded-full cursor-pointer"
               >
                 <User size={16} />
                 <p className="">Sign Up</p>
@@ -84,7 +82,7 @@ const Header = () => {
               />
               {activeOrdersCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
-               {activeOrdersCount}
+                  {activeOrdersCount}
                 </span>
               )}
             </Link>
@@ -139,6 +137,14 @@ const Header = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {authModalOpen && (
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authMode}
+        />
       )}
     </header>
   );
