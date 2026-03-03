@@ -1,3 +1,4 @@
+// BranchManagement.tsx  — cleaned up
 "use client";
 
 import SectionHeader from "@/components/admin/SectionHeader";
@@ -12,57 +13,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getLucideIcon } from "@/lib/iconUtils";
-import { Ban, Plus, Search } from "lucide-react";
+import { BranchFormData, BranchFormErrors } from "@/types/branch";
+import { Ban, Loader2, Search } from "lucide-react";
 import { ChangeEvent, useState } from "react";
-import { toast } from "sonner";
-
-const initialBranches = [
-  {
-    _id: "1",
-    name: "Century Branch",
-    code: "BR-001",
-    address: { street: "123 Poblacion Ave", city: "Makati", zipCode: "1226" },
-    contactNumber: "09171234567",
-    operatingHours: {
-      open: "08:00",
-      close: "22:00",
-      daysOpen: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    },
-    isActive: true,
-  },
-  {
-    _id: "2",
-    name: "King's Court Branch",
-    code: "BR-002",
-    address: { street: "45 Quezon Blvd", city: "Makati City", zipCode: "1100" },
-    contactNumber: "09281234567",
-    operatingHours: {
-      open: "09:00",
-      close: "21:00",
-      daysOpen: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-    },
-    isActive: true,
-  },
-  {
-    _id: "3",
-    name: "Manila Branch",
-    code: "BR-003",
-    address: { street: "78 Alabang Rd", city: "Muntinlupa", zipCode: "1780" },
-    contactNumber: "09391234567",
-    operatingHours: {
-      open: "10:00",
-      close: "20:00",
-      daysOpen: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    },
-    isActive: false,
-  },
-];
+import {
+  useBranches,
+  useCreateBranch,
+  useToggleBranchStatus,
+} from "@/hooks/api/useBranch";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const emptyForm = {
+const emptyForm: BranchFormData = {
   name: "",
-  code: "",
   street: "",
   city: "",
   zipCode: "",
@@ -72,20 +35,15 @@ const emptyForm = {
   daysOpen: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 };
 
-type formType = {
-  name?: string;
-  code?: string;
-  street?: string;
-  city?: string;
-  daysOpen?: string;
-};
-
 export default function BranchManagement() {
-  const [branches, setBranches] = useState(initialBranches);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(emptyForm);
-  const [errors, setErrors] = useState<formType>({});
+  const [form, setForm] = useState<BranchFormData>(emptyForm);
+  const [errors, setErrors] = useState<BranchFormErrors>({});
   const [search, setSearch] = useState("");
+
+  const { data: branches = [], isLoading } = useBranches();
+  const createBranch = useCreateBranch();
+  const toggleStatus = useToggleBranchStatus();
 
   const filtered = branches.filter(
     (b) =>
@@ -94,48 +52,32 @@ export default function BranchManagement() {
       b.address.city.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const validate = () => {
-    const e: formType = {};
+  const validate = (): BranchFormErrors => {
+    const e: BranchFormErrors = {};
     if (!form.name.trim()) e.name = "Branch name is required.";
-    if (!form.code.trim()) e.code = "Branch code is required.";
     if (!form.street.trim()) e.street = "Street is required.";
     if (!form.city.trim()) e.city = "City is required.";
     if (form.daysOpen.length === 0) e.daysOpen = "Select at least one day.";
     return e;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate();
     if (Object.keys(e).length > 0) {
       setErrors(e);
       return;
     }
 
-    const newBranch = {
-      _id: String(Date.now()),
-      name: form.name,
-      code: form.code.toUpperCase(),
-      address: { street: form.street, city: form.city, zipCode: form.zipCode },
-      contactNumber: form.contactNumber,
-      operatingHours: {
-        open: form.open,
-        close: form.close,
-        daysOpen: form.daysOpen,
-      },
-      isActive: true,
-    };
-
-    setBranches((prev) => [...prev, newBranch]);
+    await createBranch.mutateAsync(form); // awaited so modal only closes on success
     setShowModal(false);
     setForm(emptyForm);
     setErrors({});
-    toast.success(`Branch "${newBranch.name}" added successfully!`);
   };
 
-  const toggleStatus = (id: string) => {
-    setBranches((prev) =>
-      prev.map((b) => (b._id === id ? { ...b, isActive: !b.isActive } : b)),
-    );
+  const handleChangeForm = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined })); // clear error on change
   };
 
   const toggleDay = (day: string) => {
@@ -147,38 +89,25 @@ export default function BranchManagement() {
     }));
   };
 
-  const handleChangeForm = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm({
-      ...form,
-      [name]: value,
-    });
-  };
-
   return (
-    <div
-      style={{
-        fontFamily: "'DM Sans', sans-serif",
-      }}
-    >
+    <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
         rel="stylesheet"
       />
 
-      {/* Header */}
       <SectionHeader
-        title={"Store Management"}
+        title="Store Management"
         subTitle="Manage your store's branches"
         onClick={() => {
           setShowModal(true);
           setErrors({});
           setForm(emptyForm);
         }}
-        btnTxt="+ Add New Branches"
+        btnTxt="+ Add New Branch"
       />
 
-      {/* Stats row */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
         {[
           { label: "Total Branches", value: branches.length, icon: "Store" },
@@ -203,11 +132,9 @@ export default function BranchManagement() {
                 size={80}
                 className="absolute right-4 bottom-2 text-gray-100"
               />
-
               <p className="text-sm text-gray-500 uppercase tracking-widest mb-4 relative z-10">
                 {s.label}
               </p>
-
               <div className="text-3xl font-bold text-gray-700 relative z-10">
                 {s.value}
               </div>
@@ -241,25 +168,33 @@ export default function BranchManagement() {
                 "Days Open",
                 "Status",
                 "Action",
-              ].map((head) => (
-                <TableHead key={head} className="text-center">
-                  {head}
+              ].map((h) => (
+                <TableHead key={h} className="text-center">
+                  {h}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8}>
+                  <div className="flex justify-center items-center gap-2 p-8 text-gray-400">
+                    <Loader2 size={20} className="animate-spin" /> Loading
+                    branches...
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8}>
                   <div className="flex flex-col items-center text-gray-500 gap-2 p-8">
-                    <Ban size={24} />
-                    No branches found.
+                    <Ban size={24} /> No branches found.
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((branch, i) => (
+              filtered.map((branch) => (
                 <TableRow
                   key={branch._id}
                   className="bg-transparent hover:bg-gray-100 border-gray-100"
@@ -267,9 +202,7 @@ export default function BranchManagement() {
                   <TableCell>{branch.name}</TableCell>
                   <TableCell>
                     <span
-                      style={{
-                        fontFamily: "'DM Mono', monospace",
-                      }}
+                      style={{ fontFamily: "'DM Mono', monospace" }}
                       className="text-xs bg-gray-500 py-1 px-2.5 rounded-md text-white text-nowrap"
                     >
                       {branch.code}
@@ -293,9 +226,7 @@ export default function BranchManagement() {
                       {DAYS.map((d) => (
                         <span
                           key={d}
-                          style={{
-                            fontFamily: "'DM Mono', monospace",
-                          }}
+                          style={{ fontFamily: "'DM Mono', monospace" }}
                           className={`text-xs py-0.5 px-1.5 rounded-lg ${branch.operatingHours.daysOpen.includes(d) ? "bg-brand-color-500 text-white" : "bg-gray-100 text-gray-900"}`}
                         >
                           {d}
@@ -305,16 +236,16 @@ export default function BranchManagement() {
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`text-xs font-semibold py-1.5 px-3 rounded-lg text-white ${branch.isActive ? "bg-dark-green-500 " : "bg-red-600"}`}
+                      className={`text-xs font-semibold py-1.5 px-3 rounded-lg text-white ${branch.isActive ? "bg-dark-green-500" : "bg-red-600"}`}
                     >
                       {branch.isActive ? "Active" : "Inactive"}
                     </span>
                   </TableCell>
                   <TableCell>
                     <button
-                      onClick={() => toggleStatus(branch._id)}
-                      className="text-xs font-medium py-1.5 px-2.5 rounded-lg border border-gray-500 bg-white text-gray-900 transition-color duration-0.5 hover:bg-brand-color-500 hover:text-white hover:border-brand-color-600"
-                      aria-label={`${branch.isActive ? "Deactivate" : "Activate"} button `}
+                      onClick={() => toggleStatus.mutate(branch._id)}
+                      disabled={toggleStatus.isPending}
+                      className="text-xs font-medium py-1.5 px-2.5 rounded-lg border border-gray-500 bg-white text-gray-900 hover:bg-brand-color-500 hover:text-white hover:border-brand-color-600 disabled:opacity-50"
                     >
                       {branch.isActive ? "Deactivate" : "Activate"}
                     </button>
@@ -329,13 +260,11 @@ export default function BranchManagement() {
       {/* Modal */}
       {showModal && (
         <Modal title="Add New Branch" onClose={() => setShowModal(false)}>
-          {/* Modal Body */}
           <div>
-            {/* Basic Info */}
             <p className="text-sm font-bold text-gray-900 tracking-widest uppercase mb-3">
               Basic Info
             </p>
-            <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="grid grid-cols-1 gap-3 mb-5">
               <InputField
                 label="Branch Name"
                 value={form.name}
@@ -345,23 +274,11 @@ export default function BranchManagement() {
                 error={errors.name}
                 required
               />
-
-              <InputField
-                label="Branch Code"
-                value={form.code}
-                onChange={handleChangeForm}
-                name="code"
-                placeholder="e.g., BR-004"
-                error={errors.code}
-                required
-              />
             </div>
 
-            {/* Address */}
             <p className="text-sm font-semibold text-gray-900 tracking-widest uppercase mb-3">
               Address
             </p>
-
             <div className="flex flex-col gap-2.5 mb-4">
               <InputField
                 label="Street"
@@ -382,16 +299,14 @@ export default function BranchManagement() {
                   error={errors.city}
                   required
                 />
-
                 <InputField
                   label="ZIP Code"
                   value={form.zipCode}
                   onChange={handleChangeForm}
                   name="zipCode"
-                  placeholder="e.g., Century Mall"
+                  placeholder="e.g., 1000"
                 />
               </div>
-
               <InputField
                 label="Contact Number"
                 value={form.contactNumber}
@@ -401,8 +316,7 @@ export default function BranchManagement() {
               />
             </div>
 
-            {/* Operating Hours */}
-            <p className="block text-sm font-semibold text-gray-700">
+            <p className="block text-sm font-semibold text-gray-700 mb-2">
               Operating Hours
             </p>
             <div className="grid grid-cols-2 gap-2 mb-2">
@@ -440,7 +354,6 @@ export default function BranchManagement() {
               )}
             </div>
 
-            {/* Actions */}
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowModal(false)}
@@ -450,12 +363,13 @@ export default function BranchManagement() {
               </button>
               <button
                 onClick={handleSubmit}
-                className="py-1.5 px-3 rounded-lg border-0 bg-brand-color-500 hover:bg-brand-color-600 text-sm text-white cursor-pointer"
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
+                disabled={createBranch.isPending}
+                className="py-1.5 px-3 rounded-lg bg-brand-color-500 hover:bg-brand-color-600 text-sm text-white disabled:opacity-50 flex items-center gap-1.5"
               >
-                Add Branch
+                {createBranch.isPending && (
+                  <Loader2 size={14} className="animate-spin" />
+                )}
+                {createBranch.isPending ? "Saving..." : "Add Branch"}
               </button>
             </div>
           </div>
