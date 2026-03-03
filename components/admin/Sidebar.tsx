@@ -18,6 +18,8 @@ const navItems = [
   { name: "Products", path: "/products", icon: "Package" },
   { name: "Category", path: "/category", icon: "Folder" },
   { name: "Customers", path: "/accounts", icon: "Users" },
+  { name: "Store Management", path: "/store", icon: "Store" },
+  { name: "Staff Management", path: "/staff", icon: "UserRoundCog" },
   { name: "Reports", path: "/reports", icon: "ChartLine" },
   { name: "Settings", path: "/settings", icon: "Settings" },
 ];
