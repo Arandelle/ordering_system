@@ -47,22 +47,27 @@ export const useCreateBranch = () => {
 
 // ---- toggle branch status ----
 const toggleBranchStatus = async (id: string): Promise<Branch> => {
-  const res = await fetch(`/api/branch/${id}/toggle`, { method: "PATCH" });
+  const res = await fetch(`/api/branch/${id}`, { method: "PATCH" });
+
   const data = await res.json();
-  if (!res.ok) throw data;
+
+  if (!res.ok) {
+    throw new Error(data?.error || "Failed to update branch status.");
+  }
+
   return data;
 };
 
 export const useToggleBranchStatus = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<Branch, { error: string }, string>({
+  return useMutation<Branch, Error, string>({
     mutationFn: toggleBranchStatus,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
     },
     onError: (error) => {
-      toast.error(error?.error ?? "Failed to update status.");
+      toast.error(error.message || "Failed to update branch status.");
     },
   });
 };
