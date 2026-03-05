@@ -27,21 +27,22 @@ const LoginPage = () => {
     }));
   };
 
-  const validate = () : CredentialErrors => {
+  const validate = (): CredentialErrors => {
     const error: CredentialErrors = {};
-    if(!credentials.email.trim()) error.email = "Email is required";
-    else if (!/\S+@\S+\.\S+$/.test(credentials.email)) error.email = "Enter valid email"
+    if (!credentials.email.trim()) error.email = "Email is required";
+    else if (!/\S+@\S+\.\S+$/.test(credentials.email))
+      error.email = "Enter valid email";
     if (!credentials.password.trim()) error.password = "Password is required!";
 
-    return error
-  }
+    return error;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validateErrors = validate();
-    if(Object.keys(validateErrors).length > 0){
-      setErrors(validateErrors)
+    if (Object.keys(validateErrors).length > 0) {
+      setErrors(validateErrors);
       return;
     }
 
@@ -109,6 +110,12 @@ const LoginPage = () => {
 
           <div className="w-full max-w-xl">
             <div className="mb-8 text-center lg:text-start">
+              <p className="mb-4 text-dark-green-500">
+                Test Account: <br />
+                Email : maria@gmail.com
+                <br />
+                Password: 12345678
+              </p>
               <h2 className="text-2xl font-bold text-gray-900 mb-1">
                 Welcome back
               </h2>
