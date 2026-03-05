@@ -24,11 +24,18 @@ export async function POST(request: NextRequest) {
     }
 
     // check if user exists
-    const staff = await Staff.findOne({ email, isActive: true });
+    const staff = await Staff.findOne({ email});
     if (!staff) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 },
+      );
+    }
+
+    if(!staff.isActive){
+      return NextResponse.json(
+        { error: "Account Locked. Please contact your upline" },
+        { status: 403 },
       );
     }
 
