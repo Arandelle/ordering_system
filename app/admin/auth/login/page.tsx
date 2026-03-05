@@ -38,13 +38,8 @@ const LoginPage = () => {
 
   return (
     <>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
-        rel="stylesheet"
-      />
       <main
         className="grid grid-cols-1 lg:grid-cols-3 min-h-screen w-full"
-        style={{ fontFamily: "'DM Sans', sans-serif" }}
       >
         {/* Left panel */}
         <div
@@ -58,7 +53,6 @@ const LoginPage = () => {
           <div className="relative z-10">
             <h1
               className="text-5xl font-extrabold text-white leading-[1.1] mb-6"
-              style={{ fontFamily: "'Syne', sans-serif" }}
             >
               Manage your
               <br />
@@ -83,9 +77,6 @@ const LoginPage = () => {
               <div key={s.value}>
                 <p
                   className="text-sm font-bold mb-0.5 text-white"
-                  style={{
-                    fontFamily: "'Syne', sans-serif"
-                  }}
                 >
                   {s.value}
                 </p>
@@ -108,7 +99,6 @@ const LoginPage = () => {
             <div className="mb-8">
               <h2
                 className="text-2xl font-bold text-gray-900 mb-1"
-                style={{ fontFamily: "'Syne', sans-serif" }}
               >
                 Welcome back
               </h2>
