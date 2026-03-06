@@ -8,6 +8,7 @@ import BrandLogo from "../BrandLogo";
 import { useState } from "react";
 import Modal from "../ui/Modal";
 import { useLogoutAdmin } from "@/hooks/api/useLogout";
+import LogoutModal from "../ui/LogoutModal";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -112,31 +113,11 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
       </aside>
 
       {logoutModal && (
-        <Modal title="Logout?" onClose={() => setLogoutModal(false)}>
-          <div className="flex flex-col gap-4">
-            <p className="text-xl text-gray-500">
-              Are you sure you want to logout?
-            </p>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setLogoutModal(false)}
-                className="py-1.5 px-4 rounded-lg border border-gray-300 text-gray-600 text-lg font-medium hover:bg-gray-50 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => logout.mutate()}
-                disabled={logout.isPending}
-                className="py-1.5 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white text-lg font-medium disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
-              >
-                {logout.isPending && (
-                  <Loader2 size={14} className="animate-spin" />
-                )}
-                {logout.isPending ? "Logging out... " : "Logout"}
-              </button>
-            </div>
-          </div>
-        </Modal>
+        <LogoutModal
+          onClose={() => setLogoutModal(false)}
+          onConfirm={() => logout.mutate()}
+          isLoading={logout.isPending}
+        />
       )}
     </>
   );

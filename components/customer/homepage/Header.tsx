@@ -18,6 +18,7 @@ import BrandLogo from "@/components/BrandLogo";
 import AuthModal from "../AuthModal";
 import { useCustomerMe } from "@/hooks/api/useAuthMe";
 import { useLogoutCustomer } from "@/hooks/api/useLogout";
+import LogoutModal from "@/components/ui/LogoutModal";
 
 const Header = () => {
   const { data: currentUser } = useCustomerMe();
@@ -29,6 +30,8 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+
+  const [logoutModal, setLogoutModal] = useState(false);
 
   const activeOrdersCount =
     placedOrders?.filter(
@@ -77,7 +80,7 @@ const Header = () => {
 
                   {/* Logout */}
                   <button
-                    onClick={() => userLogout.mutate()}
+                    onClick={() => setLogoutModal(true)}
                     disabled={userLogout.isPending}
                     className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-red-500 px-3 py-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                   >
@@ -174,10 +177,9 @@ const Header = () => {
                 {/* Mobile logout */}
                 <button
                   onClick={() => {
-                    userLogout.mutate();
+                    setLogoutModal(true)
                     setIsMobileMenuOpen(false);
                   }}
-                  disabled={userLogout.isPending}
                   className="flex items-center justify-center gap-2 text-white bg-red-500/80 hover:bg-red-600 px-4 py-3 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {userLogout.isPending ? (
@@ -222,6 +224,13 @@ const Header = () => {
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
           initialMode={authMode}
+        />
+      )}
+      {logoutModal && (
+        <LogoutModal
+          onClose={() => setLogoutModal(false)}
+          onConfirm={() => userLogout.mutate()}
+          isLoading={userLogout.isPending}
         />
       )}
     </header>
