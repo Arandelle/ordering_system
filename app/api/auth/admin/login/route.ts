@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // check if user exists
-    const staff = await Staff.findOne({ email});
+    const staff = await Staff.findOne({ email}).select("+password");
     if (!staff) {
       return NextResponse.json(
         { error: "Invalid credentials" },
