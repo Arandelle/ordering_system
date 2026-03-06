@@ -26,8 +26,34 @@ export const useCustomerSignup = () => {
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create an account!",
+        error.error ?? "Failed to create an account!",
       );
     },
   });
 };
+
+const loginUser = async (authData: Omit<CustomerCreateInput, "phone" | "fullname">) => {
+    const response = await fetch("/api/auth/customer/login", {
+        method: "POST",
+        headers: {"Content-Type" : "application/json"},
+        body: JSON.stringify(authData)
+    });
+    const data = await response.json();
+    if(!response.ok) throw data;
+    return data;
+}
+
+export const useCustomerLogin = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: loginUser,
+        onSuccess: () => {
+            queryClient.invalidateQueries({queryKey: ["customers"]});
+            toast.success("Login Successfully!")
+        },
+        onError: (error: any) =>{
+            toast.error(error.error ?? "Failed to login!")
+        }
+    }) 
+}
