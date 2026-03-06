@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff, Phone } from "lucide-react";
 import { InputField } from "../ui/InputField";
 import BrandLogo from "../BrandLogo";
-import { useCustomerSignup } from "@/hooks/api/useCustomerAuth";
+import {
+  useCustomerLogin,
+  useCustomerSignup,
+} from "@/hooks/api/useCustomerAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -15,8 +18,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   initialMode,
 }) => {
-
   const createAccount = useCustomerSignup();
+  const loginAccount = useCustomerLogin();
 
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [showPassword, setShowPassword] = useState({
@@ -31,7 +34,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
     setMode(initialMode);
@@ -50,10 +52,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Please enter a valid email";
-    }
-
-    if (mode === "signup" && !formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
     }
 
     if (!formData.password) {
@@ -75,28 +73,39 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
     if (!validateForm()) return;
 
-    if(mode === 'signup'){
-      createAccount.mutateAsync(formData)
-      return
+    if (mode === "signup") {
+      createAccount.mutate(formData, {
+        onSuccess: () => {
+          onClose();
+          setFormData({
+            fullname: "",
+            email: "",
+            phone: "",
+            password: "",
+            confirmPassword: "",
+          });
+        },
+      });
+    } else if (mode === "login") {
+      loginAccount.mutate(
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+        {
+          onSuccess: () => {
+            onClose();
+            setFormData({
+              fullname: "",
+              email: "",
+              phone: "",
+              password: "",
+              confirmPassword: "",
+            });
+          },
+        },
+      );
     }
-
-    setIsSubmitting(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setIsSubmitting(false);
-    alert(
-      mode === "login" ? "Login successful!" : "Account created successfully!",
-    );
-    onClose();
-    setFormData({
-      fullname: "",
-      email: "",
-      phone: "",
-      password: "",
-      confirmPassword: "",
-    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,24 +116,30 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const PasswordToggle = ({isVisible, onToggle} : {isVisible: boolean, onToggle: () => void}) => {
+  const PasswordToggle = ({
+    isVisible,
+    onToggle,
+  }: {
+    isVisible: boolean;
+    onToggle: () => void;
+  }) => {
     return (
       <button
         type="button"
         onClick={onToggle}
         className="text-gray-400 hover:text-gray-600 cursor-pointer"
       >
-        {!isVisible? <EyeOff size={18} /> : <Eye size={18} />}
+        {!isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
     );
   };
 
   const togglePassword = (field: keyof typeof showPassword) => {
     setShowPassword((prev) => ({
-        ...prev,
-        [field]: !prev[field]
-    }))
-  }
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
   return (
     <>
@@ -149,9 +164,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
               <X size={20} />
             </button>
 
-           <div className="flex justify-center">
-             <BrandLogo />
-           </div>
+            <div className="flex justify-center">
+              <BrandLogo />
+            </div>
             <div>
               <h2 className="text-xl font-bold text-white">
                 {mode === "login" ? "Welcome Back!" : "Start your story today!"}
@@ -214,7 +229,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
               error={errors.password}
               leftIcon={<Lock size={18} />}
               rightElement={
-                <PasswordToggle isVisible={showPassword.password} onToggle={() => togglePassword("password")}/>
+                <PasswordToggle
+                  isVisible={showPassword.password}
+                  onToggle={() => togglePassword("password")}
+                />
               }
             />
 
@@ -230,7 +248,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 error={errors.confirmPassword}
                 leftIcon={<Lock size={18} />}
                 rightElement={
-                  <PasswordToggle isVisible={showPassword.confirmPassword} onToggle={() => togglePassword("confirmPassword")}/>
+                  <PasswordToggle
+                    isVisible={showPassword.confirmPassword}
+                    onToggle={() => togglePassword("confirmPassword")}
+                  />
                 }
               />
             )}
@@ -248,10 +269,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={createAccount.isPending}
               className="w-full bg-brand-color-500 hover:bg-[#c13500] disabled:bg-gray-400 text-white py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
             >
-              {isSubmitting ? (
+              {createAccount.isPending ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   {mode === "login" ? "Signing in..." : "Creating account..."}
