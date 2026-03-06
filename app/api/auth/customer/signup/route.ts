@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const { fullName, email, phone, password } = await request.json();
-    if (!fullName || !email || !password) {
+    const { fullname, email, phone, password } = await request.json();
+    if (!fullname || !email || !password) {
       return NextResponse.json(
         {
           error: "All required fields must be filled",
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const data = await Customer.create({
-        fullName,
+        fullname,
         email,
         phone,
         password: hashedPassword,
