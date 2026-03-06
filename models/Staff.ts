@@ -35,7 +35,7 @@ const staffSchema = new mongoose.Schema<IStaff>(
       required: [true, "Email is required"],
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
+      match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Please fill a valid email address'],
     },
     password: {
       type: String,
