@@ -107,6 +107,7 @@ const Header = () => {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={`md:hidden p-2 darkText hover:bg-white/10 rounded-lg transition-colors`}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Menu button"}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -121,14 +122,14 @@ const Header = () => {
             {/* Auth Buttons */}
             <div className="flex gap-2 pt-2">
               <button
-                // onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }}
+                onClick={() => { handleAuthClick("login"); setIsMobileMenuOpen(false); }}
                 className="flex-1 flex items-center justify-center gap-2 text-white bg-white/10 px-4 py-3 rounded-lg"
               >
                 <LogIn size={18} />
                 <span>Login</span>
               </button>
               <button
-                // onClick={() => { onSignupClick(); setIsMobileMenuOpen(false); }}
+                onClick={() => { handleAuthClick("signup"); setIsMobileMenuOpen(false); }}
                 className="flex-1 flex items-center justify-center gap-2 bg-brand-color-500 text-white px-4 py-3 rounded-lg"
               >
                 <User size={18} />

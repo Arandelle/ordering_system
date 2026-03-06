@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff, Phone } from "lucide-react";
 import { InputField } from "../ui/InputField";
+import BrandLogo from "../BrandLogo";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -53,8 +54,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
     }
 
     if (mode === "signup" && formData.password !== formData.confirmPassword) {
@@ -127,11 +128,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="relative bg-[#1a1a1a] p-6 text-center">
+          <div className="relative bg-[#1a1a1a] p-6 text-center space-y-3">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white transition-colors"
@@ -139,17 +140,19 @@ const AuthModal: React.FC<AuthModalProps> = ({
               <X size={20} />
             </button>
 
-            <div className="w-16 h-16 bg-brand-color-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <img src={"/images/harrison_logo.png"} alt="harrison_logo" />
+           <div className="flex justify-center">
+             <BrandLogo />
+           </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">
+                {mode === "login" ? "Welcome Back!" : "Start your story today!"}
+              </h2>
+              <p className="text-gray-400 text-sm">
+                {mode === "login"
+                  ? "Sign in to continue ordering"
+                  : "Create an account to start your story"}
+              </p>
             </div>
-            <h2 className="text-xl font-bold text-white">
-              {mode === "login" ? "Welcome Back!" : "Join Harrison"}
-            </h2>
-            <p className="text-gray-400 text-sm mt-1">
-              {mode === "login"
-                ? "Sign in to continue ordering"
-                : "Create an account to start your story"}
-            </p>
           </div>
 
           {/* Form */}
@@ -198,7 +201,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               type={showPassword.password ? "text" : "password"}
               value={formData.password}
               onChange={handleInputChange}
-              placeholder="••••••••"
+              placeholder="Enter your password"
               error={errors.password}
               leftIcon={<Lock size={18} />}
               rightElement={
@@ -214,7 +217,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 type={showPassword.confirmPassword ? "text" : "password"}
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                placeholder="••••••••"
+                placeholder="Re-enter your password"
                 error={errors.confirmPassword}
                 leftIcon={<Lock size={18} />}
                 rightElement={
