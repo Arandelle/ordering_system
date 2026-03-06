@@ -1,0 +1,22 @@
+{
+  "name": "Harrison House of Inasal & BBQ",
+  "short_name": "Harrison BBQ",
+  "description": "Proudly Filipino BBQ and Inasal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ef4501",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/harrison_logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/harrison_logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
