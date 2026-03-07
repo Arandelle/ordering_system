@@ -1,16 +1,16 @@
 // ─── types/staff.ts ───────────────────────────────────────────────────────────
 
-export type StaffRole = "branch_manager" | "stock_manager" | "cashier";
+export type StaffRole = "superadmin" | "admin" | "cashier";
 
 export const ROLE_LABELS: Record<StaffRole, string> = {
-  branch_manager: "Branch Manager",
-  stock_manager: "Stock Manager",
+  superadmin: "Super Admin",
+  admin: "Admin",
   cashier: "Cashier",
 };
 
 export const ROLE_COLORS: Record<StaffRole, string> = {
-  branch_manager: "bg-purple-100 text-purple-700",
-  stock_manager: "bg-blue-100 text-blue-700",
+  superadmin: "bg-purple-100 text-purple-700",
+  admin: "bg-blue-100 text-blue-700",
   cashier: "bg-amber-100 text-amber-700",
 };
 
