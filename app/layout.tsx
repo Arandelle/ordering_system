@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/provider/QueryProvider";
-import { dmSans, syne } from "./font";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { syne } from "./font";
 
 export const metadata: Metadata = {
   title: "Home | Harrison House of Inasal & BBQ",
@@ -52,14 +51,6 @@ export const metadata: Metadata = {
   icons: {
     icon: "images/harrison_logo.png",
   },
-
-  // for pwa
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Harrison House of Inasal & BBQ",
-  },
 };
 
 export const viewport: Viewport = {
@@ -83,7 +74,6 @@ export default function RootLayout({
           <Toaster richColors position="top-right" closeButton />
           {children}
           {modal}
-           <PWAInstallPrompt /> 
         </QueryProvider>
       </body>
     </html>
