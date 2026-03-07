@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 
-export type StaffRole = "branch_manager" | "stock_manager" | "cashier";
+export type StaffRole = "superadmin" | "admin" | "cashier";
 
 export interface IStaff {
   _id: string;
@@ -50,7 +49,7 @@ const staffSchema = new mongoose.Schema<IStaff>(
     },
     role: {
       type: String,
-      enum: ["branch_manager", "stock_manager", "cashier"],
+      enum: ["superadmin", "admin", "cashier"],
       required: [true, "Role is required"],
     },
     branch: {
