@@ -8,6 +8,8 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismmised" }>;
 }
 
+const PROMPT_EXPIRE_TIME = 60 * 60 * 8 * 1000; // 8 hrs
+
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDefferedPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
@@ -16,6 +18,16 @@ export default function PWAInstallPrompt() {
   const [isStandAlone, setIsStandAlone] = useState(false); // <- moved here
 
   useEffect(() => {
+    const lastDimissed = localStorage.getItem("pwaPromptDismissed");
+
+    if (lastDimissed) {
+      const diff = Date.now() - Number(lastDimissed);
+
+      if (diff < PROMPT_EXPIRE_TIME) {
+        return; // do not show prompt
+      }
+    }
+
     // Check if already installed
     setIsStandAlone(window.matchMedia("(display-mode: standalone)").matches); // safe here
 
@@ -46,7 +58,10 @@ export default function PWAInstallPrompt() {
     setDefferedPrompt(null);
   };
 
-  const handleDismiss = () => setShowPrompt(false);
+  const handleDismiss = () => {
+    localStorage.setItem("pwaPromptDismissed", Date.now().toString());
+    setShowPrompt(false);
+  };
 
   if (isStandAlone) return null; // safe now
   if (!showPrompt) return null;
@@ -75,15 +90,17 @@ export default function PWAInstallPrompt() {
       </div>
 
       {!isIOS && (
-        <button 
-        onClick={handleInstall}
-        className="bg-brand-color-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-brand-color-600 transition">
+        <button
+          onClick={handleInstall}
+          className="bg-brand-color-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-brand-color-600 transition"
+        >
           Install
         </button>
       )}
-      <button 
-      onClick={handleDismiss}
-      className="text-white/40 hover:text-white/80 text-xl leading-none">
+      <button
+        onClick={handleDismiss}
+        className="text-white/40 hover:text-white/80 text-xl leading-none"
+      >
         <X />
       </button>
     </div>
