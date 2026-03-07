@@ -21,7 +21,7 @@ import { useLogoutCustomer } from "@/hooks/api/useLogout";
 import LogoutModal from "@/components/ui/LogoutModal";
 
 const Header = () => {
-  const { data: currentUser } = useCustomerMe();
+  const { data: currentUser, isPending } = useCustomerMe();
   const userLogout = useLogoutCustomer();
 
   const { totalItems, setIsCartOpen } = useCart();
@@ -66,7 +66,18 @@ const Header = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Desktop Auth */}
             <div className="hidden md:flex items-center gap-2">
-              {currentUser ? (
+              {isPending ? (
+                <div className="flex items-center gap-3 animate-pulse">
+                  {/* avatar skeleton */}
+                  <div className="w-6 h-6 rounded-full bg-gray-300"></div>
+
+                  {/* name skeleton */}
+                  <div className="h-4 w-24 rounded bg-gray-300"></div>
+
+                  {/* logout skeleton */}
+                  <div className="h-4 w-16 rounded bg-gray-300 ml-2"></div>
+                </div>
+              ) : currentUser ? (
                 <div className="flex items-center gap-3">
                   {/* Username */}
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100">
@@ -177,7 +188,7 @@ const Header = () => {
                 {/* Mobile logout */}
                 <button
                   onClick={() => {
-                    setLogoutModal(true)
+                    setLogoutModal(true);
                     setIsMobileMenuOpen(false);
                   }}
                   className="flex items-center justify-center gap-2 text-white bg-red-500/80 hover:bg-red-600 px-4 py-3 rounded-lg transition-colors disabled:opacity-50"
