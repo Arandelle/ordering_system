@@ -9,6 +9,9 @@ import { useState } from "react";
 import Modal from "../ui/Modal";
 import { useLogoutAdmin } from "@/hooks/api/useLogout";
 import LogoutModal from "../ui/LogoutModal";
+import { permission } from "process";
+import { useAdminMe } from "@/hooks/api/useAuthMe";
+import { canAccess } from "@/lib/rbac";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -16,18 +19,21 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard" },
-  { name: "Orders", path: "/orders", icon: "ShoppingCart" },
-  { name: "Products", path: "/products", icon: "Package" },
-  { name: "Category", path: "/category", icon: "Folder" },
-  { name: "Customers", path: "/accounts", icon: "Users" },
-  { name: "Store Management", path: "/store", icon: "Store" },
-  { name: "Staff Management", path: "/staff", icon: "UserRoundCog" },
-  { name: "Reports", path: "/reports", icon: "ChartLine" },
-  { name: "Settings", path: "/settings", icon: "Settings" },
+  { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard", permission: "dashboard.read" },
+  { name: "Orders", path: "/orders", icon: "ShoppingCart", permission: "order.read" },
+  { name: "Products", path: "/products", icon: "Package", permission: "product.read" },
+  { name: "Category", path: "/category", icon: "Folder", permission: "category.read" },
+  { name: "Customers", path: "/accounts", icon: "Users", permission: "customer.read" },
+  { name: "Store Management", path: "/store", icon: "Store", permission: "store.read" },
+  { name: "Staff Management", path: "/staff", icon: "UserRoundCog", permission: "staff.read" },
+  { name: "Reports", path: "/reports", icon: "ChartLine", permission: "report.read" },
+  { name: "Settings", path: "/settings", icon: "Settings", permission: "setting.read" },
 ];
 
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
+
+  const {data: currentUser, isPending} = useAdminMe();
+
   const pathname = usePathname();
   const { data: placedOrders = [] } = useOrders();
   const { data: products = [] } = useProducts();
@@ -39,6 +45,8 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   const lowProductStock = products.filter((order) => order.stock <= 10).length;
 
   const [logoutModal, setLogoutModal] = useState(false);
+
+  const visibleNavItems = navItems.filter((item) => currentUser?.role ? canAccess(currentUser.role, item.permission) : false)
 
   return (
     <>
@@ -67,7 +75,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 
         <nav className="py-6 px-3 overflow-y-auto h-[calc(100vh-80px)]">
           <ul className="space-y-2">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = pathname === item.path;
               const Icon = getLucideIcon(item.icon);
               return (
