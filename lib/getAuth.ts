@@ -1,6 +1,6 @@
-import { StaffRole } from "@/hooks/api/useStaff";
 import { cookies } from "next/headers";
 import { verifyToken } from "./verifyToken";
+import { StaffRole } from "@/types/staff";
 
 export async function getAuthAdmin() {
   const token = (await cookies()).get("admin_token")?.value;

@@ -1,7 +1,6 @@
-import { StaffRole } from "@/hooks/api/useStaff";
+import { StaffRole } from "@/types/staff";
 
 // role: [resource.action] -> admin: [products.create]
-
 export const adminPermission: Record<StaffRole, Set<string>> = {
   superadmin: new Set([
     "dashboard.read",

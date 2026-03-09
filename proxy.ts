@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { canAccess } from "./lib/rbac";
-import { StaffRole } from "./hooks/api/useStaff";
 import { verifyToken } from "./lib/verifyToken";
+import { StaffRole } from "./types/staff";
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();

@@ -19,7 +19,7 @@ const ProductsPage = () => {
     refetch,
   } = useProducts();
 
-  const sortedProducts = products.sort((a, b) => a.stock - b.stock);
+  const sortedProducts = [...products].sort((a, b) => a.stock - b.stock);
 
   if (isLoading) {
     return (
@@ -62,19 +62,19 @@ const ProductsPage = () => {
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Popular</p>
           <p className="text-2xl font-bold text-emerald-600">
-            {products.filter((p: Product) => p.isPopular).length}
+            {products.filter((p) => p.isPopular).length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Low Stock</p>
           <p className="text-2xl font-bold text-amber-600">
-            {products.filter((p: Product) => p.stock < 20).length}
+            {products.filter((p) => p.stock < 20).length}
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 border border-stone-100">
           <p className="text-sm text-stone-500 mb-1">Out of Stock</p>
           <p className="text-2xl font-bold text-red-600">
-            {products.filter((p: Product) => p.stock === 0).length}
+            {products.filter((p) => p.stock === 0).length}
           </p>
         </div>
       </div>

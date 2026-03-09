@@ -26,7 +26,7 @@ import {
   Staff,
   ROLE_LABELS,
   ROLE_COLORS,
-} from "@/hooks/api/useStaff";
+} from "@/types/staff"
 import { Ban, Loader2, Search } from "lucide-react";
 import { ChangeEvent, useState } from "react";
 

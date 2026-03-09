@@ -1,83 +1,20 @@
-// ─── types/staff.ts ───────────────────────────────────────────────────────────
-
-export type StaffRole = "superadmin" | "admin" | "cashier";
-
-export const ROLE_LABELS: Record<StaffRole, string> = {
-  superadmin: "Super Admin",
-  admin: "Admin",
-  cashier: "Cashier",
-};
-
-export const ROLE_COLORS: Record<StaffRole, string> = {
-  superadmin: "bg-purple-100 text-purple-700",
-  admin: "bg-blue-100 text-blue-700",
-  cashier: "bg-amber-100 text-amber-700",
-};
-
-export type Staff = {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  role: StaffRole;
-  branch: {
-    _id: string;
-    name: string;
-    code: string;
-  };
-  isActive: boolean;
-  createdAt?: string;
-};
-
-export type StaffFormData = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  phone?: string;
-  role: StaffRole | "";
-  branch: string;
-};
-
-export type StaffFormErrors = Partial<Record<keyof StaffFormData, string>>;
-
-
-// ─── hooks/api/useStaff.ts ────────────────────────────────────────────────────
-
+import { apiClient } from "@/lib/apiClient";
+import { Staff, StaffFormData } from "@/types/staff";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 // fetch all staff
-const fetchStaff = async (): Promise<Staff[]> => {
-  const res = await fetch("/api/staff");
-  const data = await res.json();
-  if (!res.ok) throw data;
-  return data;
-};
-
 export const useStaff = () =>
   useQuery<Staff[], Error>({
     queryKey: ["staff"],
-    queryFn: fetchStaff,
+    queryFn: () => apiClient.get("/staff"),
   });
 
 // create staff
-const createStaff = async (staffData: StaffFormData): Promise<Staff> => {
-  const res = await fetch("/api/staff", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(staffData),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
-  return data;
-};
-
 export const useCreateStaff = () => {
   const queryClient = useQueryClient();
   return useMutation<Staff, { error: string }, StaffFormData>({
-    mutationFn: createStaff,
+    mutationFn: (staffData) => apiClient.post("/staff", staffData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       toast.success("Staff created successfully!");
@@ -89,23 +26,6 @@ export const useCreateStaff = () => {
 };
 
 // update staff
-const updateStaff = async ({
-  id,
-  staffData,
-}: {
-  id: string;
-  staffData: Partial<StaffFormData>;
-}): Promise<Staff> => {
-  const res = await fetch(`/api/staff/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(staffData),
-  });
-  const data = await res.json();
-  if (!res.ok) throw data;
-  return data;
-};
-
 export const useUpdateStaff = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -113,7 +33,7 @@ export const useUpdateStaff = () => {
     { error: string },
     { id: string; staffData: Partial<StaffFormData> }
   >({
-    mutationFn: updateStaff,
+    mutationFn: ({ id, staffData }) => apiClient.put(`/staff/${id}`, staffData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
       toast.success("Staff updated successfully!");
@@ -125,17 +45,10 @@ export const useUpdateStaff = () => {
 };
 
 // toggle staff status
-const toggleStaffStatus = async (id: string): Promise<Staff> => {
-  const res = await fetch(`/api/staff/${id}`, { method: "PATCH" });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error || "Failed to update status.");
-  return data;
-};
-
 export const useToggleStaffStatus = () => {
   const queryClient = useQueryClient();
   return useMutation<Staff, Error, string>({
-    mutationFn: toggleStaffStatus,
+    mutationFn: (id) => apiClient.patch(`/staff/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
     },
