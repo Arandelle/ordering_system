@@ -20,14 +20,14 @@ interface SidebarProps {
 
 const navItems = [
   { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard", permission: "dashboard.read" },
-  { name: "Orders", path: "/orders", icon: "ShoppingCart", permission: "order.read" },
-  { name: "Products", path: "/products", icon: "Package", permission: "product.read" },
-  { name: "Category", path: "/category", icon: "Folder", permission: "category.read" },
-  { name: "Customers", path: "/accounts", icon: "Users", permission: "customer.read" },
-  { name: "Store Management", path: "/store", icon: "Store", permission: "store.read" },
+  { name: "Orders", path: "/orders", icon: "ShoppingCart", permission: "orders.read" },
+  { name: "Products", path: "/products", icon: "Package", permission: "products.read" },
+  { name: "Category", path: "/categories", icon: "Folder", permission: "categories.read" },
+  { name: "Customers", path: "/customers", icon: "Users", permission: "customers.read" },
+  { name: "Store Management", path: "/stores", icon: "Store", permission: "stores.read" },
   { name: "Staff Management", path: "/staff", icon: "UserRoundCog", permission: "staff.read" },
-  { name: "Reports", path: "/reports", icon: "ChartLine", permission: "report.read" },
-  { name: "Settings", path: "/settings", icon: "Settings", permission: "setting.read" },
+  { name: "Reports", path: "/reports", icon: "ChartLine", permission: "reports.read" },
+  { name: "Settings", path: "/settings", icon: "Settings", permission: "settings.read" },
 ];
 
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
