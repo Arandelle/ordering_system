@@ -1,5 +1,4 @@
 import { StaffRole } from "@/hooks/api/useStaff";
-import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { verifyToken } from "./verifyToken";
 
