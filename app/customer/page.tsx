@@ -6,6 +6,7 @@ import StickyScrollProducts from "@/components/customer/homepage/StickyScrollPro
 import StorySection from "@/components/customer/homepage/StorySection";
 import MenuSectionSkeleton from "@/components/ui/MenuSectionSkeleton";
 import { Suspense } from "react";
+import EventsCTA from "@/components/EventsCTA";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <BestSellers />
       <StickyScrollProducts />
       <LocationsSection />
+      <EventsCTA />
     </>
   );
 }
