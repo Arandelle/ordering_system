@@ -57,15 +57,57 @@ const Header = () => {
         isScrolled ? "shadow-xl" : ""
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-400 mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-18 lg:h-20">
           {/* Logo */}
           <BrandLogo />
 
+          <div className="gap-4  hidden lg:flex">
+            <Link href={"/menu"} className="hover:text-brand-color-500">
+              Menu
+            </Link>
+            <Link href={"/"} className="hover:text-brand-color-500">
+              Events
+            </Link>
+            <Link href={"/"} className="hover:text-brand-color-500">
+              Contact Us
+            </Link>
+          </div>
+
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              href="/orders"
+              className="relative p-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 group cursor-pointer"
+            >
+              <Package
+                size={20}
+                className="group-hover:scale-110 transition-transform darkText"
+              />
+              {activeOrdersCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
+                  {activeOrdersCount}
+                </span>
+              )}
+            </Link>
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 group cursor-pointer"
+            >
+              <ShoppingBag
+                size={20}
+                className="group-hover:scale-110 transition-transform darkText"
+              />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+
             {/* Desktop Auth */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               {isPending ? (
                 <div className="flex items-center gap-3 animate-pulse">
                   {/* avatar skeleton */}
@@ -123,40 +165,10 @@ const Header = () => {
               )}
             </div>
 
-            <Link
-              href="/orders"
-              className="relative p-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 group cursor-pointer"
-            >
-              <Package
-                size={20}
-                className="group-hover:scale-110 transition-transform darkText"
-              />
-              {activeOrdersCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
-                  {activeOrdersCount}
-                </span>
-              )}
-            </Link>
-
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 group cursor-pointer"
-            >
-              <ShoppingBag
-                size={20}
-                className="group-hover:scale-110 transition-transform darkText"
-              />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
-                  {totalItems}
-                </span>
-              )}
-            </button>
-
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 darkText hover:bg-white/10 rounded-lg transition-colors"
+              className="lg:hidden p-2 darkText hover:bg-white/10 rounded-lg transition-colors"
               aria-label={isMobileMenuOpen ? "Close menu" : "Menu button"}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -168,7 +180,20 @@ const Header = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-[#1a1a1a] border-t border-white/10">
+
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+             <div className="gap-4 flex flex-col lg:hidden">
+            <Link href={"/menu"} className="text-white hover:text-brand-color-500">
+              Menu
+            </Link>
+            <Link href={"/"} className="text-white hover:text-brand-color-500">
+              Events
+            </Link>
+            <Link href={"/"} className="text-white hover:text-brand-color-500">
+              Contact Us
+            </Link>
+          </div>
+          
             {currentUser ? (
               // logged in mobile menu
               <div className="flex flex-col gap-2 pt-2">
