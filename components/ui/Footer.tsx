@@ -8,9 +8,12 @@ import {
   Mail,
   MapPin,
   Phone,
+  PhoneCall,
   Twitter,
 } from "lucide-react";
 import HeaderLogo from "../BrandLogo";
+import { LINKS } from "@/constant/links";
+import { getLucideIcon } from "@/lib/iconUtils";
 
 const Footer = ({
   variant = "customer",
@@ -26,6 +29,7 @@ const Footer = ({
   const footerQuickLinks = {
     customer: [
       { name: "Home", href: homeUrl },
+      { name: "Request Events", href: "/events#booking" },
       { name: "Menu", href: menuUrl },
       { name: "Best Sellers", href: bestSellerUrl },
       { name: "Our Story", href: ourStoryUrl },
@@ -43,6 +47,25 @@ const Footer = ({
     { name: "Terms of Service", href: "/privacy-policy" },
     { name: "Refund Policy", href: "#" },
     { name: "FAQ", href: "#" },
+  ];
+
+  const contactUs = [
+    {
+      icon: "MapPin",
+      value: "Makati, Metro Manila, Philippines",
+      href: LINKS.MAIN_BRANCH_LINK,
+    },
+    { icon: "Phone", value: "+63 912 345 6789", href: "tel:+639123456789" },
+    {
+      icon: "Mail",
+      value: "harrisoninasalbbq@gmail.com",
+      href: "https://mail.google.com/mail/?view=cm&fs=1&to=harrisoninasalbbq@gmail.com&subject=Inquiry",
+    },
+     {
+      icon: "PhoneCall",
+      value: "+63 960 334 9533",
+      href: "viber://chat?number=%2B639603349533",
+    },
   ];
 
   return (
@@ -122,40 +145,23 @@ const Footer = ({
           <div>
             <h4 className="font-semibold text-lg mb-4">Contact Us</h4>
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin
-                  size={18}
-                  className="text-brand-color-500 shrink-0 mt-0.5"
-                />
-                <span className="text-gray-400 text-sm">
-                  Makati, Metro Manila, Philippines
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="text-brand-color-500 shrink-0" />
-                <a
-                  href="tel:+639123456789"
-                  className="text-gray-400 hover:text-white text-sm transition-colors"
-                >
-                  +63 912 345 6789
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={18} className="text-brand-color-500 shrink-0" />
-                <a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=harrisoninasalbbq@gmail.com&subject=Inquiry"
-                  target="_blank"
-                  className="text-gray-400 hover:text-white text-sm transition-colors"
-                >
-                  harrisoninasalbbq@gmail.com
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Clock size={18} className="text-brand-color-500 shrink-0" />
-                <span className="text-gray-400 text-sm">
-                  Daily: 10:00 AM - 10:00 PM
-                </span>
-              </li>
+              {contactUs.map((item, index) => {
+                const Icon = getLucideIcon(item.icon);
+                return (
+                  <a
+                    key={index}
+                    href={item.href}
+                    target="_blank"
+                    className="flex items-start gap-3"
+                  >
+                    <Icon
+                      size={18}
+                      className="text-brand-color-500 shrink-0 mt-0.5"
+                    />
+                    <span className="text-gray-400 text-sm">{item.value}</span>
+                  </a>
+                );
+              })}
             </ul>
           </div>
         </div>
