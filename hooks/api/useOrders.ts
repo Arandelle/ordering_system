@@ -60,7 +60,7 @@ export const useCreateOrder = () => {
    */
   return useMutation<CreateOrderResponse, Error, CreateOrderPayload>({
     mutationFn: async (payload) => {
-      const response = await fetch("/api/paymongo/create-payment", {
+      const response = await fetch("/api/paymaya/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
