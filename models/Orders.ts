@@ -4,7 +4,7 @@ import { model, models, Schema } from "mongoose";
 /**
  * Embedded cart item snapshot
  */
-const OrderItemSchema = new Schema(
+export const OrderItemSchema = new Schema(
   {
     name: { type: String, required: true },
     price: { type: Number, required: true },
