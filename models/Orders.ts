@@ -59,6 +59,7 @@ const OrderSchema = new Schema({
     paymentInfo : {
         method: String,
         paymentLinkId: String,
+        checkoutId: String,
         checkoutUrl: String,
         referenceNumber: String,
 
@@ -70,6 +71,7 @@ const OrderSchema = new Schema({
 
     total: {
         subTotal: {type: Number, required: true},
+        tax: {type: Number, required: true},
         total: {type: Number, required: true}
     },
 
