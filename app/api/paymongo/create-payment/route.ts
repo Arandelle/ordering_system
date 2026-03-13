@@ -10,6 +10,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
     await connectDB();
