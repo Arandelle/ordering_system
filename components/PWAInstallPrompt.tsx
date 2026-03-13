@@ -5,13 +5,14 @@ import React, { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismmised" }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const PROMPT_EXPIRE_TIME = 60 * 60 * 8 * 1000; // 8 hrs
+const HOURS = 8
+const PROMPT_EXPIRE_TIME = HOURS * 60 * 60 * 1000; // 8 hrs
 
 export default function PWAInstallPrompt() {
-  const [deferredPrompt, setDefferedPrompt] =
+  const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -40,8 +41,16 @@ export default function PWAInstallPrompt() {
 
     // Android / Desktop Chrome
     const handler = (e: Event) => {
+      const lastDimissed = localStorage.getItem("pwaPromptDismissed");
+      if (lastDimissed) {
+        const diff = Date.now() - Number(lastDimissed);
+        if (diff < PROMPT_EXPIRE_TIME) {
+          return;
+        }
+      }
+
       e.preventDefault();
-      setDefferedPrompt(e as BeforeInstallPromptEvent);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowPrompt(true);
     };
 
@@ -55,7 +64,7 @@ export default function PWAInstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === "accepted") setShowPrompt(false);
-    setDefferedPrompt(null);
+    setDeferredPrompt(null);
   };
 
   const handleDismiss = () => {
