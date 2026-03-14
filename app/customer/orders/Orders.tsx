@@ -18,6 +18,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import { useOrders, useUpdateOrder } from "@/hooks/api/useOrders";
 import { toast } from "sonner";
+import { getAuthHeader } from "@/lib/getAuthHeader";
+import { OrderType } from "@/types/OrderTypes";
+import { apiClient } from "@/lib/apiClient";
 
 const TABS = [
   { key: "all", label: "All" },
@@ -31,7 +34,7 @@ const TABS = [
 const Orders = () => {
   const { data: placedOrders = [] } = useOrders();
   const updateOrder = useUpdateOrder();
-  
+
   const { addToCart, setIsCartOpen } = useCart();
   const router = useRouter();
   const pathname = usePathname();
@@ -86,15 +89,15 @@ const Orders = () => {
 
   const handleCancelOrder = (orderId: string) => {
     if (confirm(`Are you sure you want to cancel order ${orderId} ? `)) {
-     updateOrder.mutate({
-      id: orderId,
-      data: {status: "cancelled"}
-     },
-     {
-      onSuccess: () => toast.success("Order cancelled!")
-     }
-    
-    );
+      updateOrder.mutate(
+        {
+          id: orderId,
+          data: { status: "cancelled" },
+        },
+        {
+          onSuccess: () => toast.success("Order cancelled!"),
+        },
+      );
     }
   };
 
@@ -124,6 +127,21 @@ const Orders = () => {
 
       return newSet;
     });
+  };
+
+  const handlePayOrder = async (id: string) => {
+    console.log(id)
+    try {
+      const response = await apiClient.post<{ redirectUrl: string }>(
+        `/paymaya/checkout/${id}`,
+      );
+     localStorage.setItem("redirecturl", response.redirectUrl)
+      window.location.href = response.redirectUrl;
+    } catch (error: any) {
+      toast.error("Payment Failed", {
+        description: error.message,
+      });
+    }
   };
 
   return (
@@ -329,13 +347,12 @@ const Orders = () => {
                       {/** Cancel Order - Only for pending orders */}
                       {order.status === "pending" && (
                         <>
-                          <a
-                            href={order.paymentInfo.checkoutUrl}
-                            target="_blank"
+                          <button
+                            onClick={() => handlePayOrder(order._id)}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 border text-white text-sm font-semibold transition-all"
                           >
                             <ExternalLink size={16} /> Pay Order!
-                          </a>
+                          </button>
                           <button
                             onClick={() => handleCancelOrder(order._id)}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"
