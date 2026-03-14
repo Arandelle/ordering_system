@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
           items: validatedItems,
           paymentInfo: {
             checkoutId: data.checkoutId,
-            checkoutUrl: data.redirectUrl,
             referenceNumber: payload.requestReferenceNumber,
           },
           total: { subTotal: recalculatedSubTotal, tax, total: grandTotal },
