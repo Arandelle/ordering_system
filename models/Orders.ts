@@ -1,11 +1,15 @@
 import { model, models, Schema } from "mongoose";
 
-
 /**
  * Embedded cart item snapshot
  */
 export const OrderItemSchema = new Schema(
   {
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
     name: { type: String, required: true },
     price: { type: Number, required: true },
     description: { type: String },
@@ -27,66 +31,72 @@ export const OrderItemSchema = new Schema(
 const TimelineSchema = new Schema(
   {
     paidAt: Date,
+    failedAt: Date,
+    expiredAt: Date,
     preparingAt: Date,
     dispatchedAt: Date,
     readyAt: Date,
     completedAt: Date,
     cancelledAt: Date,
   },
-  { _id: false }
+  { _id: false },
 );
 
-const OrderSchema = new Schema({
+const OrderSchema = new Schema(
+  {
     status: {
-        type: String,
-        enum: [
-            "pending",
-            "paid",
-            "preparing",
-            "dispatched",
-            "ready",
-            "completed",
-            "cancelled"
-        ],
-        default: "pending",
-        required: true
+      type: String,
+      enum: [
+        "pending",
+        "paid",
+        "failed",
+        "expired",
+        "authorized",
+        "preparing",
+        "dispatched",
+        "ready",
+        "completed",
+        "cancelled",
+      ],
+      default: "pending",
+      required: true,
     },
     items: {
-        type: [OrderItemSchema],
-        required: true
+      type: [OrderItemSchema],
+      required: true,
     },
 
-    paymentInfo : {
-        method: String,
-        paymentLinkId: String,
-        checkoutId: String,
-        checkoutUrl: String,
-        referenceNumber: String,
+    paymentInfo: {
+      checkoutId: String,
+      referenceNumber: String,
+      paymentId: String,
+      paymentStatus: String,
 
-        paidAt: Date,
-        customerName: String,
-        customerEmail: String,
-        customerPhone: String
+      customerName: String,
+      customerEmail: String,
+      customerPhone: String,
     },
 
     total: {
-        subTotal: {type: Number, required: true},
-        tax: {type: Number, required: true},
-        total: {type: Number, required: true}
+      subTotal: { type: Number, required: true },
+      tax: { type: Number, required: true },
+      total: { type: Number, required: true },
     },
 
-    estimatedTime: {type: String},
+    estimatedTime: { type: String },
 
     timeline: TimelineSchema,
 
     note: String,
 
     isReviewed: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
 
-    reviewedAt: Date
-}, {timestamps: true});
+    reviewedAt: Date,
+  },
+  { timestamps: true },
+);
 
-export const Order = models.Order || model("Order", OrderSchema)
+export const Order = models.Order || model("Order", OrderSchema);
