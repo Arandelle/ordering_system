@@ -59,6 +59,7 @@ export const useCreateOrder = () => {
    * Accepts → CreateOrderPayload
    */
   return useMutation<CreateOrderResponse, Error, CreateOrderPayload>({
+    retry: false,
     mutationFn: async (payload) => {
       const response = await fetch("/api/paymaya/checkout", {
         method: "POST",
@@ -102,11 +103,6 @@ export const useCreateOrder = () => {
           userMessage =
             typeof data.error === "string" ? data.error : userMessage;
         }
-
-        toast.error("Payment Error", {
-          description: userMessage,
-          duration: 6000,
-        });
 
         throw new Error(userMessage);
       }
