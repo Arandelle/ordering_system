@@ -1,6 +1,6 @@
 import { getAuthHeader } from "@/lib/getAuthHeader";
 import { connectDB } from "@/lib/mongodb";
-import { CheckoutSession } from "@/models/CheckoutSession";
+import { Order } from "@/models/Orders";
 import { Product } from "@/models/Product";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,14 +11,16 @@ export async function POST(request: NextRequest) {
 
   try {
     await connectDB();
-    const { items } = await request.json();
+    const body = await request.json();
+
+    const MINIMUM_AMOUNT = 100;
+    const TAX_RATE = 0.12;
+
+    const { items } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
     }
-
-    const MINIMUM_AMOUNT = 100;
-    const TAX_RATE = 0.12;
 
     // Never trust your front to calculate the total amount
     let recalculatedSubTotal = 0;
@@ -29,19 +31,16 @@ export async function POST(request: NextRequest) {
         throw new Error("Invalid cart item.");
       }
 
-      const product = await Product.findById(cartItem._id);
+      const product = await Product.findById(cartItem._id).session(session);
 
       if (!product) {
         throw new Error("Product not found!");
       }
 
-      // Just check the stock, don't deduct yet
-      if (product.stock < cartItem.quantity) {
-        throw new Error(
-          `${product.name} only has ${product.stock} item(s) left in stock`,
-        );
+      if(product.stock < cartItem.quantity){
+        return NextResponse.json({error: `${product.name} only has ${product.stock} item(s) left in stock`}, {status: 400})
       }
-
+   
       recalculatedSubTotal += product.price * cartItem.quantity;
 
       validatedItems.push({
@@ -52,6 +51,10 @@ export async function POST(request: NextRequest) {
         image: product.image.url,
         category: product.category,
         quantity: cartItem.quantity,
+        totalAmount: {
+          value: product.price * cartItem.quantity,
+          currency: "PHP",
+        },
       });
     }
 
@@ -68,17 +71,6 @@ export async function POST(request: NextRequest) {
       throw new Error("Maya key not configured");
     }
 
-    const mayaItems = validatedItems.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      totalAmount: {
-        value: item.price * item.quantity,
-        currency: "PHP",
-      },
-    }));
-
-    const requestReferenceNumber = `ORDER-${Date.now()}`;
-
     const payload = {
       totalAmount: {
         value: grandTotal,
@@ -89,13 +81,13 @@ export async function POST(request: NextRequest) {
           subTotal: recalculatedSubTotal,
         },
       },
-      items: mayaItems,
+      items: validatedItems,
       redirectUrl: {
         success: `${process.env.NEXT_PUBLIC_URL}/payment/success`,
         failure: `${process.env.NEXT_PUBLIC_URL}/payment/failed`,
         cancel: `${process.env.NEXT_PUBLIC_URL}/payment/cancel`,
       },
-      requestReferenceNumber,
+      requestReferenceNumber: `ORDER-${Date.now()}`,
     };
 
     const response = await fetch(
@@ -120,24 +112,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save a lightweight pending session (not full order yet)
-    await CheckoutSession.create({
-      checkoutId: data.checkoutId,
-      referenceNumber: requestReferenceNumber,
-      items: validatedItems,
-      total: { subTotal: recalculatedSubTotal, tax, total: grandTotal },
-      expiresAt: new Date(Date.now() + 1000 * 60 * 30), // 30 min
-    });
+    const order = await Order.create(
+      [
+        {
+          status: "pending",
+          items: validatedItems,
+          paymentInfo: {
+            checkoutId: data.checkoutId,
+            checkoutUrl: data.redirectUrl,
+            referenceNumber: payload.requestReferenceNumber,
+          },
+          total: { subTotal: recalculatedSubTotal, tax, total: grandTotal },
+          timeline: { createdAt: new Date() },
+        },
+      ],
+      { session },
+    );
+
+    await session.commitTransaction();
+    session.endSession();
 
     // Return checkoutId and redirectUrl to the frontend
     return NextResponse.json(
       {
         checkoutId: data.checkoutId,
-        checkoutUrl: data.redirectUrl
+        redirectUrl: data.redirectUrl,
       },
       { status: 201 },
     );
   } catch (error) {
+    await session.abortTransaction(); // roll back the deducted stocks
+    session.endSession();
     return NextResponse.json({
       error: error instanceof Error ? error.message : "Failed to checkout!",
     });
