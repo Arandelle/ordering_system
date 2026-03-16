@@ -7,7 +7,7 @@ const MainPage = () => {
   return (
     <>
       <HeroVideo />
-      <ProductMain />
+      {/* <ProductMain /> */}
       <MissionVision />
       <MainLocationSection /> {/** Includes order now CTA */}
     </>
