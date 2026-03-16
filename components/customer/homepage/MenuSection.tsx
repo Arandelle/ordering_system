@@ -15,7 +15,12 @@ const MenuSection = () => {
   const { data: products = [], refetch } = useProducts();
   useScrollToSection();
 
-  const { data: categories } = useMenuCategories();
+  const {
+    data: categories,
+    isPending: isCategoriesPending,
+    isError: isCategoriesError,
+    refetch: refetchCategories,
+  } = useMenuCategories();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<
@@ -69,7 +74,7 @@ const MenuSection = () => {
     if (!el) return;
 
     // Offset: sticky filter bar (~120px) + a little breathing room
-    const OFFSET = 140;
+    const OFFSET = 200;
     const top = el.getBoundingClientRect().top + window.scrollY - OFFSET;
     window.scrollTo({ top, behavior: "smooth" });
   };
@@ -156,56 +161,76 @@ const MenuSection = () => {
   return (
     <section id="menu-section" className="py-4 bg-white scroll-mt-24">
       <div className="px-4 sm:px-6 lg:px-8 space-y-4">
-        {/** Section Header */}
-        <div
-          ref={headerRef}
-          className="max-w-7xl mx-auto text-center mb-12 opacity-0 transition-all duration-700"
-        >
-          <p className="text-brand-color-500 font-semibold text-xl uppercase tracking-widest">
-            Our Menu
-          </p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">
-            Favourite Dishes
-          </h2>
-          <p className="text-gray-500 max-w-2xl mx-auto">
-            From our signature Chicken Inasal to mouthwatering BBQ, every dish
-            is grilled with love and tradition.
-          </p>
-        </div>
-
         {/**
          * Sticky filter bar — two stacked rows:
          *   Row 1: Category pills (full width, wraps naturally)
          */}
         <div
           ref={filtersRef}
-          className="opacity-0 transition-all duration-700 delay-100 sticky top-18 md:top-20  z-30 bg-white w-full px-4 sm:px-6 lg:px-8 pb-5 pt-10 overflow-x-scroll lg:overflow-hidden"
+          className="opacity-0 transition-all duration-700 delay-100 sticky top-18 md:top-20 z-30 bg-white w-full px-4 sm:px-6 lg:px-8 pb-5 pt-10 overflow-x-scroll lg:overflow-hidden"
         >
-          {/* Row 1 — Category Pills */}
           <div className="flex gap-2 mb-3 max-w-7xl mx-auto">
-            <button
-              onClick={() => handleChangeCategory("All")}
-              className={`text-nowrap px-4 py-2 cursor-pointer rounded-full text-sm font-medium transition-all duration-300 ${
-                activeCategory === "All"
-                  ? "bg-brand-color-500 text-white shadow-lg shadow-brand-color-500/30"
-                  : "bg-white text-gray-800 font-bold hover:bg-gray-100 border border-gray-200"
-              }`}
-            >
-              All Categories
-            </button>
-            {categories?.map((category: Category) => (
-              <button
-                key={category._id}
-                onClick={() => handleChangeCategory(category.name)}
-                className={`text-nowrap px-5 py-3 cursor-pointer rounded-full text-sm font-medium transition-all duration-300 ${
-                  activeCategory === category.name
-                    ? "bg-brand-color-500 text-white shadow-lg shadow-brand-color-500/30"
-                    : "bg-white text-gray-800 font-black hover:bg-gray-100 border border-gray-200"
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
+            {/* ── Loading ── */}
+            {isCategoriesPending && (
+              <>
+                {[108, 76, 88, 64, 92].map((w, i) => (
+                  <div
+                    key={i}
+                    className="h-9 rounded-full bg-gray-100 animate-pulse shrink-0"
+                    style={{ width: w }}
+                  />
+                ))}
+              </>
+            )}
+
+            {/* ── Error ── */}
+            {isCategoriesError && !isCategoriesPending && (
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                  <span className="text-red-700 text-[10px] font-bold leading-none">
+                    !
+                  </span>
+                </span>
+                <span className="text-sm text-red-600">
+                  Couldn't load categories
+                </span>
+                <button
+                  onClick={() => refetchCategories()}
+                  className="text-sm px-3 py-1 rounded-full border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* ── Loaded ── */}
+            {!isCategoriesPending && !isCategoriesError && (
+              <>
+                <button
+                  onClick={() => handleChangeCategory("All")}
+                  className={`text-nowrap px-4 py-2 cursor-pointer rounded-full text-sm font-medium transition-all duration-300 ${
+                    activeCategory === "All"
+                      ? "bg-brand-color-500 text-white shadow-lg shadow-brand-color-500/30"
+                      : "bg-white text-gray-800 font-bold hover:bg-gray-100 border border-gray-200"
+                  }`}
+                >
+                  All Categories
+                </button>
+                {categories?.map((category: Category) => (
+                  <button
+                    key={category._id}
+                    onClick={() => handleChangeCategory(category.name)}
+                    className={`text-nowrap px-5 py-3 cursor-pointer rounded-full text-sm font-medium transition-all duration-300 ${
+                      activeCategory === category.name
+                        ? "bg-brand-color-500 text-white shadow-lg shadow-brand-color-500/30"
+                        : "bg-white text-gray-800 font-black hover:bg-gray-100 border border-gray-200"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
         </div>
 
