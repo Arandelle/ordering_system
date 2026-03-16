@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef } from "react";
 import {
   MapPin,
   Clock,
@@ -7,10 +8,13 @@ import {
   Phone,
   Utensils,
   ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { LINKS } from "@/constant/links";
 
 const LocationsSection = () => {
+  const [current, setCurrent] = useState(0);
+  const touchStartX = useRef<number>(0);
 
   const locations = [
     {
@@ -51,6 +55,21 @@ const LocationsSection = () => {
     },
   ];
 
+  const total = locations.length;
+
+  const goTo = (index: number) => {
+    setCurrent((index + total) % total);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
+  };
+
   function DeliveryButton({
     label = "Logo",
     href = "/",
@@ -73,7 +92,6 @@ const LocationsSection = () => {
             className={`object-contain ${imgSize}`}
           />
         </div>
-
         <span
           className={`font-semibold text-gray-800 transition ${hoverTextColor}`}
         >
@@ -84,11 +102,14 @@ const LocationsSection = () => {
   }
 
   return (
-    <section id="location-section" className="w-full bg-linear-to-b from-white to-gray-50 py-16 lg:pt-24">
+    <section
+      id="location-section"
+      className="w-full bg-linear-to-b from-white to-gray-50 py-16 lg:pt-24"
+    >
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <span className="inline-block bg-[#ef4501]/10 text-[#ef4501] px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wider mb-4">
+          <span className="inline-block bg-brand-color-500/10 text-brand-color-500 px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wider mb-4">
             Our Locations
           </span>
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
@@ -100,206 +121,246 @@ const LocationsSection = () => {
           </p>
         </div>
 
-        {/* Locations Grid */}
-        <div className="space-y-16">
-          {locations.map((location, index) => (
+        {/* Carousel */}
+        <div className="relative max-w-7xl mx-auto">
+          {/* Track */}
+          <div className="overflow-hidden">
             <div
-              key={index}
-              className={`grid lg:grid-cols-2 gap-8 items-center pt-8 md:pt-16 max-w-7xl mx-auto`}
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${current * 100}%)` }}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
-              {/* Map Section */}
+              {locations.map((location) => (
+                <div key={location.id} className="min-w-full px-2">
+                  <div className="grid lg:grid-cols-2 gap-8 items-center py-8">
+                    {/* Map */}
+                    <div className="relative">
+                      <div className="relative h-112.5 rounded-2xl overflow-hidden shadow-xl border border-gray-200 group">
+                        <iframe
+                          src={location.embedUrl}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen={false}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          className="grayscale-[0.2] contrast-[1.1] transition-all duration-300 group-hover:grayscale-0"
+                        />
 
-              <div className="relative">
-                <div className="relative h-112.5 rounded-2xl overflow-hidden shadow-xl border border-gray-200 group">
-                  {/* Map */}
-                  <iframe
-                    src={location.embedUrl}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen={false}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    className="grayscale-[0.2] contrast-[1.1] transition-all duration-300 group-hover:grayscale-0"
-                  />
-
-                  {/* Info Card Overlay - Centered on Map Marker */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                    <div className="bg-white rounded-xl shadow-2xl p-5 border-2 border-[#ef4501]/20 transform transition-all duration-300 hover:scale-105 pointer-events-auto">
-                      <div className="flex items-center gap-4">
-                        {/* Logo/Icon */}
-                        <div className="w-14 h-14 bg-linear-to-br from-[#ef4501] to-[#ff4500] rounded-lg flex items-center justify-center shadow-lg p-1">
-                          <img
-                            src="/images/harrison_logo.png"
-                            alt="Harrison's Logo"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-
-                        {/* Location Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-gray-900 text-base">
-                              Harrison's Inasal
-                            </h3>
-                            {location.isNew && (
-                              <span className="bg-linear-to-r from-[#ef4501] to-[#ff4500] text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
-                                NEW
-                              </span>
-                            )}
+                        {/* Info Card Overlay */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                          <div className="bg-white rounded-xl shadow-2xl p-5 border-2 border-brand-color-500/20 transform transition-all duration-300 hover:scale-105 pointer-events-auto">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 bg-linear-to-br from-brand-color-500 to-[#ff4500] rounded-lg flex items-center justify-center shadow-lg p-1">
+                                <img
+                                  src="/images/harrison_logo.png"
+                                  alt="Harrison's Logo"
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-bold text-gray-900 text-base">
+                                    Harrison's Inasal
+                                  </h3>
+                                  {location.isNew && (
+                                    <span className="bg-linear-to-r from-brand-color-500 to-[#ff4500] text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
+                                      NEW
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-gray-700 font-semibold text-sm mb-1">
+                                  {location.name}
+                                </p>
+                                <p className="text-gray-500 text-xs">
+                                  {location.address}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
+                              <div className="relative">
+                                <div className="w-8 h-8 bg-brand-color-500 rounded-full border-4 border-white shadow-lg" />
+                                <div className="absolute inset-0 w-8 h-8 bg-brand-color-500 rounded-full animate-ping opacity-50" />
+                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-12 border-t-brand-color-500" />
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-gray-700 font-semibold text-sm mb-1">
-                            {location.name}
-                          </p>
-                          <p className="text-gray-500 text-xs">
-                            {location.address}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Pointer Arrow to Map Marker (pointing down) */}
-                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
-                        <div className="relative">
-                          {/* Pulsing marker */}
-                          <div className="w-8 h-8 bg-[#ef4501] rounded-full border-4 border-white shadow-lg" />
-                          <div className="absolute inset-0 w-8 h-8 bg-[#ef4501] rounded-full animate-ping opacity-50" />
-
-                          {/* Arrow/Triangle pointing down */}
-                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-12 border-t-[#ef4501]" />
                         </div>
                       </div>
                     </div>
+
+                    {/* Details */}
+                    <div className="flex flex-col space-y-6">
+                      {/* Status Badge */}
+                      <div className="inline-flex items-center gap-2 rounded-xl shadow-md border border-gray-200 w-fit py-2 px-4 bg-white">
+                        <div className="relative flex items-center">
+                          <span className="flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                          </span>
+                        </div>
+                        <p className="font-semibold text-sm text-green-600">
+                          {location.status === "open"
+                            ? "Open Now"
+                            : "Opening Soon"}
+                        </p>
+                        {location.isNew && (
+                          <span className="bg-linear-to-r from-brand-color-500 to-[#ff4500] text-white text-xs font-bold px-2 py-1 rounded-full ml-1">
+                            NOW OPEN!
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Title & Description */}
+                      <div className="space-y-3">
+                        <h3 className="text-4xl lg:text-5xl leading-tight font-bold text-gray-900">
+                          {location.name}
+                        </h3>
+                        <p className="text-gray-600 text-base leading-relaxed">
+                          {location.description}
+                        </p>
+                      </div>
+
+                      {/* Location Details */}
+                      <div className="space-y-4 pt-2">
+                        <div className="flex items-start gap-4 group">
+                          <div className="shrink-0 w-10 h-10 bg-brand-color-500/10 rounded-lg flex items-center justify-center group-hover:bg-brand-color-500 transition-colors">
+                            <MapPin
+                              size={20}
+                              className="text-brand-color-500 group-hover:text-white transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 mb-0.5">
+                              Address
+                            </p>
+                            <p className="text-gray-900 font-semibold">
+                              {location.address}
+                            </p>
+                            <p className="text-gray-600 text-sm">
+                              {location.fullAddress}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 group">
+                          <div className="shrink-0 w-10 h-10 bg-brand-color-500/10 rounded-lg flex items-center justify-center group-hover:bg-brand-color-500 transition-colors">
+                            <Clock
+                              size={20}
+                              className="text-brand-color-500 group-hover:text-white transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 mb-0.5">
+                              Operating Hours
+                            </p>
+                            <p className="text-gray-900 font-semibold">
+                              {location.hours}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 group">
+                          <div className="shrink-0 w-10 h-10 bg-brand-color-500/10 rounded-lg flex items-center justify-center group-hover:bg-brand-color-500 transition-colors">
+                            <Utensils
+                              size={20}
+                              className="text-brand-color-500 group-hover:text-white transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 mb-0.5">
+                              Cuisine
+                            </p>
+                            <p className="text-gray-900 font-semibold">
+                              {location.foodType}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 group">
+                          <div className="shrink-0 w-10 h-10 bg-brand-color-500/10 rounded-lg flex items-center justify-center group-hover:bg-brand-color-500 transition-colors">
+                            <Phone
+                              size={20}
+                              className="text-brand-color-500 group-hover:text-white transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500 mb-0.5">
+                              Contact
+                            </p>
+                            <a
+                              href={`tel:${location.phone}`}
+                              className="text-gray-900 font-semibold hover:text-brand-color-500 transition-colors"
+                            >
+                              {location.phone}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CTA */}
+                      <div className="pt-4 mx-auto">
+                        <a
+                          href={location.mapLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 bg-brand-color-500 hover:bg-[#c13500] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 group"
+                        >
+                          <Navigation
+                            size={20}
+                            className="group-hover:rotate-45 transition-transform duration-300"
+                          />
+                          Get Directions
+                          <ChevronRight
+                            size={20}
+                            className="group-hover:translate-x-1 transition-transform duration-300"
+                          />
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Details Section */}
-              <div className={`flex flex-col space-y-6 order-1`}>
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 rounded-xl shadow-md border border-gray-200 w-fit py-2 px-4 bg-white">
-                  <div className="relative flex items-center">
-                    <span className="flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-                    </span>
-                  </div>
-                  <p className="font-semibold text-sm text-green-600">
-                    {location.status === "open" ? "Open Now" : "Opening Soon"}
-                  </p>
-                  {location.isNew && (
-                    <span className="bg-linear-to-r from-[#ef4501] to-[#ff4500] text-white text-xs font-bold px-2 py-1 rounded-full ml-1">
-                      NOW OPEN!
-                    </span>
-                  )}
-                </div>
-
-                {/* Title & Description */}
-                <div className="space-y-3">
-                  <h3 className="text-4xl lg:text-5xl leading-tight font-bold text-gray-900">
-                    {location.name}
-                  </h3>
-                  <p className="text-gray-600 text-base leading-relaxed">
-                    {location.description}
-                  </p>
-                </div>
-
-                {/* Location Details */}
-                <div className="space-y-4 pt-2">
-                  {/* Address */}
-                  <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
-                      <MapPin
-                        size={20}
-                        className="text-[#ef4501] group-hover:text-white transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-0.5">Address</p>
-                      <p className="text-gray-900 font-semibold">
-                        {location.address}
-                      </p>
-                      <p className="text-gray-600 text-sm">
-                        {location.fullAddress}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Hours */}
-                  <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
-                      <Clock
-                        size={20}
-                        className="text-[#ef4501] group-hover:text-white transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-0.5">
-                        Operating Hours
-                      </p>
-                      <p className="text-gray-900 font-semibold">
-                        {location.hours}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Cuisine */}
-                  <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
-                      <Utensils
-                        size={20}
-                        className="text-[#ef4501] group-hover:text-white transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-0.5">Cuisine</p>
-                      <p className="text-gray-900 font-semibold">
-                        {location.foodType}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Phone */}
-                  <div className="flex items-start gap-4 group">
-                    <div className="shrink-0 w-10 h-10 bg-[#ef4501]/10 rounded-lg flex items-center justify-center group-hover:bg-[#ef4501] transition-colors">
-                      <Phone
-                        size={20}
-                        className="text-[#ef4501] group-hover:text-white transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-0.5">Contact</p>
-                      <a
-                        href={`tel:${location.phone}`}
-                        className="text-gray-900 font-semibold hover:text-[#ef4501] transition-colors"
-                      >
-                        {location.phone}
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CTA Button */}
-                <div className="pt-4 mx-auto">
-                  <a
-                    href={location.mapLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-[#ef4501] hover:bg-[#c13500] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 group"
-                  >
-                    <Navigation
-                      size={20}
-                      className="group-hover:rotate-45 transition-transform duration-300"
-                    />
-                    Get Directions
-                    <ChevronRight
-                      size={20}
-                      className="group-hover:translate-x-1 transition-transform duration-300"
-                    />
-                  </a>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Prev / Next Arrows */}
+          <button
+            onClick={() => goTo(current - 1)}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center hover:border-brand-color-500 hover:text-brand-color-500 transition-colors"
+            aria-label="Previous location"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            onClick={() => goTo(current + 1)}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center hover:border-brand-color-500 hover:text-brand-color-500 transition-colors"
+            aria-label="Next location"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+
+        {/* Dots + Counter */}
+        <div className="flex items-center justify-center gap-4 mt-8">
+          <div className="flex gap-2">
+            {locations.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  i === current
+                    ? "w-6 bg-brand-color-500"
+                    : "w-2 bg-gray-300 hover:bg-gray-400"
+                }`}
+                aria-label={`Go to location ${i + 1}`}
+              />
+            ))}
+          </div>
+          <span className="text-sm text-gray-500">
+            {current + 1} / {total}
+          </span>
         </div>
       </div>
 
@@ -309,18 +370,18 @@ const LocationsSection = () => {
           Can't visit us? We deliver to your doorstep!
         </h3>
         <p className="text-gray-600 mb-8 text-lg">
-          Order your favorite Harrison’s dishes directly or through trusted delivery platforms.
+          Order your favorite Harrison's dishes directly or through trusted
+          delivery platforms.
         </p>
         <div className="flex flex-wrap justify-center gap-10">
           <DeliveryButton
-            label="Harrison’s Menu"
+            label="Harrison's Menu"
             href={LINKS.MENU}
             imgSrc="/images/harrison_logo.png"
-            bgColor="bg-[#ef4501]"
+            bgColor="bg-brand-color-500"
             imgSize="h-14 w-14"
-            hoverTextColor="group-hover:text-[#ef4501]"
+            hoverTextColor="group-hover:text-brand-color-500"
           />
-
           <DeliveryButton
             label="Grab"
             href={LINKS.GRAB}
