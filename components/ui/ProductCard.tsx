@@ -110,9 +110,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
           </h3>
         </div>
 
-        <p className="text-gray-500 text-sm mb-3 line-clamp-2">
+        {/* <p className="text-gray-500 text-sm mb-3 line-clamp-2">
           {item.description !== "" ? item.description : "No description"}
-        </p>
+        </p> */}
 
         <div className="flex items-center justify-between mt-auto">
           <span className="text-brand-color-500 font-bold text-xl">
