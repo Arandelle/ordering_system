@@ -153,7 +153,7 @@ export default function PaymentStatusPage({ type }: PaymentStatusPageProps) {
             {config.primaryButton.label}
           </Link>
           <Link 
-            href={"/menu"}
+            href={"/"}
             className={`rounded-xl px-6 py-3 text-sm transition-all duration-200 text-gray-400 hover:text-gray-700`}
           >
             Back to Menu
