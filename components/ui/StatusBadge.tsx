@@ -14,6 +14,8 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
     ready: "bg-orange-500",
     cancelled: "bg-gray-500",
     completed: "bg-[#ef4501]",
+    failed: "bg-red-500",
+    expired: "bg-red-500"
   };
 
   return (

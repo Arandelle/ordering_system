@@ -42,4 +42,6 @@ export const ORDER_TRANSITIONS: Record<
   },
   completed: null,
   cancelled: null,
+  failed: null,
+  expired: null
 };
