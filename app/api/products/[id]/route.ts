@@ -7,7 +7,7 @@ export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  let uploadResult;
+  let uploadResult: any;
 
   try {
     await connectDB();
@@ -18,34 +18,45 @@ export async function PUT(
     const {
       name,
       price,
-      description,
       image,
       imageFile,
       category,
+      subcategory,
       stock,
       isSignature,
+      isPopular,
+      productType,
+      paxCount,
+      includedItems,
     } = body;
 
     if (!id) {
       return NextResponse.json(
         { error: "Product ID required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const existingProduct = await Product.findById(id);
 
     if (!existingProduct) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
     }
+
+    // ── Image handling (unchanged from your original) ─────────────────────────
 
     let finalImage = existingProduct.image;
 
-    // ✅ If user uploaded new image
     if (imageFile) {
-      // 1️⃣ Upload new image
       uploadResult = await cloudinary.uploader.upload(imageFile, {
         folder: "products",
+        transformation: [
+          { width: 1200, height: 1200, crop: "limit" },
+          { quality: "auto" },
+        ],
       });
 
       finalImage = {
@@ -53,7 +64,6 @@ export async function PUT(
         public_id: uploadResult.public_id,
       };
 
-      // 2️⃣ Delete old image
       if (existingProduct.image?.public_id) {
         await cloudinary.uploader.destroy(existingProduct.image.public_id);
       }
@@ -64,39 +74,54 @@ export async function PUT(
         if (existingProduct.image?.public_id) {
           await cloudinary.uploader.destroy(existingProduct.image.public_id);
         }
-
-        finalImage = {
-          url: image,
-          public_id: undefined,
-        };
+        finalImage = { url: image, public_id: "" };
       }
     }
 
-    // 3️⃣ Update product
+    // ── Update product ────────────────────────────────────────────────────────
+
+    const resolvedProductType = productType ?? existingProduct.productType ?? "solo";
+
     const updated = await Product.findByIdAndUpdate(
       id,
       {
         name,
-        price: parseFloat(price),
-        description,
+        price: price !== undefined ? (price === null ? null : parseFloat(price)) : existingProduct.price,
         image: finalImage,
         category,
-        stock: parseInt(stock),
+        subcategory: subcategory ?? null,
+        stock: parseInt(stock) ?? existingProduct.stock,
         isSignature,
+        isPopular,
+        productType: resolvedProductType,
+        paxCount: resolvedProductType === "set" ? (paxCount ?? null) : null,
+        includedItems: resolvedProductType !== "solo"
+          ? (includedItems ?? []).map((item: any) => ({
+              product: item.product,
+              quantity: item.quantity,
+              label: item.label ?? null,
+            }))
+          : [],
       },
-      { new: true },
+      { new: true, runValidators: true }
     );
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: any) {
-    // 🔥 Rollback if DB update failed after upload
     if (uploadResult?.public_id) {
       await cloudinary.uploader.destroy(uploadResult.public_id);
     }
 
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { error: "Product already exists" },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
-      { error: error.message || "Failed to update item" },
-      { status: 500 },
+      { error: error.message || "Failed to update product" },
+      { status: 500 }
     );
   }
 }
@@ -113,7 +138,7 @@ export async function DELETE(
     if (!id) {
       return NextResponse.json(
         { error: "Product ID required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -122,26 +147,24 @@ export async function DELETE(
     if (!product) {
       return NextResponse.json(
         { error: "Product not found!" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
-    // Delete image from cloudinary
     if (product.image?.public_id) {
       await cloudinary.uploader.destroy(product.image.public_id);
     }
 
-    // Then delete product from DB
     await Product.findByIdAndDelete(id);
 
     return NextResponse.json(
       { message: "Product deleted successfully!" },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to delete an item" },
-      { status: 500 },
+      { error: "Failed to delete product" },
+      { status: 500 }
     );
   }
 }
