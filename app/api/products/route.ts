@@ -47,7 +47,7 @@ const productCreateSchema = productBaseSchema
     {
       message: "Combo and Set products must have at least one included item",
       path: ["includedItems"],
-    }
+    },
   );
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
@@ -129,6 +129,23 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function extractPublicId(url: string): string {
+  try {
+    const parts = url.split("/upload/")[1];
+    // v1771405509/products/xxxx.png
+
+    const withoutVersion = parts.replace(/^v\d+\//, "");
+    // products/xxxx.png
+
+    const publicId = withoutVersion.replace(/\.[^/.]+$/, "");
+    // products/xxxx
+
+    return publicId;
+  } catch (error) {
+    return "";
+  }
+}
+
 // ─── POST ─────────────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
@@ -167,12 +184,16 @@ export async function POST(request: NextRequest) {
           { quality: "auto" },
         ],
       });
+
       finalImage = {
         url: uploadResult.secure_url,
         public_id: uploadResult.public_id,
       };
     } else if (image) {
-      finalImage = { url: image, public_id: "" };
+      finalImage = {
+        url: image,
+        public_id: extractPublicId(image),
+      };
     }
 
     // ── Create ──────────────────────────────────────────────────────────────
@@ -181,7 +202,7 @@ export async function POST(request: NextRequest) {
       name,
       price: price ?? null,
       image: finalImage,
-      category,                          // ✅ ObjectId string — no normalization
+      category, // ✅ ObjectId string — no normalization
       subcategory: subcategory ?? null,
       stock,
       isSignature,
@@ -213,20 +234,20 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: "Validation failed", details: error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (error?.code === 11000) {
       return NextResponse.json(
         { success: false, error: "Product already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
       { error: error.message || "Failed to create product" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
