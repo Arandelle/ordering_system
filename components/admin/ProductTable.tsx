@@ -22,7 +22,6 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
   const productHeaders = [
     "Image",
     "Product",
-    "Description",
     "Category",
     "Price",
     "Stock",
@@ -93,18 +92,13 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                     </p>
                   </TableCell>
                   <TableCell className="px-6 py-4">
-                    <p className="text-gray-500 mt-1">
-                      {product.description.substring(0, 50) + "..."}
-                    </p>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
                     <span className="text-sm text-gray-600">
                       {product.category?.name}
                     </span>
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <span className="text-sm font-semibold text-gray-800">
-                      ₱{product.price.toFixed(2)}
+                      ₱{product.price?.toFixed(2)}
                     </span>
                   </TableCell>
                   <TableCell className="px-6 py-4">
