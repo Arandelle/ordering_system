@@ -824,7 +824,7 @@ const ProductsModal = ({
           <div className="text-center text-gray-400 text-xs my-3">— OR —</div>
 
           <InputField
-            subLabel="Paste Image URL"
+            subLabel="Paste Cloudinary Image URL"
             type="url"
             id="image"
             name="image"
