@@ -15,30 +15,66 @@ export interface OrderItem {
   price: number;
 }
 
+export interface IncludedItem {
+  product: string | Product;  // string when sending, populated Product when receiving
+  quantity: number;
+  label: string | null;
+}
+
+// UI-only type — lives inside the modal, never sent to API
+export interface IncludedItemUI {
+  product: string;       // always ObjectId string in the form
+  quantity: number;
+  label: string | null;
+  _name: string;         // display only
+  _price: number | null; // display only
+}
+
 export interface Product {
   _id: string;
   name: string;
-  description: string;
   category: Category;
-  price: number;
+  subcategory?: SubCategory | null;
+  price: number | null;
   image: {
-    url: string,
-    public_id?: string
+    url: string;
+    public_id?: string;
   };
   stock: number;
+  productType: "solo" | "combo" | "set";
+  includedItems: IncludedItem[];
+  paxCount?: number | null;
   isPopular?: boolean;
   isSignature?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface ProductPayload {
   name: string;
-  price: number;
-  description: string;
-  category: string;
+  price: number | null;
+  category: string;                  // ObjectId
+  subcategory?: string | null;       // ObjectId
   stock: number;
   image?: string;
   imageFile?: string;
   isSignature?: boolean;
+  isPopular?: boolean;
+  productType: "solo" | "combo" | "set";
+  paxCount?: number | null;
+  includedItems?: {
+    product: string;                 // ObjectId — always a string when sending
+    quantity: number;
+    label: string | null;
+  }[];
+}
+
+export interface SubCategory {
+  _id: string;
+  name: string;
+  category: string | Category;       // string when stored, populated when fetched
+  position: number;
+  createdAt?: Date;
 }
 
 export interface Category {
