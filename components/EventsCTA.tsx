@@ -58,7 +58,7 @@ export default function EventsCTA() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            href="/events#booking"
+            href="/catering#booking"
             className="group inline-flex items-center gap-2 bg-brand-color-600 hover:bg-brand-color-700 active:bg-brand-color-800 text-white font-bold px-8 py-4 rounded-full transition-all shadow-lg shadow-brand-color-900/40 hover:shadow-xl hover:shadow-brand-color-900/50 hover:-translate-y-0.5"
           >
             Book Your Event
