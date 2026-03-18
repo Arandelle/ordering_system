@@ -1,6 +1,11 @@
+"use client";
+
+import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import React from "react";
 
 const MainIntro = () => {
+  const menuUrl = useSubdomainPath("/", "food");
+
   return (
     <div className="max-w-5xl mx-auto text-center mt-24 px-4 space-y-6">
       {/* Headline */}
@@ -28,25 +33,28 @@ const MainIntro = () => {
       {/* Tagline Section */}
       <div className="pt-4 space-y-2">
         <blockquote>
-            <p className="text-brand-color-500 font-semibold italic text-xl md:text-2xl font-serif">
-              "Where Real Grilled Sarap Feels Like Home"
-            </p>
+          <p className="text-brand-color-500 font-semibold italic text-xl md:text-2xl font-serif">
+            "Where Real Grilled Sarap Feels Like Home"
+          </p>
         </blockquote>
         <p className="text-base md:text-lg text-gray-700">
           Juicy inasal. Smoky BBQ. Fresh off the grill—every single day.
         </p>
       </div>
 
-      <div className="space-x-4">
-        <button className="py-2 px-4 bg-brand-color-500 hover:bg-brand-color-600 cursor-pointer text-white font-bold rounded-lg">
+      <div className="space-x-4 mt-12">
+        <a
+          href={menuUrl}
+          className="py-2.5 px-6 bg-brand-color-500 hover:bg-brand-color-600 cursor-pointer text-white font-bold rounded-lg"
+        >
           Order Now
-        </button>
-        <button className="py-2 px-4 bg-brand-color-500 hover:bg-brand-color-600 cursor-pointer text-white font-bold rounded-lg">
-          View Menu
-        </button>
-        <button className="py-2 px-4 bg-brand-color-500 hover:bg-brand-color-600 cursor-pointer text-white font-bold rounded-lg">
-          Find a branch
-        </button>
+        </a>
+        <a
+          href="/#locations-section"
+          className="py-2.5 px-6 border border-brand-color-500 text-brand-color-500 hover:bg-brand-color-500 hover:text-white cursor-pointer font-bold rounded-lg transition-colors duration-300"
+        >
+          <span className="group-hover:scale-110 transform transition-transform">Find a branch</span>
+        </a>
       </div>
     </div>
   );
