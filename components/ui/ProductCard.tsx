@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useCart } from "@/contexts/CartContext";
 import { Product } from "@/types/adminType";
@@ -31,7 +31,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
 
   const getStockStatus = () => {
     if (item.stock <= 0) return { status: "out", label: "Out of Stock" };
-    if (item.stock <= 5) return { status: "low", label: `Only ${item.stock} left!` };
+    if (item.stock <= 5)
+      return { status: "low", label: `Only ${item.stock} left!` };
     return { status: "available", label: `${item.stock} available` };
   };
 
@@ -40,17 +41,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
 
   // Build included items display string
   const includedItems = item.includedItems ?? [];
-  const hasIncludedItems = item.productType !== "solo" && includedItems.length > 0;
+  const hasIncludedItems =
+    item.productType !== "solo" && includedItems.length > 0;
 
-  const includedItemsText = includedItems
-    .map((i) => {
-      const name =
-        i.label ??
-        (typeof i.product === "object" ? i.product.name : null) ??
-        "Item";
-      return i.quantity > 1 ? `${i.quantity}x ${name}` : name;
-    })
-    .join(" · ");
+  const includedItemsText = includedItems.map((i) => {
+    const name =
+      i.label ??
+      (typeof i.product === "object" ? i.product.name : null) ??
+      "Item";
+    return i.quantity > 1 ? `${i.quantity}x ${name}` : name;
+  });
 
   return (
     <div
@@ -93,11 +93,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
         {/** Combo / Set badge */}
         {item.productType !== "solo" && (
           <div className="absolute top-3 right-3 z-10">
-            <span className={`text-[10px] font-bold px-2 py-1 rounded-full shadow-sm ${
-              item.productType === "combo"
-                ? "bg-amber-500 text-white"
-                : "bg-emerald-500 text-white"
-            }`}>
+            <span
+              className={`text-[10px] font-bold px-2 py-1 rounded-full shadow-sm ${
+                item.productType === "combo"
+                  ? "bg-amber-500 text-white"
+                  : "bg-emerald-500 text-white"
+              }`}
+            >
               {item.productType === "combo"
                 ? "COMBO"
                 : `SET${item.paxCount ? ` · ${item.paxCount}pax` : ""}`}
@@ -119,11 +121,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
             } text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transform transition-all duration-300 hover:scale-105 shadow-lg`}
           >
             {isAdded ? (
-              <><Check size={18} />Added!</>
+              <>
+                <Check size={18} />
+                Added!
+              </>
             ) : item.stock === 0 ? (
               "Out of Stock"
             ) : (
-              <><Plus size={18} />Add To Cart</>
+              <>
+                <Plus size={18} />
+                Add To Cart
+              </>
             )}
           </button>
         </div>
@@ -137,18 +145,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ item }) => {
             {item.name}
           </h3>
 
-          {/* Subcategory pill */}
-          {subcategoryName && (
-            <span className="inline-block text-[11px] font-semibold text-brand-color-500 bg-brand-color-500/10 px-2 py-0.5 rounded-full leading-tight">
-              {subcategoryName}
-            </span>
-          )}
-
           {/* Included items — combo / set only */}
           {hasIncludedItems && (
-            <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-2">
-              {includedItemsText}
-            </p>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {includedItemsText.map((text, index) => (
+                <span
+                  key={index}
+                  className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
+                >
+                  {text}
+                </span>
+              ))}
+            </div>
           )}
 
           {/* Pax count for sets */}
