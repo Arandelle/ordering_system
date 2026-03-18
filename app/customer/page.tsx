@@ -11,12 +11,14 @@ export default function Home() {
   return (
     <>
       {/* <PromoBannerV2 /> */}
-      <div  className="max-w-7xl mx-auto mt-12 mb-3">
-        <PromoBanner type="single"/>
+      <div className="max-w-360 mx-auto mt-12 mb-3">
+        <div className="mx-4">
+          <PromoBanner type="single" />
+          <Suspense fallback={<MenuSectionSkeleton />}>
+            <MenuSection />
+          </Suspense>
+        </div>
       </div>
-      <Suspense fallback={<MenuSectionSkeleton />}>
-        <MenuSection />
-      </Suspense>
       {/* <StickyScrollProducts /> */}
       <LocationsSection />
       <EventsCTA />
