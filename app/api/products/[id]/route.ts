@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
+import { extractPublicId } from "@/helper/extractImagePublicId";
 
 export async function PUT(
   request: NextRequest,
@@ -74,7 +75,10 @@ export async function PUT(
         if (existingProduct.image?.public_id) {
           await cloudinary.uploader.destroy(existingProduct.image.public_id);
         }
-        finalImage = { url: image, public_id: "" };
+        finalImage = {
+          url: image,
+          public_id: extractPublicId(image)
+        };
       }
     }
 
