@@ -1,14 +1,16 @@
+import About from "@/components/main/About";
 import HeroVideo from "@/components/main/HeroBanner";
+import MainIntro from "@/components/main/MainIntro";
 import MainLocationSection from "@/components/main/MainLocationSection";
-import MissionVision from "@/components/main/MissionVision";
-import ProductMain from "@/components/main/ProductMain";
+import WhatWeServe from "@/components/main/WhatWeServe";
 
 const MainPage = () => {
   return (
     <>
       <HeroVideo />
-      {/* <ProductMain /> */}
-      <MissionVision />
+      <MainIntro />
+      <About />
+      <WhatWeServe />
       <MainLocationSection /> {/** Includes order now CTA */}
     </>
   );
