@@ -14,10 +14,11 @@ const Header = () => {
 
   const NAV_ITEMS = [
     // { label: "Products", section: "/#products-main-section" },
+    { label: "Home", section: "/"}, 
     { label: "About", section: "/#about-section" },
-    { label: "Catering", section: "/catering" },
-    { label: "Franchise Now", section: "/franchise" },
-    { label: "Locations", section: "/#locations-section" },
+    { label: "What we serve", section: "/#what-we-serve" },
+    { label: "Promotions", section: "/promotions" },
+    { label: "Contact us", section: "/contact-us" },
   ];
 
   return (
