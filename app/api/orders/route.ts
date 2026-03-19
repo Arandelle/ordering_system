@@ -1,6 +1,6 @@
 /**
  * GET /api/orders
- * 
+ *
  * Fetch all orders with smart sorting using STATUS_PRIORITY
  * Uses orderConstants.ts for consistent behavior with frontend
  */
@@ -8,7 +8,12 @@
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
 import { NextRequest, NextResponse } from "next/server";
-import { STATUS_PRIORITY, ORDER_ACTION_CONFIG, ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
+import {
+  STATUS_PRIORITY,
+  ORDER_ACTION_CONFIG,
+  ORDER_STATUSES,
+  OrderStatus,
+} from "@/types/orderConstants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,7 +65,8 @@ export async function GET(request: NextRequest) {
       // Sort by STATUS_PRIORITY (high-priority orders first)
       sortedOrders.sort((a, b) => {
         const priorityDiff =
-          STATUS_PRIORITY[a.status as OrderStatus] - STATUS_PRIORITY[b.status as OrderStatus];
+          STATUS_PRIORITY[a.status as OrderStatus] -
+          STATUS_PRIORITY[b.status as OrderStatus];
 
         // If same priority, sort by date (newest first)
         if (priorityDiff !== 0) return priorityDiff;
@@ -73,7 +79,7 @@ export async function GET(request: NextRequest) {
       // Sort by date (newest first)
       sortedOrders.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     }
 
@@ -82,14 +88,12 @@ export async function GET(request: NextRequest) {
     // ============================================
 
     const formattedOrders = sortedOrders.map((order) => ({
-      _id: order._id.toString(),
+      _id: order._id,
       createdAt: order.createdAt,
       status: order.status,
       items: order.items,
       total: order.total,
-      customerName: order.paymentInfo?.customerName,
-      customerEmail: order.paymentInfo?.customerEmail,
-      customerPhone: order.paymentInfo?.customerPhone,
+      paymentInfo: order.paymentInfo,
       estimatedTime: order.estimatedTime,
       isReviewed: order.isReviewed,
 
@@ -121,7 +125,7 @@ export async function GET(request: NextRequest) {
     console.error("GET /api/orders error:", error);
     return NextResponse.json(
       { error: "Failed to fetch orders" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
