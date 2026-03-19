@@ -2,6 +2,7 @@ import { getAuthHeader } from "@/lib/getAuthHeader";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
 import { Product } from "@/models/Product";
+import { ORDER_STATUSES } from "@/types/orderConstants";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
 
       // ✅ Maya payload format (separate — not saved to DB)
       mayaItems.push({
+        productId: product._id,
         name: product.name,
         quantity: cartItem.quantity,
         code: String(product._id),
@@ -138,7 +140,7 @@ export async function POST(request: NextRequest) {
     await Order.create(
       [
         {
-          status: "pending",
+          status: ORDER_STATUSES.PENDING,
           items: orderItems, // ✅ clean snapshot, matches OrderItemSchema
           paymentInfo: {
             checkoutId: data.checkoutId,
