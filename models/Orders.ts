@@ -1,7 +1,20 @@
+/**
+ * MONGOOSE ORDER SCHEMA
+ *
+ * Uses ORDER_STATUSES from orderConstants.ts to ensure
+ * frontend and backend stay in sync
+ */
+
+import { ORDER_STATUSES } from "@/types/orderConstants";
 import { model, models, Schema } from "mongoose";
+
+// ============================================
+// ORDER ITEM SCHEMA (Embedded)
+// ============================================
 
 /**
  * Embedded cart item snapshot
+ * Captures product state at time of order
  */
 export const OrderItemSchema = new Schema(
   {
@@ -25,41 +38,48 @@ export const OrderItemSchema = new Schema(
   { _id: false },
 );
 
+// ============================================
+// TIMELINE SCHEMA (Subdocument)
+// ============================================
+
 /**
- * Timeline subdocument
+ * Tracks when order transitions between statuses
+ * Maps to TIMELINE_FIELD_MAP in orderConstants.ts
  */
+
 const TimelineSchema = new Schema(
   {
+    // Payment events
     paidAt: Date,
     failedAt: Date,
     expiredAt: Date,
+
+    // Preparation events
     preparingAt: Date,
-    dispatchedAt: Date,
     readyAt: Date,
+
+    // Delivery events
+    dispatchedAt: Date,
     completedAt: Date,
+
+    // Cancellation
     cancelledAt: Date,
   },
   { _id: false },
 );
 
+// ============================================
+// MAIN ORDER SCHEMA
+// ============================================
+
 const OrderSchema = new Schema(
   {
     status: {
       type: String,
-      enum: [
-        "pending",
-        "paid",
-        "failed",
-        "expired",
-        "authorized",
-        "preparing",
-        "dispatched",
-        "ready",
-        "completed",
-        "cancelled",
-      ],
-      default: "pending",
+      enum: Object.values(ORDER_STATUSES),
+      default: ORDER_STATUSES.PENDING,
       required: true,
+      index: true, // Frequently queried field
     },
     items: {
       type: [OrderItemSchema],
@@ -72,9 +92,25 @@ const OrderSchema = new Schema(
       paymentId: String,
       paymentStatus: String,
 
-      customerName: String,
-      customerEmail: String,
-      customerPhone: String,
+      method: {
+        type: String,
+        default: "paymaya",
+      },
+
+      // Customer details
+      customerName: {
+        type: String,
+        required: true,
+      },
+      customerEmail: {
+        type: String,
+        required: true,
+        lowercase: true,
+      },
+      customerPhone: {
+        type: String,
+        required: true,
+      },
     },
 
     total: {
@@ -83,20 +119,49 @@ const OrderSchema = new Schema(
       total: { type: Number, required: true },
     },
 
-    estimatedTime: { type: String },
+    estimatedTime: { type: String, default: "30-45 minutes",},
 
-    timeline: TimelineSchema,
+      // Timeline of status changes
+    timeline: {
+      type: TimelineSchema,
+      default: {},
+    },
+
+     // Delivery/dispatch information
+    dispatchInfo: {
+      riderId: {
+        type: Schema.Types.ObjectId,
+        ref: "Driver",
+      },
+      riderName: String,
+      riderPhone: String,
+      vehicleType: String,  // motorcycle, car, etc.
+    },
 
     note: String,
 
     isReviewed: {
       type: Boolean,
       default: false,
+      index: true
     },
 
     reviewedAt: Date,
   },
   { timestamps: true },
 );
+
+// ============================================
+// INDEXES
+// ============================================
+
+// Optimize queries by status
+OrderSchema.index({ status: 1, createdAt: -1 });
+ 
+// Optimize customer queries
+OrderSchema.index({ "paymentInfo.customerEmail": 1 });
+ 
+// Optimize review queries
+OrderSchema.index({ isReviewed: 1, reviewedAt: -1 });
 
 export const Order = models.Order || model("Order", OrderSchema);
