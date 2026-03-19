@@ -6,10 +6,11 @@
  */
 
 import { apiClient } from "@/lib/apiClient";
-import { isValidOrderStatus, ORDER_ACTION_CONFIG, STATUS_PRIORITY, STATUS_TRANSITIONS } from "@/types/orderConstants";
+import { isValidOrderStatus, ORDER_ACTION_CONFIG, OrderStatus, STATUS_PRIORITY, STATUS_TRANSITIONS } from "@/types/orderConstants";
 import {
   CreateOrderPayload,
   CreateOrderResponse,
+  OrdersApiResponse,
   OrderType,
   UpdateOrderPayLoad,
   UpdateOrderResponse,
@@ -18,22 +19,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export const useOrders = () => {
-  return useQuery<OrderType[]>({
-    // unique query
+  return useQuery<OrdersApiResponse, Error, OrderType[]>({
     queryKey: ["orders"],
     queryFn: () => apiClient.get("/orders"),
     staleTime: 30000,
-    select: (data) =>
-      [...data].sort((a, b) => {
+    select: (response) =>
+      [...response.data].sort((a, b) => {
         const priorityDiff =
-          STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status];
+          STATUS_PRIORITY[a.status as OrderStatus] -
+          STATUS_PRIORITY[b.status as OrderStatus];
 
-        // if same status, keep most recent first
         if (priorityDiff !== 0) return priorityDiff;
 
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }),
   });
 };
