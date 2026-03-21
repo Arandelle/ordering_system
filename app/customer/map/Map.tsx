@@ -192,19 +192,10 @@ const Map = () => {
       },
       () => {
         // Permission denied or unavailable — silent fail, user can still click
+        setError("Location access denied. Please enable it or select manually.");
       },
     );
   }, []);
-
-  // ── Dismiss messages after 4 s ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!error && !success) return;
-    const t = setTimeout(() => {
-      setError(null);
-      setSuccess(null);
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [error, success]);
 
   // ---------- Place Marker with radius check --------------
   const placeMarker = useCallback((latlng: [number, number]) => {
@@ -354,7 +345,7 @@ const Map = () => {
         )}
 
         {success && !error && (
-          <div className="w-full py-2.5 px-3.5 rounded-lg bg-white border border-brand-color-500 text-brand-color-500 text-sm font-medium shadow">
+          <div className="w-full py-2.5 px-3.5 rounded-lg bg-white border border-dark-green-500 text-dark-green-500 text-sm font-medium shadow">
             {success}
           </div>
         )}
