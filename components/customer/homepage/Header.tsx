@@ -11,6 +11,9 @@ import {
   Package,
   LogOut,
   Loader2,
+  MapIcon,
+  MapPin,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useOrders } from "@/hooks/api/useOrders";
@@ -19,6 +22,9 @@ import AuthModal from "../AuthModal";
 import { useCustomerMe } from "@/hooks/api/useAuthMe";
 import { useLogoutCustomer } from "@/hooks/api/useLogout";
 import LogoutModal from "@/components/ui/LogoutModal";
+import Modal from "@/components/ui/Modal";
+import Map from "@/app/customer/map/Map";
+import MapPage from "@/app/customer/map/page"
 
 const Header = () => {
   const { data: currentUser, isPending } = useCustomerMe();
@@ -30,6 +36,8 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+
+  const [showMap, setShowmap] = useState(false)
 
   const [logoutModal, setLogoutModal] = useState(false);
 
@@ -61,6 +69,15 @@ const Header = () => {
         <div className="flex items-center justify-between lg:justify-around h-18 lg:h-20">
           {/* Logo */}
           <BrandLogo />
+
+          <button
+          onClick={() => setShowmap(true)}
+            className="flex items-center justify-center gap-2 bg-white hover:bg-brand-color-50 hover:text-brand-color-600 text-brand-color-500 px-4 py-2 text-sm font-bold rounded-full transition-colors cursor-pointer"
+          >
+            <MapPin size={16} />
+            Select Branch
+            <ChevronDown size={16}/>
+          </button>
 
           <div className="gap-6 hidden lg:flex">
             <Link href={"/catering"} className="hover:text-brand-color-500">
@@ -177,20 +194,28 @@ const Header = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-[#1a1a1a] border-t border-white/10">
-
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
-             <div className="gap-4 flex flex-col lg:hidden">
-            <Link href={"/menu"} className="text-white hover:text-brand-color-500">
-              Menu
-            </Link>
-            <Link href={"/events"} className="text-white hover:text-brand-color-500">
-              Events
-            </Link>
-            <Link href={"/contact"} className="text-white hover:text-brand-color-500">
-              Contact Us
-            </Link>
-          </div>
-          
+            <div className="gap-4 flex flex-col lg:hidden">
+              <Link
+                href={"/menu"}
+                className="text-white hover:text-brand-color-500"
+              >
+                Menu
+              </Link>
+              <Link
+                href={"/events"}
+                className="text-white hover:text-brand-color-500"
+              >
+                Events
+              </Link>
+              <Link
+                href={"/contact"}
+                className="text-white hover:text-brand-color-500"
+              >
+                Contact Us
+              </Link>
+            </div>
+
             {currentUser ? (
               // logged in mobile menu
               <div className="flex flex-col gap-2 pt-2">
@@ -265,6 +290,12 @@ const Header = () => {
           onConfirm={() => userLogout.mutate()}
           isLoading={userLogout.isPending}
         />
+      )}
+
+      {showMap && (
+        <Modal onClose={() => setShowmap(false)} title="Select Harrison Branch">
+          <MapPage />
+        </Modal>
       )}
     </header>
   );
