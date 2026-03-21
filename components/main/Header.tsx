@@ -16,6 +16,7 @@ const Header = () => {
     // { label: "Products", section: "/#products-main-section" },
     { label: "Home", section: "/"}, 
     { label: "About", section: "/#about-section" },
+     { label: "Franchise", section: "/franchise" },
     { label: "What we serve", section: "/#what-we-serve" },
     { label: "Promotions", section: "/promotions" },
     { label: "Contact us", section: "/contact-us" },
