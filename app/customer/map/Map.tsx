@@ -25,100 +25,18 @@ import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 
 import { InputField } from "@/components/ui/InputField";
 import { LoaderCircle, MapPin, Search } from "lucide-react";
+import {
+  Branch,
+  BRANCHES,
+  branchIcon,
+  nearestBranchIcon,
+  userIcon,
+} from "./mockupData";
+import { haversine } from "./functions/haversine";
+import { nearestBranch } from "./functions/nearestBranch";
 
 const METRO_MANILA_CENTER: [number, number] = [14.5995, 120.9842];
 const ALLOWED_RADIUS_METERS = 25_000; // 25 km - covers the entire NCR
-
-// Branch Data
-interface Branch {
-  id: number;
-  name: string;
-  address: string;
-  position: [number, number];
-}
-
-const BRANCHES: Branch[] = [
-  {
-    id: 1,
-    name: "Harrison BGC Branch",
-    address: "30th St, Bonifacio Global City, Taguig",
-    position: [14.5514, 121.0494],
-  },
-  {
-    id: 2,
-    name: "Harrison Quezon City Branch",
-    address: "Tomas Morato Ave, Quezon City",
-    position: [14.5789, 121.0345],
-  },
-  {
-    id: 3,
-    name: "Harrison Makati Branch",
-    address: "Ayala Ave, Makati City",
-    position: [14.5547, 121.0244],
-  },
-];
-
-// ── Haversine distance (metres) ───────────────────────────────────────────────
-function haversine(a: [number, number], b: [number, number]): number {
-  const R = 6_371_000;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(b[0] - a[0]);
-  const dLon = toRad(b[1] - a[1]);
-  const sin2 =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.asin(Math.sqrt(sin2));
-}
-
-// Returns the nearest branch + distance in km
-function nearestBranch(latlng: [number, number]): {
-  branch: Branch;
-  km: number;
-} {
-  let nearest = BRANCHES[0];
-  let minDist = haversine(latlng, BRANCHES[0].position);
-
-  for (const branch of BRANCHES.slice(1)) {
-    const d = haversine(latlng, branch.position);
-    if (d < minDist) {
-      minDist = d;
-      nearest = branch;
-    }
-  }
-
-  return { branch: nearest, km: minDist / 1000 };
-}
-
-// ------ Custom Icon ---------------
-const userIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-// Red pin for branch markers
-const branchIcon = new L.Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-const nearestBranchIcon = new L.Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
 
 // ── Click handler (child component so it can access map events) ───────────────
 function ClickHandler({
@@ -127,7 +45,7 @@ function ClickHandler({
   onPlace: (latlng: [number, number]) => void;
 }) {
   useMapEvents({
-    click(e) {
+    dblclick(e) {
       onPlace([e.latlng.lat, e.latlng.lng]);
     },
   });
@@ -186,13 +104,14 @@ const Map = () => {
           // open popup afer fly animation finishes
           setTimeout(() => {
             userMarkerRef.current?.openPopup();
-          }, 1800)
-
+          }, 1800);
         }, 600);
       },
       () => {
         // Permission denied or unavailable — silent fail, user can still click
-        setError("Location access denied. Please enable it or select manually.");
+        setError(
+          "Location access denied. Please enable it or select manually.",
+        );
       },
     );
   }, []);
@@ -214,9 +133,6 @@ const Map = () => {
     setIsPending(false);
     setNearestInfo(info);
     setError(null);
-    setSuccess(
-      `Nearest branch: ${info.branch.name} — ${info.km.toFixed(1)} km away`,
-    );
   }, []);
 
   // ──Manual Geolocation button ───────────────────────────────────────────────────────────
@@ -275,6 +191,15 @@ const Map = () => {
     [placeMarker],
   );
 
+  const saveSelectedBranch = useCallback((branch: Branch) => {
+    localStorage.setItem("selected_branch", JSON.stringify(branch));
+  }, []);
+
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(() => {
+    const saved = localStorage.getItem("selected_branch");
+    return saved ? JSON.parse(saved) : null;
+  });
+
   return (
     <section className="relative w-full font-sans z-0">
       <div className="relative max-w-7xl h-full mx-auto space-y-4 my-4">
@@ -325,16 +250,29 @@ const Map = () => {
 
         {/** -------- Nearest branch info card (shown after marker confirmed) */}
         {nearestInfo && !isPending && (
-          <div className="w-full py-3 px-4 rounded-lg bg-brand-color-50 border border-brand-color-200 text-sm shadow-sm">
-            <p className="font-semibold text-brand-color-600">
-              Nearest Branch : {nearestInfo.branch.name}
-            </p>
-            <p className="text-brand-color-500 mt-0.5">
-              {nearestInfo.branch.address} &mdash;{" "}
-              <span className="font-medium">
-                {nearestInfo.km.toFixed(1)} km from your location
-              </span>
-            </p>
+          <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-brand-color-50 border border-brand-color-200 text-sm shadow-sm">
+            <div>
+              <p className="font-semibold text-brand-color-600">
+                Nearest Branch : {nearestInfo.branch.name}
+              </p>
+              <p className="text-brand-color-500 mt-0.5">
+                {nearestInfo.branch.address} &mdash;{" "}
+                <span className="font-medium">
+                  {nearestInfo.km.toFixed(1)} km from your location
+                </span>
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                mapRef.current?.flyTo(nearestInfo.branch.position, 16, {
+                  duration: 1.2,
+                });
+              }}
+              className="bg-brand-color-500 hover:bg-brand-color-600 text-white py-1 px-2 rounded-lg cursor-pointer"
+            >
+              View on map
+            </button>
           </div>
         )}
 
@@ -359,6 +297,7 @@ const Map = () => {
           center={METRO_MANILA_CENTER}
           zoom={12}
           scrollWheelZoom
+          doubleClickZoom={false}
           style={{ width: "100%", height: "500px" }}
           ref={mapRef}
         >
@@ -393,16 +332,36 @@ const Map = () => {
             >
               <Popup>
                 <div className="min-w-40">
-                  <p className="font-bold mb-0.5">{branch.name}</p>
-                  <p className="text-sm text-gray-500 mb-1.5">
-                    {branch.address}
-                  </p>
-                  {/* Badge shown on the nearest branch after user confirms location */}
-                  {nearestInfo?.branch.id === branch.id && !isPending && (
-                    <span className="bg-dark-green-500 text-white text-xs font-semibold py-2 px-4 rounded-4xl">
-                      * Nearest to you
-                    </span>
-                  )}
+                  <div>
+                    <p className="font-bold mb-0.5">{branch.name}</p>
+                    <p className="text-sm text-gray-500 mb-1.5">
+                      {branch.address}
+                    </p>
+                    {/* Badge shown on the nearest branch after user confirms location */}
+                    {nearestInfo?.branch.id === branch.id && !isPending && (
+                      <p className="bg-dark-green-500 text-white text-xs font-semibold py-2 px-4 rounded-4xl">
+                        * Nearest to you
+                      </p>
+                    )}
+                  </div>
+
+                  {/* ── Select this branch button ── */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      saveSelectedBranch(branch);
+                      setSelectedBranch(branch);
+                    }}
+                    className={`mt-2 w-full py-1.5 text-xs font-semibold rounded-md border-0 cursor-pointer transition-colors ${
+                      selectedBranch?.id === branch.id
+                        ? "bg-dark-green-500 text-white"
+                        : "bg-brand-color-500 hover:bg-brand-color-600 text-white"
+                    }`}
+                  >
+                    {selectedBranch?.id === branch.id
+                      ? "✓ Selected Branch"
+                      : "Select this Branch"}
+                  </button>
                 </div>
               </Popup>
             </Marker>
@@ -421,7 +380,10 @@ const Map = () => {
                       anywhere on the map to choose a different spot.
                     </p>
                     <button
-                      onClick={() => placeMarker(userMarker)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        placeMarker(userMarker);
+                      }}
                       className="w-full py-2 bg-brand-color-500 text-white border-0 rounded-sm text-sm font-semibold cursor-pointer"
                     >
                       Confirm this location
@@ -447,6 +409,12 @@ const Map = () => {
             </Marker>
           )}
           <ClickHandler onPlace={placeMarker} />
+
+          {/** Double click message */}
+          <div className="absolute top-8 left-1/2 -translate-x-1/2 z-999 px-4 py-2 bg-white text-brand-color-500 text-sm font-medium rounded-full shadow-md border border-brand-color-100">
+            <p>Double-click on the map to set your location</p>
+          </div>
+
           {/* ── Logo badge overlaid on map bottom-left ── */}
           <div className="absolute bottom-2 left-2 bg-white shadow-md px-3 py-2 rounded-lg flex items-center z-9999">
             <img
