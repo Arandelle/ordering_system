@@ -5,6 +5,7 @@ import TheOpportunity from './components/TheOpportunity'
 import OurAdvantage from './components/OurAdvantage'
 import ScalableInvestmentTiers from './components/Investment'
 import WeBuildSuccessTogether from './components/WeBuildSuccess'
+import WhoWeAre from './components/WhoWeAre'
 
 const Clientpage = () => {
   return (
@@ -12,6 +13,7 @@ const Clientpage = () => {
       <Header />
       <HeroBanner />
       <TheOpportunity />
+      <WhoWeAre />
       <OurAdvantage />
       <ScalableInvestmentTiers />
       <WeBuildSuccessTogether />

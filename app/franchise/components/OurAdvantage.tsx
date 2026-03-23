@@ -5,43 +5,51 @@ const OurAdvantage = () => {
   const advantageList = [
     {
       icon: "Zap",
-      name: "Faster Operations",
+      name: "Strong Brand Recognition",
       description:
-        "A laser-focused menu translates directly to quicker preparation times, faster table turnovers, and higher daily customer volume.",
+        "Leverage the power of an established name that customers trust.",
+    },
+    {
+      icon: "BookOpen",
+      name: "Comprehensive Training & Support",
+      description:
+        "From onboarding to daily operations, we guide you every step of the way.",
     },
     {
       icon: "ChartLine",
-      name: "Lower Waste",
+      name: "Marketing & Growth Support",
       description:
-        "Streamlined, overlapping ingredients drastically reduce food spoilage and optimize your daily inventory management.",
+        "Access ready-to-use marketing strategies that drive real results.",
     },
     {
-      icon: "GraduationCap",
-      name: "Easier Training",
+      icon: "MapPin",
+      name: "Scalable Opportunity",
       description:
-        "Simplified kitchen processes mean you can hire, train, and deploy staff rapidly without ever sacrificing food quality.",
+        "Expand your business with multiple locations and maximize your earning potential.",
     },
   ];
 
   return (
-    <div id="our-advantages" className="min-h-screen bg-linear-to-b from-slate-950 to-black text-white py-24 px-4 sm:px-6 lg:px-8">
+    <div
+      id="our-advantages"
+      className="bg-linear-to-b from-slate-950 to-black text-white py-24 px-4 sm:px-6 lg:px-8"
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-20">
           <div className="flex flex-col items-center gap-6 mb-12">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-center text-white">
-              Why Our Model Works
+              A Proven Business Model
             </h1>
             <div className="w-20 h-1 bg-brand-color-500 rounded-full" />
           </div>
           <p className="max-w-3xl mx-auto text-center text-lg sm:text-xl text-gray-300 leading-relaxed">
-            We don't just sell food; we sell an efficient operating system
-            designed to maximize your Return on Investment.
+            Step into a system that’s already tested and optimized for success.
           </p>
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {advantageList.map((item, index) => {
             const Icon = getLucideIcon(item.icon);
 
@@ -52,7 +60,11 @@ const OurAdvantage = () => {
               >
                 {/* Icon Container */}
                 <div className="p-4 rounded-xl">
-                  <Icon size={48} className="text-brand-color-500" strokeWidth={1.5} />
+                  <Icon
+                    size={48}
+                    className="text-brand-color-500"
+                    strokeWidth={1.5}
+                  />
                 </div>
 
                 {/* Title */}
