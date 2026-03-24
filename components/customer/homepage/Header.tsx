@@ -11,7 +11,6 @@ import {
   Package,
   LogOut,
   Loader2,
-  MapIcon,
   MapPin,
   ChevronDown,
 } from "lucide-react";
@@ -24,8 +23,8 @@ import { useLogoutCustomer } from "@/hooks/api/useLogout";
 import LogoutModal from "@/components/ui/LogoutModal";
 import Modal from "@/components/ui/Modal";
 import MapPage from "@/app/customer/map/page";
-import { Branch } from "@/app/customer/map/mockupData";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useBranch } from "@/contexts/BranchContext";
 
 const Header = () => {
   const { data: currentUser, isPending } = useCustomerMe();
@@ -36,20 +35,17 @@ const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
 
+  const { selectedBranch } = useBranch();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { totalItems, setIsCartOpen } = useCart();
   const { data: placedOrders } = useOrders();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(() => {
-    try {
-      const saved = localStorage.getItem("selected_branch");
-      return saved ? JSON.parse(saved) : null;
-    } catch (error) {
-      console.error("Error loading selected branch", error);
-      return null;
-    }
-  });
 
   const activeOrdersCount =
     placedOrders?.filter(
@@ -98,9 +94,16 @@ const Header = () => {
             onClick={() => handleOpenModal("map")}
             className="flex items-center justify-center gap-2 bg-white hover:bg-brand-color-50 hover:text-brand-color-600 text-brand-color-500 px-4 py-2 text-sm font-bold rounded-full transition-colors cursor-pointer max-w-35 sm:max-w-none"
           >
-            <MapPin size={16} className="shrink-0"/>
-            <span className="truncate">{selectedBranch ? selectedBranch.name : "Select Branch"}</span>
-            <ChevronDown size={16} className="shrink-0"/>
+            <MapPin size={16} className="shrink-0" />
+            <span className="truncate">
+              {mounted
+                ? selectedBranch
+                  ? selectedBranch.name
+                  : "Select Branch"
+                : "Select Branch"}{" "}
+              {/* matches server render */}
+            </span>
+            <ChevronDown size={16} className="shrink-0" />
           </button>
 
           <div className="gap-6 hidden lg:flex">
