@@ -120,7 +120,7 @@ const Map = () => {
   const [userMarker, setUserMarker] = useState<[number, number] | null>(null);
 
   // true = geolocated but user hasn't confirmed (shows "Select a place?" popup)
-  const [isPending, setIsPending] = useState(false);
+  const [isMarkerPending, setIsMarkerPending] = useState(false);
 
   // selected branch from context
   const { selectedBranch, setSelectedBranch } = useBranch();
@@ -153,7 +153,7 @@ const Map = () => {
           pos.coords.longitude,
         ];
         setUserMarker(latlng);
-        setIsPending(true);
+        setIsMarkerPending(true);
         // Small delay so MapContainer has fully initialised before flyTo
         setTimeout(() => {
           mapRef.current?.flyTo(latlng, 14, { duration: 1.5 });
@@ -187,7 +187,7 @@ const Map = () => {
     const info = nearestBranch(latlng);
 
     setUserMarker(latlng);
-    setIsPending(false);
+    setIsMarkerPending(false);
     setNearestInfo(info);
     setError(null);
   }, []);
@@ -249,7 +249,7 @@ const Map = () => {
   );
 
   const getBranchIcon = (branch: Branch) => {
-    const isNearest = nearestInfo?.branch.id === branch.id && !isPending;
+    const isNearest = nearestInfo?.branch.id === branch.id && !isMarkerPending;
     const isSelected = selectedBranch?.id === branch.id;
 
     if (isNearest && isSelected) return selectedAndNearestBranchIcon;
@@ -268,7 +268,7 @@ const Map = () => {
   return (
     <section className={`${fredoka.className} relative w-full font-sans z-0`}>
       <div className="relative max-w-7xl h-full mx-auto space-y-4 my-4">
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2">
           <InputField
             placeholder="Search your address or area"
             name="search-branch"
@@ -279,10 +279,16 @@ const Map = () => {
             }}
             rightElement={
               !searching ? (
-                <Search
-                  onClick={() => handleSearch(query)}
-                  className="cursor-pointer text-brand-color-500 hover:text-brand-color-600"
-                />
+                <div className="flex items-center gap-2 cursor-pointer group">
+                  <Search
+                    size={18}
+                    onClick={() => handleSearch(query)}
+                    className=" text-brand-color-500 group-hover:text-brand-color-600"
+                  />
+                  <p className="text-slate-700 group-hover:text-slate-800">
+                    Search
+                  </p>
+                </div>
               ) : (
                 <LoaderCircle className="animate-spin" />
               )
@@ -313,7 +319,7 @@ const Map = () => {
           </div>
         )}
 
-        {nearestInfo && !isPending && (
+        {nearestInfo && !isMarkerPending && (
           <BranchInfoCard
             label="Nearest branch"
             branch={nearestInfo.branch}
@@ -326,7 +332,7 @@ const Map = () => {
           />
         )}
 
-        {selectedBranch && !isPending && (
+        {selectedBranch && !isMarkerPending && (
           <BranchInfoCard
             label="Selected branch"
             branch={selectedBranch}
@@ -407,12 +413,13 @@ const Map = () => {
 
                   {/* Badges */}
                   <div className="flex flex-wrap gap-1">
-                    {nearestInfo?.branch.id === branch.id && !isPending && (
-                      <span className="inline-flex items-center gap-1 bg-dark-green-50 text-dark-green-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-dark-green-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-dark-green-500 inline-block" />
-                        Nearest to you
-                      </span>
-                    )}
+                    {nearestInfo?.branch.id === branch.id &&
+                      !isMarkerPending && (
+                        <span className="inline-flex items-center gap-1 bg-dark-green-50 text-dark-green-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-dark-green-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-dark-green-500 inline-block" />
+                          Nearest to you
+                        </span>
+                      )}
                     {selectedBranch?.id === branch.id && (
                       <span className="inline-flex items-center gap-1 bg-brand-color-50 text-brand-color-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-brand-color-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-brand-color-500 inline-block" />
@@ -422,7 +429,7 @@ const Map = () => {
                   </div>
 
                   {/* Distance — only if user placed a marker */}
-                  {userMarker && !isPending && (
+                  {userMarker && !isMarkerPending && (
                     <p className="text-xs text-gray-400">
                       {getDistance(branch.position, userMarker).toFixed(1)} km
                       from your location
@@ -454,7 +461,7 @@ const Map = () => {
           {userMarker && (
             <Marker position={userMarker} icon={userIcon} ref={userMarkerRef}>
               <Popup>
-                {isPending ? (
+                {isMarkerPending ? (
                   // ── Pending state: auto-geolocated, not yet confirmed ──
                   <div className="min-w-40">
                     <p className="font-bold mb-1">Select Place?</p>
@@ -474,19 +481,7 @@ const Map = () => {
                   </div>
                 ) : (
                   //** confirmed state */}
-                  <div className="min-w-40">
-                    <p className="font-bold mb-0.5">You are here</p>
-                    <p>
-                      {userMarker[0].toFixed(5)}, {userMarker[1].toFixed(5)}
-                    </p>
-                    {nearestInfo && (
-                      <p className="text-xs text-dark-green-500 font-medium">
-                        {nearestInfo.branch.name}
-                        <br />
-                        {nearestInfo.km.toFixed(1)} km away
-                      </p>
-                    )}
-                  </div>
+                  "Your are here"
                 )}
               </Popup>
             </Marker>
@@ -518,7 +513,7 @@ const Map = () => {
             }}
             aria-label="Locate my marker"
             title="Locate my current marker"
-            className="absolute top-5 right-5 z-999 bg-brand-color-500 hover:bg-brand-color-600 rounded-full p-1 cursor-pointer"
+            className="absolute top-5 right-5 z-999 bg-brand-color-500 hover:bg-brand-color-600 rounded-full p-2 cursor-pointer"
           >
             <MapPinned size={18} className="text-white" />
           </button>
@@ -526,7 +521,7 @@ const Map = () => {
       </div>
 
       {/* ── Legend ── */}
-      <div className="absolute bottom-2 right-2 z-9999">
+      <div className="z-9999">
         <div className="relative">
           {/* Trigger button */}
           <button
@@ -551,7 +546,7 @@ const Map = () => {
 
           {/* Dropdown panel */}
           {legendOpen && (
-            <div className="absolute bottom-full mb-2 left-0 bg-[#1c1c1e] rounded-lg p-2.5 min-w-44 shadow-lg">
+            <div className="absolute bottom-full mb-2 left-0 bg-[#1c1c1e] opacity-90 rounded-lg p-2.5 min-w-44 shadow-lg z-9999">
               {[
                 { icon: userIcon, label: "Your location" },
                 { icon: branchIcon, label: "Branch" },
