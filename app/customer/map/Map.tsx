@@ -24,7 +24,15 @@ import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 
 import { InputField } from "@/components/ui/InputField";
-import { ChevronDown, LoaderCircle, MapPin, Search } from "lucide-react";
+import {
+  ChevronDown,
+  LoaderCircle,
+  MapPin,
+  MapPinHouse,
+  MapPinned,
+  PersonStanding,
+  Search,
+} from "lucide-react";
 import {
   Branch,
   BRANCHES,
@@ -62,6 +70,46 @@ interface SearchResult {
   lat: string;
   lon: string;
 }
+
+type BranchInfoCardProps = {
+  label: string;
+  branch: Branch;
+  distanceKm?: number;
+  onViewMap: () => void;
+};
+
+const BranchInfoCard = ({
+  label,
+  branch,
+  distanceKm,
+  onViewMap,
+}: BranchInfoCardProps) => (
+  <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-gray-50 border border-gray-200 text-sm shadow-sm">
+    <div>
+      <p className="text-lg font-medium text-slate-900">
+        {label}: {branch.name}
+      </p>
+      <p className="text-slate-700 mt-0.5">
+        {branch.address}
+        {distanceKm !== undefined && (
+          <>
+            {" "}
+            &mdash;{" "}
+            <span className="font-medium">
+              {distanceKm.toFixed(1)} km from your location
+            </span>
+          </>
+        )}
+      </p>
+    </div>
+    <button
+      onClick={onViewMap}
+      className="shrink-0 ml-3 bg-brand-color-500 hover:bg-brand-color-600 text-white text-xs py-1.5 px-3 rounded-lg cursor-pointer border-0 transition-colors"
+    >
+      View on map
+    </button>
+  </div>
+);
 
 // ---------------- Component ----------------------
 const Map = () => {
@@ -243,7 +291,7 @@ const Map = () => {
           <button
             onClick={handleLocate}
             title="Use my current location"
-            className="flex items-center gap-2 py-2.5 px-3.5 border-0 bg-brand-color-500 hover:bg-brand-color-600 rounded-lg text-white text-sm font-semibold cursor-pointer shadow whitespace-nowrap"
+            className="flex items-center gap-2 py-2.5 px-3.5 border-0 bg-brand-color-500 hover:bg-brand-color-600 rounded-lg text-white text-sm cursor-pointer shadow whitespace-nowrap"
           >
             <MapPin size={16} />
             My Location
@@ -265,53 +313,34 @@ const Map = () => {
           </div>
         )}
 
-        {/** -------- Nearest branch info card (shown after marker confirmed) */}
         {nearestInfo && !isPending && (
-          <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-brand-color-50 border border-brand-color-200 text-sm shadow-sm">
-            <div>
-              <p className="font-semibold text-brand-color-600">
-                Nearest Branch : {nearestInfo.branch.name}
-              </p>
-              <p className="text-brand-color-500 mt-0.5">
-                {nearestInfo.branch.address} &mdash;{" "}
-                <span className="font-medium">
-                  {nearestInfo.km.toFixed(1)} km from your location
-                </span>
-              </p>
-            </div>
-
-            <button
-              onClick={() => {
-                mapRef.current?.flyTo(nearestInfo.branch.position, 16, {
-                  duration: 1.2,
-                });
-              }}
-              className="bg-brand-color-500 hover:bg-brand-color-600 text-white py-1 px-2 rounded-lg cursor-pointer"
-            >
-              View on map
-            </button>
-          </div>
+          <BranchInfoCard
+            label="Nearest branch"
+            branch={nearestInfo.branch}
+            distanceKm={nearestInfo.km}
+            onViewMap={() =>
+              mapRef.current?.flyTo(nearestInfo.branch.position, 16, {
+                duration: 1.2,
+              })
+            }
+          />
         )}
 
         {selectedBranch && !isPending && (
-          <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-brand-color-50 border border-brand-color-200 text-sm shadow-sm">
-            <div>
-              <p className="font-semibold text-brand-color-600">
-                Your selected Branch: {selectedBranch.name}
-              </p>
-              <p className="text-brand-color-500 mt-0.5">
-                {selectedBranch.address} &mdash;{" "}
-                {userMarker && (
-                  <span className="font-medium">
-                    {getDistance(selectedBranch.position, userMarker).toFixed(
-                      1,
-                    )}{" "}
-                    km from your location
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
+          <BranchInfoCard
+            label="Selected branch"
+            branch={selectedBranch}
+            distanceKm={
+              userMarker
+                ? getDistance(selectedBranch.position, userMarker)
+                : undefined
+            }
+            onViewMap={() =>
+              mapRef.current?.flyTo(selectedBranch.position, 16, {
+                duration: 1.2,
+              })
+            }
+          />
         )}
 
         {error && (
@@ -365,36 +394,56 @@ const Map = () => {
               icon={getBranchIcon(branch)}
             >
               <Popup>
-                <div className="min-w-40">
-                  <div>
-                    <p className="font-bold mb-0.5">{branch.name}</p>
-                    <p className="text-sm text-gray-500 mb-1.5">
-                      {branch.address}
-                      {branch.position[0]} , {branch.position[1]}
+                <div className="min-w-44 space-y-2">
+                  {/* Header */}
+                  <div className="border-b border-gray-100 pb-2">
+                    <p className="font-bold text-sm text-gray-800">
+                      {branch.name}
                     </p>
-                    {/* Badge shown on the nearest branch after user confirms location */}
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {branch.address}
+                    </p>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-1">
                     {nearestInfo?.branch.id === branch.id && !isPending && (
-                      <p className="bg-dark-green-500 text-white text-xs font-semibold py-2 px-4 rounded-4xl">
-                        * Nearest to you
-                      </p>
+                      <span className="inline-flex items-center gap-1 bg-dark-green-50 text-dark-green-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-dark-green-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-dark-green-500 inline-block" />
+                        Nearest to you
+                      </span>
+                    )}
+                    {selectedBranch?.id === branch.id && (
+                      <span className="inline-flex items-center gap-1 bg-brand-color-50 text-brand-color-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-brand-color-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-color-500 inline-block" />
+                        Selected
+                      </span>
                     )}
                   </div>
 
-                  {/* ── Select this branch button ── */}
+                  {/* Distance — only if user placed a marker */}
+                  {userMarker && !isPending && (
+                    <p className="text-xs text-gray-400">
+                      {getDistance(branch.position, userMarker).toFixed(1)} km
+                      from your location
+                    </p>
+                  )}
+
+                  {/* Select button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedBranch(branch);
                     }}
-                    className={`mt-2 w-full py-1.5 text-xs font-semibold rounded-md border-0 cursor-pointer transition-colors ${
+                    className={`w-full py-1.5 text-xs font-semibold rounded-md border-0 cursor-pointer transition-colors ${
                       selectedBranch?.id === branch.id
                         ? "bg-dark-green-500 text-white"
                         : "bg-brand-color-500 hover:bg-brand-color-600 text-white"
                     }`}
                   >
                     {selectedBranch?.id === branch.id
-                      ? "✓ Selected Branch"
-                      : "Select this Branch"}
+                      ? "✓ Selected branch"
+                      : "Select this branch"}
                   </button>
                 </div>
               </Popup>
@@ -460,6 +509,19 @@ const Map = () => {
               Map
             </span>
           </div>
+
+          <button
+            onClick={() => {
+              mapRef.current?.flyTo(userMarker ? userMarker : [0, 0], 14, {
+                duration: 1.2,
+              });
+            }}
+            aria-label="Locate my marker"
+            title="Locate my current marker"
+            className="absolute top-5 right-5 z-999 bg-brand-color-500 hover:bg-brand-color-600 rounded-full p-1 cursor-pointer"
+          >
+            <MapPinned size={18} className="text-white" />
+          </button>
         </MapContainer>
       </div>
 
@@ -480,7 +542,7 @@ const Map = () => {
                 />
               ))}
             </span>
-            Markers 5/5
+            Markers Legend
             <ChevronDown
               size={12}
               className={`transition-transform duration-200 ${legendOpen ? "rotate-180" : ""}`}
