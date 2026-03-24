@@ -24,7 +24,7 @@ import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 
 import { InputField } from "@/components/ui/InputField";
-import { LoaderCircle, MapPin, Search } from "lucide-react";
+import { ChevronDown, LoaderCircle, MapPin, Search } from "lucide-react";
 import {
   Branch,
   BRANCHES,
@@ -37,6 +37,7 @@ import {
 import { haversine } from "./functions/haversine";
 import { nearestBranch } from "./functions/nearestBranch";
 import { useBranch } from "@/contexts/BranchContext";
+import { fredoka } from "@/app/font";
 
 const METRO_MANILA_CENTER: [number, number] = [14.5995, 120.9842];
 const ALLOWED_RADIUS_METERS = 25_000; // 25 km - covers the entire NCR
@@ -88,6 +89,8 @@ const Map = () => {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+
+  const [legendOpen, setLegendOpen] = useState(false);
 
   // -- Auto request geolocation on mount ---------------
   // Drops a pending marker at the user's detected location with a
@@ -212,8 +215,10 @@ const Map = () => {
     return haversine(a, b) / 1000; // returns km directly
   }
 
+  const dotColors = ["#e53e3e", "#38a169", "#d69e2e", "#7c3aed", "#3b82f6"];
+
   return (
-    <section className="relative w-full font-sans z-0">
+    <section className={`${fredoka.className} relative w-full font-sans z-0`}>
       <div className="relative max-w-7xl h-full mx-auto space-y-4 my-4">
         <div className="flex gap-2 items-center">
           <InputField
@@ -459,26 +464,54 @@ const Map = () => {
       </div>
 
       {/* ── Legend ── */}
-      <div className="grid grid-cols-3 bg-white px-3 py-2 font-bold text-sm gap-4">
-        {[
-          { icon: userIcon, label: "Your Location" },
-          { icon: branchIcon, label: "Branch" },
-          { icon: selectedBranchIcon, label: "Selected" },
-          { icon: nearestBranchIcon, label: "Nearest" },
-          {
-            icon: selectedAndNearestBranchIcon,
-            label: "Selected & Nearest",
-          },
-        ].map(({ icon, label }) => (
-          <div key={label} className="flex items-center gap-2">
-            <img
-              src={icon.options.iconUrl}
-              className="h-4 w-auto"
-              alt={label}
+      <div className="absolute bottom-2 right-2 z-9999">
+        <div className="relative">
+          {/* Trigger button */}
+          <button
+            onClick={() => setLegendOpen((p) => !p)}
+            className="flex items-center gap-1.5 bg-[#1c1c1e] text-white text-xs font-medium px-2.5 py-1.5 rounded-lg cursor-pointer border-0"
+          >
+            <span className="flex items-center">
+              {dotColors.map((color, i) => (
+                <div
+                  key={i}
+                  className="h-3 w-3 border border-gray-500 rounded-full -ml-1.5 first:ml-0"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </span>
+            Markers 5/5
+            <ChevronDown
+              size={12}
+              className={`transition-transform duration-200 ${legendOpen ? "rotate-180" : ""}`}
             />
-            <span className="text-gray-600">{label}</span>
-          </div>
-        ))}
+          </button>
+
+          {/* Dropdown panel */}
+          {legendOpen && (
+            <div className="absolute bottom-full mb-2 left-0 bg-[#1c1c1e] rounded-lg p-2.5 min-w-44 shadow-lg">
+              {[
+                { icon: userIcon, label: "Your location" },
+                { icon: branchIcon, label: "Branch" },
+                { icon: selectedBranchIcon, label: "Selected branch" },
+                { icon: nearestBranchIcon, label: "Nearest branch" },
+                {
+                  icon: selectedAndNearestBranchIcon,
+                  label: "Selected & nearest",
+                },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex items-center gap-2 py-1">
+                  <img
+                    src={icon.options.iconUrl}
+                    className="h-6 w-auto"
+                    alt={label}
+                  />
+                  <span className="text-xs text-gray-200">{label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
