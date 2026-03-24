@@ -5,6 +5,7 @@ import React from "react";
 
 const MainIntro = () => {
   const menuUrl = useSubdomainPath("/", "food");
+  const mapUrl = useSubdomainPath("/?modal=map", "food")
 
   return (
     <div className="max-w-5xl mx-auto text-center mt-24 px-4 space-y-6">
@@ -50,7 +51,7 @@ const MainIntro = () => {
           Order Now
         </a>
         <a
-          href="/#locations-section"
+          href={mapUrl}
           className="py-2.5 px-6 border border-brand-color-500 text-brand-color-500 hover:bg-brand-color-500 hover:text-white cursor-pointer font-bold rounded-lg transition-colors duration-300"
         >
           <span className="group-hover:scale-110 transform transition-transform">Find a branch</span>
