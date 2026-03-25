@@ -1,6 +1,6 @@
 "use client";
 
-import { Branch } from "@/app/customer/map/mockupData";
+import { Branch } from "@/types/branch";
 import {
   createContext,
   ReactNode,
