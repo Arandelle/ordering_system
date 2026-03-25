@@ -1,34 +1,53 @@
 import { connectDB } from "@/lib/mongodb";
-import {Branch} from "@/models/Branch";
+import { Branch } from "@/models/Branch";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(){
-    try{
-        await connectDB();
+export async function GET() {
+  try {
+    await connectDB();
 
-        const data = await Branch.find({}).sort({createdAt: -1}).lean();
+    const data = await Branch.find({}).sort({ createdAt: -1 }).lean();
 
-        return NextResponse.json(data, {status: 200})
-
-    }catch(error){
-        return NextResponse.json({
-            error: "Failed to fetch"
-        }, {status: 500})
-    }
+    return NextResponse.json(data, { status: 200 });
+  } catch (error) {
+    console.error("GET /api/branches error: ", error);
+    return NextResponse.json(
+      {
+        error: "Failed to fetch branches",
+      },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
     const body = await request.json();
-    const {
-      name,
-      address,
-      contactNumber,
-      open,
-      close,
-    } = body;
+    const { name, address, contactNumber, open, close, location } = body;
 
+    // Validate required fields
+    if (!name?.trim() || !address?.trim()) {
+      return NextResponse.json(
+        {
+          error: "Branch name and address are required",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate location coordinates
+    if (!location?.coordinates || location.coordinates.length !== 2) {
+      return NextResponse.json(
+        {
+          error:
+            "Valid location coordinates [longitude, latitude] are required",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Generate unique branch code
     const count = await Branch.countDocuments();
     const code = `BR-${String(count + 1).padStart(3, "0")}`;
 
@@ -39,13 +58,17 @@ export async function POST(request: NextRequest) {
       contactNumber,
       operatingHours: {
         open,
-        close
+        close,
+      },
+      location: {
+        type: "Point",
+        coordinates: location.coordinates, // [longitue, latitude] as GeoJSON format
       },
     });
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error(error); // so you can see it in terminal
+    console.error("POST /api/branches error:", error);
     return NextResponse.json(
       {
         error:
