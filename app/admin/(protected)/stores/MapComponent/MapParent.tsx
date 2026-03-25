@@ -6,7 +6,7 @@ type MapParentProps = {
 };
 
 const MapParent = ({ onSelectCoordinates }: MapParentProps) => {
-  const Map = useMemo(
+  const MapModal = useMemo(
     () =>
       dynamic(() => import("./MapModal"), {
         loading: (): React.ReactNode => (
@@ -21,7 +21,7 @@ const MapParent = ({ onSelectCoordinates }: MapParentProps) => {
 
   return (
     <div>
-      <Map onSelectCoordinates={onSelectCoordinates} />
+      <MapModal onSelectCoordinates={onSelectCoordinates} />
     </div>
   );
 };

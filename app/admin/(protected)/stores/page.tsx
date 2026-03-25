@@ -15,12 +15,11 @@ import {
 import { getLucideIcon } from "@/lib/iconUtils";
 import { Branch, BranchFormData, BranchFormErrors } from "@/types/branch";
 import { Ban, Loader2, Search } from "lucide-react";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import {
+  formatBranchDataForForm,
   useBranches,
-  useCreateBranch,
   useToggleBranchStatus,
-  useUpdateBranch,
 } from "@/hooks/api/useBranch";
 import BranchModal from "./BranchModal";
 
@@ -30,6 +29,10 @@ export const emptyForm: BranchFormData = {
   contactNumber: "",
   open: "08:00",
   close: "22:00",
+  location: {
+    latitude: "",
+    longitude: "",
+  },
 };
 
 export default function BranchManagement() {
@@ -52,19 +55,17 @@ export default function BranchManagement() {
 
   const handleEditClick = (branch: Branch) => {
     setBranchToEdit(branch);
-    setForm({
-      name: branch.name,
-      address: branch.address,
-      contactNumber: branch.contactNumber,
-      open: branch.operatingHours.open,
-      close: branch.operatingHours.close,
-    });
+    // Use the conversion helper to transform API data to form data
+    const formData = formatBranchDataForForm(branch);
+    setForm(formData);
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setBranchToEdit(null);
+    setForm(emptyForm);
+    setErrors({});
   };
 
   return (
@@ -225,7 +226,7 @@ export default function BranchManagement() {
 
       {/* Modal */}
       {showModal && (
-        <Modal title="Add New Branch" onClose={handleCloseModal}>
+        <Modal title={branchToEdit ? `Edit Branch: ${branchToEdit.name}` : "Add New Branch"} onClose={handleCloseModal}>
           <BranchModal
             branchToEdit={branchToEdit}
             setBranchToEdit={setBranchToEdit}

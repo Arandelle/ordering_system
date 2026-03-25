@@ -1,31 +1,36 @@
 import React, { useState } from "react";
-import { Circle, MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import {
+  Circle,
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
 import { LatLng } from "leaflet";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+import { useBranches } from "@/hooks/api/useBranch";
 
 const METRO_MANILA_CENTER: [number, number] = [14.5995, 120.9842];
-const ALLOWED_RADIUS_METERS = 25_000; // 25 km
+const ALLOWED_RADIUS_METERS = 25_000;
 
 type MapParentProps = {
   onSelectCoordinates: (latitude: number, longitude: number) => void;
 };
 
 const MapClickHandler = ({
-  onSelectCoordinates,
+  selectedCoords,
+  setSelectedCoords,
 }: {
-  onSelectCoordinates: (latitude: number, longitude: number) => void;
+  selectedCoords: LatLng | null;
+  setSelectedCoords: (coords: LatLng) => void;
 }) => {
-  const [selectedCoords, setSelectedCoords] = useState<LatLng | null>(null);
-
   useMapEvents({
     click(e) {
-      const { lat, lng } = e.latlng;
       setSelectedCoords(e.latlng);
-      // Pass lat, lng to parent - note that our storage order is [longitude, latitude] for GeoJSON
-      onSelectCoordinates(lat, lng);
     },
   });
 
@@ -38,12 +43,20 @@ const MapClickHandler = ({
 };
 
 const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
+  const { data: branches = [], isPending } = useBranches();
+  const [selectedCoords, setSelectedCoords] = useState<LatLng | null>(null);
+
+  const handleSave = () => {
+    if (!selectedCoords) return;
+    onSelectCoordinates(selectedCoords.lat, selectedCoords.lng);
+  };
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <p className="text-sm text-blue-900">
-          <span className="font-semibold">Click on the map</span> to select the branch location.
-          The selected point will be marked on the map.
+      <div className="bg-dark-green-50 border border-dark-green-200 rounded-lg p-3">
+        <p className="text-sm text-dark-green-900">
+          <span className="font-semibold">Click on the map</span> to select the
+          branch location. The selected point will be marked on the map.
         </p>
       </div>
 
@@ -57,8 +70,8 @@ const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
             attribution='&copy; <a href="/">Harrison House of Inasal & BBQ</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          
-          {/* NCR Service Area Circle */}
+
+          {/* Service Area Circle */}
           <Circle
             center={METRO_MANILA_CENTER}
             radius={ALLOWED_RADIUS_METERS}
@@ -71,19 +84,52 @@ const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
             }}
           />
 
-          {/* Map Click Handler - adds marker on click */}
-          <MapClickHandler onSelectCoordinates={onSelectCoordinates} />
+          {/* Render Existing Branches */}
+          {!isPending &&
+            branches.map((branch) => {
+              const [lng, lat] = branch.location?.coordinates || [0, 0];
+              if (lng === 0 && lat === 0) return null; // Skip branches with no coordinates
+
+              return (
+                <Marker
+                  key={branch._id}
+                  position={[lat, lng]}
+                  title={branch.name}
+                >
+                  <Popup>
+                    <div className="text-sm">
+                      <p className="font-semibold">{branch.name}</p>
+                      <p className="text-xs text-gray-600">{branch.code}</p>
+                      <p className="text-xs text-gray-600">{branch.address}</p>
+                      {branch.contactNumber && (
+                        <p className="text-xs text-gray-600">
+                          {branch.contactNumber}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        {lat.toFixed(4)}, {lng.toFixed(4)}
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+
+          {/* Selected Location Marker */}
+          <MapClickHandler
+            selectedCoords={selectedCoords}
+            setSelectedCoords={setSelectedCoords}
+          />
         </MapContainer>
       </div>
 
-      <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded border border-slate-200">
-        <p className="font-medium mb-1">Coordinate Format:</p>
-        <p>Latitude (Y-axis): -90 to 90</p>
-        <p>Longitude (X-axis): -180 to 180</p>
-        <p className="mt-2 text-slate-500">
-          <span className="font-medium">Note:</span> The map stores coordinates as [longitude, latitude] (GeoJSON standard).
-        </p>
-      </div>
+      <button
+        onClick={handleSave}
+        disabled={!selectedCoords}
+        className="bg-dark-green-700 hover:bg-dark-green-800 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-md shadow text-sm cursor-pointer"
+      >
+        Save Changes
+      </button>
     </div>
   );
 };
