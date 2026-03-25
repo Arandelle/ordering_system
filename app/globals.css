@@ -147,3 +147,36 @@ body {
   background: #ef4501; 
 }
 
+
+/* In your global CSS or a map-specific stylesheet */
+
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 14px !important;
+  border: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+  line-height: unset !important;
+}
+
+/* Color the tail/arrow to match your header */
+.leaflet-popup-tip {
+  background: #15803d !important; /* dark-green-700 */
+  box-shadow: none !important;
+}
+
+.leaflet-popup-tip-container {
+  margin-top: -1px; /* closes the 1px gap between card and tip */
+}
+
+/* Hide the default close button — optional */
+.leaflet-popup-close-button {
+  display: none !important;
+}
+
