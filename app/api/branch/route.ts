@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await connectDB();
 
-    const data = await Branch.find({}).sort({ createdAt: -1 }).lean();
+    const data = await Branch.find({isActive: true}).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
