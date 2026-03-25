@@ -28,14 +28,10 @@ import {
   ChevronDown,
   LoaderCircle,
   MapPin,
-  MapPinHouse,
   MapPinned,
-  PersonStanding,
   Search,
 } from "lucide-react";
 import {
-  Branch,
-  BRANCHES,
   branchIcon,
   nearestBranchIcon,
   selectedAndNearestBranchIcon,
@@ -46,6 +42,8 @@ import { haversine } from "./functions/haversine";
 import { nearestBranch } from "./functions/nearestBranch";
 import { useBranch } from "@/contexts/BranchContext";
 import { fredoka } from "@/app/font";
+import { useBranches } from "@/hooks/api/useBranch";
+import { Branch } from "@/types/branch";
 
 const METRO_MANILA_CENTER: [number, number] = [14.5995, 120.9842];
 const ALLOWED_RADIUS_METERS = 25_000; // 25 km - covers the entire NCR
@@ -130,6 +128,8 @@ const BranchInfoCard = ({
 
 // ---------------- Component ----------------------
 const Map = () => {
+  const { data: branches = [], isPending } = useBranches();
+
   const mapRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
@@ -191,23 +191,27 @@ const Map = () => {
   }, []);
 
   // ---------- Place Marker with radius check --------------
-  const placeMarker = useCallback((latlng: [number, number]) => {
-    const dist = haversine(METRO_MANILA_CENTER, latlng);
-    if (dist > ALLOWED_RADIUS_METERS) {
-      setError(
-        `That location is outside Metro Manila (${(dist / 1000).toFixed(1)} km away). Please click within the highlighted area.`,
-      );
-      setSuccess(null);
-      return;
-    }
+  const placeMarker = useCallback(
+    (latlng: [number, number]) => {
+      const dist = haversine(METRO_MANILA_CENTER, latlng);
+      if (dist > ALLOWED_RADIUS_METERS) {
+        setError(
+          `That location is outside Metro Manila (${(dist / 1000).toFixed(1)} km away). Please click within the highlighted area.`,
+        );
+        setSuccess(null);
+        return;
+      }
 
-    const info = nearestBranch(latlng);
+      // Pass branches from useBranches() hook
+      const info = nearestBranch(latlng, branches);
 
-    setUserMarker(latlng);
-    setIsMarkerPending(false);
-    setNearestInfo(info);
-    setError(null);
-  }, []);
+      setUserMarker(latlng);
+      setIsMarkerPending(false);
+      setNearestInfo(info);
+      setError(null);
+    },
+    [branches],
+  );
 
   // ──Manual Geolocation button ───────────────────────────────────────────────────────────
   const handleLocate = useCallback(() => {
@@ -266,8 +270,9 @@ const Map = () => {
   );
 
   const getBranchIcon = (branch: Branch) => {
-    const isNearest = nearestInfo?.branch.id === branch.id && !isMarkerPending;
-    const isSelected = selectedBranch?.id === branch.id;
+    const isNearest =
+      nearestInfo?.branch._id === branch._id && !isMarkerPending;
+    const isSelected = selectedBranch?._id === branch._id;
 
     if (isNearest && isSelected) return selectedAndNearestBranchIcon;
     if (isNearest) return nearestBranchIcon;
@@ -279,6 +284,12 @@ const Map = () => {
   function getDistance(a: [number, number], b: [number, number]): number {
     return haversine(a, b) / 1000; // returns km directly
   }
+
+  /** GeoJSON stores [longitude, latitude] — Leaflet wants [latitude, longitude] */
+  const toLatLng = (coordinates: [number, number]): [number, number] => [
+    coordinates[1],
+    coordinates[0],
+  ];
 
   const dotColors = ["#e53e3e", "#38a169", "#d69e2e", "#7c3aed", "#3b82f6"];
 
@@ -342,9 +353,13 @@ const Map = () => {
             branch={nearestInfo.branch}
             distanceKm={nearestInfo.km}
             onViewMap={() =>
-              mapRef.current?.flyTo(nearestInfo.branch.position, 16, {
-                duration: 1.2,
-              })
+              mapRef.current?.flyTo(
+                toLatLng(nearestInfo.branch.location.coordinates),
+                16,
+                {
+                  duration: 1.2,
+                },
+              )
             }
           />
         )}
@@ -355,13 +370,20 @@ const Map = () => {
             branch={selectedBranch}
             distanceKm={
               userMarker
-                ? getDistance(selectedBranch.position, userMarker)
+                ? getDistance(
+                    toLatLng(selectedBranch.location.coordinates),
+                    userMarker,
+                  )
                 : undefined
             }
             onViewMap={() =>
-              mapRef.current?.flyTo(selectedBranch.position, 16, {
-                duration: 1.2,
-              })
+              mapRef.current?.flyTo(
+                toLatLng(selectedBranch.location.coordinates),
+                16,
+                {
+                  duration: 1.2,
+                },
+              )
             }
           />
         )}
@@ -409,70 +431,81 @@ const Map = () => {
             }}
           />
 
-          {/* ── Branch markers (red pins) ── */}
-          {BRANCHES.map((branch) => (
-            <Marker
-              key={branch.id}
-              position={branch.position}
-              icon={getBranchIcon(branch)}
-            >
-              <Popup>
-                <div className="min-w-44 space-y-2">
-                  {/* Header */}
-                  <div className="border-b border-gray-100 pb-2">
-                    <p className="font-bold text-sm text-gray-800">
-                      {branch.name}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {branch.address}
-                    </p>
-                  </div>
+          {/* ── Branch markers (red pins/ or yello/green for selected and nearest) ── */}
+          {!isPending &&
+            branches.length > 0 &&
+            branches.map((branch) => {
+              const [lng, lat] = branch.location?.coordinates || [0, 0];
+              if (lng === 0 && lat === 0) return null; // Skip branches with no coordinates
 
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-1">
-                    {nearestInfo?.branch.id === branch.id &&
-                      !isMarkerPending && (
-                        <span className="inline-flex items-center gap-1 bg-dark-green-50 text-dark-green-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-dark-green-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-dark-green-500 inline-block" />
-                          Nearest to you
-                        </span>
+              return (
+                <Marker
+                  key={branch._id}
+                  position={[lat, lng]}
+                  title={branch.name}
+                  icon={getBranchIcon(branch)}
+                >
+                  <Popup>
+                    <div className="min-w-44 space-y-2">
+                      {/* Header */}
+                      <div className="border-b border-gray-100 pb-2">
+                        <p className="font-bold text-sm text-gray-800">
+                          {branch.name}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {branch.address}
+                        </p>
+                      </div>
+
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-1">
+                        {nearestInfo?.branch._id === branch._id &&
+                          !isMarkerPending && (
+                            <span className="inline-flex items-center gap-1 bg-dark-green-50 text-dark-green-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-dark-green-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-dark-green-500 inline-block" />
+                              Nearest to you
+                            </span>
+                          )}
+                        {selectedBranch?._id === branch._id && (
+                          <span className="inline-flex items-center gap-1 bg-brand-color-50 text-brand-color-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-brand-color-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-color-500 inline-block" />
+                            Selected
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Distance — only if user placed a marker */}
+                      {userMarker && !isMarkerPending && (
+                        <p className="text-xs text-gray-400">
+                          {getDistance(
+                            toLatLng(branch.location.coordinates),
+                            userMarker,
+                          ).toFixed(1)}{" "}
+                          km from your location
+                        </p>
                       )}
-                    {selectedBranch?.id === branch.id && (
-                      <span className="inline-flex items-center gap-1 bg-brand-color-50 text-brand-color-600 text-xs font-semibold py-0.5 px-2 rounded-full border border-brand-color-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-color-500 inline-block" />
-                        Selected
-                      </span>
-                    )}
-                  </div>
 
-                  {/* Distance — only if user placed a marker */}
-                  {userMarker && !isMarkerPending && (
-                    <p className="text-xs text-gray-400">
-                      {getDistance(branch.position, userMarker).toFixed(1)} km
-                      from your location
-                    </p>
-                  )}
-
-                  {/* Select button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedBranch(branch);
-                    }}
-                    className={`w-full py-1.5 text-xs font-semibold rounded-md border-0 cursor-pointer transition-colors ${
-                      selectedBranch?.id === branch.id
-                        ? "bg-dark-green-500 text-white"
-                        : "bg-brand-color-500 hover:bg-brand-color-600 text-white"
-                    }`}
-                  >
-                    {selectedBranch?.id === branch.id
-                      ? "✓ Selected branch"
-                      : "Select this branch"}
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                      {/* Select button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBranch(branch);
+                        }}
+                        className={`w-full py-1.5 text-xs font-semibold rounded-md border-0 cursor-pointer transition-colors ${
+                          selectedBranch?._id === branch._id
+                            ? "bg-dark-green-500 text-white"
+                            : "bg-brand-color-500 hover:bg-brand-color-600 text-white"
+                        }`}
+                      >
+                        {selectedBranch?._id === branch._id
+                          ? "✓ Selected branch"
+                          : "Select this branch"}
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
 
           {/* ── User marker (blue pin) ── */}
           {userMarker && (
