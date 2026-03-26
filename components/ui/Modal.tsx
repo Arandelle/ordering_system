@@ -18,7 +18,7 @@ export default function Modal({ onClose, title, children }: ModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto hide-scrollbar">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full mx-auto max-w-3xl max-h-[90vh] overflow-y-auto hide-scrollbar">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-stone-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-40">
           <h2 className="text-xl font-bold text-stone-800">{title}</h2>

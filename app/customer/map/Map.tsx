@@ -80,7 +80,7 @@ const ClickHintHandler = () => {
   });
 
   return show ? (
-    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-999 px-4 py-2 bg-white text-brand-color-500 text-sm font-medium rounded-full shadow-md border border-brand-color-100 transition-opacity">
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-999 px-4 py-2 bg-white text-brand-color-500 text-xs md:text-sm text-nowrap font-medium rounded-full shadow-md border border-brand-color-100 transition-opacity">
       Double-click on the map to set your location
     </div>
   ) : null;
@@ -93,45 +93,61 @@ interface SearchResult {
   lon: string;
 }
 
+// ── Replace your BranchInfoCard component ────────────────────────────────────
 type BranchInfoCardProps = {
-  label: string;
+  type: "nearest" | "selected";
   branch: Branch;
   distanceKm?: number;
   onViewMap: () => void;
 };
 
 const BranchInfoCard = ({
-  label,
+  type,
   branch,
   distanceKm,
   onViewMap,
-}: BranchInfoCardProps) => (
-  <div className="flex items-center justify-between w-full py-3 px-4 rounded-lg bg-gray-50 border border-gray-200 text-sm shadow-sm">
-    <div>
-      <p className="text-lg font-medium text-slate-900">
-        {label}: {branch.name}
-      </p>
-      <p className="text-slate-700 mt-0.5">
-        {branch.address}
+}: BranchInfoCardProps) => {
+  const isNearest = type === "nearest";
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden w-full">
+      {/* Badge pill header */}
+      <div className="px-3 pt-3 pb-0">
+        <span
+          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+            isNearest
+              ? "bg-slate-50 text-slate-700 border border-slate-200"
+              : "bg-brand-color-50 text-brand-color-700 border border-brand-color-200"
+          }`}
+        >
+          {isNearest ? "📍 Nearest" : "✓ Selected"}
+        </span>
+      </div>
+
+      {/* Branch info */}
+      <div className="px-3 pt-2 pb-3 space-y-0.5">
+        <p className="text-sm font-semibold text-slate-900 leading-snug">
+          {branch.name}
+        </p>
+        <p className="text-[11px] text-slate-500 leading-snug capitalize">
+          {branch.address}
+        </p>
         {distanceKm !== undefined && (
-          <>
-            {" "}
-            &mdash;{" "}
-            <span className="font-medium">
-              {distanceKm.toFixed(1)} km from your location
-            </span>
-          </>
+          <p className="text-[11px] text-slate-400">
+            {distanceKm.toFixed(1)} km away
+          </p>
         )}
-      </p>
+
+        <button
+          onClick={onViewMap}
+          className="mt-2 w-full py-1.5 px-3 bg-dark-green-700 hover:bg-dark-green-800 text-white text-[11px] font-medium rounded-lg border-0 cursor-pointer transition-colors"
+        >
+          View on map
+        </button>
+      </div>
     </div>
-    <button
-      onClick={onViewMap}
-      className="shrink-0 ml-3 bg-brand-color-500 hover:bg-brand-color-600 text-white text-xs py-1.5 px-3 rounded-lg cursor-pointer border-0 transition-colors"
-    >
-      View on map
-    </button>
-  </div>
-);
+  );
+};
 
 // ---------------- Component ----------------------
 const Map = () => {
@@ -301,8 +317,9 @@ const Map = () => {
   const dotColors = ["#e53e3e", "#38a169", "#d69e2e", "#7c3aed", "#3b82f6"];
 
   return (
-    <section className={`${fredoka.className} relative w-full font-sans z-0`}>
-      <div className="relative max-w-7xl h-full mx-auto space-y-4 my-4">
+    <section className={`${fredoka.className} flex flex-col md:flex-row gap-3 items-start  w-full`}>
+      <div className="relative max-w-7xl h-full mx-auto space-y-4 w-full z-10">
+        {/** Search */}
         <div className="flex gap-2">
           <InputField
             placeholder="Search your address or area"
@@ -320,7 +337,7 @@ const Map = () => {
                     onClick={() => handleSearch(query)}
                     className=" text-brand-color-500 group-hover:text-brand-color-600"
                   />
-                  <p className="text-slate-700 group-hover:text-slate-800">
+                  <p className="hidden md:block text-slate-700 group-hover:text-slate-800">
                     Search
                   </p>
                 </div>
@@ -332,7 +349,7 @@ const Map = () => {
           <button
             onClick={handleLocate}
             title="Use my current location"
-            className="flex items-center gap-2 py-2.5 px-3.5 border-0 bg-brand-color-500 hover:bg-brand-color-600 rounded-lg text-white text-sm cursor-pointer shadow whitespace-nowrap"
+            className="flex items-center gap-2 py-2.5 px-3.5 border-0 bg-brand-color-500 hover:bg-brand-color-600 rounded-lg text-white text-xs md:text-sm cursor-pointer shadow whitespace-nowrap"
           >
             <MapPin size={16} />
             My Location
@@ -354,47 +371,6 @@ const Map = () => {
           </div>
         )}
 
-        {nearestInfo && !isMarkerPending && (
-          <BranchInfoCard
-            label="Nearest branch"
-            branch={nearestInfo.branch}
-            distanceKm={nearestInfo.km}
-            onViewMap={() =>
-              mapRef.current?.flyTo(
-                toLatLng(nearestInfo.branch.location.coordinates),
-                16,
-                {
-                  duration: 1.2,
-                },
-              )
-            }
-          />
-        )}
-
-        {selectedBranch && !isMarkerPending && (
-          <BranchInfoCard
-            label="Selected branch"
-            branch={selectedBranch}
-            distanceKm={
-              userMarker
-                ? getDistance(
-                    toLatLng(selectedBranch.location.coordinates),
-                    userMarker,
-                  )
-                : undefined
-            }
-            onViewMap={() =>
-              mapRef.current?.flyTo(
-                toLatLng(selectedBranch.location.coordinates),
-                16,
-                {
-                  duration: 1.2,
-                },
-              )
-            }
-          />
-        )}
-
         {error && (
           <div className="w-full py-2.5 px-3.5 rounded-lg bg-white border border-brand-color-500 text-brand-color-500 text-sm font-medium shadow">
             {error}
@@ -412,317 +388,349 @@ const Map = () => {
          * and shows nothing. We set width/height to 100% and rely on the parent <main> being 100vh
          */}
 
-        <MapContainer
-          center={METRO_MANILA_CENTER}
-          zoom={12}
-          scrollWheelZoom
-          doubleClickZoom={false}
-          style={{ width: "100%", height: "500px" }}
-          ref={mapRef}
-        >
-          <TileLayer
-            attribution='&copy; <a href="/">Harrison House of Inasal & BBQ</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-          {/* Allowed area boundary */}
-          <Circle
+        <div className="flex-1 min-w-0">
+          <MapContainer
             center={METRO_MANILA_CENTER}
-            radius={ALLOWED_RADIUS_METERS}
-            pathOptions={{
-              color: "#2563eb",
-              fillColor: "#3b82f6",
-              fillOpacity: 0.08,
-              weight: 2,
-              dashArray: "6 4",
-            }}
-          />
-
-          {/* ── Branch markers (red pins/ or yello/green for selected and nearest) ── */}
-          {!isPending &&
-            branches.length > 0 &&
-            branches.map((branch) => {
-              const [lng, lat] = branch.location?.coordinates || [0, 0];
-              if (lng === 0 && lat === 0) return null; // Skip branches with no coordinates
-
-              return (
-                <Marker
-                  key={branch._id}
-                  position={[lat, lng]}
-                  title={branch.name}
-                  icon={getBranchIcon(branch)}
-                >
-                  <Popup>
-                    <div className="w-56 overflow-hidden rounded-xl border border-gray-200 shadow-lg bg-white">
-                      {/* Header */}
-                      <div className="bg-dark-green-700 px-3 py-2.5">
-                        <div className="flex items-start justify-between">
+            zoom={12}
+            scrollWheelZoom
+            doubleClickZoom={false}
+            style={{ width: "100%", height: "500px" }}
+            ref={mapRef}
+          >
+            <TileLayer
+              attribution='&copy; <a href="/">Harrison House of Inasal & BBQ</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {/* Allowed area boundary */}
+            <Circle
+              center={METRO_MANILA_CENTER}
+              radius={ALLOWED_RADIUS_METERS}
+              pathOptions={{
+                color: "#2563eb",
+                fillColor: "#3b82f6",
+                fillOpacity: 0.08,
+                weight: 2,
+                dashArray: "6 4",
+              }}
+            />
+            {/* ── Branch markers (red pins/ or yello/green for selected and nearest) ── */}
+            {!isPending &&
+              branches.length > 0 &&
+              branches.map((branch) => {
+                const [lng, lat] = branch.location?.coordinates || [0, 0];
+                if (lng === 0 && lat === 0) return null; // Skip branches with no coordinates
+                return (
+                  <Marker
+                    key={branch._id}
+                    position={[lat, lng]}
+                    title={branch.name}
+                    icon={getBranchIcon(branch)}
+                  >
+                    <Popup>
+                      <div className="w-56 overflow-hidden rounded-xl border border-gray-200 shadow-lg bg-white">
+                        {/* Header */}
+                        <div className="bg-dark-green-700 px-3 py-2.5">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-[10px] font-medium text-white/60 uppercase tracking-widest">
+                                Branch
+                              </p>
+                              <p className="mt-0.5 font-medium text-white uppercase">
+                                {branch.name}
+                              </p>
+                            </div>
+                            <div className="shrink-0 w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
+                              <MapPinIcon className="w-3.5 h-3.5 text-white" />
+                            </div>
+                          </div>
+                          {nearestInfo?.branch._id === branch._id &&
+                            !isMarkerPending && (
+                              <div className="mt-1.5">
+                                <span className="inline-flex text-[10px] font-medium text-white bg-white/20 rounded-full px-2 py-0.5">
+                                  Nearest to you
+                                </span>
+                              </div>
+                            )}
+                        </div>
+                        {/* Details */}
+                        <div className="px-3 py-2.5 space-y-1.5 border-b border-gray-100">
+                          <div className="flex items-start gap-1.5">
+                            <HomeIcon className="w-3 h-3 text-gray-400 mt-0.5 shrink-0" />
+                            <span className="text-[11px] text-gray-500 leading-snug capitalize">
+                              {branch.address}
+                            </span>
+                          </div>
+                          {branch.contactNumber && (
+                            <div className="flex items-center gap-1.5">
+                              <PhoneIcon className="w-3 h-3 text-gray-400 shrink-0" />
+                              <span className="text-[11px] text-gray-500">
+                                {branch.contactNumber}
+                              </span>
+                            </div>
+                          )}
+                          {branch.operatingHours && (
+                            <div className="flex items-center gap-1.5">
+                              <ClockIcon className="w-3 h-3 text-gray-400 shrink-0" />
+                              <span className="text-[11px] text-gray-500">
+                                {branch.operatingHours.open} –{" "}
+                                {branch.operatingHours.close}
+                              </span>
+                            </div>
+                          )}
+                          {branch.location?.coordinates && (
+                            <div className="flex items-center gap-1.5">
+                              <Globe className="w-3 h-3 text-gray-400 shrink-0" />
+                              <span className="text-[11px] text-gray-500">
+                                {lat.toFixed(4)}, {lng.toFixed(4)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Footer */}
+                        <div className="px-3 py-2">
+                          {userMarker && !isMarkerPending && (
+                            <p className="text-[10px] text-gray-400 mb-1.5">
+                              {getDistance(
+                                toLatLng(branch.location.coordinates),
+                                userMarker,
+                              ).toFixed(1)}{" "}
+                              km from your location
+                            </p>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedBranch(branch);
+                            }}
+                            className={`w-full py-1.5 text-xs font-medium rounded-lg border-0 cursor-pointer transition-colors flex items-center justify-center gap-1.5 ${
+                              selectedBranch?._id === branch._id
+                                ? "bg-green-50 text-dark-green-700 border border-green-200"
+                                : "bg-dark-green-700 hover:bg-dark-green-800 text-white"
+                            }`}
+                          >
+                            {selectedBranch?._id === branch._id ? (
+                              <>
+                                <CheckIcon className="w-3.5 h-3.5" />
+                                Selected branch
+                              </>
+                            ) : (
+                              "Select this branch"
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+            {/* ── User marker (brand-color pin) ── */}
+            {userMarker && (
+              <Marker position={userMarker} icon={userIcon} ref={userMarkerRef}>
+                <Popup>
+                  {isMarkerPending ? (
+                    // ── Pending state ──
+                    <div className="w-56 overflow-hidden rounded-xl bg-white">
+                      <div className="bg-brand-color-500 px-3 py-2.5">
+                        <div className="flex items-start justify-between gap-2">
                           <div>
                             <p className="text-[10px] font-medium text-white/60 uppercase tracking-widest">
-                              Branch
+                              Your Location
                             </p>
-                            <p className="mt-0.5 font-medium text-white uppercase">
-                              {branch.name}
+                            <p className="mt-0.5 text-sm font-medium text-white leading-snug">
+                              Confirm this spot?
+                            </p>
+                          </div>
+                          <div className="shrink-0 w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
+                            <SunIcon className="w-3.5 h-3.5 text-white" />{" "}
+                            {/* or CrosshairIcon */}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="px-3 py-2.5 border-b border-gray-100">
+                        <p className="text-[11px] text-gray-500 leading-relaxed">
+                          This is your auto-detected location. Confirm it or tap
+                          anywhere on the map to choose a different spot.
+                        </p>
+                      </div>
+                      <div className="px-3 py-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            placeMarker(userMarker);
+                          }}
+                          className="w-full py-1.5 bg-brand-color-500 hover:bg-brand-color-600 text-white text-xs font-medium rounded-lg border-0 cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <CheckIcon className="w-3.5 h-3.5" />
+                          Confirm this location
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // ── Confirmed state ──
+                    <div className="w-56 overflow-hidden rounded-xl bg-white">
+                      <div className="bg-teal-700 px-3 py-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] font-medium text-white/60 uppercase tracking-widest">
+                              You are here
+                            </p>
+                            <p className="mt-0.5 text-sm font-medium text-white leading-snug">
+                              Location confirmed
                             </p>
                           </div>
                           <div className="shrink-0 w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
                             <MapPinIcon className="w-3.5 h-3.5 text-white" />
                           </div>
                         </div>
-                        {nearestInfo?.branch._id === branch._id &&
-                          !isMarkerPending && (
-                            <div className="mt-1.5">
-                              <span className="inline-flex text-[10px] font-medium text-white bg-white/20 rounded-full px-2 py-0.5">
-                                Nearest to you
-                              </span>
-                            </div>
-                          )}
-                      </div>
-
-                      {/* Details */}
-                      <div className="px-3 py-2.5 space-y-1.5 border-b border-gray-100">
-                        <div className="flex items-start gap-1.5">
-                          <HomeIcon className="w-3 h-3 text-gray-400 mt-0.5 shrink-0" />
-                          <span className="text-[11px] text-gray-500 leading-snug capitalize">
-                            {branch.address}
+                        <div className="mt-1.5">
+                          <span className="inline-flex text-[10px] font-medium text-white bg-white/20 rounded-full px-2 py-0.5">
+                            Pinned location
                           </span>
                         </div>
-                        {branch.contactNumber && (
-                          <div className="flex items-center gap-1.5">
-                            <PhoneIcon className="w-3 h-3 text-gray-400 shrink-0" />
-                            <span className="text-[11px] text-gray-500">
-                              {branch.contactNumber}
-                            </span>
-                          </div>
-                        )}
-                        {branch.operatingHours && (
-                          <div className="flex items-center gap-1.5">
-                            <ClockIcon className="w-3 h-3 text-gray-400 shrink-0" />
-                            <span className="text-[11px] text-gray-500">
-                              {branch.operatingHours.open} –{" "}
-                              {branch.operatingHours.close}
-                            </span>
-                          </div>
-                        )}
-                        {branch.location?.coordinates && (
-                          <div className="flex items-center gap-1.5">
-                            <Globe className="w-3 h-3 text-gray-400 shrink-0" />
-                            <span className="text-[11px] text-gray-500">
-                              {lat.toFixed(4)}, {lng.toFixed(4)}
-                            </span>
-                          </div>
-                        )}
                       </div>
-
-                      {/* Footer */}
+                      <div className="px-3 py-2.5 border-b border-gray-100 space-y-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <Globe className="w-3 h-3 text-gray-400 shrink-0" />
+                          <span className="text-[11px] text-gray-500">
+                            {userMarker[0].toFixed(4)},{" "}
+                            {userMarker[1].toFixed(4)}
+                          </span>
+                        </div>
+                      </div>
                       <div className="px-3 py-2">
-                        {userMarker && !isMarkerPending && (
-                          <p className="text-[10px] text-gray-400 mb-1.5">
-                            {getDistance(
-                              toLatLng(branch.location.coordinates),
-                              userMarker,
-                            ).toFixed(1)}{" "}
-                            km from your location
-                          </p>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedBranch(branch);
-                          }}
-                          className={`w-full py-1.5 text-xs font-medium rounded-lg border-0 cursor-pointer transition-colors flex items-center justify-center gap-1.5 ${
-                            selectedBranch?._id === branch._id
-                              ? "bg-green-50 text-dark-green-700 border border-green-200"
-                              : "bg-dark-green-700 hover:bg-dark-green-800 text-white"
-                          }`}
-                        >
-                          {selectedBranch?._id === branch._id ? (
-                            <>
-                              <CheckIcon className="w-3.5 h-3.5" />
-                              Selected branch
-                            </>
-                          ) : (
-                            "Select this branch"
-                          )}
-                        </button>
+                        <p className="text-[10px] text-gray-400 text-center">
+                          Tap the map to move your pin
+                        </p>
                       </div>
                     </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-
-          {/* ── User marker (brand-color pin) ── */}
-          {userMarker && (
-            <Marker position={userMarker} icon={userIcon} ref={userMarkerRef}>
-              <Popup>
-                {isMarkerPending ? (
-                  // ── Pending state ──
-                  <div className="w-56 overflow-hidden rounded-xl bg-white">
-                    <div className="bg-brand-color-500 px-3 py-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-[10px] font-medium text-white/60 uppercase tracking-widest">
-                            Your Location
-                          </p>
-                          <p className="mt-0.5 text-sm font-medium text-white leading-snug">
-                            Confirm this spot?
-                          </p>
-                        </div>
-                        <div className="shrink-0 w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
-                          <SunIcon className="w-3.5 h-3.5 text-white" />{" "}
-                          {/* or CrosshairIcon */}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="px-3 py-2.5 border-b border-gray-100">
-                      <p className="text-[11px] text-gray-500 leading-relaxed">
-                        This is your auto-detected location. Confirm it or tap
-                        anywhere on the map to choose a different spot.
-                      </p>
-                    </div>
-
-                    <div className="px-3 py-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          placeMarker(userMarker);
-                        }}
-                        className="w-full py-1.5 bg-brand-color-500 hover:bg-brand-color-600 text-white text-xs font-medium rounded-lg border-0 cursor-pointer transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <CheckIcon className="w-3.5 h-3.5" />
-                        Confirm this location
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  // ── Confirmed state ──
-                  <div className="w-56 overflow-hidden rounded-xl bg-white">
-                    <div className="bg-teal-700 px-3 py-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="text-[10px] font-medium text-white/60 uppercase tracking-widest">
-                            You are here
-                          </p>
-                          <p className="mt-0.5 text-sm font-medium text-white leading-snug">
-                            Location confirmed
-                          </p>
-                        </div>
-                        <div className="shrink-0 w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
-                          <MapPinIcon className="w-3.5 h-3.5 text-white" />
-                        </div>
-                      </div>
-                      <div className="mt-1.5">
-                        <span className="inline-flex text-[10px] font-medium text-white bg-white/20 rounded-full px-2 py-0.5">
-                          Pinned location
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="px-3 py-2.5 border-b border-gray-100 space-y-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <Globe className="w-3 h-3 text-gray-400 shrink-0" />
-                        <span className="text-[11px] text-gray-500">
-                          {userMarker[0].toFixed(4)}, {userMarker[1].toFixed(4)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="px-3 py-2">
-                      <p className="text-[10px] text-gray-400 text-center">
-                        Tap the map to move your pin
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </Popup>
-            </Marker>
-          )}
-
-          {/** Double click to map hint when user click once */}
-          <ClickHintHandler />
-
-          {/** Double click on map to place marker*/}
-          <ClickHandler onPlace={placeMarker} />
-
-          {/* ── Logo badge overlaid on map bottom-left ── */}
-          <div className="absolute bottom-2 left-2 bg-white shadow-md px-3 py-2 rounded-lg flex items-center z-9999">
-            <img
-              src="/images/harrison_logo_landscape.png"
-              alt="Harrison Logo"
-              className="h-6"
-            />
-            <span className="translate-x-1 text-xs font-black text-brand-color-500">
-              Map
-            </span>
-          </div>
-
-          <button
-            onClick={() => {
-              mapRef.current?.flyTo(userMarker ? userMarker : [0, 0], 14, {
-                duration: 1.2,
-              });
-            }}
-            aria-label="Locate my marker"
-            title="Locate my current marker"
-            className="absolute top-5 right-5 z-999 bg-brand-color-500 hover:bg-brand-color-600 rounded-full p-2 cursor-pointer"
-          >
-            <MapPinned size={18} className="text-white" />
-          </button>
-        </MapContainer>
-      </div>
-
-      {/* ── Legend ── */}
-      <div className="z-9999">
-        <div className="relative">
-          {/* Trigger button */}
-          <button
-            onClick={() => setLegendOpen((p) => !p)}
-            className="flex items-center gap-1.5 bg-[#1c1c1e] text-white text-xs font-medium px-2.5 py-1.5 rounded-lg cursor-pointer border-0"
-          >
-            <span className="flex items-center">
-              {dotColors.map((color, i) => (
-                <div
-                  key={i}
-                  className="h-3 w-3 border border-gray-500 rounded-full -ml-1.5 first:ml-0"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </span>
-            Markers Legend
-            <ChevronDown
-              size={12}
-              className={`transition-transform duration-200 ${legendOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-
-          {/* Dropdown panel */}
-          {legendOpen && (
-            <div className="absolute bottom-full mb-2 left-0 bg-[#1c1c1e] opacity-90 rounded-lg p-2.5 min-w-44 shadow-lg z-9999">
-              {[
-                { icon: userIcon, label: "Your location" },
-                { icon: branchIcon, label: "Branch" },
-                { icon: selectedBranchIcon, label: "Selected branch" },
-                { icon: nearestBranchIcon, label: "Nearest branch" },
-                {
-                  icon: selectedAndNearestBranchIcon,
-                  label: "Selected & nearest",
-                },
-              ].map(({ icon, label }) => (
-                <div key={label} className="flex items-center gap-2 py-1">
-                  <img
-                    src={icon.options.iconUrl}
-                    className="h-6 w-auto"
-                    alt={label}
-                  />
-                  <span className="text-xs text-gray-200">{label}</span>
-                </div>
-              ))}
+                  )}
+                </Popup>
+              </Marker>
+            )}
+            {/** Double click to map hint when user click once */}
+            <ClickHintHandler />
+            {/** Double click on map to place marker*/}
+            <ClickHandler onPlace={placeMarker} />
+            {/* ── Logo badge overlaid on map bottom-left ── */}
+            <div className="absolute bottom-2 left-2 bg-white shadow-md px-3 py-2 rounded-lg flex items-center z-9999">
+              <img
+                src="/images/harrison_logo_landscape.png"
+                alt="Harrison Logo"
+                className="h-6"
+              />
+              <span className="translate-x-1 text-xs font-black text-brand-color-500">
+                Map
+              </span>
             </div>
-          )}
+
+            {/** Locate my marker button */}
+            <button
+              onClick={() => {
+                mapRef.current?.flyTo(userMarker ? userMarker : [0, 0], 14, {
+                  duration: 1.2,
+                });
+              }}
+              aria-label="Locate my marker"
+              title="Locate my current marker"
+              className="absolute top-5 right-5 z-999 bg-brand-color-500 hover:bg-brand-color-600 rounded-full p-2 cursor-pointer"
+            >
+              <MapPinned size={18} className="text-white" />
+            </button>
+          </MapContainer>
         </div>
       </div>
+
+      {(nearestInfo || selectedBranch) && !isMarkerPending && (
+        <div>
+          {/* ── Legend ── */}
+          <div className="z-9999">
+            <div className="relative">
+              {/* Trigger button */}
+              <button
+                onClick={() => setLegendOpen((p) => !p)}
+                className="flex items-center gap-1.5 bg-[#1c1c1e] text-white text-xs font-medium px-2.5 py-1.5 rounded-lg cursor-pointer border-0"
+              >
+                <span className="flex items-center">
+                  {dotColors.map((color, i) => (
+                    <div
+                      key={i}
+                      className="h-3 w-3 border border-gray-500 rounded-full -ml-1.5 first:ml-0"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </span>
+                Markers Legend
+                <ChevronDown
+                  size={12}
+                  className={`transition-transform duration-200 ${legendOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {/* Dropdown panel */}
+              {legendOpen && (
+                <div className="absolute top-full mb-2 left-0 bg-[#1c1c1e] opacity-90 rounded-lg p-2.5 min-w-44 shadow-lg z-9999">
+                  {[
+                    { icon: userIcon, label: "Your location" },
+                    { icon: branchIcon, label: "Branch" },
+                    { icon: selectedBranchIcon, label: "Selected branch" },
+                    { icon: nearestBranchIcon, label: "Nearest branch" },
+                    {
+                      icon: selectedAndNearestBranchIcon,
+                      label: "Selected & nearest",
+                    },
+                  ].map(({ icon, label }) => (
+                    <div key={label} className="flex items-center gap-2 py-1">
+                      <img
+                        src={icon.options.iconUrl}
+                        className="h-6 w-auto"
+                        alt={label}
+                      />
+                      <span className="text-xs text-gray-200">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Right side panel — only visible when there's something to show */}
+          <div className="flex flex-row md:flex-col gap-3 shrink-0 pt-1">
+            {nearestInfo && (
+              <BranchInfoCard
+                type="nearest"
+                branch={nearestInfo.branch}
+                distanceKm={nearestInfo.km}
+                onViewMap={() =>
+                  mapRef.current?.flyTo(
+                    toLatLng(nearestInfo.branch.location.coordinates),
+                    16,
+                    { duration: 1.2 },
+                  )
+                }
+              />
+            )}
+            {selectedBranch && (
+              <BranchInfoCard
+                type="selected"
+                branch={selectedBranch}
+                distanceKm={
+                  userMarker
+                    ? getDistance(
+                        toLatLng(selectedBranch.location.coordinates),
+                        userMarker,
+                      )
+                    : undefined
+                }
+                onViewMap={() =>
+                  mapRef.current?.flyTo(
+                    toLatLng(selectedBranch.location.coordinates),
+                    16,
+                    { duration: 1.2 },
+                  )
+                }
+              />
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 };
