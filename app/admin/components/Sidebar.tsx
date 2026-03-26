@@ -21,6 +21,7 @@ const navItems = [
   { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard", permission: "dashboard.read" },
   { name: "Orders", path: "/orders", icon: "ShoppingCart", permission: "orders.read" },
   { name: "Products", path: "/products", icon: "Package", permission: "products.read" },
+  { name: "Inventory", path: "/inventory", icon: "Archive", permission: "inventories.read" },
   { name: "Category", path: "/categories", icon: "Folder", permission: "categories.read" },
   { name: "Customers", path: "/customers", icon: "Users", permission: "customers.read" },
   { name: "Store Management", path: "/stores", icon: "Store", permission: "stores.read" },
@@ -41,7 +42,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   const pendingCount = placedOrders.filter(
     (order) => order.status === "pending",
   ).length;
-  const lowProductStock = products.filter((order) => order.stock <= 10).length;
+  // const lowProductStock = products.filter((order) => order.stock <= 10).length;
 
   const [logoutModal, setLogoutModal] = useState(false);
 
@@ -96,12 +97,12 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                         {pendingCount}
                       </div>
                     )}
-
+{/* 
                     {item.name === "Products" && lowProductStock > 0 && (
                       <div className="absolute -top-1 right-0 flex items-center justify-center w-5 h-5 text-xs bg-red-600 text-white rounded-full">
                         {lowProductStock}
                       </div>
-                    )}
+                    )} */}
                   </Link>
                 </li>
               );
