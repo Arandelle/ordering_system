@@ -46,6 +46,10 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "products.create",
     "products.update",
 
+    "inventories.read",
+    "inventories.create",
+    "inventories.update",
+
     "categories.read",
     "categories.create",
     "categories.update",
