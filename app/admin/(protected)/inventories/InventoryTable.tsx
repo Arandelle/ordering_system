@@ -2,20 +2,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBranchInventories } from "@/hooks/api/useBranchInventory";
-
-export interface InventoryItem {
-  id: string;
-  image: {
-    url: string,
-    public_id: string
-  };
-  name: string;
-  price: number;
-  quantity: number;
-  reorderLevel: number;
-  category: string;
-  status: string
-}
+import { STOCK_STATUSES, StockStatus } from "@/types/inventory_types";
 
 const InventoryTable = () => {
 
@@ -24,22 +11,29 @@ const InventoryTable = () => {
   const inventoryHeader = ["Image", "Name", "Category", "Price", "Stock", "Status", "Action"];
 
   // Function to determine stock status
-  const getStockStatus = (status: string) => {
-    if (status === "OUT_OF_STOCK") {
+  const getStockStatus = (status: StockStatus) => {
+    if (status === STOCK_STATUSES.OUT_OF_STOCK) {
       return {
         label: "Empty",
         className: "bg-red-50 text-red-700 border border-red-200",
       };
     }
-    if (status === "LOW_STOCK") {
+    if (status === STOCK_STATUSES.LOW_STOCK) {
       return {
         label: "Low Stock",
         className: "bg-yellow-50 text-yellow-700 border border-yellow-200",
       };
     }
+
+    if (status === STOCK_STATUSES.IN_STOCK) {
+      return {
+        label: "In Stock",
+        className: "bg-green-50 text-green-700 border border-green-200",
+      };
+    }
     return {
-      label: "In Stock",
-      className: "bg-green-50 text-green-700 border border-green-200",
+      label: "Not defined - Check response status",
+      className: "bg-slate-50 text-slate-700 border border-slate-200",
     };
   };
 

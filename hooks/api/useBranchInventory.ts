@@ -1,4 +1,4 @@
-import { InventoryItem } from "@/app/admin/(protected)/inventories/InventoryTable"
+import { InventoryItem } from "@/types/inventory_types"
 import { apiClient } from "@/lib/apiClient"
 import { useQuery } from "@tanstack/react-query"
 

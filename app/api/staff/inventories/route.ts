@@ -4,6 +4,7 @@ import { syncInventoryForBranch } from "@/lib/inventory/syncInventory";
 import { jwtVerify } from "jose";
 import { Product } from "@/models/Product";
 import { Inventory } from "@/models/Inventory";
+import { STOCK_STATUSES } from "@/types/inventory_types";
 
 /**
  * POST /api/inventory/sync
@@ -65,10 +66,10 @@ export async function GET(req: NextRequest) {
       const quantity = inv?.quantity ?? 0;
       const reorderLevel = inv?.reorderLevel ?? 10;
 
-      let status = "OK";
+      let status = STOCK_STATUSES.IN_STOCK;
 
-      if (quantity === 0) status = "OUT_OF_STOCK";
-      else if (quantity <= reorderLevel) status = "LOW_STOCK";
+      if (quantity === 0) status = STOCK_STATUSES.OUT_OF_STOCK;
+      else if (quantity <= reorderLevel) status = STOCK_STATUSES.LOW_STOCK;
 
       return {
         id: product._id.toString(),
