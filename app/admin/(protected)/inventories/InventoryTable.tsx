@@ -1,78 +1,37 @@
 "use client"
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useBranchInventories } from "@/hooks/api/useBranchInventory";
 
-interface InventoryItem {
+export interface InventoryItem {
   id: string;
-  image: string;
+  image: {
+    url: string,
+    public_id: string
+  };
   name: string;
   price: number;
-  stock: number;
+  quantity: number;
   reorderLevel: number;
   category: string;
+  status: string
 }
 
 const InventoryTable = () => {
-  // Static data for now
-  const inventoryData: InventoryItem[] = [
-    {
-      id: "1",
-      image: "https://via.placeholder.com/80?text=Fried+Chicken",
-      name: "Fried Chicken Combo",
-      price: 199,
-      stock: 45,
-      reorderLevel: 100,
-      category: "Main Course",
-    },
-    {
-      id: "2",
-      image: "https://via.placeholder.com/80?text=Soda",
-      name: "Soda",
-      price: 45,
-      stock: 200,
-      reorderLevel: 150,
-      category: "Beverages",
-    },
-    {
-      id: "3",
-      image: "https://via.placeholder.com/80?text=Wine",
-      name: "Red Wine",
-      price: 599,
-      stock: 2,
-      reorderLevel: 5,
-      category: "Beverages",
-    },
-    {
-      id: "4",
-      image: "https://via.placeholder.com/80?text=Rice",
-      name: "Rice",
-      price: 89,
-      stock: 0,
-      reorderLevel: 50,
-      category: "Staples",
-    },
-    {
-      id: "5",
-      image: "https://via.placeholder.com/80?text=Dessert",
-      name: "Chocolate Cake",
-      price: 149,
-      stock: 15,
-      reorderLevel: 20,
-      category: "Desserts",
-    },
-  ];
+
+  const {data: inventoryData = []} = useBranchInventories();
 
   const inventoryHeader = ["Image", "Name", "Category", "Price", "Stock", "Status", "Action"];
 
   // Function to determine stock status
-  const getStockStatus = (stock: number, reorderLevel: number) => {
-    if (stock === 0) {
+  const getStockStatus = (status: string) => {
+    if (status === "OUT_OF_STOCK") {
       return {
         label: "Empty",
         className: "bg-red-50 text-red-700 border border-red-200",
       };
     }
-    if (stock <= reorderLevel) {
+    if (status === "LOW_STOCK") {
       return {
         label: "Low Stock",
         className: "bg-yellow-50 text-yellow-700 border border-yellow-200",
@@ -99,7 +58,7 @@ const InventoryTable = () => {
 
         <TableBody>
           {inventoryData.map((item) => {
-            const status = getStockStatus(item.stock, item.reorderLevel);
+            const status = getStockStatus(item.status);
 
             return (
               <TableRow key={item.id} className="hover:bg-slate-50 border-b border-slate-100">
@@ -108,7 +67,7 @@ const InventoryTable = () => {
                   <div className="flex justify-center">
                     <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100">
                       <img
-                        src={item.image}
+                        src={item.image.url}
                         alt={item.name}
                         width={48}
                         height={48}
@@ -135,7 +94,7 @@ const InventoryTable = () => {
 
                 {/* Stock */}
                 <TableCell className="text-center">
-                  <span className="font-semibold text-slate-900">{item.stock}</span>
+                  <span className="font-semibold text-slate-900">{item.quantity}</span>
                   <span className="text-xs text-slate-500 block">
                     Reorder: {item.reorderLevel}
                   </span>
