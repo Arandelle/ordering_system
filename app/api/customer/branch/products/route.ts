@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
         inv.productId.toString(),
         {
           quantity: inv.quantity,
-          reorderLevel: inv.reorderLevel,
+          reorderLevel: inv.reorderLevel ?? 10,
         },
       ]),
     );
@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
 
       // Build response object matching the Product model
       return {
-        productId: product._id.toString(),
+        _id: product._id.toString(),
         name: product.name,
         price: product.price,
         image: {
@@ -104,19 +104,19 @@ export async function GET(req: NextRequest) {
         description:
           product.description || "Product description is not available",
         category: {
-          id: product.category?._id?.toString() || "",
+          _id: product.category?._id?.toString() || "",
           name: product.category?.name || "Uncategorized",
         },
         subcategory: product.subcategory
           ? {
-              id: product.subcategory._id.toString(),
+              _id: product.subcategory._id.toString(),
               name: product.subcategory.name,
             }
           : null,
         productType: product.productType || "solo",
         includedItems:
           product.includedItems?.map((item: any) => ({
-            productId: item.product?._id?.toString() || "",
+            _id: item.product?._id?.toString() || "",
             productName: item.product?.name || "",
             quantity: item.quantity,
             label: item.label,
