@@ -10,7 +10,7 @@ interface ModalProps {
 
 export default function Modal({ onClose, title, children }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm"
@@ -18,7 +18,7 @@ export default function Modal({ onClose, title, children }: ModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full mx-auto max-w-3xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full mx-auto max-w-3xl max-h-[95vh] overflow-y-auto hide-scrollbar">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-stone-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-40">
           <h2 className="text-xl font-bold text-stone-800">{title}</h2>
@@ -31,7 +31,7 @@ export default function Modal({ onClose, title, children }: ModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div className="">{children}</div>
       </div>
     </div>
   );
