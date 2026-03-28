@@ -49,7 +49,7 @@ const QuantityStepper = ({
     >
       <Minus size={12} />
     </button>
-    <span className="text-sm font-medium min-w-[20px] text-center text-gray-800">
+    <span className="text-sm font-medium min-w-5 text-center text-gray-800">
       {value}
     </span>
     <button
@@ -157,61 +157,63 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     <Modal onClose={onClose} title="Add to cart">
       <div className="flex flex-col overflow-auto max-h-[75vh]">
         <div className="flex overflow-hidden">
-          {/* Left — sticky image */}
-          <div className="w-52 min-w-52 hidden sm:flex items-start bg-gray-50 p-4 self-stretch">
-            <div className="relative w-full aspect-square rounded-xl overflow-hidden">
-              <Image
-                src={item.image.url}
-                alt={item.name}
-                fill
-                className="object-cover"
-                quality={90}
-              />
-              {item.isPopular && (
-                <div className="absolute top-3 left-3 bg-brand-color-500 text-white text-[10px] font-bold px-3 py-1 rounded-full">
-                  Best Seller
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right — scrollable content */}
+          {/* scrollable content */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-gray-100">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
-                    {item.category?.name}
-                  </p>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    {item.name}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          size={12}
-                          className={
-                            s <= 4
-                              ? "fill-amber-400 text-amber-400"
-                              : "text-gray-200 fill-gray-200"
-                          }
-                        />
-                      ))}
+            <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-gray-100">
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
+                      {item.category?.name}
+                    </p>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      {item.name}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={12}
+                            className={
+                              s <= 4
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-gray-200 fill-gray-200"
+                            }
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        4.2 · 32 reviews
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-400">
-                      4.2 · 32 reviews
-                    </span>
                   </div>
                 </div>
+                {/* Price */}
+                <div className="flex items-baseline gap-2 mt-3">
+                  <span className="text-2xl font-bold text-brand-color-500">
+                    ₱{basePrice}
+                  </span>
+                </div>
               </div>
-              {/* Price */}
-              <div className="flex items-baseline gap-2 mt-3">
-                <span className="text-2xl font-bold text-brand-color-500">
-                  ₱{basePrice}
-                </span>
+
+              {/* image */}
+              <div className="w-52 min-w-52 hidden sm:flex items-start">
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden">
+                  <Image
+                    src={item.image.url}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                    quality={90}
+                  />
+                  {item.isPopular && (
+                    <div className="absolute top-3 left-3 bg-brand-color-500 text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                      Best Seller
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             {/* Scrollable body */}
