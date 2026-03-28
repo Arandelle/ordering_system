@@ -172,7 +172,7 @@ const MenuSection = () => {
             className={`product-card-wrapper h-full transition-all duration-500`}
             style={{ transitionDelay: `${(index % 8) * 60}ms` }}
           >
-            <ProductCard item={item} hasBranch={!!branchId} />
+            <ProductCard item={item} hasBranch={!!branchId} selectedBranch={selectedBranch?._id} />
           </div>
         );
       })}
