@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   },
 
   robots: {
-    index: false, // change to true once domain is final
+    index: true, // change to true once domain is final
     follow: false, // change to true once domain is final
   },
 
