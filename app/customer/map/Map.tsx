@@ -44,7 +44,7 @@ import {
   selectedAndNearestBranchIcon,
   selectedBranchIcon,
   userIcon,
-} from "./mockupData";
+} from "./markerIcon";
 import { haversine } from "./functions/haversine";
 import { nearestBranch } from "./functions/nearestBranch";
 import { useBranch } from "@/contexts/BranchContext";
