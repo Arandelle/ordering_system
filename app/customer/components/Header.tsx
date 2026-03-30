@@ -28,7 +28,7 @@ import { useBranch } from "@/contexts/BranchContext";
 import { syne } from "@/app/font";
 
 const Header = () => {
-  const { data: currentUser, isPending } = useCustomerMe();
+  const { data: currentUser, isPending, fetchStatus  } = useCustomerMe();
   const userLogout = useLogoutCustomer();
 
   const searchParams = useSearchParams();
@@ -150,7 +150,7 @@ const Header = () => {
 
             {/* Desktop Auth */}
             <div className="hidden lg:flex items-center gap-2">
-              {isPending ? (
+              {isPending && fetchStatus !== "idle" ? (
                 <div className="flex items-center gap-3 animate-pulse">
                   {/* avatar skeleton */}
                   <div className="w-6 h-6 rounded-full bg-gray-300"></div>
