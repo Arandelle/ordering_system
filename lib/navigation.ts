@@ -1,3 +1,5 @@
+import { parse } from 'tldts'
+
 // lib/navigation.ts
 /**
  * Get the base URL for a specific subdomain
@@ -5,39 +7,26 @@
  * @returns Full URL with protocol and domain
  */
 export function getSubdomainUrl(subdomain?: string): string {
-  // Server-side: return empty string (not needed for SSR)
-  if (typeof window === 'undefined') {
-    return ''
-  }
+  if (typeof window === 'undefined') return ''
 
   const { protocol, hostname, port } = window.location
 
-  // Localhost development
+  // Localhost handling
   if (hostname.includes('localhost')) {
-    if (!subdomain) {
-      // Main domain: localhost:3000
-      return `${protocol}//localhost:${port}`
-    }
-    // Subdomain: food.localhost:3000
-    return `${protocol}//${subdomain}.localhost:${port}`
+    return subdomain
+      ? `${protocol}//${subdomain}.localhost:${port}`
+      : `${protocol}//localhost:${port}`
   }
 
-  // Production
-  const parts = hostname.split('.')
-  
-  // Get root domain (e.g., "domain.com" from "food.domain.com" or "domain.com")
-  // If hostname is already a subdomain, take last 2 parts
-  // If hostname is main domain, it's already correct
-  const rootDomain = parts.length > 2 
-    ? parts.slice(-2).join('.') // "domain.com"
-    : hostname // "domain.com"
+  const parsed = parse(hostname)
+
+  // Fallback if parsing fails
+  const rootDomain = parsed.domain ?? hostname
 
   if (!subdomain) {
-    // Main domain: https://domain.com
     return `${protocol}//${rootDomain}`
   }
 
-  // Subdomain: https://food.domain.com
   return `${protocol}//${subdomain}.${rootDomain}`
 }
 
