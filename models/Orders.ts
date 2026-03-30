@@ -74,6 +74,12 @@ const TimelineSchema = new Schema(
 
 const OrderSchema = new Schema(
   {
+    branchId: {
+      type: Schema.Types.ObjectId,
+      ref: "Branch",
+      required: true,
+      index: true
+    },
     status: {
       type: String,
       enum: Object.values(ORDER_STATUSES),
@@ -111,6 +117,12 @@ const OrderSchema = new Schema(
         type: String,
         required: true,
       },
+
+      branchSnapshot: {
+        branchId: { type: Schema.Types.ObjectId, ref: "Branch"},
+        name: String, // captured at order time
+        code: String // e.g. OR-001
+      }
     },
 
     total: {
@@ -163,5 +175,8 @@ OrderSchema.index({ "paymentInfo.customerEmail": 1 });
  
 // Optimize review queries
 OrderSchema.index({ isReviewed: 1, reviewedAt: -1 });
+
+OrderSchema.index({branchId: 1, status: 1, createdAt: -1});
+OrderSchema.index({branchId: 1, isReviewed: 1});
 
 export const Order = models.Order || model("Order", OrderSchema);
