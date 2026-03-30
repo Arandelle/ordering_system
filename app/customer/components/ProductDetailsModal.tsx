@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 import ProductCard from "./ProductCard";
 import { syne } from "@/app/font";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -91,6 +92,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 }) => {
   const { addToCart } = useCart();
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<"info" | "desc">("info");
   const [mainQty, setMainQty] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
@@ -150,6 +154,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       setIsAdded(false);
       onClose();
     }, 1500);
+  };
+
+   const handleOpenModal = (modalType: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("modal", modalType);
+
+    const query = params.toString();
+    router.replace(query ? `?${query}` : "");
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -357,7 +369,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="px-5 py-4 border-t border-gray-100 flex items-center gap-3 bg-white">
               <QuantityStepper value={mainQty} min={1} onChange={setMainQty} />
               <button
-                onClick={handleAddToCart}
+                onClick={() => !selectedBranch ? handleOpenModal("map") : handleAddToCart()}
                 disabled={isAdded}
                 className={`flex-1 h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   isAdded
