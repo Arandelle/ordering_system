@@ -1,5 +1,6 @@
 "use client";
 
+import { syne } from "@/app/font";
 import BrandLogo from "@/components/BrandLogo";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import { Menu, ShoppingCart, X } from "lucide-react";
@@ -100,12 +101,13 @@ const NewHeader = () => {
             ))}
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="hidden lg:flex gap-2 items-center">
             <Link
               href={orderUrl}
-              className="bg-brand-color-500 text-white hover:bg-brand-color-600 py-2 px-8 rounded-lg"
+              className={`${syne.className} flex bg-brand-color-500 text-white items-center justify-center text-sm hover:bg-brand-color-600 font-bold py-2 px-4 rounded-full`}
             >
-              Order Now
+              <ShoppingCart className="inline-block mr-2" size={18} />
+              <p>Order Now</p>
             </Link>
           </div>
 
@@ -145,7 +147,7 @@ const NewHeader = () => {
             ))}
             <a
               href={orderUrl}
-              className="block w-full bg-brand-color-500 text-white px-6 py-3 font-bold text-center hover:bg-brand-color-600 transition-colors"
+              className="block w-full bg-brand-color-500 text-white px-6 py-3 text-center hover:bg-brand-color-600 transition-colors rounded-full"
             >
               Order Now
             </a>

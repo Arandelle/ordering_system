@@ -198,9 +198,9 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => handleOpenModal("signup")}
-                    className="flex items-center justify-center gap-2 bg-brand-color-500 hover:bg-brand-color-600 text-white px-4 py-2 text-sm font-bold rounded-full transition-colors cursor-pointer"
+                    className={`${syne.className} flex bg-brand-color-500 text-white items-center justify-center text-sm hover:bg-brand-color-600 font-bold py-2 px-4 rounded-full`}
                   >
-                    <User size={16} />
+                    <User className="inline-block mr-2" size={18}  />
                     Sign Up
                   </button>
                 </>
