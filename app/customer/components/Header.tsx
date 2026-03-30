@@ -25,6 +25,7 @@ import Modal from "@/components/ui/Modal";
 import MapPage from "@/app/customer/map/page";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBranch } from "@/contexts/BranchContext";
+import { syne } from "@/app/font";
 
 const Header = () => {
   const { data: currentUser, isPending } = useCustomerMe();
@@ -319,7 +320,7 @@ const Header = () => {
       )}
 
       {modalType === "map" && (
-        <Modal onClose={handleCloseModal} title="Select Harrison Branch">
+        <Modal onClose={handleCloseModal} title="Select Harrison's Branch" subTitle="Explore the map to find the nearest branch" className={`${syne.className}`}>
           <MapPage />
         </Modal>
       )}
