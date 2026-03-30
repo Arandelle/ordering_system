@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Product } from "@/models/Product";
 import { Inventory } from "@/models/Inventory";
 import { STOCK_STATUSES } from "@/types/inventory_types";
-import "@/models/SubCategory"
+import "@/lib/registerModels";
 
 /**
  * GET /api/branch/products
