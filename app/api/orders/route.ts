@@ -14,17 +14,42 @@ import {
   ORDER_STATUSES,
   OrderStatus,
 } from "@/types/orderConstants";
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined");
+}
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
+    // get token first
+    const token = request.cookies.get("admin_token")?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // verify + decode JWT
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+
+    const branchId = payload.branch as string;
+
+    if (!branchId) {
+      return NextResponse.json(
+        { error: "branchId is required" },
+        { status: 400 },
+      );
+    }
+
     // ============================================
     // QUERY PARAMETERS
     // ============================================
-
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get("status");
+    const status = searchParams.get("status") || ORDER_STATUSES.PAID;
     const email = searchParams.get("email");
     const sortBy = searchParams.get("sortBy") || "priority"; // priority | date
     const page = parseInt(searchParams.get("page") || "1");
@@ -36,7 +61,7 @@ export async function GET(request: NextRequest) {
     // BUILD FILTER
     // ============================================
 
-    const filter: any = {};
+    const filter: any = { branchId };
 
     if (status) {
       filter.status = status;
@@ -51,7 +76,11 @@ export async function GET(request: NextRequest) {
     // ============================================
 
     const [orders, total] = await Promise.all([
-      Order.find(filter).skip(skip).limit(limit).lean(),
+      Order.find(filter)
+        .sort({ createdAt: -1 }) // always fetch newest first as base
+        .skip(skip)
+        .limit(limit)
+        .lean(),
       Order.countDocuments(filter),
     ]);
 
@@ -59,29 +88,17 @@ export async function GET(request: NextRequest) {
     // SORT ORDERS
     // ============================================
 
-    let sortedOrders = [...orders];
-
-    if (sortBy === "priority") {
-      // Sort by STATUS_PRIORITY (high-priority orders first)
-      sortedOrders.sort((a, b) => {
-        const priorityDiff =
-          STATUS_PRIORITY[a.status as OrderStatus] -
-          STATUS_PRIORITY[b.status as OrderStatus];
-
-        // If same priority, sort by date (newest first)
-        if (priorityDiff !== 0) return priorityDiff;
-
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      });
-    } else if (sortBy === "date") {
-      // Sort by date (newest first)
-      sortedOrders.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-    }
+    // JS sort only when priority is requested
+    const sortedOrders =
+      sortBy === "priority"
+        ? [...orders].sort((a, b) => {
+            const priorityDiff =
+              STATUS_PRIORITY[a.status as OrderStatus] -
+              STATUS_PRIORITY[b.status as OrderStatus];
+            // same priority → preserve createdAt desc (already sorted by Mongo)
+            return priorityDiff !== 0 ? priorityDiff : 0;
+          })
+        : orders; // date sort already done by Mongo
 
     // ============================================
     // FORMAT RESPONSE
@@ -97,7 +114,7 @@ export async function GET(request: NextRequest) {
       estimatedTime: order.estimatedTime,
       isReviewed: order.isReviewed,
 
-      // ✨ Add UI hint for staff dashboard
+      // Add UI hint for staff dashboard
       actionConfig: ORDER_ACTION_CONFIG[order.status as OrderStatus],
       priority: STATUS_PRIORITY[order.status as OrderStatus],
     }));
