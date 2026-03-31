@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useLogoutAdmin } from "@/hooks/api/useLogout";
 import LogoutModal from "../../../components/ui/LogoutModal";
 import { useAdminMe } from "@/hooks/api/useAuthMe";
-import { canAccess } from "@/lib/rbac";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
 
 interface SidebarProps {
   isMobileOpen: boolean;
