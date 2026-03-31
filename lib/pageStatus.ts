@@ -1,5 +1,5 @@
 export const pageStatus = {
-    '/checkout' : false,
+    '/checkout' : true,
     '/orders': false,
 }
 

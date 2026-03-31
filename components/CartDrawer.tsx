@@ -144,17 +144,17 @@ const CartDrawer = () => {
                 </span>
               </div>
             </div>
-            {/* <button
+            <button
               onClick={handleCheckout}
               className="w-full bg-brand-color-500 hover:bg-[#c13500] text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 cursor-pointer"
             >
               Proceed to checkout
               <ArrowRight size={20} />
-            </button> */}
+            </button>
 
-            <p className="text-center">
+            {/* <p className="text-center">
               Sorry, checkout is currently unavailable. Please visit our store to place your order.
-            </p>
+            </p> */}
 
             <button
               onClick={clearCart}

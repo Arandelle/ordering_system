@@ -116,7 +116,6 @@ const OrderSchema = new Schema(
       },
       customerEmail: {
         type: String,
-        required: true,
         lowercase: true,
       },
       customerPhone: {
