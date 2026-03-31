@@ -1,6 +1,6 @@
 import { getAuthAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
-import { canAccess } from "@/lib/rbac";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import Staff from "@/models/Staff";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
