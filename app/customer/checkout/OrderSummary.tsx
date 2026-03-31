@@ -1,21 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  Loader,
-  Mail,
-  MapPin,
-  Minus,
-  Phone,
-  Plus,
-  ShoppingBag,
-  Trash2,
-  User,
-} from "lucide-react";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import OrderNowButton from "@/components/ui/OrderNowButton";
@@ -29,6 +14,7 @@ import { useBranch } from "@/contexts/BranchContext";
 import { TextareaField } from "@/components/ui/TextAreaField";
 import { Branch } from "@/types/branch";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
+import { DynamicIcon } from "@/components/DynamicIcon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -47,7 +33,7 @@ const CheckoutHeader = () => (
         href="/menu"
         className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
       >
-        <ArrowLeft size={15} />
+        <DynamicIcon name="ArrowLeft" size={15} />
         <span>Back to menu</span>
       </Link>
       <p className="text-xl font-semibold tracking-tight text-slate-900">
@@ -61,7 +47,7 @@ const CheckoutHeader = () => (
 
 const BranchBadge = ({ branch }: { branch: Branch }) => (
   <div className="flex items-start gap-2.5 bg-slate-50 border border-slate-100 px-3.5 py-3">
-    <MapPin size={14} className="text-brand-color-500 mt-0.5 shrink-0" />
+    <DynamicIcon name="MapPin" size={14} className="text-brand-color-500 mt-0.5 shrink-0" />
     <div className="min-w-0">
       <p className="text-xs font-medium text-brand-color-900 truncate">
         {branch.name}
@@ -108,7 +94,7 @@ const CartRow = ({
           aria-label="Remove item"
           className="p-1 text-slate-300 hover:text-red-400 transition-colors shrink-0 rounded-full"
         >
-          <Trash2 size={13} />
+          <DynamicIcon name="Trash2" size={13} />
         </button>
       </div>
 
@@ -119,7 +105,7 @@ const CartRow = ({
             onClick={() => onUpdate(item._id, item.quantity - 1)}
             className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
           >
-            <Minus size={11} />
+            <DynamicIcon name="Minus" size={11} />
           </button>
           <span className="w-6 text-center text-xs font-semibold text-slate-800">
             {item.quantity}
@@ -128,7 +114,7 @@ const CartRow = ({
             onClick={() => onUpdate(item._id, item.quantity + 1)}
             className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
           >
-            <Plus size={11} />
+             <DynamicIcon name="Plus" size={11} />
           </button>
         </div>
 
@@ -232,15 +218,17 @@ const OrderSummaryStep = () => {
     return (
       <div className="bg-brand-color-50 text-center min-h-[70vh] flex flex-col items-center justify-center gap-4">
         <div className="bg-white p-12 rounded-xl shadow">
-          <ShoppingBag size={64} className="mx-auto text-slate-200 mb-4" />
-          <h3 className="text-xl text-slate-500 mb-2">
-            Your cart is empty
-          </h3>
+          <DynamicIcon
+            name="ShoppingBag"
+            size={64}
+            className="mx-auto text-slate-200 mb-4"
+          />
+          <h3 className="text-xl text-slate-500 mb-2">Your cart is empty</h3>
           <p className="text-slate-400">
             Add your favourite before checking out!
           </p>
           <OrderNowButton />
-        </div>  
+        </div>
       </div>
     );
   }
@@ -320,7 +308,7 @@ const OrderSummaryStep = () => {
               ) : (
                 <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 px-3.5 py-3">
                   <div className="flex items-center gap-2">
-                    <MapPin size={14} className="text-red-400 shrink-0" />
+                    <DynamicIcon name="MapPin" size={14} className="text-red-400 shrink-0" />
                     <p className="text-sm text-red-500 font-medium">
                       No branch selected
                     </p>
@@ -343,7 +331,7 @@ const OrderSummaryStep = () => {
                 onChange={(e) => handleChange("name", e.target.value)}
                 onBlur={() => handleBlur("name")}
                 required
-                leftIcon={<User size={15} />}
+                leftIcon={<DynamicIcon name="User" size={15} />}
                 error={errors.name}
               />
               <InputField
@@ -355,7 +343,7 @@ const OrderSummaryStep = () => {
                 onChange={(e) => handleChange("phone", e.target.value)}
                 onBlur={() => handleBlur("phone")}
                 required
-                leftIcon={<Phone size={15} />}
+                leftIcon={<DynamicIcon name="Phone" size={15} />}
                 error={errors.phone}
               />
               <InputField
@@ -366,7 +354,7 @@ const OrderSummaryStep = () => {
                 value={customerDetails.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 onBlur={() => handleBlur("email")}
-                leftIcon={<Mail size={15} />}
+                leftIcon={<DynamicIcon name="Mail" size={15} />}
                 error={errors.email}
               />
               <TextareaField
@@ -429,7 +417,11 @@ const OrderSummaryStep = () => {
 
               {/* Estimated time hint */}
               <div className="flex items-center gap-2 px-1">
-                <Clock size={13} className="text-gray-400" />
+                <DynamicIcon
+                  name="Clock"
+                  size={13}
+                  className=" text-slate-400"
+                />
                 <p className="text-xs text-gray-400">
                   Estimated prep time: 30 - 45 minutes
                 </p>
@@ -448,7 +440,11 @@ const OrderSummaryStep = () => {
                 {isPending ? (
                   <span className="flex items-center gap-2 justify-center">
                     Placing order…
-                    <Loader size={14} className="animate-spin" />
+                    <DynamicIcon
+                      name="Loader"
+                      size={14}
+                      className="animate-spin"
+                    />
                   </span>
                 ) : (
                   "Place Order"
@@ -470,7 +466,8 @@ const OrderSummaryStep = () => {
                 {/* Animated check */}
                 <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-green-50 ring-8 ring-green-50/50">
                   <div className="absolute inset-0 rounded-full bg-green-200 animate-ping opacity-50" />
-                  <CheckCircle2
+                  <DynamicIcon
+                    name="CheckCircle2"
                     size={88}
                     className="text-green-500 relative z-10"
                   />
@@ -500,7 +497,7 @@ const OrderSummaryStep = () => {
                     rel="noopener noreferrer"
                     className="w-full flex items-center justify-center gap-2 bg-brand-color-500 hover:bg-[#c13500] active:scale-[0.98] text-white py-4 rounded-xl font-bold text-base shadow-md shadow-brand-color-500/30 transition-all"
                   >
-                    Pay Now <ExternalLink size={15} />
+                    Pay Now <DynamicIcon name="ExternalLink" size={15} />
                   </a>
                   <button
                     onClick={handleModalClose}
