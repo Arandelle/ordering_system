@@ -1,8 +1,8 @@
-import CheckoutPage from './CheckoutPage';
+import OrderSummaryStep from "./OrderSummary";
 
 const Checkout = () => {
   return (
-    <CheckoutPage />
+    <OrderSummaryStep />
   )
 }
 
