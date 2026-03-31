@@ -1,22 +1,20 @@
 "use client";
 
-import { useCart } from "@/contexts/CartContext";
+import React, { useState } from "react";
 import { BranchProduct } from "@/hooks/api/useBranchProduct";
 import { STOCK_STATUSES } from "@/types/inventory_types";
-import { Check, ShoppingBag, AlertTriangle } from "lucide-react";
+import { ShoppingBag, AlertTriangle } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
-import { toast } from "sonner";
 import ProductDetailModal from "./ProductDetailsModal";
+import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 
 interface ProductCardProps {
   item: BranchProduct;
   hasBranch?: boolean;
-  selectedBranch?: string
+  selectedBranch?: string;
 }
 
 // ── Helpers (pure, no need to live inside component) ──────────────────────────
-
 const getStockLabel = (status: string, quantity: number | null): string => {
   if (status === STOCK_STATUSES.OUT_OF_STOCK) return "Out of stock";
   if (status === STOCK_STATUSES.LOW_STOCK) return `Only ${quantity} left!`;
@@ -36,9 +34,12 @@ const getIncludedItemsText = (
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ProductCard: React.FC<ProductCardProps> = ({ item, hasBranch, selectedBranch}) => {
-  const { addToCart } = useCart();
-  const [isAdded, setIsAdded] = useState(false);
+const ProductCard: React.FC<ProductCardProps> = ({
+  item,
+  hasBranch,
+  selectedBranch,
+}) => {
+  const { openModal } = useModalQuery();
   const [showDetail, setShowDetail] = useState(false);
 
   // ── Derived state (declared early, used throughout) ───────────────────────
@@ -54,32 +55,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, hasBranch, selectedBran
   const isNonSolo = item.productType !== "solo";
   const includedItemsText = getIncludedItemsText(item.includedItems);
   const hasIncludedItems = isNonSolo && includedItemsText.length > 0;
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleAddToCart = () => {
-    if (!hasBranch) {
-      toast.warning("Please select a branch first");
-      return;
-    }
-    if (isOutOfStock) {
-      toast.warning("This item is out of stock");
-      return;
-    }
-
-    addToCart({
-      _id: item._id,
-      name: item.name,
-      price: item.price ?? 0,
-      image: item.image.url,
-      category: {
-        _id: item.category._id,
-        name: item.category.name,
-      },
-    });
-
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
-  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -134,17 +109,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, hasBranch, selectedBran
               </span>
             </div>
           )}
-          {/* Added confirmation overlay */}
-          <div
-            className={`absolute inset-0 bg-black/40 transition-opacity duration-300 flex items-center justify-center ${
-              isAdded ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <p className="bg-green-500 text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-lg">
-              <Check size={18} />
-              Added!
-            </p>
-          </div>
         </div>
         {/* Content */}
         <div className="flex flex-col p-4">
@@ -175,19 +139,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, hasBranch, selectedBran
               {item.price != null ? `₱${item.price}` : "—"}
             </span>
             <button
-              onClick={() => setShowDetail(true)}
-              disabled={isAdded || isOutOfStock}
+              onClick={() => {
+                !selectedBranch
+                  ? openModal(MODAL_TYPES.MAP)
+                  : setShowDetail(true);
+              }}
+              disabled={isOutOfStock}
               className={`text-white p-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg ${
-                isAdded
-                  ? "bg-green-500"
-                  : isOutOfStock
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-[#1a1a1a] hover:bg-brand-color-500"
+                isOutOfStock
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-[#1a1a1a] hover:bg-brand-color-500"
               }`}
             >
-              {isAdded ? (
-                <Check size={18} />
-              ) : isOutOfStock ? (
+              {isOutOfStock ? (
                 <AlertTriangle size={18} />
               ) : (
                 <ShoppingBag size={18} />
@@ -196,14 +160,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, hasBranch, selectedBran
           </div>
         </div>
       </div>
-      
-        {showDetail && (
-          <ProductDetailModal
-            item={item}
-            selectedBranch={selectedBranch}
-            onClose={() => setShowDetail(false)}
-          />
-        )}
+
+      {showDetail && (
+        <ProductDetailModal
+          item={item}
+          selectedBranch={selectedBranch}
+          onClose={() => setShowDetail(false)}
+        />
+      )}
     </div>
   );
 };
