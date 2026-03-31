@@ -55,7 +55,7 @@ export const categories: Category[] = [
 export const menuData: MenuData = {
   "Ala Carte & Grill": [
     {
-      _id: 1,
+      _id: "1",
       name: "Chicken Liver",
       price: 79,
       description:
@@ -64,7 +64,7 @@ export const menuData: MenuData = {
       image: "/images/202.png",
     },
     {
-      _id: 2,
+      _id: "2",
       name: "Chicken Wings",
       price: 89,
       description:
@@ -73,7 +73,7 @@ export const menuData: MenuData = {
       image: "/images/144.png",
     },
     {
-      _id: 3,
+      _id: "3",
       name: "Pecho",
       price: 209,
       description:
@@ -81,46 +81,51 @@ export const menuData: MenuData = {
       image: "/images/145.png",
     },
     {
-      _id: 4,
+      _id: "4",
       name: "Chicken Leg Quarter",
       price: 189,
-      description: "A tender and juicy chicken leg quarter, perfectly seasoned and cooked to golden perfection. Crispy on the outside, flavorful and succulent on the inside.",
+      description:
+        "A tender and juicy chicken leg quarter, perfectly seasoned and cooked to golden perfection. Crispy on the outside, flavorful and succulent on the inside.",
       isBestSeller: true,
       image: "/images/248.png",
     },
     {
-      _id: 5,
+      _id: "5",
       name: "Ehsaladang Talong",
       price: 149,
-      description: "A classic Filipino eggplant salad made with grilled eggplant, fresh tomatoes, onions, and a savory blend of seasonings. Light, refreshing, and full of authentic flavor.",
+      description:
+        "A classic Filipino eggplant salad made with grilled eggplant, fresh tomatoes, onions, and a savory blend of seasonings. Light, refreshing, and full of authentic flavor.",
       image: "/images/253.png",
     },
     {
-      _id: 6,
+      _id: "6",
       name: "Chicken Gizzard",
       price: 79,
-      description: "Tender chicken gizzards cooked to perfection and seasoned with rich, savory flavors. A hearty and satisfying dish for those who love bold bites.",
+      description:
+        "Tender chicken gizzards cooked to perfection and seasoned with rich, savory flavors. A hearty and satisfying dish for those who love bold bites.",
       image: "/images/255.png",
     },
     {
-      _id: 61,
+      _id: "61",
       name: "Chicken BBQ",
       price: 89,
-      description: "Tender chicken marinated in a flavorful blend of spices and grilled to smoky perfection. Juicy, savory, and satisfying in every bite.",
+      description:
+        "Tender chicken marinated in a flavorful blend of spices and grilled to smoky perfection. Juicy, savory, and satisfying in every bite.",
       image: "/images/256.png",
     },
     {
-      _id: 62,
+      _id: "62",
       name: "Pork BBQ",
       price: 89,
-      description: "Tender pork slices marinated in a savory-sweet barbecue sauce and grilled to perfection. Juicy, smoky, and packed with flavor in every bite.",
+      description:
+        "Tender pork slices marinated in a savory-sweet barbecue sauce and grilled to perfection. Juicy, smoky, and packed with flavor in every bite.",
       isBestSeller: true,
       image: "/images/257.png",
     },
   ],
   "Harrison Traditions": [
     {
-      _id: 7,
+      _id: "7",
       name: "Lechon Kawali",
       price: 399,
       description:
@@ -128,7 +133,7 @@ export const menuData: MenuData = {
       image: "/images/205.png",
     },
     {
-      _id: 8,
+      _id: "8",
       name: "Lumpiang Shanghai",
       price: 199,
       description:
@@ -137,7 +142,7 @@ export const menuData: MenuData = {
       image: "/images/206.png",
     },
     {
-      _id: 9,
+      _id: "9",
       name: "Sisig Turon",
       price: 79,
       description:
@@ -146,7 +151,7 @@ export const menuData: MenuData = {
       image: "/images/207.png",
     },
     {
-      _id: 10,
+      _id: "10",
       name: "Adobong Kangkong",
       price: 99,
       description:
@@ -155,7 +160,7 @@ export const menuData: MenuData = {
       image: "/images/209.png",
     },
     {
-      _id: 101,
+      _id: "101",
       name: "Pancit Canton",
       price: 299,
       description:
@@ -163,7 +168,7 @@ export const menuData: MenuData = {
       image: "/images/216.png",
     },
     {
-      _id: 102,
+      _id: "102",
       name: "Pork Sinigang",
       price: 399,
       description:
@@ -171,7 +176,7 @@ export const menuData: MenuData = {
       image: "/images/221.png",
     },
     {
-      _id: 103,
+      _id: "103",
       name: "Harrison Sisig",
       price: 399,
       description:
@@ -181,7 +186,7 @@ export const menuData: MenuData = {
   ],
   "Harrison Bonding Bites": [
     {
-      _id: 11,
+      _id: "11",
       name: "The Juicy Gathering",
       price: 1499,
       description:
@@ -189,7 +194,7 @@ export const menuData: MenuData = {
       image: "/images/176.png",
     },
     {
-      _id: 12,
+      _id: "12",
       name: "WINGS MEET QUARTERS",
       price: 1399,
       description:
@@ -197,7 +202,7 @@ export const menuData: MenuData = {
       image: "/images/175.png",
     },
     {
-      _id: 13,
+      _id: "13",
       name: "Stick It Together",
       price: 999,
       description:
@@ -207,14 +212,15 @@ export const menuData: MenuData = {
   ],
   "Add-ons": [
     {
-      _id: 14,
+      _id: "14",
       name: "Atchara",
       price: 19,
-      description: "Popular Filipino side dish made of pickled, grated, or julienned green papaya, characterized by a sweet, sour, and tangy flavor",
+      description:
+        "Popular Filipino side dish made of pickled, grated, or julienned green papaya, characterized by a sweet, sour, and tangy flavor",
       image: "/images/228.png",
     },
     {
-      _id: 15,
+      _id: "15",
       name: "Plain Rice",
       price: 39,
       description: "",
@@ -223,28 +229,28 @@ export const menuData: MenuData = {
   ],
   "Harrison Full Plates": [
     {
-      _id: 16,
+      _id: "16",
       name: "Pork BBQ Combo",
       price: 199,
       description: "2PCS PORK SKEWERS + RICE + ATCHARA",
       image: "/images/243.png",
     },
     {
-      _id: 17,
+      _id: "17",
       name: "Chicken BBQ Combo",
       price: 199,
       description: "2 CHICKEN SKEWERS + RICE + ATCHARA",
       image: "/images/141.png",
     },
     {
-      _id: 18,
+      _id: "18",
       name: "Leg Quarter Combo",
       price: 199,
       description: "1 LEG QUARTER + RICE + ATCHARA",
       image: "/images/142.png",
     },
     {
-      _id: 19,
+      _id: "19",
       name: "Chicken Wings Combo",
       price: 199,
       description: "2 CHICKEN WINGS + RICE + ATCHARA",
@@ -252,7 +258,7 @@ export const menuData: MenuData = {
       image: "/images/146.png",
     },
     {
-      _id: 191,
+      _id: "191",
       name: "Chicken Pecho Combo",
       price: 219,
       description: "1 PECHO INASAL + RICE + ATCHARA",
@@ -261,60 +267,68 @@ export const menuData: MenuData = {
   ],
   "Harrison Refreshment": [
     {
-      _id: 20,
+      _id: "20",
       name: "Mountain Dew",
       price: 99,
-      description: "A refreshing canned beverage made to quench your thirst anytime, anywhere. Perfectly chilled and conveniently packed for on-the-go enjoyment.",
+      description:
+        "A refreshing canned beverage made to quench your thirst anytime, anywhere. Perfectly chilled and conveniently packed for on-the-go enjoyment.",
       image: "/images/159.png",
     },
     {
-      _id: 21,
+      _id: "21",
       name: "Sprite",
       price: 99,
-      description: "A refreshing canned beverage made to quench your thirst anytime, anywhere. Perfectly chilled and conveniently packed for on-the-go enjoyment.",
+      description:
+        "A refreshing canned beverage made to quench your thirst anytime, anywhere. Perfectly chilled and conveniently packed for on-the-go enjoyment.",
       image: "/images/160.png",
     },
     {
-      _id: 22,
+      _id: "22",
       name: "Royal",
       price: 99,
-      description: "A refreshing canned beverage made to quench your thirst anytime, anywhere. Perfectly chilled and conveniently packed for on-the-go enjoyment.",
+      description:
+        "A refreshing canned beverage made to quench your thirst anytime, anywhere. Perfectly chilled and conveniently packed for on-the-go enjoyment.",
       image: "/images/161.png",
     },
     {
-      _id: 23,
+      _id: "23",
       name: "Super Dry",
       price: 99,
-      description: "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
+      description:
+        "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
       image: "/images/163.png",
     },
     {
-      _id: 24,
+      _id: "24",
       name: "Red Horse",
       price: 99,
-      description: "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
+      description:
+        "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
       isBestSeller: true,
       image: "/images/164.png",
     },
     {
-      _id: 25,
+      _id: "25",
       name: "San Mig Apple",
       price: 99,
-      description: "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
+      description:
+        "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
       image: "/images/165.png",
     },
     {
-      _id: 26,
+      _id: "26",
       name: "Pale Pilsen",
       price: 99,
-      description: "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
+      description:
+        "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
       image: "/images/166.png",
     },
     {
-      _id: 27,
+      _id: "27",
       name: "San Mig Light",
       price: 99,
-      description: "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
+      description:
+        "A crisp and well-balanced beer with a refreshing finish. Perfect for unwinding after a long day or sharing good times with friends.",
       image: "/images/167.png",
     },
   ],
