@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { canAccess } from "./lib/rbac";
+import { canAccess } from "./lib/roleBasedAccessCtrl";
 import { verifyToken } from "./lib/verifyToken";
 import { StaffRole } from "./types/staff";
 import { blockNonMaya, isMayaCallbackPath } from "./lib/mayaGuard";
