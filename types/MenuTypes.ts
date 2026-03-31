@@ -4,7 +4,7 @@
  * Base menu item interface
  */
 export interface MenuItem {
-  _id: string | number;
+  _id: string;
   name: string;
   price: number;
   description?: string;

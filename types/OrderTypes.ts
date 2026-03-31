@@ -86,8 +86,15 @@ export interface OrdersApiResponse {
  */
 
 export interface CreateOrderPayload {
-  items: CartItem[];
-  subTotal: number;
+  branchId: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone: string;
+  note?: string;
+  items: {
+    _id: string;
+    quantity: number;
+  }[];
 }
 
 /**
