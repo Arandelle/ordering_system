@@ -22,17 +22,18 @@ import {
   StaffFormErrors,
   StaffRole,
   Staff,
-  ROLE_LABELS,
+  STAFF_ROLES,
   ROLE_COLORS,
+  ROLE_LABELS,
 } from "@/types/staff"
 import { Ban, Loader2, Search } from "lucide-react";
 import { ChangeEvent, useState } from "react";
 import SectionHeader from "../../components/SectionHeader";
 
 const ROLES: { value: StaffRole; label: string }[] = [
-  { value: "superadmin", label: "Super Admin" },
-  { value: "admin", label: "Admin" },
-  { value: "cashier", label: "Cashier" },
+  { value: STAFF_ROLES.SUPERADMIN, label: "Super Admin" },
+  { value: STAFF_ROLES.ADMIN, label: "Admin" },
+  { value: STAFF_ROLES.CASHIER, label: "Cashier" },
 ];
 
 const emptyForm: StaffFormData = {

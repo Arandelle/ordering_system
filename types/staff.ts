@@ -4,6 +4,12 @@ export const STAFF_ROLES = {
   CASHIER: "cashier",
 } as const;
 
+export const ROLE_LABELS = {
+  superadmin: "Super Admin",
+  admin: "Admin",
+  cashier: "Cashier",
+} as const;
+
 export type StaffRole = (typeof STAFF_ROLES)[keyof typeof STAFF_ROLES];
 
 export const ROLE_COLORS: Record<StaffRole, string> = {
