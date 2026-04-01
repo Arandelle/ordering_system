@@ -45,6 +45,8 @@ export async function getAdminAuth(request: NextRequest) {
 
   return {
     id: payload.id as string,
+    role: payload.role as StaffRole,
+    isActive: payload.isActive as boolean,
   };
 }
 
@@ -54,6 +56,7 @@ export async function getCustomerAuth(request: NextRequest) {
 
   return {
     id: payload.id as string,
+    isActive: payload.isActive as boolean,
   };
 }
 
@@ -63,6 +66,6 @@ export async function requireAdmin(request: NextRequest) {
 
   await connectDB();
   const staffRecord = await Staff.findById(admin.id).lean();
-   if (!staffRecord || !staffRecord.isActive) throw new Error("Unauthorized");
-  return staffRecord
+  if (!staffRecord || !staffRecord.isActive) throw new Error("Unauthorized");
+  return staffRecord;
 }
