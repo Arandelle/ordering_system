@@ -1,10 +1,10 @@
-export type StaffRole = "superadmin" | "admin" | "cashier";
+export const STAFF_ROLES = {
+  SUPERADMIN: "superadmin",
+  ADMIN: "admin",
+  CASHIER: "cashier",
+} as const;
 
-export const ROLE_LABELS: Record<StaffRole, string> = {
-  superadmin: "Super Admin",
-  admin: "Admin",
-  cashier: "Cashier",
-};
+export type StaffRole = (typeof STAFF_ROLES)[keyof typeof STAFF_ROLES];
 
 export const ROLE_COLORS: Record<StaffRole, string> = {
   superadmin: "bg-purple-100 text-purple-700",
