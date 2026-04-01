@@ -40,7 +40,6 @@ export async function proxy(request: NextRequest) {
 
   // ── Admin subdomain ──────────────────────────────────────────
   if (subdomain === "admin") {
-    
     const isPublic = ["/auth/login", "/auth/signup"].some((p) =>
       pathname.startsWith(p),
     );
@@ -68,6 +67,27 @@ export async function proxy(request: NextRequest) {
       );
       response.cookies.delete(COOKIE_NAMES.ADMIN_TOKEN);
       return response;
+    }
+
+    // verify token validity on protected pages
+    if (!isPublic && admin) {
+      const role = admin.role as StaffRole;
+
+      if (!admin.isActive) {
+        const response = NextResponse.redirect(
+          new URL("/auth/login", request.url),
+        );
+        response.cookies.delete(COOKIE_NAMES.ADMIN_TOKEN);
+        return response;
+      }
+
+      // Example: "/orders/123".split("/") → ["", "orders", "123"]
+      // We take index [1] to get the resource segment ("orders")
+      const segment = pathname.split("/")[1];
+
+      if (!canAccess(role, `${segment}.read`)) {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
     }
 
     // rewrite to /admin folder
