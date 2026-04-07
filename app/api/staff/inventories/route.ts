@@ -6,6 +6,7 @@ import { Product } from "@/models/Product";
 import { Inventory } from "@/models/Inventory";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import { COOKIE_NAMES } from "@/lib/getAuth";
+import Staff from "@/models/Staff";
 
 /**
  * POST /api/inventory/sync
@@ -32,7 +33,15 @@ export async function GET(req: NextRequest) {
     // verify + decode JWT
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
-    const branchId = payload.branch as string;
+    const staff = await Staff.findById(payload.id).select(
+      "branch role isActive",
+    );
+
+    if (!staff || !staff.isActive) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const branchId = staff.branch;
 
     if (!branchId) {
       return NextResponse.json(
@@ -61,7 +70,7 @@ export async function GET(req: NextRequest) {
       ]),
     );
 
-    const result = products.map((product) => {  
+    const result = products.map((product) => {
       const inv = inventoryMap.get(product._id.toString());
 
       const quantity = inv?.quantity ?? 0;
@@ -75,8 +84,8 @@ export async function GET(req: NextRequest) {
       return {
         id: product._id.toString(),
         image: {
-            url: product.image.url,
-            public_id: product.image.public_id
+          url: product.image.url,
+          public_id: product.image.public_id,
         },
         name: product.name,
         price: product.price,
