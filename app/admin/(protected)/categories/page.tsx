@@ -14,18 +14,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import PermissionGuard from "@/lib/PermissionGuard";
-import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { Category } from "@/types/adminType";
+import { categories_api } from "./hooks/api";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-interface Category {
-  _id: string;
-  name: string;
-  position: number;
-  image?: {
-    url: string;
-    public_id: string;
-  };
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const toBase64 = (file: File): Promise<string> =>
@@ -36,59 +27,7 @@ const toBase64 = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-// ── API helpers ───────────────────────────────────────────────────────────────
-const api = {
-  getAll: async (): Promise<Category[]> => {
-    const res = await fetch("/api/categories");
-    if (!res.ok) throw new Error("Failed to fetch categories");
-    return res.json();
-  },
-  create: async (data: {
-    name: string;
-    position: number;
-    imageFile?: string;
-  }) => {
-    const res = await fetch("/api/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Failed to create category");
-    return res.json();
-  },
-  update: async ({
-    id,
-    data,
-  }: {
-    id: string;
-    data: Partial<Category> & { imageFile?: string };
-  }) => {
-    const res = await fetch(`/api/categories/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Failed to update category");
-    return res.json();
-  },
-  delete: async (id: string) => {
-    const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error);
-    }
-    return res.json();
-  },
-  reorder: async (categories: { id: string; position: number }[]) => {
-    const res = await fetch("/api/categories/reorder", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ categories }),
-    });
-    if (!res.ok) throw new Error("Failed to reorder categories");
-    return res.json();
-  },
-};
+
 
 // ── Image Upload Button ───────────────────────────────────────────────────────
 const ImageUploadButton = ({
@@ -347,13 +286,13 @@ const Page = () => {
     isError,
   } = useQuery({
     queryKey: ["categories"],
-    queryFn: api.getAll,
+    queryFn: categories_api.getAll,
     select: (data) => [...data].sort((a, b) => a.position - b.position),
   });
 
   // ── Mutations ──
   const createMutation = useMutation({
-    mutationFn: api.create,
+    mutationFn: categories_api.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setIsAdding(false);
@@ -365,7 +304,7 @@ const Page = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: api.update,
+    mutationFn: categories_api.update,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       setEditingId(null);
@@ -375,7 +314,7 @@ const Page = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: api.delete,
+    mutationFn: categories_api.delete,
     onMutate: (id) => setDeletingId(id),
     onSettled: () => setDeletingId(null),
     onSuccess: () => {
@@ -387,7 +326,7 @@ const Page = () => {
   });
 
   const reorderMutation = useMutation({
-    mutationFn: api.reorder,
+    mutationFn: categories_api.reorder,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
