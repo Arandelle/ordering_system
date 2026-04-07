@@ -14,6 +14,7 @@ import Modal from "../../../components/ui/Modal";
 import { useOrder } from "@/hooks/api/useOrders";
 import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
 import PermissionGuard from "@/lib/PermissionGuard";
+import LoadingPage from "@/components/ui/LoadingPage";
 
 export default function OrdersTable({ orders }: { orders: OrderType[] }) {
   const [orderToViewId, setOrderToViewId] = useState<string>("");
@@ -132,7 +133,9 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
             ) : (
               <TableRow>
                 <TableCell colSpan={8} className="py-12 text-center">
-                  <p className="text-sm text-gray-500">No orders found on this branch.</p>
+                  <p className="text-sm text-gray-500">
+                    No orders found on this branch.
+                  </p>
                 </TableCell>
               </TableRow>
             )}
@@ -142,8 +145,8 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
         {orderToViewId && (
           <Modal title="Order Details" onClose={() => setOrderToViewId("")}>
             {isLoading && (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+              <div className="relative flex items-center justify-center py-12 h-[50vh]">
+                <LoadingPage />
               </div>
             )}
             {isError && (
