@@ -142,10 +142,14 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                   {/* ACTIONS */}
                   <TableCell className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
-                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                        <EyeIcon size={16} />
-                      </button>
-                      <PermissionGuard permission="products.update">
+                      <PermissionGuard
+                        permission="products.update"
+                        fallback={
+                          <span className="text-xs text-gray-400">
+                            No access on buttons
+                          </span>
+                        }
+                      >
                         <button
                           onClick={() => onEdit(product)}
                           className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"
