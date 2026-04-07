@@ -1,5 +1,7 @@
+import { requireAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Branch } from "@/models/Branch";
+import { STAFF_ROLES } from "@/types/staff";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
@@ -8,7 +10,17 @@ export async function PATCH(
 ) {
   try {
     await connectDB();
+    const superadmin = await requireAdmin(request);
+
+    if (superadmin.role !== STAFF_ROLES.SUPERADMIN) {
+      return NextResponse.json(
+        { error: "Access denied. Superadmin privileges required." },
+        { status: 403 },
+      );
+    }
+
     const { id } = await context.params;
+
     if (!id) {
       return NextResponse.json(
         {
@@ -49,6 +61,16 @@ export async function PUT(
 ) {
   try {
     await connectDB();
+
+    const superadmin = await requireAdmin(request);
+
+    if (superadmin.role !== STAFF_ROLES.SUPERADMIN) {
+      return NextResponse.json(
+        { error: "Access denied. Superadmin privileges required." },
+        { status: 403 },
+      );
+    }
+
     const { id } = await context.params;
     const body = await request.json();
 
@@ -116,7 +138,7 @@ export async function PUT(
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
-      console.error("PUT /api/branches/[id] error:", error);
+    console.error("PUT /api/branches/[id] error:", error);
     return NextResponse.json(
       {
         error: "Faield to update branch",
@@ -128,33 +150,40 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
+
+    const superadmin = await requireAdmin(request);
+
+    if (superadmin.role !== STAFF_ROLES.SUPERADMIN) {
+      return NextResponse.json(
+        { error: "Access denied. Superadmin privileges required." },
+        { status: 403 },
+      );
+    }
+
     const { id } = await context.params;
- 
+
     if (!id) {
       return NextResponse.json(
         {
           error: "Branch id is required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
- 
+
     const deleted = await Branch.findByIdAndDelete(id);
- 
+
     if (!deleted) {
-      return NextResponse.json(
-        { error: "Branch not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Branch not found" }, { status: 404 });
     }
- 
+
     return NextResponse.json(
       { message: "Branch deleted successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("DELETE /api/branches/[id] error:", error);
@@ -163,7 +192,7 @@ export async function DELETE(
         error:
           error instanceof Error ? error.message : "Failed to delete branch",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,12 +1,23 @@
+import { requireAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Branch } from "@/models/Branch";
+import { STAFF_ROLES } from "@/types/staff";
 import { NextRequest, NextResponse } from "next/server";
+import z from "zod";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const data = await Branch.find({isActive: true}).sort({ createdAt: -1 }).lean();
+    const staff = await requireAdmin(request);
+
+    // If superadmin can see all branch, else own branch only
+    const filter =
+      staff.role === STAFF_ROLES.SUPERADMIN
+        ? { isActive: true }
+        : { isActive: true, _id: staff.branch };
+
+    const data = await Branch.find(filter).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
@@ -20,32 +31,42 @@ export async function GET() {
   }
 }
 
+const branchSchema = z.object({
+  name: z.string().min(1, "Branch name is required").trim(),
+  address: z.string().min(1, "Address is required").trim(),
+  contactNumber: z.string().optional(),
+  open: z.string().optional(),
+  close: z.string().optional(),
+  location: z.object({
+    coordinates: z
+      .array(z.number())
+      .length(2, "Coordinates must be [longitude, latitude]"),
+  }),
+});
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
+
+    const superadmin = await requireAdmin(request);
+    if (superadmin.role !== STAFF_ROLES.SUPERADMIN) {
+      return NextResponse.json(
+        { error: "Access denied. Superadmin privileges required." },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json();
-    const { name, address, contactNumber, open, close, location } = body;
+    const parsed = branchSchema.safeParse(body);
 
-    // Validate required fields
-    if (!name?.trim() || !address?.trim()) {
+    if (!parsed.success) {
       return NextResponse.json(
-        {
-          error: "Branch name and address are required",
-        },
+        { error: parsed.error.flatten() },
         { status: 400 },
       );
     }
 
-    // Validate location coordinates
-    if (!location?.coordinates || location.coordinates.length !== 2) {
-      return NextResponse.json(
-        {
-          error:
-            "Valid location coordinates [longitude, latitude] are required",
-        },
-        { status: 400 },
-      );
-    }
+    const { name, address, contactNumber, open, close, location } = parsed.data;
 
     // Generate unique branch code
     const count = await Branch.countDocuments();
