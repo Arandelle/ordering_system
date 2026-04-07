@@ -184,7 +184,7 @@ const CategoryRow = ({
   isDragging,
   isDragOver,
   isDeleting,
-  hasPermissionUpdate
+  hasPermissionUpdate,
 }: {
   category: Category;
   onEdit: () => void;
@@ -210,7 +210,7 @@ const CategoryRow = ({
     {/* Drag spacer (matches header w-6) */}
     <div className="w-6 flex">
       <GripVertical
-        className={`text-gray-500 group-hover:text-gray-500 transition-colors ${!isDeleting ? "cursor-grab active:cursor-grabbing" : "cursor-not-allowed"}`}
+        className={`text-gray-500 group-hover:text-gray-500 transition-colors ${!isDeleting && hasPermissionUpdate ? "cursor-grab active:cursor-grabbing" : "cursor-not-allowed"}`}
         size={18}
       />
     </div>
@@ -343,7 +343,7 @@ const Page = () => {
   // ── Drag & drop ──
   const handleDrop = (targetId: string) => {
     if (!dragId || dragId === targetId) return;
-    if(!canAccess(admin?.role, "categories.update")) {
+    if (!canAccess(admin?.role, "categories.update")) {
       toast.error("You don't have permission to reorder categories");
       setDragId(null);
       setDragOverId(null);
@@ -480,7 +480,9 @@ const Page = () => {
                   isDragging={dragId === category._id}
                   isDragOver={dragOverId === category._id}
                   isDeleting={deletingId === category._id}
-                  hasPermissionUpdate={canAccess(admin?.role, "categories.update") ?? false}
+                  hasPermissionUpdate={
+                    canAccess(admin?.role, "categories.update") ?? false
+                  }
                 />
               ),
             )}
@@ -535,7 +537,7 @@ const Page = () => {
             </div>
           )}
           {/* Footer / Add button */}
-          {!isAdding && (
+          {!isAdding && canAccess(admin?.role, "categories.create") && (
             <div className="px-4 py-3 border-t border-gray-100">
               <button
                 onClick={() => setIsAdding(true)}
