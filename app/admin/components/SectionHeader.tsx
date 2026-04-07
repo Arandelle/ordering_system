@@ -1,3 +1,5 @@
+import { useStaffContext } from "@/contexts/StaffContext";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import React from "react";
 
 type SectionHeaderProps = {
@@ -5,6 +7,7 @@ type SectionHeaderProps = {
   subTitle?: string;
   onClick?: () => void;
   btnTxt?: string;
+  permission?: string;
 };
 
 /**
@@ -23,7 +26,12 @@ const SectionHeader = ({
   subTitle,
   onClick,
   btnTxt,
+  permission
 }: SectionHeaderProps) => {
+
+  const admin = useStaffContext();
+  const showBtn = btnTxt && onClick && (!permission || (admin && canAccess(admin.role, permission)));
+
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -36,7 +44,7 @@ const SectionHeader = ({
         )}
       </div>
 
-      {btnTxt && onClick && (
+      {showBtn && (
         <button
           onClick={onClick}
           className="px-6 py-3 bg-brand-color-500 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer"
