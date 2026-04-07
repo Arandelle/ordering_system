@@ -451,42 +451,7 @@ const Page = () => {
               </p>
             </div>
           )}
-          {/* Rows */}
-          {!isLoading &&
-            !isError &&
-            categories.map((category) =>
-              editingId === category._id ? (
-                <EditRow
-                  key={category._id}
-                  category={category}
-                  onSave={(name, imageFile) =>
-                    handleUpdate(category._id, name, imageFile)
-                  }
-                  onCancel={() => setEditingId(null)}
-                  isSaving={updateMutation.isPending}
-                />
-              ) : (
-                <CategoryRow
-                  key={category._id}
-                  category={category}
-                  onEdit={() => setEditingId(category._id)}
-                  onDelete={() => deleteMutation.mutate(category._id)}
-                  onDragStart={() => setDragId(category._id)}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setDragOverId(category._id);
-                  }}
-                  onDrop={() => handleDrop(category._id)}
-                  isDragging={dragId === category._id}
-                  isDragOver={dragOverId === category._id}
-                  isDeleting={deletingId === category._id}
-                  hasPermissionUpdate={
-                    canAccess(admin?.role, "categories.update") ?? false
-                  }
-                />
-              ),
-            )}
-          {/* Add new row */}
+                    {/* Add new row */}
           {isAdding && (
             <div className="flex items-center gap-3 px-4 py-3 bg-brand-color-50 border-t border-brand-color-200">
               <GripVertical className="text-gray-200 shrink-0" size={18} />
@@ -541,13 +506,48 @@ const Page = () => {
             <div className="px-4 py-3 border-t border-gray-100">
               <button
                 onClick={() => setIsAdding(true)}
-                className="flex items-center gap-2 text-sm font-bold text-brand-color-500 hover:text-brand-color-600 transition-colors"
+                className="flex place-self-end justify-center items-center gap-2 text-sm font-bold text-brand-color-500 hover:text-brand-color-600 transition-colors"
               >
                 <Plus size={16} />
                 Add Category
               </button>
             </div>
           )}
+          {/* Rows */}
+          {!isLoading &&
+            !isError &&
+            categories.map((category) =>
+              editingId === category._id ? (
+                <EditRow
+                  key={category._id}
+                  category={category}
+                  onSave={(name, imageFile) =>
+                    handleUpdate(category._id, name, imageFile)
+                  }
+                  onCancel={() => setEditingId(null)}
+                  isSaving={updateMutation.isPending}
+                />
+              ) : (
+                <CategoryRow
+                  key={category._id}
+                  category={category}
+                  onEdit={() => setEditingId(category._id)}
+                  onDelete={() => deleteMutation.mutate(category._id)}
+                  onDragStart={() => setDragId(category._id)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOverId(category._id);
+                  }}
+                  onDrop={() => handleDrop(category._id)}
+                  isDragging={dragId === category._id}
+                  isDragOver={dragOverId === category._id}
+                  isDeleting={deletingId === category._id}
+                  hasPermissionUpdate={
+                    canAccess(admin?.role, "categories.update") ?? false
+                  }
+                />
+              ),
+            )}
         </div>
       </div>
 
