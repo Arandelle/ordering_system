@@ -6,6 +6,7 @@ import { z } from "zod";
 import "@/models/Category";
 import "@/models/SubCategory";
 import { extractPublicId } from "@/helper/extractImagePublicId";
+import { requireAdmin, requireSuperAdmin } from "@/lib/getAuth";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -164,6 +165,7 @@ export async function POST(request: NextRequest) {
 
   try {
     await connectDB();
+    await requireSuperAdmin(request);
 
     const body = await request.json();
     const validated = productCreateSchema.parse(body);

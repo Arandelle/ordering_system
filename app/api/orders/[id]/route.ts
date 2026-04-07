@@ -93,7 +93,7 @@ export async function GET(
   } catch (error: any) {
     console.error("GET /api/orders/[id] error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch order" },
+      { error:  error instanceof Error ? error.message : "Failed to fetch order" },
       { status: 500 }
     );
   }
@@ -245,7 +245,7 @@ export async function PATCH(
     }
 
     return NextResponse.json(
-      { error: "Failed to update order" },
+      { error: error instanceof Error ? error.message : "Failed to update order" },
       { status: 500 }
     );
   }

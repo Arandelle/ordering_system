@@ -3,6 +3,7 @@ import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { extractPublicId } from "@/helper/extractImagePublicId";
+import { requireSuperAdmin } from "@/lib/getAuth";
 
 export async function PUT(
   request: NextRequest,
@@ -12,6 +13,7 @@ export async function PUT(
 
   try {
     await connectDB();
+    await requireSuperAdmin(request)
 
     const { id } = await context.params;
     const body = await request.json();
