@@ -6,6 +6,7 @@ import ProductsModal from "./ProductsModal";
 import { Product } from "@/types/adminType";
 import { useProducts } from "@/hooks/api/useProducts";
 import SectionHeader from "@/app/admin/components/SectionHeader";
+import LoadingPage from "@/components/ui/LoadingPage";
 
 const ProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,9 +24,7 @@ const ProductsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-xl">Loading products...</div>
-      </div>
+     <LoadingPage />
     );
   }
 
