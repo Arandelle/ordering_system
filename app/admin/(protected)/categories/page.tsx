@@ -16,7 +16,8 @@ import { toast } from "sonner";
 import PermissionGuard from "@/lib/PermissionGuard";
 import { Category } from "@/types/adminType";
 import { categories_api } from "./hooks/api";
-
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { useStaffContext } from "@/contexts/StaffContext";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const toBase64 = (file: File): Promise<string> =>
@@ -26,8 +27,6 @@ const toBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-
-
 
 // ── Image Upload Button ───────────────────────────────────────────────────────
 const ImageUploadButton = ({
@@ -185,6 +184,7 @@ const CategoryRow = ({
   isDragging,
   isDragOver,
   isDeleting,
+  hasPermissionUpdate
 }: {
   category: Category;
   onEdit: () => void;
@@ -195,13 +195,14 @@ const CategoryRow = ({
   isDragging: boolean;
   isDragOver: boolean;
   isDeleting: boolean;
+  hasPermissionUpdate: boolean;
 }) => (
   <div
-    draggable={!isDeleting}
+    draggable={!isDeleting && hasPermissionUpdate}
     onDragStart={onDragStart}
     onDragOver={onDragOver}
     onDrop={onDrop}
-    className={`flex items-center gap-6 px-6 py-3 border-b border-gray-100 bg-white group transition-all duration-150
+    className={`flex items-center gap-6 px-6 py-3 border-b border-gray-100 bg-white group transition-all duration-150 select-none
     ${isDragging ? "opacity-40" : "opacity-100"}
     ${isDragOver ? "border-t-2 border-t-brand-color-500" : ""}
   `}
@@ -227,6 +228,7 @@ const CategoryRow = ({
             src={category.image.url}
             alt={category.name}
             className="w-full h-full object-content"
+            draggable={false}
           />
         ) : (
           <ImagePlus size={13} className="text-gray-300" />
@@ -241,7 +243,10 @@ const CategoryRow = ({
 
     {/* Actions (matches header flex-1) */}
     <div className="flex-2 flex justify-center items-center gap-1">
-      <PermissionGuard permission="categories.update" fallback={<span className="text-xs text-gray-400">No access</span>}>
+      <PermissionGuard
+        permission="categories.update"
+        fallback={<span className="text-xs text-gray-400">No access</span>}
+      >
         <button
           onClick={onEdit}
           disabled={isDeleting}
@@ -270,6 +275,7 @@ const CategoryRow = ({
 // ── Main page ─────────────────────────────────────────────────────────────────
 const Page = () => {
   const queryClient = useQueryClient();
+  const admin = useStaffContext();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -337,6 +343,12 @@ const Page = () => {
   // ── Drag & drop ──
   const handleDrop = (targetId: string) => {
     if (!dragId || dragId === targetId) return;
+    if(!canAccess(admin?.role, "categories.update")) {
+      toast.error("You don't have permission to reorder categories");
+      setDragId(null);
+      setDragOverId(null);
+      return;
+    }
 
     const sorted = [...categories];
     const fromIdx = sorted.findIndex((c) => c._id === dragId);
@@ -468,6 +480,7 @@ const Page = () => {
                   isDragging={dragId === category._id}
                   isDragOver={dragOverId === category._id}
                   isDeleting={deletingId === category._id}
+                  hasPermissionUpdate={canAccess(admin?.role, "categories.update") ?? false}
                 />
               ),
             )}
