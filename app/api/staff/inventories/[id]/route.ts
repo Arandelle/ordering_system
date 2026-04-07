@@ -1,19 +1,19 @@
 import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { Inventory } from "@/models/Inventory";
-import { jwtVerify } from "jose";
 import z from "zod";
+import { requireAdmin } from "@/lib/getAuth";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+const updateInventorySchema = z
+  .object({
+    quantity: z.coerce.number().min(0).optional(),
+    reorderLevel: z.coerce.number().min(0).optional(),
+  })
+  .refine((data) => data.quantity != null || data.reorderLevel != null, {
+    message: "At least one field must be provided",
+  });
 
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined");
-}
-
-const updateInventorySchema = z.object({
-  quantity: z.number().min(0).optional(),
-  reorderLevel: z.number().min(0).optional(),
-});
+type UpdateInventoryInput = z.infer<typeof updateInventorySchema>;
 
 export async function PUT(
   req: NextRequest,
@@ -21,18 +21,10 @@ export async function PUT(
 ) {
   try {
     await connectDB();
+    const staff = await requireAdmin(req);
 
-    // Get token first for the branchid and staffid
-    const token = req.cookies.get("admin_token")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-
-    const branchId = payload.branch as string;
-    const staffId = payload.id as string;
+    const branchId = staff.branch as string;
+    const staffId = staff.id as string;
 
     if (!branchId) {
       return NextResponse.json(
@@ -44,7 +36,16 @@ export async function PUT(
     // Get Product id from the params
     const { id: productId } = await context.params;
     const body = await req.json();
-    const { quantity, reorderLevel } = body;
+    const parsed = updateInventorySchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    const { quantity, reorderLevel } = parsed.data;
 
     if (!productId) {
       return NextResponse.json(
@@ -53,30 +54,17 @@ export async function PUT(
       );
     }
 
-    // ⚠️ validation
-    if (quantity != null && quantity < 0) {
-      return NextResponse.json(
-        { error: "Quantity cannot be negative" },
-        { status: 400 },
-      );
-    }
-
-    if (reorderLevel != null && reorderLevel < 0) {
-      return NextResponse.json(
-        { error: "reorderLevel cannot be negative" },
-        { status: 400 },
-      );
-    }
-
-    // 🧠 3. Build update object (only update provided fields)
-    const updateData: any = {
+    // 3. Build update object (only update provided fields)
+    const updateData: Partial<UpdateInventoryInput> & {
+      updatedBy: string;
+    } = {
       updatedBy: staffId,
     };
 
     if (quantity != null) updateData.quantity = quantity;
     if (reorderLevel != null) updateData.reorderLevel = reorderLevel;
 
-    // 🔥 4. Update (or create if missing)
+    // 4. Update (or create if missing)
     const inventory = await Inventory.findOneAndUpdate(
       {
         productId: productId,
@@ -87,7 +75,7 @@ export async function PUT(
       },
       {
         new: true,
-        upsert: true, // 🔥 auto create if missing
+        upsert: true,
       },
     );
 
