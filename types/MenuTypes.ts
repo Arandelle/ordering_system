@@ -1,5 +1,7 @@
 // types.ts - TypeScript interfaces for Harrison House Menu
 
+import { Category } from "./category";
+
 /**
  * Base menu item interface
  */
@@ -23,16 +25,7 @@ export interface CartItem extends MenuItem {
   quantity: number;
 }
 
-/**
- * Category metadata interface
- */
-export interface Category {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  showHeader: boolean;
-  icon: string | null;
-}
+
 
 /**
  * Menu data structure - maps category IDs to their menu items
