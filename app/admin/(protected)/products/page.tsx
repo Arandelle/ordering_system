@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useStaffContext } from "@/contexts/StaffContext";
 import { useProducts } from "@/hooks/api/useProducts";
 import { Product } from "@/types/products";
 
@@ -13,7 +12,6 @@ import LoadingPage from "@/components/ui/LoadingPage";
 const ProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const currentAdmin = useStaffContext()
 
   const {
     data: products = [],
