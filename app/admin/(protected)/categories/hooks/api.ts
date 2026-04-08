@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
-import { Category } from "@/types/adminType";
+import { Category } from "@/types/category";
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 export const categories_api = {

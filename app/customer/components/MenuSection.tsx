@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { ChevronDown, Search } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { LINKS } from "@/constant/links";
 import { useScrollToSection } from "@/hooks/utils/useScrollToSection";
-import { Category } from "@/types/adminType";
+import { Category } from "@/types/category";
 import { useMenuCategories } from "@/app/main/components/CategoryCarousel";
 import { BranchProduct, useBranchProduct } from "@/hooks/api/useBranchProduct";
 import { useBranch } from "@/contexts/BranchContext";
 import { useProducts } from "@/hooks/api/useProducts";
 import PromoBanner from "./PromoBanner";
+import { DynamicIcon } from "@/lib/DynamicIcon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -224,7 +224,7 @@ const MenuSection = () => {
         </div>
       ) : isError ? (
         <div className="text-center py-20">
-          <Search size={32} className="mx-auto text-red-200 mb-4" />
+          <DynamicIcon name="Search" size={32} className="mx-auto text-red-200 mb-4" />
           <h3 className="text-base font-semibold text-gray-500 mb-1">
             Failed to load products
           </h3>
@@ -238,7 +238,7 @@ const MenuSection = () => {
         </div>
       ) : (
         <div className="text-center py-20">
-          <Search size={32} className="mx-auto text-gray-200 mb-4" />
+          <DynamicIcon name="Search" size={32} className="mx-auto text-gray-200 mb-4" />
           <h3 className="text-base font-semibold text-gray-500 mb-1">
             No products found
           </h3>
@@ -453,7 +453,8 @@ const MenuSection = () => {
                     >
                       <span className="truncate">{cat.name}</span>
                       {hasSubcategories && (
-                        <ChevronDown
+                        <DynamicIcon
+                          name="ChevronDown"
                           size={14}
                           className={`shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""} ${
                             isActive ? "text-white/70" : "text-gray-400"

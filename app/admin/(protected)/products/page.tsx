@@ -1,14 +1,14 @@
 "use client";
 
-import ProductTable from "@/app/admin/components/ProductTable";
 import { useState } from "react";
-import ProductsModal from "./ProductsModal";
-import { Product } from "@/types/adminType";
+import { useStaffContext } from "@/contexts/StaffContext";
 import { useProducts } from "@/hooks/api/useProducts";
+import { Product } from "@/types/products";
+
+import ProductTable from "@/app/admin/components/ProductTable";
+import ProductsModal from "./ProductsModal";
 import SectionHeader from "@/app/admin/components/SectionHeader";
 import LoadingPage from "@/components/ui/LoadingPage";
-import { useStaffContext } from "@/contexts/StaffContext";
-import { canAccess } from "@/lib/roleBasedAccessCtrl";
 
 const ProductsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

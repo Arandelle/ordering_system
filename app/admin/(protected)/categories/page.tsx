@@ -2,22 +2,13 @@
 
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  GripVertical,
-  Pencil,
-  Trash2,
-  Plus,
-  X,
-  Check,
-  Loader2,
-  ImagePlus,
-} from "lucide-react";
 import { toast } from "sonner";
 import PermissionGuard from "@/lib/PermissionGuard";
-import { Category } from "@/types/adminType";
 import { categories_api } from "./hooks/api";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
+import { Category } from "@/types/category";
+import { DynamicIcon } from "@/lib/DynamicIcon";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const toBase64 = (file: File): Promise<string> =>
@@ -70,7 +61,8 @@ const ImageUploadButton = ({
             className="w-full h-full object-cover"
           />
         ) : (
-          <ImagePlus
+          <DynamicIcon 
+            name="ImagePlus"
             size={size === "sm" ? 14 : 18}
             className="text-gray-300 group-hover:text-brand-color-500 transition-colors"
           />
@@ -85,7 +77,7 @@ const ImageUploadButton = ({
           className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white flex items-center justify-center rounded-full hover:bg-red-600 transition-colors"
           title="Remove image"
         >
-          <X size={9} />
+          <DynamicIcon name="X" size={9} />
         </button>
       )}
 
@@ -134,7 +126,7 @@ const EditRow = ({
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-brand-color-50 border border-brand-color-200">
-      <GripVertical className="text-gray-300 shrink-0" size={18} />
+      <DynamicIcon name="GripVertical" className="text-gray-300 shrink-0" size={18} />
       <span className="text-xs font-mono text-gray-500 w-6">
         {category.position}
       </span>
@@ -158,16 +150,16 @@ const EditRow = ({
         className="p-1.5 bg-brand-color-500 text-white hover:bg-brand-color-600 disabled:opacity-50 transition-colors"
       >
         {isSaving ? (
-          <Loader2 size={14} className="animate-spin" />
+          <DynamicIcon name="Loader2" size={14} className="animate-spin" />
         ) : (
-          <Check size={14} />
+          <DynamicIcon name="Check" size={14} />
         )}
       </button>
       <button
         onClick={onCancel}
         className="p-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
       >
-        <X size={14} />
+        <DynamicIcon name="X" size={14} />
       </button>
     </div>
   );
@@ -209,7 +201,8 @@ const CategoryRow = ({
   >
     {/* Drag spacer (matches header w-6) */}
     <div className="w-6 flex">
-      <GripVertical
+      <DynamicIcon
+        name="GripVertical"
         className={`text-gray-500 group-hover:text-gray-500 transition-colors ${!isDeleting && hasPermissionUpdate ? "cursor-grab active:cursor-grabbing" : "cursor-not-allowed"}`}
         size={18}
       />
@@ -231,7 +224,7 @@ const CategoryRow = ({
             draggable={false}
           />
         ) : (
-          <ImagePlus size={13} className="text-gray-300" />
+          <DynamicIcon name="ImagePlus" size={13} className="text-gray-300" />
         )}
       </div>
     </div>
@@ -253,7 +246,7 @@ const CategoryRow = ({
           className="p-1.5 text-dark-green-500 hover:text-dark-green-600 hover:bg-dark-green-50 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Edit"
         >
-          <Pencil size={14} />
+          <DynamicIcon name="Pencil" size={14} />
         </button>
         <button
           onClick={onDelete}
@@ -262,9 +255,9 @@ const CategoryRow = ({
           aria-label="Delete"
         >
           {isDeleting ? (
-            <Loader2 size={14} className="animate-spin" />
+            <DynamicIcon name="Loader2" size={14} className="animate-spin" />
           ) : (
-            <Trash2 size={14} />
+            <DynamicIcon name="Trash2" size={14} />
           )}
         </button>
       </PermissionGuard>
@@ -427,7 +420,7 @@ const Page = () => {
           {/* Loading */}
           {isLoading && (
             <div className="flex items-center justify-center py-16 gap-2 text-gray-500">
-              <Loader2 size={18} className="animate-spin" />
+              <DynamicIcon name="Loader2" size={18} className="animate-spin" />
               <span className="text-sm">Loading categories...</span>
             </div>
           )}
@@ -454,7 +447,7 @@ const Page = () => {
                     {/* Add new row */}
           {isAdding && (
             <div className="flex items-center gap-3 px-4 py-3 bg-brand-color-50 border-t border-brand-color-200">
-              <GripVertical className="text-gray-200 shrink-0" size={18} />
+              <DynamicIcon name="GripVertical" className="text-gray-200 shrink-0" size={18} />
               <span className="text-xs font-mono text-gray-300 w-6">
                 {categories.length + 1}
               </span>
@@ -484,9 +477,9 @@ const Page = () => {
                 className="p-1.5 bg-brand-color-500 text-white hover:bg-brand-color-600 disabled:opacity-50 transition-colors"
               >
                 {createMutation.isPending ? (
-                  <Loader2 size={14} className="animate-spin" />
+                  <DynamicIcon name="Loader2" size={14} className="animate-spin" />
                 ) : (
-                  <Check size={14} />
+                  <DynamicIcon name="Check" size={14} />
                 )}
               </button>
               <button
@@ -497,7 +490,7 @@ const Page = () => {
                 }}
                 className="p-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
               >
-                <X size={14} />
+                <DynamicIcon name="X" size={14} />
               </button>
             </div>
           )}
@@ -508,7 +501,7 @@ const Page = () => {
                 onClick={() => setIsAdding(true)}
                 className="flex place-self-end justify-center items-center gap-2 text-sm font-bold text-brand-color-500 hover:text-brand-color-600 transition-colors"
               >
-                <Plus size={16} />
+                <DynamicIcon name="Plus" size={16} />
                 Add Category
               </button>
             </div>

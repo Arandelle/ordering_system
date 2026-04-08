@@ -1,27 +1,12 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { InputField } from "@/components/ui/InputField";
 import Modal from "@/components/ui/Modal";
-import {
-  Beef,
-  Layers,
-  Link,
-  LoaderCircle,
-  Search,
-  Trash2,
-  X,
-  ChevronDown,
-  Package,
-  Utensils,
-  Star,
-  Upload,
-  Images,
-  RefreshCw,
-  CheckCircle2,
-} from "lucide-react";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/api/useProducts";
-import { Category, IncludedItemUI, Product } from "@/types/adminType";
 import { toast } from "sonner";
 import { TextareaField } from "@/components/ui/TextAreaField";
+import { Category } from "@/types/category";
+import { IncludedItemUI, Product } from "@/types/products";
+import { DynamicIcon } from "@/lib/DynamicIcon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,27 +69,27 @@ const PRODUCT_TYPE_OPTIONS: {
     value: "solo",
     label: "Solo",
     description: "Single ala-carte item",
-    icon: <Utensils size={16} />,
+    icon: <DynamicIcon name="Utensils" size={16} />,
   },
   {
     value: "combo",
     label: "Combo",
     description: "Bundled meal with drink",
-    icon: <Package size={16} />,
+    icon: <DynamicIcon name="Package" size={16} />,
   },
   {
     value: "set",
     label: "Set",
     description: "Group / sharing platter",
-    icon: <Star size={16} />,
+    icon: <DynamicIcon name="Star" size={16} />,
   },
 ];
 
 const IMAGE_TABS: { value: ImageTab; label: string; icon: React.ReactNode }[] =
   [
-    { value: "upload", label: "Upload", icon: <Upload size={14} /> },
-    { value: "url", label: "URL", icon: <Link size={14} /> },
-    { value: "gallery", label: "Gallery", icon: <Images size={14} /> },
+    { value: "upload", label: "Upload", icon: <DynamicIcon name="Upload" size={14} /> },
+    { value: "url", label: "URL", icon: <DynamicIcon name="Link" size={14} /> },
+    { value: "gallery", label: "Gallery", icon: <DynamicIcon name="Images" size={14} /> },
   ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -556,7 +541,7 @@ const ProductsModal = ({
         {/* ── Product Name ── */}
         <InputField
           label="Product Name"
-          leftIcon={<Beef size={18} />}
+          leftIcon={<DynamicIcon name="Beef" size={18} />}
           placeholder="e.g., Pork Sinigang"
           type="text"
           id="name"
@@ -628,7 +613,7 @@ const ProductsModal = ({
                   ))}
                   <option value="__add_new__">＋ Add New Category</option>
                 </select>
-                <ChevronDown
+                <DynamicIcon name="ChevronDown"
                   size={16}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                 />
@@ -689,7 +674,7 @@ const ProductsModal = ({
                     ))}
                     <option value="__add_new__">＋ Add New Subcategory</option>
                   </select>
-                  <ChevronDown
+                  <DynamicIcon name="ChevronDown"
                     size={16}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                   />
@@ -750,7 +735,7 @@ const ProductsModal = ({
             {/* Search box */}
             <div className="relative">
               <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-brand-color-500">
-                <Search size={16} className="text-gray-400 shrink-0" />
+                <DynamicIcon name="Search" size={16} className="text-gray-400 shrink-0" />
                 <input
                   type="text"
                   placeholder={
@@ -776,7 +761,7 @@ const ProductsModal = ({
                     }}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    <X size={14} />
+                    <DynamicIcon name="X" size={14} />
                   </button>
                 )}
               </div>
@@ -872,7 +857,7 @@ const ProductsModal = ({
                       onClick={() => removeIncludedItem(index)}
                       className="text-red-400 hover:text-red-600 transition"
                     >
-                      <Trash2 size={15} />
+                      <DynamicIcon name="Trash2" size={15} />
                     </button>
                   </div>
                 ))}
@@ -946,7 +931,7 @@ const ProductsModal = ({
                 onChange={handleChange}
                 required={!previewUrl}
                 placeholder="https://example.com/image.jpg"
-                leftIcon={<Link size={16} />}
+                leftIcon={<DynamicIcon name="Link" size={16} />}
               />
             </div>
           )}
@@ -967,7 +952,7 @@ const ProductsModal = ({
                   disabled={loadingGallery}
                   className="flex items-center gap-1 text-xs text-brand-color-500 hover:text-brand-color-600 font-medium disabled:opacity-50 transition"
                 >
-                  <RefreshCw
+                  <DynamicIcon name="RefreshCcw"
                     size={12}
                     className={loadingGallery ? "animate-spin" : ""}
                   />
@@ -978,7 +963,7 @@ const ProductsModal = ({
               {/* Search */}
               {cloudinaryImages.length > 0 && (
                 <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg mb-3 focus-within:ring-2 focus-within:ring-brand-color-500">
-                  <Search size={14} className="text-gray-400 shrink-0" />
+                  <DynamicIcon name="Search" size={14} className="text-gray-400 shrink-0" />
                   <input
                     type="text"
                     placeholder="Search by filename..."
@@ -992,7 +977,7 @@ const ProductsModal = ({
                       onClick={() => setGallerySearch("")}
                       className="text-gray-400 hover:text-gray-600"
                     >
-                      <X size={12} />
+                      <DynamicIcon name="X" size={12} />
                     </button>
                   )}
                 </div>
@@ -1001,7 +986,7 @@ const ProductsModal = ({
               {/* States */}
               {loadingGallery ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-2 text-gray-400">
-                  <LoaderCircle size={24} className="animate-spin" />
+                  <DynamicIcon name="LoaderCircle" size={24} className="animate-spin" />
                   <p className="text-sm">Loading gallery...</p>
                 </div>
               ) : galleryError ? (
@@ -1017,7 +1002,7 @@ const ProductsModal = ({
                 </div>
               ) : filteredGalleryImages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-1 text-gray-400">
-                  <Images size={28} />
+                  <DynamicIcon name="Images" size={28} />
                   <p className="text-sm">
                     {gallerySearch
                       ? "No images match your search"
@@ -1050,7 +1035,7 @@ const ProductsModal = ({
                         {/* Selected overlay */}
                         {isSelected && (
                           <div className="absolute inset-0 bg-brand-color-500/20 flex items-center justify-center">
-                            <CheckCircle2
+                            <DynamicIcon name="CheckCircle2"
                               size={22}
                               className="text-brand-color-500 drop-shadow"
                             />
@@ -1073,7 +1058,8 @@ const ProductsModal = ({
               {/* Selected image info */}
               {selectedGalleryUrl && (
                 <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-brand-color-500/10 border border-brand-color-500/30 rounded-lg">
-                  <CheckCircle2
+                  <DynamicIcon
+                    name="CheckCircle2"
                     size={14}
                     className="text-brand-color-500 shrink-0"
                   />
@@ -1085,7 +1071,7 @@ const ProductsModal = ({
                     onClick={() => setSelectedGalleryUrl(null)}
                     className="text-brand-color-500 hover:text-brand-color-600 shrink-0"
                   >
-                    <X size={13} />
+                    <DynamicIcon name="X" size={13} />
                   </button>
                 </div>
               )}
@@ -1183,7 +1169,7 @@ const ProductsModal = ({
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">
-              <LoaderCircle size={18} className="animate-spin" />
+              <DynamicIcon name="LoaderCircle" size={18} className="animate-spin" />
               {isEditMode ? "Updating..." : "Creating..."}
             </span>
           ) : (

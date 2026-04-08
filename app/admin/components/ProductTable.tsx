@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-import { Product } from "@/types/adminType";
 import {
   Table,
   TableBody,
@@ -8,11 +6,11 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
-import { EyeIcon, PencilLine, Search, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { useDeleteProduct } from "@/hooks/api/useProducts";
 import Image from "next/image";
 import PermissionGuard from "@/lib/PermissionGuard";
+import { DynamicIcon } from "@/lib/DynamicIcon";
+import { Product } from "@/types/products";
 
 interface ProductTableProps {
   products: Product[];
@@ -35,7 +33,6 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
   const handleDeleteItem = async (id: string) => {
     if (confirm("Are you sure you want to delete this item?")) {
       await deleteMutation.mutateAsync(id);
-      toast.success("Deleted successfully!");
       return;
     }
   };
@@ -154,7 +151,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                           onClick={() => onEdit(product)}
                           className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"
                         >
-                          <PencilLine size={16} />
+                          <DynamicIcon name="PencilLine" size={16} />
                         </button>
                       </PermissionGuard>
                       <PermissionGuard permission="products.delete">
@@ -162,7 +159,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                           onClick={() => handleDeleteItem(product._id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                         >
-                          <Trash2 size={16} />
+                          <DynamicIcon name="Trash2" size={16} />
                         </button>
                       </PermissionGuard>
                     </div>
@@ -173,7 +170,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
               <TableRow>
                 <TableCell colSpan={productHeaders.length}>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Search size={48} className="text-slate-300 mb-4" />
+                    <DynamicIcon name="Search" size={48} className="text-slate-300 mb-4" />
                     <h3 className="text-lg font-semibold text-slate-700">
                       No Products Found
                     </h3>
