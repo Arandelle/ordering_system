@@ -11,6 +11,7 @@ import Image from "next/image";
 import PermissionGuard from "@/lib/PermissionGuard";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { Product } from "@/types/products";
+import { useState } from "react";
 
 interface ProductTableProps {
   products: Product[];
@@ -28,12 +29,19 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
     "Actions",
   ];
 
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(
+    null,
+  );
+
   const deleteMutation = useDeleteProduct();
 
   const handleDeleteItem = async (id: string) => {
-    if (confirm("Are you sure you want to delete this item?")) {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+    try {
+      setDeletingProductId(id);
       await deleteMutation.mutateAsync(id);
-      return;
+    } finally {
+      setDeletingProductId(null);
     }
   };
 
@@ -138,31 +146,43 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
 
                   {/* ACTIONS */}
                   <TableCell className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <PermissionGuard
-                        permission="products.update"
-                        fallback={
-                          <span className="text-xs text-gray-400">
-                            No access on buttons
-                          </span>
-                        }
-                      >
-                        <button
-                          onClick={() => onEdit(product)}
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+                    {deleteMutation.isPending && deletingProductId === product._id ? (
+                      <div className="flex items-center justify-center">
+                        <DynamicIcon
+                          name="Loader2"
+                          size={16}
+                          className="animate-spin text-gray-400"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-2">
+                        <PermissionGuard
+                          permission="products.update"
+                          fallback={
+                            <span className="text-xs text-gray-400">
+                              No access on buttons
+                            </span>
+                          }
                         >
-                          <DynamicIcon name="PencilLine" size={16} />
-                        </button>
-                      </PermissionGuard>
-                      <PermissionGuard permission="products.delete">
-                        <button
-                          onClick={() => handleDeleteItem(product._id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                        >
-                          <DynamicIcon name="Trash2" size={16} />
-                        </button>
-                      </PermissionGuard>
-                    </div>
+                          <button
+                            onClick={() => onEdit(product)}
+                            disabled={deletingProductId === product._id}
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"
+                          >
+                            <DynamicIcon name="PencilLine" size={16} />
+                          </button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="products.delete">
+                          <button
+                            onClick={() => handleDeleteItem(product._id)}
+                             disabled={deletingProductId === product._id}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            <DynamicIcon name="Trash2" size={16} />
+                          </button>
+                        </PermissionGuard>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -170,7 +190,11 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
               <TableRow>
                 <TableCell colSpan={productHeaders.length}>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <DynamicIcon name="Search" size={48} className="text-slate-300 mb-4" />
+                    <DynamicIcon
+                      name="Search"
+                      size={48}
+                      className="text-slate-300 mb-4"
+                    />
                     <h3 className="text-lg font-semibold text-slate-700">
                       No Products Found
                     </h3>
