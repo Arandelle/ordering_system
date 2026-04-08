@@ -15,6 +15,14 @@ export interface IncludedItemUI {
   _price: number | null; // display only
 }
 
+export const ITEM_TYPES = {
+  SOLO: "solo",
+  COMBO: "combo",
+  SET: "set"
+};
+
+export type ProductType = (typeof ITEM_TYPES)[keyof typeof ITEM_TYPES];
+
 export interface Product {
   _id: string;
   name: string;
@@ -27,7 +35,7 @@ export interface Product {
     url: string;
     public_id?: string;
   };
-  productType: "solo" | "combo" | "set";
+  productType: ProductType;
   includedItems: IncludedItem[];
   paxCount?: number | null;
   isPopular?: boolean;
@@ -48,7 +56,7 @@ export interface ProductPayload {
   imageFile?: string;
   isSignature?: boolean;
   isPopular?: boolean;
-  productType: "solo" | "combo" | "set";
+  productType: ProductType;
   paxCount?: number | null;
   includedItems?: {
     product: string;                 // ObjectId — always a string when sending
