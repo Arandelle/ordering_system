@@ -84,7 +84,7 @@ export async function getTopProducts(): Promise<TopProduct[]>{
     {
       $group: {
         _id: "$items.name",
-        sale: {$sum: "$items.quantity"}
+        sales: {$sum: "$items.quantity"}
       }
     },
     {$sort : {sales : -1}},
