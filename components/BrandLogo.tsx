@@ -1,7 +1,10 @@
+'use client'
+
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 
 const BrandLogo = ({
   color = "normal",
@@ -10,8 +13,11 @@ const BrandLogo = ({
   color?: "white" | "normal";
   className?: string;
 }) => {
+
+  const homeUrl = useSubdomainPath("/", undefined)
+
   return (
-    <Link href={"/"} className="cursor-pointer">
+    <Link href={homeUrl} className="cursor-pointer">
       <div className="flex items-center">
         <Image
           src={
