@@ -2,18 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
-import {
-  ShoppingBag,
-  Menu,
-  X,
-  User,
-  LogIn,
-  Package,
-  LogOut,
-  Loader2,
-  MapPin,
-  ChevronDown,
-} from "lucide-react";
 import Link from "next/link";
 import { useOrders } from "@/hooks/api/useOrders";
 import BrandLogo from "@/components/BrandLogo";
@@ -26,6 +14,7 @@ import MapPage from "@/app/customer/map/page";
 import { useBranch } from "@/contexts/BranchContext";
 import { syne } from "@/app/font";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
+import { DynamicIcon } from "@/lib/DynamicIcon";
 
 const Header = () => {
   const { data: currentUser, isPending, fetchStatus  } = useCustomerMe();
@@ -73,7 +62,7 @@ const Header = () => {
             onClick={() => handleOpenModal(MODAL_TYPES.MAP)}
             className="flex items-center justify-center gap-2 bg-white hover:bg-brand-color-50 hover:text-brand-color-600 text-brand-color-500 px-4 py-2 text-sm font-bold rounded-full transition-colors cursor-pointer max-w-35 sm:max-w-none"
           >
-            <MapPin size={16} className="shrink-0" />
+            <DynamicIcon name="MapPin" size={16} className="shrink-0" />
             <span className="truncate">
               {mounted
                 ? selectedBranch
@@ -82,7 +71,7 @@ const Header = () => {
                 : "Select Branch"}{" "}
               {/* matches server render */}
             </span>
-            <ChevronDown size={16} className="shrink-0" />
+            <DynamicIcon name="ChevronDown" size={16} className="shrink-0" />
           </button>
 
           <div className="gap-6 hidden lg:flex">
@@ -100,7 +89,8 @@ const Header = () => {
               href="/orders"
               className="relative p-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 group cursor-pointer"
             >
-              <Package
+              <DynamicIcon
+                name="BaggageClaim"
                 size={20}
                 className="group-hover:scale-110 transition-transform darkText"
               />
@@ -115,7 +105,8 @@ const Header = () => {
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 group cursor-pointer"
             >
-              <ShoppingBag
+              <DynamicIcon
+                name="ShoppingBag"
                 size={20}
                 className="group-hover:scale-110 transition-transform darkText"
               />
@@ -158,9 +149,9 @@ const Header = () => {
                     className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-red-500 px-3 py-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                   >
                     {userLogout.isPending ? (
-                      <Loader2 size={15} className="animate-spin" />
+                      <DynamicIcon name="Loader2" size={15} className="animate-spin" />
                     ) : (
-                      <LogOut size={15} />
+                      <DynamicIcon name="LogOut" size={15} />
                     )}
                     {userLogout.isPending ? "Logging out..." : "Logout"}
                   </button>
@@ -171,14 +162,14 @@ const Header = () => {
                     onClick={() => handleOpenModal(MODAL_TYPES.LOGIN)}
                     className="flex items-center gap-2 text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg transition-colors cursor-pointer"
                   >
-                    <LogIn size={18} />
+                    <DynamicIcon name="LogIn" size={18} />
                     <span className="text-sm font-medium">Login</span>
                   </button>
                   <button
                     onClick={() => handleOpenModal(MODAL_TYPES.SIGNUP)}
                     className={`${syne.className} flex bg-brand-color-500 text-white items-center justify-center text-sm hover:bg-brand-color-600 font-bold py-2 px-4 rounded-full`}
                   >
-                    <User className="inline-block mr-2" size={18}  />
+                    <DynamicIcon name="User" className="inline-block mr-2" size={18} />
                     Sign Up
                   </button>
                 </>
@@ -191,7 +182,7 @@ const Header = () => {
               className="lg:hidden p-2 darkText hover:bg-white/10 rounded-lg transition-colors"
               aria-label={isMobileMenuOpen ? "Close menu" : "Menu button"}
             >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMobileMenuOpen ? <DynamicIcon name="X" size={24} /> : <DynamicIcon name="Menu" size={24} />}
             </button>
           </div>
         </div>
@@ -247,9 +238,9 @@ const Header = () => {
                   className="flex items-center justify-center gap-2 text-white bg-red-500/80 hover:bg-red-600 px-4 py-3 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {userLogout.isPending ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <DynamicIcon name="Loader2" size={16} className="animate-spin" />
                   ) : (
-                    <LogOut size={16} />
+                    <DynamicIcon name="LogOut" size={16} />
                   )}
                   {userLogout.isPending ? "Logging out..." : "Logout"}
                 </button>
@@ -264,7 +255,7 @@ const Header = () => {
                   }}
                   className="flex-1 flex items-center justify-center gap-2 text-white bg-white/10 px-4 py-3 rounded-lg"
                 >
-                  <LogIn size={18} />
+                  <DynamicIcon name="LogIn" size={18} />
                   <span>Login</span>
                 </button>
                 <button
@@ -274,7 +265,7 @@ const Header = () => {
                   }}
                   className="flex-1 flex items-center justify-center gap-2 bg-brand-color-500 text-white px-4 py-3 rounded-lg"
                 >
-                  <User size={18} />
+                  <DynamicIcon name="User" size={18} />
                   <span>Sign Up</span>
                 </button>
               </div>

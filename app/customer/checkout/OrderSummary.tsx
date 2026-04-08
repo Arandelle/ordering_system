@@ -14,7 +14,7 @@ import { useBranch } from "@/contexts/BranchContext";
 import { TextareaField } from "@/components/ui/TextAreaField";
 import { Branch } from "@/types/branch";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
-import { DynamicIcon } from "@/components/DynamicIcon";
+import { DynamicIcon } from "@/lib/DynamicIcon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
