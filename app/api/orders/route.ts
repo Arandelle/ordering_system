@@ -20,15 +20,15 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const admin = await requireAdmin(request);
-    const branchId = admin.branch;
+    // const admin = await requireAdmin(request);
+    // const branchId = admin.branch;
 
-    if (!branchId) {
-      return NextResponse.json(
-        { error: "branchId is required" },
-        { status: 400 },
-      );
-    }
+    // if (!branchId) {
+    //   return NextResponse.json(
+    //     { error: "branchId is required" },
+    //     { status: 400 },
+    //   );
+    // }
 
     // ============================================
     // QUERY PARAMETERS
@@ -51,15 +51,15 @@ export async function GET(request: NextRequest) {
 
     const filter: any = {};
 
-    if (admin.role !== STAFF_ROLES.SUPERADMIN) {
-      if (!admin.branch) {
-        return NextResponse.json(
-          { error: "branchId is required" },
-          { status: 400 },
-        );
-      }
-      filter.branchId = admin.branch;
-    }
+    // if (admin.role !== STAFF_ROLES.SUPERADMIN) {
+    //   if (!admin.branch) {
+    //     return NextResponse.json(
+    //       { error: "branchId is required" },
+    //       { status: 400 },
+    //     );
+    //   }
+    //   filter.branchId = admin.branch;
+    // }
 
     if (status) {
       filter.status = status;
@@ -123,7 +123,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       data: formattedOrders,
-      branchId,
       pagination: {
         page,
         limit,
