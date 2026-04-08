@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
-import { Product } from "@/types/adminType";
+import { Product } from "@/types/products";
 import { StockStatus } from "@/types/inventory_types";
 import { useQuery } from "@tanstack/react-query";
 

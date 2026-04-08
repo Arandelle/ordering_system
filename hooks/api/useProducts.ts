@@ -2,11 +2,10 @@
 // QUERIES (GET data)
 // ============================
 
-import { Product } from "@/types/adminType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ProductPayload } from "@/types/adminType";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/apiClient";
+import { Product, ProductPayload } from "@/types/products";
 
 /**
  * Fetch all product
