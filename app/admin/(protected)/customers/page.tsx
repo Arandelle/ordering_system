@@ -1,3 +1,6 @@
+"use client";
+
+import LoadingPage from "@/components/ui/LoadingPage";
 import {
   Table,
   TableBody,
@@ -6,51 +9,67 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { apiClient } from "@/lib/apiClient";
+import { Customer, CustomerResponse } from "@/types/CustomerAccountType";
+import { useQuery } from "@tanstack/react-query";
 import { Star, Users, Wallet } from "lucide-react";
 import React from "react";
 
 const mockCustomers = [
   {
-    id: "C001",
-    name: "Maria Santos",
+    _id: "C001",
+    fullname: "Maria Santos",
     email: "maria.santos@email.com",
     phone: "+63 912 345 6789",
     totalOrders: 23,
     totalSpent: 8750,
-    joinDate: "2024-01-15",
+    createdAt: "2024-01-15",
   },
   {
-    id: "C002",
-    name: "Juan Dela Cruz",
+    _id: "C002",
+    fullname: "Juan Dela Cruz",
     email: "juan.delacruz@email.com",
     phone: "+63 923 456 7890",
     totalOrders: 15,
     totalSpent: 5420,
-    joinDate: "2024-02-01",
+    createdAt: "2024-02-01",
   },
   {
-    id: "C003",
-    name: "Anna Reyes",
+    _id: "C003",
+    fullname: "Anna Reyes",
     email: "anna.reyes@email.com",
     phone: "+63 934 567 8901",
     totalOrders: 31,
     totalSpent: 12350,
-    joinDate: "2023-12-10",
+    createdAt: "2023-12-10",
   },
   {
-    id: "C004",
-    name: "Carlos Rivera",
+    _id: "C004",
+    fullname: "Carlos Rivera",
     email: "carlos.rivera@email.com",
     phone: "+63 945 678 9012",
     totalOrders: 8,
     totalSpent: 2890,
-    joinDate: "2024-02-05",
+    createdAt: "2024-02-05",
   },
 ];
 
 const CustomersPage = () => {
-  const totalRevenue = mockCustomers.reduce((sum, c) => sum + c.totalSpent, 0);
-  const average = totalRevenue / mockCustomers.length;
+  const {
+    data: response,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["customers"],
+    queryFn: () =>
+      apiClient.get<{ data: CustomerResponse[]; pagination: any }>(
+        "/accounts/customers",
+      ),
+  });
+
+  const customerList = response?.data ?? [];
+  const totalRevenue = customerList.reduce((sum, c) => sum + (c.totalSpent ?? 0), 0);
+  const average = totalRevenue / customerList.length;
 
   const customerHeaders = [
     "Customer",
@@ -60,6 +79,9 @@ const CustomersPage = () => {
     "Join Date",
     "Actions",
   ];
+
+  if (isLoading) return <LoadingPage />;
+  if (error) return <p>Error loading customers</p>;
 
   return (
     <section className="space-y-6">
@@ -79,7 +101,7 @@ const CustomersPage = () => {
             <div>
               <p className="text-sm text-stone-500">Total Customers</p>
               <p className="text-2xl font-bold text-stone-800">
-                {mockCustomers.length}
+                {customerList.length}
               </p>
             </div>
           </div>
@@ -93,7 +115,7 @@ const CustomersPage = () => {
             <div>
               <p className="text-sm text-stone-500">VIP Customers</p>
               <p className="text-2xl font-bold text-stone-800">
-                {mockCustomers.filter((c) => c.totalSpent > 10000).length}
+                {customerList.filter((c) => (c.totalSpent ?? 0) > 10000).length}
               </p>
             </div>
           </div>
@@ -101,7 +123,7 @@ const CustomersPage = () => {
 
         <div className="bg-white rounded-xl p-6 border border-stone-100">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#ef4501] text-white flex items-center justify-center text-2xl">
+            <div className="w-12 h-12 rounded-xl bg-brand-color-500 text-white flex items-center justify-center text-2xl">
               <Wallet />
             </div>
             <div>
@@ -122,7 +144,7 @@ const CustomersPage = () => {
                 {customerHeaders.map((head, index) => (
                   <TableHead
                     key={index}
-                    className="tex-xs font-semibold uppercase tracking-wider"
+                    className="tex-xs font-semibold uppercase tracking-wider text-center"
                   >
                     {head}
                   </TableHead>
@@ -130,21 +152,21 @@ const CustomersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-stone-100">
-              {mockCustomers.map((customer) => (
+              {customerList?.map((customer) => (
                 <TableRow
-                  key={customer.id}
+                  key={customer._id}
                   className="hover:bg-stone-50 transition-colors"
                 >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
+                  <TableCell className="mx-auto flex justify-center">
+                    <div className="flex items-center gap-3 w-full max-w-60 min-w-44 justify-between">
                       <div className="w-10 h-10 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold">
-                        {customer.name.charAt(0)}
+                        {customer.fullname?.charAt(0) ?? "?"}
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-stone-800">
-                          {customer.name}
+                          {customer.fullname}
                         </p>
-                        <p className="text-xs text-stone-500">{customer.id}</p>
+                        <p className="text-xs text-stone-500">{customer._id}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -156,6 +178,7 @@ const CustomersPage = () => {
                       </p>
                     </div>
                   </TableCell>
+
                   <TableCell>
                     <span className="text-sm font-semibold text-stone-800">
                       {customer.totalOrders}
@@ -163,20 +186,27 @@ const CustomersPage = () => {
                   </TableCell>
                   <TableCell>
                     <span className="text-sm font-semibold text-emerald-600">
-                      ₱{customer.totalSpent.toLocaleString()}
+                      ₱{customer.totalSpent?.toLocaleString()}
                     </span>
                   </TableCell>
+
                   <TableCell>
                     <span className="text-sm text-stone-600">
-                      {new Date(customer.joinDate).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {customer.createdAt
+                        ? new Date(customer.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )
+                        : "—"}
                     </span>
                   </TableCell>
+
                   <TableCell>
-                    <button className="px-4 py-2 text-sm font-semibold text-[#ef4501] hover:bg-[#ef4501]/20 rounded-lg transition-colors cursor-pointer">
+                    <button className="px-4 py-2 text-sm font-semibold text-brand-color-500 hover:bg-brand-color-500/20 rounded-lg transition-colors cursor-pointer">
                       View Details
                     </button>
                   </TableCell>
