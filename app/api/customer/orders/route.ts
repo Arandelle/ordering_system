@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // ============================================
     const searchParams = request.nextUrl.searchParams;
     const result = await queryOrders({
-      filter: { userId: customer._id }, // customer can ONLY see their own
+      filter: { customerId: customer._id }, // customer can ONLY see their own
       page: parseInt(searchParams.get("page") || "1"),
       limit: parseInt(searchParams.get("limit") || "20"),
       sortBy: "date",
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(result);
-    
+
   } catch (error: any) {
     if (error.message === "Unauthorized!") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
