@@ -15,7 +15,12 @@ export interface OrderType {
 
   items: CartItem[];
   paymentInfo: {
-    method: string;
+    method: {
+      type: string,
+      description: string,
+      last4?: string,
+      scheme?: string
+    };
     paymentLinkId?: string;
     checkoutUrl?: string;
     referenceNumber?: string;
