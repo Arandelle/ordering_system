@@ -105,8 +105,12 @@ const OrderSchema = new Schema(
       paymentStatus: String,
 
       method: {
-        type: String,
-        default: "paymaya",
+        type: {
+          type: String // "card" || "maya-wallet" 
+        },
+        description: String, // "Visa ending 0008" — Maya provides this
+        last4: String, // card only, null for maya-wallet
+        scheme: String // "visa" | "mastercard" | null for maya-wallet
       },
 
       // Customer details
