@@ -216,7 +216,7 @@ const Orders = () => {
                         <p className="font-bold text-slate-700 text-lg">
                           Order #{" "}
                           <span className="uppercase text-gray-400">
-                            {order.paymentInfo.referenceNumber}
+                            {order.paymentInfo?.referenceNumber}
                           </span>
                         </p>
                         <div className="flex text-sm text-gray-600 items-center gap-4 py-2">
