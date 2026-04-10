@@ -1,7 +1,9 @@
 import { syne } from "@/app/font";
 import { InputField } from "@/components/ui/InputField";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
+import { apiClient } from "@/lib/apiClient";
 import { DynamicIcon } from "@/lib/DynamicIcon";
+import { OrdersApiResponse, OrderType } from "@/types/OrderTypes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,18 +25,22 @@ export const GuestOrderLookup = () => {
 
     setIsSearching(true);
     try {
-      // Try to navigate to the order detail page by reference number
-      // Adjust this route/logic to match your actual guest order lookup endpoint
-      router.push(`/orders`);
-    } catch {
-      toast.error("Order not found. Please check your reference number.");
+      const response = await apiClient.get<OrdersApiResponse>(
+        `/customer/orders/guest?ref=${encodeURIComponent(trimmed)}`,
+      );
+      console.log("Guest order lookup response:", response.data);
+    } catch (error: any) {
+      console.error("Error fetching guest order:", error);
+      toast.error(error.message);
     } finally {
       setIsSearching(false);
     }
   };
 
   return (
-    <div className={`${syne.className} min-h-[70vh] bg-linear-to-b from-slate-50 to-slate-100 flex items-center justify-center px-4`}>
+    <div
+      className={`${syne.className} min-h-[70vh] bg-linear-to-b from-slate-50 to-slate-100 flex items-center justify-center px-4`}
+    >
       <div className="w-full max-w-md">
         {/* Illustration / Icon */}
         <div className="flex flex-col items-center mb-8 text-center">
