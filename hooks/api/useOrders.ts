@@ -27,7 +27,7 @@ import { toast } from "sonner";
 
 const ORDER_ENDPOINTS = {
   admin: "/admin/orders",
-  customer: "/orders/my",
+  customer: "/customer/orders/",
 } as const;
 
 export const useOrders = ({ type }: { type: keyof typeof ORDER_ENDPOINTS }) => {
