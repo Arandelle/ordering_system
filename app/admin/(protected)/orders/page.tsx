@@ -21,7 +21,7 @@ const OrdersPage = () => {
       order.paymentInfo?.customerEmail,
       order.paymentInfo?.customerPhone,
       order.paymentInfo?.referenceNumber,
-      order.paymentInfo?.method,
+      order.paymentInfo?.method.type,
     ].map((field) => field?.toLowerCase() ?? "");
 
     const lowerQuery = searchQuery.toLowerCase();
