@@ -34,19 +34,7 @@ export const useOrders = ({ type }: { type: keyof typeof ORDER_ENDPOINTS }) => {
   return useQuery<OrdersApiResponse, Error, OrderType[]>({
     queryKey: ["orders", type],
     queryFn: () => apiClient.get(ORDER_ENDPOINTS[type]),
-    staleTime: 30000,
-     select: (response) =>
-      [...response.data].sort((a, b) => {
-        const priorityDiff =
-          STATUS_PRIORITY[a.status as OrderStatus] -
-          STATUS_PRIORITY[b.status as OrderStatus];
-
-        if (priorityDiff !== 0) return priorityDiff;
-
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      }),
+    staleTime: 30000
   });
 };
 
