@@ -104,6 +104,12 @@ export async function POST(request: NextRequest) {
           ...(orderStatus === "cancelled" && {
             "timeline.cancelledAt": new Date(),
           }),
+          "paymentInfo.method" : fundSource ? {
+            type: fundSource.type,
+            description: fundSource.description,
+            last4: fundSource.last4 ?? null,
+            scheme: fundSource.scheme ?? null
+          } : null
         },
       },
     );
