@@ -11,7 +11,7 @@ const OrdersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
 
-  const { data: placedOrders = [] } = useOrders();
+  const { data: placedOrders = [] } = useOrders({type: "admin"});
 
   const filteredOrders = placedOrders.filter((order) => {
     const searchableFields = [

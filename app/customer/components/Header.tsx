@@ -30,7 +30,7 @@ const Header = () => {
   }, []);
 
   const { totalItems, setIsCartOpen } = useCart();
-  const { data: placedOrders } = useOrders();
+  const { data: placedOrders } = useOrders({type: "customer"});
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

@@ -33,7 +33,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 
   const currentUser = useStaffContext()
   const pathname = usePathname();
-  const { data: placedOrders = [] } = useOrders();
+  const { data: placedOrders = [] } = useOrders({type: "admin"});
   const logout = useLogoutAdmin();
 
   const pendingCount = placedOrders.filter(

@@ -12,7 +12,7 @@ interface OrderDetailsProps {
 }
 
 export default function OrderDetails({ orderId }: OrderDetailsProps) {
-  const { data: placedOrders, isLoading } = useOrders();
+  const { data: placedOrders, isLoading } = useOrders({type: "customer"});
   const router = useRouter();
   const order = placedOrders?.find((o) => o._id === orderId);
 

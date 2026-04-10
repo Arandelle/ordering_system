@@ -19,7 +19,7 @@ const TABS = [
 ];
 
 const Orders = () => {
-  const { data: placedOrders = [] } = useOrders();
+  const { data: placedOrders = [] } = useOrders({type: "customer"});
   const updateOrder = useUpdateOrder();
 
   const { addToCart, setIsCartOpen } = useCart();
