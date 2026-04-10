@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/apiClient";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { useCustomerMe } from "@/hooks/api/useAuthMe";
-import { GuestOrderLookup } from "./GuestPage/page";
+import { GuestOrderLookup } from "./GuestPage";
 import LoadingPage from "@/components/ui/LoadingPage";
 
 const TABS = [
