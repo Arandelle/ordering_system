@@ -132,8 +132,8 @@ export async function POST(request: NextRequest) {
       throw new Error(`Minimum order amount is ₱${MINIMUM_AMOUNT}`);
     }
 
-    const tax = recalculatedSubTotal * TAX_RATE;
-    const grandTotal = recalculatedSubTotal + tax;
+    const tax = parseFloat((recalculatedSubTotal * TAX_RATE).toFixed(2));
+    const grandTotal = parseFloat((recalculatedSubTotal + tax).toFixed(2));
 
     if (!process.env.MAYA_PUBLIC_KEY) {
       throw new Error("Maya key not configured");
