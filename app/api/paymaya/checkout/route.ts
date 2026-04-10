@@ -1,6 +1,8 @@
+import { getCustomerAuth } from "@/lib/getAuth";
 import { getAuthHeader } from "@/lib/getAuthHeader";
 import { connectDB } from "@/lib/mongodb";
 import { Branch } from "@/models/Branch";
+import { Customer } from "@/models/Customer";
 import { Inventory } from "@/models/Inventory";
 import { Order } from "@/models/Orders";
 import { Product } from "@/models/Product";
@@ -14,6 +16,20 @@ export async function POST(request: NextRequest) {
 
   try {
     await connectDB();
+    const customer = await getCustomerAuth(request);
+
+    let customer_id = null;
+
+    if (customer) {
+      customer_id = customer.id;
+    }
+
+    const customerId = await Customer.findById(customer_id)
+
+    if(!customerId){
+       return NextResponse.json({ error: "User id not found!" }, { status: 400 });
+    }
+
     const body = await request.json();
 
     const MINIMUM_AMOUNT = 100;
@@ -183,6 +199,7 @@ export async function POST(request: NextRequest) {
       [
         {
           branchId,
+          customerId,
           branchSnapshot: {
             name: branch.name,
             code: branch.code,
