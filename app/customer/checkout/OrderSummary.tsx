@@ -47,7 +47,11 @@ const CheckoutHeader = () => (
 
 const BranchBadge = ({ branch }: { branch: Branch }) => (
   <div className="flex items-start gap-2.5 bg-slate-50 border border-slate-100 px-3.5 py-3">
-    <DynamicIcon name="MapPin" size={14} className="text-brand-color-500 mt-0.5 shrink-0" />
+    <DynamicIcon
+      name="MapPin"
+      size={14}
+      className="text-brand-color-500 mt-0.5 shrink-0"
+    />
     <div className="min-w-0">
       <p className="text-xs font-medium text-brand-color-900 truncate">
         {branch.name}
@@ -114,7 +118,7 @@ const CartRow = ({
             onClick={() => onUpdate(item._id, item.quantity + 1)}
             className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
           >
-             <DynamicIcon name="Plus" size={11} />
+            <DynamicIcon name="Plus" size={11} />
           </button>
         </div>
 
@@ -144,6 +148,7 @@ const OrderSummaryStep = () => {
   const { openModal } = useModalQuery();
 
   const [checkoutUrl, setCheckoutUrl] = useState<string>("");
+  const [referenceNumber, setReferenceNumber] = useState("");
   const [placedTotalPrice, setPlaceTotalPrice] = useState(0);
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -270,6 +275,7 @@ const OrderSummaryStep = () => {
 
       setCheckoutUrl(data.redirectUrl);
       setPlaceTotalPrice(totalPrice);
+      setReferenceNumber(data.referenceNumber);
       clearCart();
     } catch (error: any) {
       toast.error("Order Failed", {
@@ -308,7 +314,11 @@ const OrderSummaryStep = () => {
               ) : (
                 <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 px-3.5 py-3">
                   <div className="flex items-center gap-2">
-                    <DynamicIcon name="MapPin" size={14} className="text-red-400 shrink-0" />
+                    <DynamicIcon
+                      name="MapPin"
+                      size={14}
+                      className="text-red-400 shrink-0"
+                    />
                     <p className="text-sm text-red-500 font-medium">
                       No branch selected
                     </p>
@@ -384,9 +394,9 @@ const OrderSummaryStep = () => {
 
                 {/* Cart items list */}
                 <div className="px-5 py-4 divide-y divide-slate-100 max-h-72 overflow-y-auto hide-scrollbar">
-                  {cartItems.map((item) => (
+                  {cartItems.map((item, index) => (
                     <CartRow
-                      key={item._id}
+                      key={index}
                       item={item}
                       onRemove={removeFromCart}
                       onUpdate={updateQuantity}
@@ -452,7 +462,7 @@ const OrderSummaryStep = () => {
               </button>
 
               <Link
-                href="/menu"
+                href="/"
                 className="block text-center text-xs text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2 pt-1"
               >
                 Need to add more items?
@@ -477,6 +487,26 @@ const OrderSummaryStep = () => {
                   <h3 className="text-xl font-bold text-slate-900">
                     Order Placed!
                   </h3>
+                  {referenceNumber && (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(referenceNumber);
+                        toast.success("Copied!", {
+                          description: referenceNumber,
+                        });
+                      }}
+                      className="flex items-center gap-1.5 place-self-center text-brand-color-500 hover:text-brand-color-600 transition-colors group cursor-pointer"
+                    >
+                      <span className="text-sm font-semibold">
+                        {referenceNumber}
+                      </span>
+                      <DynamicIcon
+                        name="Copy"
+                        size={13}
+                        className="text-brand-color-400 group-hover:text-brand-color-500 transition-colors"
+                      />
+                    </button>
+                  )}
                   <p className="text-sm text-slate-400 max-w-220px leading-relaxed">
                     Complete your payment to confirm and prepare your order.
                   </p>
