@@ -4,7 +4,7 @@ import { OrdersApiResponse } from "@/types/OrderTypes";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { format } from "date-fns";
 
-interface OrderDetailsModalProps {
+interface GuestOrderModalProps {
   order: OrdersApiResponse["data"][number] | null;
   onPayOrder: (id: string) => void;
   onCancelOrder: (id: string) => void;
@@ -31,7 +31,7 @@ function OrderActions({
   onBuyAgain,
   isLoading,
 }: {
-  order: OrderDetailsModalProps["order"];
+  order: GuestOrderModalProps["order"];
   onPayOrder: (id: string) => void;
   onCancelOrder: (id: string) => void;
   onBuyAgain: (items: any[]) => void;
@@ -109,13 +109,13 @@ function OrderActions({
   );
 }
 
-export const OrderDetailsModal = ({
+export const GuestOrderModal = ({
   order,
   onPayOrder,
   onCancelOrder,
   onBuyAgain,
   isLoading,
-}: OrderDetailsModalProps) => {
+}: GuestOrderModalProps) => {
   if (!order) return null;
 
   const statusStyle = STATUS_STYLES[order.status as OrderStatus] ?? {

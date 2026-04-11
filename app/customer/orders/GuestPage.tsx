@@ -6,7 +6,7 @@ import { DynamicIcon } from "@/lib/DynamicIcon";
 import { OrdersApiResponse } from "@/types/OrderTypes";
 import { useState } from "react";
 import { toast } from "sonner";
-import { OrderDetailsModal } from "./GuestOrderModal";
+import { GuestOrderModal } from "./GuestOrderModal";
 import Modal from "@/components/ui/Modal";
 import { useOrderActions } from "@/hooks/useOrderActions";
 
@@ -128,10 +128,10 @@ export const GuestOrderLookup = () => {
           subTitle="Your order details"
           contentClassName="p-4"
         >
-          <OrderDetailsModal
+          <GuestOrderModal
             order={foundOrder}
             onPayOrder={() => handlePayOrder(foundOrder._id)}
-            onCancelOrder={() => handleCancelOrder(foundOrder._id)}
+            onCancelOrder={() => {handleCancelOrder(foundOrder._id); setFoundOrder(null)}}
             onBuyAgain={handleBuyAgain}
             isLoading={isLoading}
           />
