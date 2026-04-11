@@ -3,20 +3,21 @@ import { InputField } from "@/components/ui/InputField";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { apiClient } from "@/lib/apiClient";
 import { DynamicIcon } from "@/lib/DynamicIcon";
-import { OrdersApiResponse, OrderType } from "@/types/OrderTypes";
-import { useRouter } from "next/navigation";
+import { OrdersApiResponse } from "@/types/OrderTypes";
 import { useState } from "react";
 import { toast } from "sonner";
+import OrderDetails from "./OrderDetails";
+import { OrderDetailsModal } from "./GuestOrderModal";
+import Modal from "@/components/ui/Modal";
 
 export const GuestOrderLookup = () => {
-  const router = useRouter();
-  const {
-    modal: modalType,
-    openModal: handleOpenModal,
-    closeModal: handleCloseModal,
-  } = useModalQuery();
+  const { openModal: handleOpenModal } = useModalQuery();
   const [referenceNumber, setReferenceNumber] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
+  const [foundOrder, setFoundOrder] = useState<
+    OrdersApiResponse["data"][number] | null
+  >(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +29,13 @@ export const GuestOrderLookup = () => {
       const response = await apiClient.get<OrdersApiResponse>(
         `/customer/orders/guest?ref=${encodeURIComponent(trimmed)}`,
       );
-      console.log("Guest order lookup response:", response.data);
+      const order = response.data[0] ?? null;
+      if (!order) {
+        toast.error("No order found with that reference number.");
+      } else {
+        setFoundOrder(order);
+      }
     } catch (error: any) {
-      console.error("Error fetching guest order:", error);
       toast.error(error.message);
     } finally {
       setIsSearching(false);
@@ -114,6 +119,17 @@ export const GuestOrderLookup = () => {
           </div>
         </div>
       </div>
+
+      {foundOrder && (
+        <Modal
+          onClose={() => setFoundOrder(null)}
+          title="Order Details"
+          subTitle="Your order details"
+          contentClassName="p-4"
+        >
+          <OrderDetailsModal order={foundOrder} />
+        </Modal>
+      )}
     </div>
   );
 };
