@@ -5,6 +5,7 @@ import { Product } from "@/models/Product";
 import { Inventory } from "@/models/Inventory";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import { requireAdmin } from "@/lib/getAuth";
+import "@/lib/registerModels";
 
 /**
  * POST /api/inventory/sync
@@ -77,7 +78,7 @@ export async function GET(req: NextRequest) {
     console.error("SYNC ERROR:", error);
 
     return NextResponse.json(
-      { error: "Failed to sync inventory" },
+      { error: error instanceof Error ? error.message : "Failed to sync inventory" },
       { status: 500 },
     );
   }
