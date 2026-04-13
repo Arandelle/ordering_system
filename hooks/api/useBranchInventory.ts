@@ -48,3 +48,26 @@ export const useUpdateInventory = () => {
     },
   });
 };
+
+interface BulkUpdateItem {
+  productId: string;
+  quantity?: number;
+  reorderLevel?: number;
+}
+
+interface BulkUpdateResponse {
+  message: string;
+  updated: number;
+}
+
+export const useBulkUpdateInventory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<BulkUpdateResponse, Error, BulkUpdateItem[]>({
+    mutationFn: (items: BulkUpdateItem[]) =>
+      apiClient.put(`/staff/inventories/bulk`, { items }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["inventory_sync"] });
+    },
+  });
+};
