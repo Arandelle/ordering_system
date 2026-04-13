@@ -1,15 +1,22 @@
-import { OrderType } from "@/types/OrderTypes";
-import { CreditCard, Package, Truck, Hamburger, CheckCircle, Ban } from "lucide-react";
+import { OrderStatus } from "@/types/orderConstants";
+import {
+  CreditCard,
+  Package,
+  Truck,
+  Hamburger,
+  CheckCircle,
+  Ban,
+} from "lucide-react";
 
-export function StatusBadge({ status }: { status: OrderType["status"] }) {
+export function StatusBadge({ status }: { status: OrderStatus }) {
   const map: Record<
-    string,
+    OrderStatus,
     { label: string; color: string; icon: React.JSX.Element }
   > = {
     pending: {
       label: "Pending Payment",
       color: "bg-yellow-100 text-yellow-700 border border-yellow-200",
-      icon: <CreditCard size={14} />
+      icon: <CreditCard size={14} />,
     },
     paid: {
       label: "Payment Confirmed",
@@ -39,6 +46,16 @@ export function StatusBadge({ status }: { status: OrderType["status"] }) {
     cancelled: {
       label: "Order Cancelled",
       color: "bg-gray-100 text-gray-700 border border-gray-200",
+      icon: <Ban size={14} />,
+    },
+    expired: {
+      label: "Order Expired",
+      color: "bg-red-100 text-red-700 border border-red-200",
+      icon: <Ban size={14} />,
+    },
+    failed: {
+      label: "Order Expired",
+      color: "bg-red-100 text-red-700 border border-red-200",
       icon: <Ban size={14} />,
     },
   };

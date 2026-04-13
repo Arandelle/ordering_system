@@ -9,12 +9,19 @@ import { useCustomerMe } from "@/hooks/api/useAuthMe";
 import { GuestOrderLookup } from "./GuestPage";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { useOrderActions } from "@/hooks/useOrderActions";
+import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 
-const TABS = [
+type Tab = {
+  key: string;
+  label: string;
+  statuses?: OrderStatus[];
+};
+
+const TABS: Tab[] = [
   { key: "all", label: "All" },
-  { key: "pending", label: "To Pay", statuses: ["pending", "paid"] },
+  { key: "pending", label: "To Pay", statuses: [ORDER_STATUSES.PENDING, ORDER_STATUSES.PAID] },
   { key: "preparing", label: "To Dispatch" },
-  { key: "to-receive", label: "To Receive", statuses: ["dispatched", "ready"] },
+  { key: "to-receive", label: "To Receive", statuses: [ORDER_STATUSES.DISPATCHED, ORDER_STATUSES.READY] },
   { key: "completed", label: "To Review" },
   { key: "cancelled", label: "Cancelled" },
 ];
@@ -40,8 +47,8 @@ const Orders = () => {
     if (activeTab === "all") {
       return placedOrders?.sort((a, b) => {
         // Pushed cancelled to bottom
-        if (a.status === "cancelled" && b.status !== "cancelled") return 1;
-        if (a.status !== "cancelled" && b.status === "cancelled") return -1;
+        if (a.status === ORDER_STATUSES.CANCELLED && b.status !== ORDER_STATUSES.CANCELLED) return 1;
+        if (a.status !== ORDER_STATUSES.CANCELLED && b.status === ORDER_STATUSES.CANCELLED) return -1;
 
         // Sort date by descending
         return (
@@ -53,7 +60,7 @@ const Orders = () => {
     const currentTab = TABS.find((tab) => tab.key === activeTab);
     return currentTab?.statuses
       ? placedOrders?.filter((order) =>
-          currentTab.statuses.includes(order.status),
+          currentTab?.statuses?.includes(order.status),
         )
       : placedOrders?.filter((order) => order.status === activeTab);
   }, [placedOrders, activeTab]);
@@ -119,13 +126,13 @@ const Orders = () => {
           <div className="flex gap-2 py-3">
             {TABS.map((tab) => {
               const count =
-                tab.key === "completed"
+                tab.key === ORDER_STATUSES.COMPLETED
                   ? placedOrders?.filter(
-                      (o) => o.status === "completed" && !o.isReviewed,
+                      (o) => o.status === ORDER_STATUSES.COMPLETED && !o.isReviewed,
                     ).length
                   : tab.statuses
                     ? placedOrders?.filter((o) =>
-                        tab.statuses.includes(o.status),
+                        tab.statuses?.includes(o.status),
                       ).length
                     : placedOrders?.filter((o) => o.status === tab.key).length;
 
@@ -136,7 +143,7 @@ const Orders = () => {
                   className={`relative px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.key ? "bg-brand-color-500 text-white" : "bg-white text-gray-600 border border-gray-700 hover:border-brand-color-500 hover:text-brand-color-500"}`}
                 >
                   {tab.label}
-                  {count > 0 && tab.key !== "cancelled" && (
+                  {count > 0 && tab.key !== ORDER_STATUSES.CANCELLED && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center border border-white">
                       {count}
                     </span>
@@ -313,7 +320,7 @@ const Orders = () => {
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                     <div className="flex flex-wrap gap-3 justify-end">
                       {/** Cancel Order - Only for pending orders */}
-                      {order.status === "pending" && (
+                      {order.status === ORDER_STATUSES.PENDING && (
                         <>
                           <button
                             onClick={() => handlePayOrder(order._id)}
@@ -339,8 +346,8 @@ const Orders = () => {
                       </button>
 
                       {/** Track Order - For paid and preparing order */}
-                      {(order.status === "paid" ||
-                        order.status === "preparing") && (
+                      {(order.status === ORDER_STATUSES.PAID ||
+                        order.status === ORDER_STATUSES.PREPARING) && (
                         <button
                           onClick={() => router.push("/support")}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-blue-300 hover:bg-blue-50 text-blue-600 text-sm font-semibold transition-all"
@@ -350,7 +357,7 @@ const Orders = () => {
                       )}
 
                       {/* Leave Review & Buy Again - For completed orders */}
-                      {order.status === "completed" && !order.isReviewed && (
+                      {order.status === ORDER_STATUSES.COMPLETED && !order.isReviewed && (
                         <button
                           onClick={() =>
                             router.push(`/orders/${order._id}/review`)
@@ -361,9 +368,9 @@ const Orders = () => {
                         </button>
                       )}
 
-                      {(order.status === "completed" ||
-                        order.status === "cancelled" ||
-                        order.status === "failed") && (
+                      {(order.status === ORDER_STATUSES.COMPLETED ||
+                        order.status === ORDER_STATUSES.CANCELLED ||
+                        order.status === ORDER_STATUSES.EXPIRED) && (
                         <button
                           onClick={() => handleBuyAgain(order.items)}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-color-500 hover:bg-orange-50 text-brand-color-500 text-sm font-semibold transition-all"
