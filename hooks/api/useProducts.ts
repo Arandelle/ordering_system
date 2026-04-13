@@ -72,16 +72,8 @@ export const useCreateProduct = () => {
 
     // What happens if creation fails
     onError: (error: any) => {
-      console.error("Create failed:", error);
-      if (error?.details?.length) {
-        const message = error.details
-          .map((issue: any) => issue.message)
-          .join("\n");
-
-        toast.error(message);
-      } else {
-        toast.error(error?.error || "Something went wrong");
-      }
+      console.log(error?.message)
+      toast.error(error?.message || "Something went wrong");
     },
   });
 };
@@ -147,13 +139,13 @@ export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, string>({
-    mutationFn:  (id) => apiClient.delete(`/products/${id}`),
+    mutationFn: (id) => apiClient.delete(`/products/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Product deleted successfully");
     },
     onError: () => {
-      toast.error("Failed to delete product!")
-    }
+      toast.error("Failed to delete product!");
+    },
   });
 };
