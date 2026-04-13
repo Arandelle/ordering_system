@@ -1,19 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useProducts } from "@/hooks/api/useProducts";
-import { Product } from "@/types/products";
 
+import { useProducts } from "@/hooks/api/useProducts";
 import ProductTable from "@/app/admin/components/ProductTable";
-import ProductsModal from "./ProductsModal";
 import SectionHeader from "@/app/admin/components/SectionHeader";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { useRouter } from "next/navigation";
 
 const ProductsPage = () => {
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const {
     data: products = [],
@@ -71,14 +66,6 @@ const ProductsPage = () => {
       <ProductTable
         products={sortedProducts}
       />
-
-      {/* Add Product Modal */}
-      {/* {isModalOpen && (
-        <ProductsModal
-          setIsModalOpen={setIsModalOpen}
-          editProduct={selectedProduct}
-        />
-      )} */}
     </section>
   );
 };
