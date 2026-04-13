@@ -2,11 +2,13 @@ import React from "react";
 import DashboardCards from "@/app/admin/components/DashboardCard";
 import SalesChart from "@/app/admin/components/SalesChart";
 import { mockSalesData, mockTopProducts } from "@/data/mockData";
-import { getDashboardStats } from "@/helper/dashboardStats";
+import { getDashboardStats, getSalesData, getTopProducts } from "@/helper/dashboardStats";
 
 export default async function DashboardPage() {
   
   const stats = await getDashboardStats();
+  const salesData = await getSalesData();
+  const topProduct = await getTopProducts();
 
   return (
     <div className="space-y-8">
@@ -24,10 +26,7 @@ export default async function DashboardPage() {
       <DashboardCards stats={stats} />
 
       {/* Charts */}
-      <SalesChart salesData={mockSalesData} topProducts={mockTopProducts} />
-
-      {/* Recent Orders */}
-      {/* <OrdersTable orders={recentOrders} showActions={false} /> */}
+      <SalesChart salesData={salesData} topProducts={topProduct} />
     </div>
   );
 }
