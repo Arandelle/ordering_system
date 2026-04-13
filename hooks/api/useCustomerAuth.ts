@@ -6,7 +6,7 @@ import { toast } from "sonner";
 export const useCustomerSignup = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<Customer, { error: string }, CustomerCreateInput>({
+  return useMutation<Customer, Error, CustomerCreateInput>({
     mutationFn: (data) => apiClient.post("/auth/customer/signup", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
@@ -14,7 +14,7 @@ export const useCustomerSignup = () => {
     },
     onError: (error) => {
       toast.error(
-        error.error ?? "Failed to create an account!",
+        error.message ?? "Failed to create an account!",
       );
     },
   });
