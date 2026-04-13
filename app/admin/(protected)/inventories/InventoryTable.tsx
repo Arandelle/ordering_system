@@ -1,14 +1,55 @@
-"use client"
+"use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useBranchInventories } from "@/hooks/api/useBranchInventory";
-import { STOCK_STATUSES, StockStatus } from "@/types/inventory_types";
+import { InputField } from "@/components/ui/InputField";
+import LoadingPage from "@/components/ui/LoadingPage";
+import Modal from "@/components/ui/Modal";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useBranchInventories,
+  useUpdateInventory,
+} from "@/hooks/api/useBranchInventory";
+import {
+  InventoryItem,
+  STOCK_STATUSES,
+  StockStatus,
+} from "@/types/inventory_types";
+import { ChangeEvent, useState } from "react";
 
 const InventoryTable = () => {
+  const { data: inventoryData = [], isPending } = useBranchInventories();
+  const {
+    mutate: updateInventory,
+    isPending: isUpdating,
+    isError,
+    error,
+  } = useUpdateInventory();
 
-  const {data: inventoryData = []} = useBranchInventories();
+  const inventoryHeader = [
+    "Image",
+    "Name",
+    "Category",
+    "Price",
+    "Stock",
+    "Status",
+    "Action",
+  ];
 
-  const inventoryHeader = ["Image", "Name", "Category", "Price", "Stock", "Status", "Action"];
+  const [isEditStock, setIsEditStock] = useState(false);
+  const [inventoryStocks, setInventoryStocks] = useState({
+    quantity: 0,
+    reorderLevel: 0,
+  });
+
+  const [productToEdit, setProductToEdit] = useState<InventoryItem | null>(
+    null,
+  );
 
   // Function to determine stock status
   const getStockStatus = (status: StockStatus) => {
@@ -37,13 +78,51 @@ const InventoryTable = () => {
     };
   };
 
+  const handleProductToEdit = (product: InventoryItem) => {
+    setInventoryStocks({
+      quantity: product.quantity,
+      reorderLevel: product.reorderLevel,
+    });
+    setProductToEdit(product);
+    setIsEditStock(!isEditStock);
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setInventoryStocks((prev) => ({ ...prev, [name]: Number(value) }));
+  };
+
+  const handleSave = () => {
+    if (!productToEdit) return;
+
+    updateInventory(
+      {
+        id: productToEdit.id,
+        payload: {
+          quantity: inventoryStocks.quantity,
+          reorderLevel: inventoryStocks.reorderLevel,
+        },
+      },
+      {
+        onSuccess: () => setIsEditStock(false),
+      },
+    );
+  };
+
+  if (isPending) {
+    return <LoadingPage />;
+  }
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50">
             {inventoryHeader.map((item, index) => (
-              <TableHead key={index} className="text-center font-semibold text-slate-700">
+              <TableHead
+                key={index}
+                className="text-center font-semibold text-slate-700"
+              >
                 {item}
               </TableHead>
             ))}
@@ -55,7 +134,10 @@ const InventoryTable = () => {
             const status = getStockStatus(item.status);
 
             return (
-              <TableRow key={item.id} className="hover:bg-slate-50 border-b border-slate-100">
+              <TableRow
+                key={item.id}
+                className="hover:bg-slate-50 border-b border-slate-100"
+              >
                 {/* Image */}
                 <TableCell className="text-center py-3">
                   <div className="flex justify-center">
@@ -88,7 +170,9 @@ const InventoryTable = () => {
 
                 {/* Stock */}
                 <TableCell className="text-center">
-                  <span className="font-semibold text-slate-900">{item.quantity}</span>
+                  <span className="font-semibold text-slate-900">
+                    {item.quantity}
+                  </span>
                   <span className="text-xs text-slate-500 block">
                     Reorder: {item.reorderLevel}
                   </span>
@@ -96,14 +180,19 @@ const InventoryTable = () => {
 
                 {/* Status Badge */}
                 <TableCell className="text-center">
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${status.className}`}>
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${status.className}`}
+                  >
                     {status.label}
                   </span>
                 </TableCell>
 
                 {/* Action */}
                 <TableCell className="text-center">
-                  <button className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                  <button
+                    onClick={() => handleProductToEdit(item)}
+                    className="px-4 py-2 text-sm font-medium text-brand-color-600 hover:bg-brand-color-50 rounded-lg transition-colors cursor-pointer"
+                  >
                     Edit
                   </button>
                 </TableCell>
@@ -118,6 +207,61 @@ const InventoryTable = () => {
         <div className="p-8 text-center text-slate-500">
           <p>No inventory items found</p>
         </div>
+      )}
+
+      {isEditStock && productToEdit && (
+        <Modal
+          title={`Update Stock for  ${productToEdit?.name} `}
+          subTitle={`Keep your products available`}
+          onClose={() => setIsEditStock(false)}
+        >
+          <form className="space-y-4" onSubmit={handleSave}>
+            <InputField
+              label="Quantity"
+              placeholder="Enter stock/quantity"
+              type="number"
+              name="quantity"
+              value={inventoryStocks.quantity}
+              onChange={handleChange}
+              required
+              autoFocus
+            />
+
+            <InputField
+              label="Reorder Alert Level"
+              placeholder="Enter reorder alert"
+              type="number"
+              name="reorderLevel"
+              value={inventoryStocks.reorderLevel}
+              onChange={handleChange}
+              required
+            />
+
+            {isError && (
+              <p className="text-sm text-red-600">
+                {error?.message ?? "Something went wrong. Please try again."}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setIsEditStock(false)}
+                type="button"
+                disabled={isUpdating}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={isUpdating}
+                type="submit"
+                className="px-4 py-2 text-sm font-medium text-white bg-brand-color-500 hover:bg-brand-color-600 rounded-lg transition-colors disabled:opacity-60 cursor-pointer"
+              >
+                {isUpdating ? "Saving..." : "Save changes"}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );
