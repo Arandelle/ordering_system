@@ -82,15 +82,8 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (err: any) {
-    // Duplicate key error from MongoDB
-    if (err.code === 11000) {
-      return NextResponse.json(
-        { error: "Email is already registered" },
-        { status: 409 }
-      );
-    }
-    console.error("[register]", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[register]", error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Internal server error" }, { status: 500 });
   }
 }
