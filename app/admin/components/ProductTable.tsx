@@ -12,13 +12,17 @@ import PermissionGuard from "@/lib/PermissionGuard";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { Product } from "@/types/products";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface ProductTableProps {
   products: Product[];
-  onEdit: (item: Product) => void;
+  onEdit?: (item: Product) => void;
 }
 
 export default function ProductTable({ products, onEdit }: ProductTableProps) {
+
+  const router = useRouter();
+
   const productHeaders = [
     "Image",
     "Product",
@@ -165,7 +169,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                           }
                         >
                           <button
-                            onClick={() => onEdit(product)}
+                            onClick={() => router.push(`/products/${product._id}/edit`)}
                             disabled={deletingProductId === product._id}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"
                           >
