@@ -17,6 +17,8 @@ const EditProductPage = async ( context : {params: Promise<{id: string}>}) => {
 
   const serialized = JSON.parse(JSON.stringify(product));
 
+  console.log(serialized)
+
   return <ProductFormPage editProduct={serialized} />;
 };
 
