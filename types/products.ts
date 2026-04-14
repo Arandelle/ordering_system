@@ -1,24 +1,25 @@
 import { Category, SubCategory } from "./category";
 
 export interface IncludedItem {
-  product: string | Product;  // string when sending, populated Product when receiving
+  product: string | Product; // string when sending, populated Product when receiving
   quantity: number;
   label: string | null;
+  _price?: number;
 }
 
 // UI-only type — lives inside the modal, never sent to API
 export interface IncludedItemUI {
-  product: string;       // always ObjectId string in the form
+  product: string; // always ObjectId string in the form
   quantity: number;
   label: string | null;
-  _name: string;         // display only
+  _name: string; // display only
   _price: number | null; // display only
 }
 
 export const ITEM_TYPES = {
   SOLO: "solo",
   COMBO: "combo",
-  SET: "set"
+  SET: "set",
 };
 
 export type ProductType = (typeof ITEM_TYPES)[keyof typeof ITEM_TYPES];
@@ -47,8 +48,8 @@ export interface Product {
 export interface ProductPayload {
   name: string;
   price: number | null;
-  category: string;                  // ObjectId
-  subcategory?: string | null;       // ObjectId
+  category: string; // ObjectId
+  subcategory?: string | null; // ObjectId
 
   info?: string;
   description?: string;
@@ -58,9 +59,5 @@ export interface ProductPayload {
   isPopular?: boolean;
   productType: ProductType;
   paxCount?: number | null;
-  includedItems?: {
-    product: string;                 // ObjectId — always a string when sending
-    quantity: number;
-    label: string | null;
-  }[];
+  includedItems?: IncludedItem[];
 }
