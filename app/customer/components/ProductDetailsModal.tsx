@@ -43,45 +43,49 @@ const QuantityStepper = ({
   value: number;
   onChange: (val: number) => void;
   min?: number;
-}) => (
-  <div className="flex items-center gap-0 border border-gray-200 rounded-lg overflow-hidden">
-    <button
-      onClick={() => onChange(Math.max(min, value - 1))}
-      className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer"
-    >
-      <Minus size={12} />
-    </button>
-    <span className="text-sm font-medium min-w-5 text-center text-gray-800">
-      {value}
-    </span>
-    <button
-      onClick={() => onChange(value + 1)}
-      className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer"
-    >
-      <Plus size={12} />
-    </button>
-  </div>
-);
+}) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+    // Allow empty while typing
+    if (raw === "") {
+      onChange(min);
+      return;
+    }
 
-const MOCK_COMPLIMENTS: AddonItem[] = [
-  { _id: "comp-1", name: "Steamed Rice", price: 50, quantity: 1 },
-  { _id: "comp-2", name: "Atchara", price: 50, quantity: 1 },
-  { _id: "comp-3", name: "Atchara", price: 50, quantity: 1 },
-];
+    const parsed = Number(raw);
 
-const MOCK_BEVERAGES: AddonItem[] = [
-  { _id: "bev-1", name: "Coke 250ml", price: 40, quantity: 0 },
-  { _id: "bev-2", name: "Iced Tea", price: 35, quantity: 0 },
-];
+    if (isNaN(parsed)) return;
 
-const MOCK_COMMONLY_BOUGHT: CommonlyBoughtItem[] = [
-  { _id: "cb-1", name: "Liempo", price: 120, selected: false },
-  { _id: "cb-2", name: "Bangus", price: 110, selected: false },
-  { _id: "cb-3", name: "Sinigang", price: 95, selected: false },
-  { _id: "cb-4", name: "Kare-kare", price: 130, selected: false },
-];
+    onChange(Math.max(min, parsed));
+  };
+
+  return (
+    <div className="flex items-center gap-0 border border-gray-200 rounded-lg overflow-hidden h-full">
+      <button
+        onClick={() => onChange(Math.max(min, value - 1))}
+        className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer"
+      >
+        <Minus size={12} />
+      </button>
+
+      <input
+        type="number"
+        value={value}
+        min={min}
+        onChange={handleInputChange}
+        className="w-10 text-center outline-none"
+      />
+
+      <button
+        onClick={() => onChange(value + 1)}
+        className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors cursor-pointer"
+      >
+        <Plus size={12} />
+      </button>
+    </div>
+  );
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -96,22 +100,11 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [activeTab, setActiveTab] = useState<"info" | "desc">("info");
   const [mainQty, setMainQty] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
-  const [compliments, setCompliments] = useState<AddonItem[]>(MOCK_COMPLIMENTS);
-  const [beverages, setBeverages] = useState<AddonItem[]>(MOCK_BEVERAGES);
-  const [commonlyBought, setCommonlyBought] =
-    useState<CommonlyBoughtItem[]>(MOCK_COMMONLY_BOUGHT);
 
   // ── Computed ──────────────────────────────────────────────────────────────
 
   const basePrice = item.price ?? 0;
-
-  const addonTotal = [
-    ...compliments.map((c) => c.price * c.quantity),
-    ...beverages.map((b) => b.price * b.quantity),
-    ...commonlyBought.filter((c) => c.selected).map((c) => c.price),
-  ].reduce((sum, val) => sum + val, 0);
-
-  const total = basePrice * mainQty + addonTotal;
+  const total = basePrice * mainQty;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -122,12 +115,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     qty: number,
   ) => {
     setList(list.map((a) => (a._id === id ? { ...a, quantity: qty } : a)));
-  };
-
-  const toggleCommonlyBought = (id: string) => {
-    setCommonlyBought((prev) =>
-      prev.map((c) => (c._id === id ? { ...c, selected: !c.selected } : c)),
-    );
   };
 
   const handleAddToCart = () => {
@@ -145,6 +132,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         _id: item.category._id,
         name: item.category.name,
       },
+      quantity: mainQty,
     });
 
     setIsAdded(true);
@@ -163,7 +151,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       subTitle="Recommended items to go with this product"
       contentClassName="p-0"
     >
-      <div className={`${syne.className} flex flex-col overflow-auto max-h-[75vh]`}>
+      <div
+        className={`${syne.className} flex flex-col overflow-auto max-h-[75vh]`}
+      >
         <div className="flex overflow-hidden">
           {/* scrollable content */}
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -256,112 +246,18 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     : item.description || "No description available."}
                 </p>
               </div>
-              {/* Meal Compliments */}
-              <div className="px-5 py-4 border-b border-gray-100">
-                <div className="flex items-baseline justify-between mb-3">
-                  <p className="text-sm font-bold text-gray-800">
-                    Meal Compliments
-                  </p>
-                  <span className="text-[10px] text-gray-400">
-                    Select up to 5
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {compliments.map((c) => (
-                    <div
-                      key={c._id}
-                      className="flex items-center justify-between py-2 px-3 rounded-xl border border-gray-100 bg-gray-50"
-                    >
-                      <span className="text-sm text-gray-700">{c.name}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-brand-color-500">
-                          + ₱{c.price}
-                        </span>
-                        <QuantityStepper
-                          value={c.quantity}
-                          min={0}
-                          onChange={(qty) =>
-                            updateAddon(compliments, setCompliments, c._id, qty)
-                          }
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Commonly Bought With */}
-              <div className="px-5 py-4 border-b border-gray-100">
-                <div className="flex items-baseline justify-between mb-3">
-                  <p className="text-sm font-bold text-gray-800">
-                    Commonly Bought With
-                  </p>
-                  <span className="text-[10px] text-gray-400">
-                    What others add
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {commonlyBought.map((c) => (
-                    <button
-                      key={c._id}
-                      onClick={() => toggleCommonlyBought(c._id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer ${
-                        c.selected
-                          ? "border-brand-color-500 bg-brand-color-500/10 text-brand-color-500"
-                          : "border-gray-200 text-gray-600 hover:border-gray-300"
-                      }`}
-                    >
-                      {c.name}
-                      <span
-                        className={
-                          c.selected ? "text-brand-color-500" : "text-gray-400"
-                        }
-                      >
-                        +₱{c.price}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {/* Add Beverages */}
-              <div className="px-5 py-4">
-                <div className="flex items-baseline justify-between mb-3">
-                  <p className="text-sm font-bold text-gray-800">
-                    Add Beverages
-                  </p>
-                  <span className="text-[10px] text-gray-400">
-                    Select up to 3
-                  </span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {beverages.map((b) => (
-                    <div
-                      key={b._id}
-                      className="flex items-center justify-between py-2 px-3 rounded-xl border border-gray-100 bg-gray-50"
-                    >
-                      <span className="text-sm text-gray-700">{b.name}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-brand-color-500">
-                          + ₱{b.price}
-                        </span>
-                        <QuantityStepper
-                          value={b.quantity}
-                          onChange={(qty) =>
-                            updateAddon(beverages, setBeverages, b._id, qty)
-                          }
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
             {/* Footer — Add to cart */}
             <div className="px-5 py-4 border-t border-gray-100 flex items-center gap-3 bg-white">
               <QuantityStepper value={mainQty} min={1} onChange={setMainQty} />
               <button
-                onClick={() => !selectedBranch ? handleOpenModal(MODAL_TYPES.MAP) : handleAddToCart()}
+                onClick={() =>
+                  !selectedBranch
+                    ? handleOpenModal(MODAL_TYPES.MAP)
+                    : handleAddToCart()
+                }
                 disabled={isAdded}
-                className={`flex-1 h-10 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`flex-1 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   isAdded
                     ? "bg-green-500 text-white"
                     : "bg-brand-color-500 hover:bg-brand-color-600 text-white"
