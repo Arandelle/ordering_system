@@ -19,7 +19,7 @@ const SettingsPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Settings saved:", settings);
-    toast.success("Successfull saved!")
+    toast.success("Successfull saved!");
   };
 
   return (
@@ -115,7 +115,7 @@ const SettingsPage = () => {
           </div>
 
           <div className="mt-4 p-4 bg-gray-50">
-            <p className="text-sm text-[#ef4501]">
+            <p className="text-sm text-brand-color-500">
               <span className="font-semibold">Current hours:</span>{" "}
               {settings.openTime} - {settings.closeTime}
             </p>
@@ -128,39 +128,21 @@ const SettingsPage = () => {
             Pricing Configuration
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="Tax Rate (%)"
-              id="tax-rate-input"
-              type="number"
-              value={settings.taxRate}
-              onChange={(e) =>
-                setSettings({ ...settings, taxRate: e.target.value })
-              }
-            />
-
-            <InputField
-              label="Service Charge (%)"
-              id="service-charge"
-              type="number"
-              value={settings.serviceCharge}
-              onChange={(e) =>
-                setSettings({ ...settings, serviceCharge: e.target.value })
-              }
-            />
-          </div>
+          <InputField
+            label="Tax Rate (%)"
+            id="tax-rate-input"
+            type="number"
+            value={settings.taxRate}
+            onChange={(e) =>
+              setSettings({ ...settings, taxRate: e.target.value })
+            }
+          />
 
           <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <p className="text-sm text-gray-700">
               <span className="font-semibold">Example calculation:</span> ₱100
-              base price + {settings.taxRate}% tax + {settings.serviceCharge}%
-              service charge = ₱
-              {(
-                100 *
-                (1 +
-                  parseFloat(settings.taxRate) / 100 +
-                  parseFloat(settings.serviceCharge) / 100)
-              ).toFixed(2)}
+              base price + {settings.taxRate}% tax service charge = ₱
+              {(100 * (1 + parseFloat(settings.taxRate) / 100)).toFixed(2)}
             </p>
           </div>
         </div>
@@ -175,7 +157,7 @@ const SettingsPage = () => {
           </button>
           <button
             type="submit"
-            className="flex-1 px-8 py-3 rounded-xl bg-[#ef4501] text-white font-semibold hover:shadow-lg hover:scale-[1.02] transition-all"
+            className="flex-1 px-8 py-3 rounded-xl bg-brand-color-500 text-white font-semibold hover:shadow-lg hover:scale-[1.02] transition-all"
           >
             Save Changes
           </button>
