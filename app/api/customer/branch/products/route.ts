@@ -22,9 +22,11 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
+    // Get branchId from query parameters
     const { searchParams } = new URL(req.url);
     const branchId = searchParams.get("branchId");
 
+    // Validate branchId
     if (!branchId) {
       return NextResponse.json(
         {
@@ -38,7 +40,7 @@ export async function GET(req: NextRequest) {
 
     console.log(`[BRANCH_PRODUCTS] Fetching products for branch: ${branchId}`);
 
-    // Use aggregation pipeline to get products sorted by category position
+    // use aggregation pipeline to get products sorted by category position and quantity
     const products = await Product.aggregate([
       {
         $lookup: {
@@ -71,7 +73,7 @@ export async function GET(req: NextRequest) {
           includedItems: {
             $map: {
               input: { $ifNull: ["$includedItems", []] },
-              as: "item",
+              as: "$item",
               in: {
                 product: {
                   $arrayElemAt: [
@@ -85,16 +87,16 @@ export async function GET(req: NextRequest) {
                     0,
                   ],
                 },
-                quantity: "$$item.quantity",
-                label: "$$item.label",
               },
+              quantity: "$$item.quantity",
+              label: "$$item.label",
             },
           },
         },
       },
-      { $unset: "_includedProducts" },
+       { $unset: "_includedProducts" },
 
-      // ✅ Lookup inventory for this specific branch
+        // ✅ Lookup inventory for this specific branch
       {
         $lookup: {
           from: "inventories",
@@ -115,8 +117,7 @@ export async function GET(req: NextRequest) {
           as: "inventory",
         },
       },
-
-      // ✅ Flatten inventory array into fields (default to 0 if no record)
+       // ✅ Flatten inventory array into fields (default to 0 if no record)
       {
         $addFields: {
           quantity: {
@@ -177,7 +178,7 @@ export async function GET(req: NextRequest) {
     console.log(`[BRANCH_PRODUCTS] Found ${products.length} total products`);
 
     // Fetch inventory for this specific branch
-    const inventories = await Inventory.find({ branchId })
+    const inventories = await Inventory.find({ branchId: branchId })
       .select("productId quantity reorderLevel")
       .lean();
 
@@ -185,7 +186,7 @@ export async function GET(req: NextRequest) {
       `[BRANCH_PRODUCTS] Found ${inventories.length} inventory records for branch`,
     );
 
-    // Map productId -> inventory data for quick lookup
+    // Create a map for quick lookup: productId -> inventory data
     const inventoryMap = new Map(
       inventories.map((inv) => [
         inv.productId.toString(),
@@ -196,56 +197,62 @@ export async function GET(req: NextRequest) {
       ]),
     );
 
-    // Merge inventory data into each product (preserving category.position sort order)
-    const result = products.map((product) => {
-      const inv = inventoryMap.get(product._id.toString());
+    // Combine products with their stock information
+    const result = products
+      .map((product) => {
+        const inv = inventoryMap.get(product._id.toString());
 
-      const quantity = inv?.quantity ?? 0;
-      const reorderLevel = inv?.reorderLevel ?? 10;
+        // Default values if no inventory record exists
+        const quantity = inv?.quantity ?? 0;
+        const reorderLevel = inv?.reorderLevel ?? 10;
 
-      let status = STOCK_STATUSES.IN_STOCK;
-      if (quantity === 0) {
-        status = STOCK_STATUSES.OUT_OF_STOCK;
-      } else if (quantity <= reorderLevel) {
-        status = STOCK_STATUSES.LOW_STOCK;
-      }
+        // Determine status based on stock level
+        let status = STOCK_STATUSES.IN_STOCK;
+        if (quantity === 0) {
+          status = STOCK_STATUSES.OUT_OF_STOCK;
+        } else if (quantity <= reorderLevel) {
+          status = STOCK_STATUSES.LOW_STOCK;
+        }
 
-      return {
-        _id: product._id.toString(),
-        name: product.name,
-        price: product.price,
-        image: {
-          url: product.image?.url || "",
-          public_id: product.image?.public_id || "",
-        },
-        info: product.info || "Product info is not available",
-        description:
-          product.description || "Product description is not available",
-        category: {
-          _id: product.category?._id?.toString() || "",
-          name: product.category?.name || "Uncategorized",
-        },
-        subcategory: product.subcategory?._id
-          ? {
-              _id: product.subcategory._id.toString(),
-              name: product.subcategory.name,
-            }
-          : null,
-        productType: product.productType || "solo",
-        includedItems:
-          product.includedItems?.map((item: any) => ({
-            _id: item.product?._id?.toString() || "",
-            productName: item.product?.name || "",
-            quantity: item.quantity,
-            label: item.label,
-          })) || [],
-        paxCount: product.paxCount,
-        isPopular: product.isPopular || false,
-        isSignature: product.isSignature || false,
-        quantity,
-        status,
-      };
-    });
+        // Build response object matching the Product model
+        return {
+          _id: product._id.toString(),
+          name: product.name,
+          price: product.price,
+          image: {
+            url: product.image?.url || "",
+            public_id: product.image?.public_id || "",
+          },
+          info: product.info || "Product info is not available",
+          description:
+            product.description || "Product description is not available",
+          category: {
+            _id: product.category?._id?.toString() || "",
+            name: product.category?.name || "Uncategorized",
+          },
+          subcategory: product.subcategory
+            ? {
+                _id: product.subcategory._id.toString(),
+                name: product.subcategory.name,
+              }
+            : null,
+          productType: product.productType || "solo",
+          includedItems:
+            product.includedItems?.map((item: any) => ({
+              _id: item.product?._id?.toString() || "",
+              productName: item.product?.name || "",
+              quantity: item.quantity,
+              label: item.label,
+            })) || [],
+          paxCount: product.paxCount,
+          isPopular: product.isPopular || false,
+          isSignature: product.isSignature || false,
+          // Stock information for this branch
+          quantity,
+          status,
+        };
+      })
+      .sort((a, b) => b.quantity - a.quantity);
 
     console.log(
       `[BRANCH_PRODUCTS] Returning ${result.length} products with stock info`,
@@ -262,6 +269,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("[BRANCH_PRODUCTS] Error:", error);
+
     return NextResponse.json(
       {
         error: "Failed to fetch products",
