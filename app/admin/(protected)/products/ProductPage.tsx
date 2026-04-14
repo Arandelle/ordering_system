@@ -302,7 +302,10 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
             ? editProduct.category
             : editProduct.category?._id || "",
 
-        subcategory: typeof editProduct.subcategory === "string" ? editProduct.subcategory : editProduct.subcategory?._id  || "",
+        subcategory:
+          typeof editProduct.subcategory === "string"
+            ? editProduct.subcategory
+            : editProduct.subcategory?._id || "",
         info: editProduct.info || "",
         description: editProduct.description || "",
         isSignature: editProduct.isSignature || false,
@@ -402,8 +405,13 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   // ── Fetch solo products ──────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (isComboOrSet && allProducts.length === 0) fetchAllProducts();
-  }, [isComboOrSet]);
+    if (
+      (isComboOrSet || (isEditMode && editProduct?.includedItems?.length)) &&
+      allProducts.length === 0
+    ) {
+      fetchAllProducts();
+    }
+  }, [isComboOrSet, isEditMode]);
 
   const fetchAllProducts = async () => {
     setLoadingProducts(true);
@@ -616,7 +624,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
           ? formData.includedItems.map(({ product, quantity, label }) => ({
               product,
               quantity,
-              label: label || null,
+              label,
             }))
           : [],
       };
@@ -976,7 +984,10 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                             className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl"
                           >
                             <span className="flex-1 text-sm font-medium text-gray-800 truncate">
-                              {item._name || item.product}
+                              {item._name ||
+                                allProducts.find((p) => p._id === item.product)
+                                  ?.name ||
+                                item.product}
                             </span>
                             <input
                               type="text"
