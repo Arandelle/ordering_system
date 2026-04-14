@@ -8,16 +8,17 @@ import OrderNowButton from "./ui/OrderNowButton";
 
 const CartDrawer = () => {
   const router = useRouter();
-
   const {
-    cartItems,
-    isCartOpen,
-    setIsCartOpen,
-    updateQuantity,
-    removeFromCart,
-    totalPrice,
-    clearCart,
-  } = useCart();
+  cartItems,
+  isCartOpen,
+  setIsCartOpen,
+  updateQuantity,
+  removeFromCart,
+  vatableSales,
+  vatAmount,
+  totalPrice,
+  clearCart,
+} = useCart();
 
   const handleCheckout = () => {
     setIsCartOpen(false);
@@ -130,17 +131,17 @@ const CartDrawer = () => {
           <div className="border-t border-gray-100 p-6 space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-500">
-                <span>Subtotal</span>
-                <span>₱{totalPrice.toFixed(2)}</span>
+                <span>VATable Sales</span>
+                <span>₱{vatableSales.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500">
-                <span>Deliver Fee</span>
-                <span>{totalPrice >= 500 ? "Free" : "₱50.00"}</span>
+                <span>VAT (12%)</span>
+                <span>₱{vatAmount.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                <span className="font-semibold text-gray-900">Total</span>
+                <span className="font-semibold text-gray-900">Total (VAT Inc)</span>
                 <span className="font-bold text-xl text-brand-color-500">
-                  ₱{(totalPrice + (totalPrice >= 500 ? 0 : 50)).toFixed(2)}
+                  ₱{totalPrice.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -151,10 +152,6 @@ const CartDrawer = () => {
               Proceed to checkout
               <ArrowRight size={20} />
             </button>
-
-            {/* <p className="text-center">
-              Sorry, checkout is currently unavailable. Please visit our store to place your order.
-            </p> */}
 
             <button
               onClick={clearCart}

@@ -10,50 +10,41 @@ interface CartContextType {
   updateQuantity: (id: string | number, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
-  subTotal: number;
-  tax: number;
+  vatableSales: number;
+  vatAmount: number;
   totalPrice: number;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
 }
 
-// This context will hold cart state and actions
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// CartProvider component to wrap the app and provide cart state
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
- useEffect(() => {
-  const savedCart = localStorage.getItem('cart');
-
-  if (savedCart) {
-    try {
-      const parsed = JSON.parse(savedCart);
-
-      // ✅ ENSURE ARRAY
-      if (Array.isArray(parsed)) {
-        setCartItems(parsed);
-      } else {
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      try {
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed)) {
+          setCartItems(parsed);
+        } else {
+          setCartItems([]);
+        }
+      } catch (error) {
+        console.error("Error loading cart", error);
         setCartItems([]);
       }
-
-    } catch (error) {
-      console.error("Error loading cart", error);
-      setCartItems([]); // ✅ fallback
     }
-  }
+    setIsHydrated(true);
+  }, []);
 
-  setIsHydrated(true);
-}, []);
-
-
-  // Save cart to localstorage whenever it changes
   useEffect(() => {
-    if(isHydrated){
-      localStorage.setItem('cart', JSON.stringify(cartItems));
+    if (isHydrated) {
+      localStorage.setItem("cart", JSON.stringify(cartItems));
     }
   }, [cartItems, isHydrated]);
 
@@ -62,7 +53,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const existingItem = prev.find((cartItem) => cartItem._id === item._id);
       if (existingItem) {
         return prev.map((cartItem) =>
-          cartItem._id === item._id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem,
+          cartItem._id === item._id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
         );
       }
       return [...prev, { ...item, quantity: 1 }];
@@ -73,38 +66,43 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCartItems((prev) => prev.filter((item) => item._id !== id));
   };
 
-  const updateQuantity = (id: string | number, quantity: number)=> {
-    if(quantity <= 0 ){
+  const updateQuantity = (id: string | number, quantity: number) => {
+    if (quantity <= 0) {
       removeFromCart(id);
       return;
     }
-
-    setCartItems(prev => prev.map(item => item._id === id ? {...item, quantity} : item))
-  }
+    setCartItems((prev) =>
+      prev.map((item) => (item._id === id ? { ...item, quantity } : item))
+    );
+  };
 
   const clearCart = () => {
     setCartItems([]);
-  }
+  };
 
-  const totalItems = cartItems?.reduce((sum, item) => sum + item.quantity, 0);
-  const subTotal = cartItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subTotal * 0.12
-  const totalPrice = subTotal + tax
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Prices are VAT-inclusive — back-calculate the breakdown
+  const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const vatableSales = totalPrice / 1.12;   // net price before VAT
+  const vatAmount = totalPrice - vatableSales;     // VAT amount (12% of net)
 
   return (
-    <CartContext.Provider value={{
-      cartItems,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      totalItems,
-      subTotal,
-      tax,
-      totalPrice,
-      isCartOpen,
-      setIsCartOpen
-    }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        totalItems,
+        vatableSales,
+        vatAmount,
+        totalPrice,
+        isCartOpen,
+        setIsCartOpen,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
@@ -112,9 +110,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if(!context) {
-    throw new Error('useCart must be used within a CartProvider');
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
   }
-
   return context;
-}
+};

@@ -136,8 +136,8 @@ const OrderSummaryStep = () => {
     cartItems,
     removeFromCart,
     updateQuantity,
-    subTotal,
-    tax,
+    vatableSales,
+    vatAmount,
     totalPrice,
     clearCart,
   } = useCart();
@@ -407,16 +407,16 @@ const OrderSummaryStep = () => {
                 {/* Order Totals */}
                 <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 space-y-2">
                   <div className="flex justify-between text-sm text-slate-500">
-                    <span>Subtotal</span>
-                    <span>₱{subTotal.toFixed(2)}</span>
+                    <span>VATable Sales</span>
+                    <span>₱{vatableSales.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-slate-500">
                     <span>VAT (12%)</span>
-                    <span>₱{tax.toFixed(2)}</span>
+                    <span>₱{vatAmount.toFixed(2)}</span>
                   </div>
                   <div className="  flex justify-between items-baseline pt-2 border-t border-slate-200">
                     <span className="text-sm font-semibold text-slate-900">
-                      Total
+                      Total (VAT Inc)
                     </span>
                     <span className="text-lg font-bold text-brand-color-500">
                       ₱{totalPrice.toFixed(2)}
