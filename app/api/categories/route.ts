@@ -3,18 +3,33 @@ import {requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Category } from "@/models/Category";
 import { NextRequest, NextResponse } from "next/server";
+import "@/lib/registerModels";
 
 export async function GET() {
   try {
     await connectDB();
-    const categories = await Category.find({}).sort({ position: 1 }).lean();
+
+    const categories = await Category.aggregate([
+      { $sort: { position: 1 } },
+      {
+        $lookup: {
+          from: "subcategories",       // MongoDB collection name (auto-lowercased+pluralized)
+          localField: "_id",
+          foreignField: "category",
+          as: "subcategories",
+        },
+      },
+      {
+        $addFields: {
+          subCategoryCount: { $size: "$subcategories" },
+        },
+      },
+      { $project: { subcategories: 0 } }, // don't bloat the payload
+    ]);
 
     return NextResponse.json(categories);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch categories" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
   }
 }
 
