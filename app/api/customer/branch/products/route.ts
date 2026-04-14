@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
           includedItems: {
             $map: {
               input: { $ifNull: ["$includedItems", []] },
-              as: "$item",
+              as: "item",
               in: {
                 product: {
                   $arrayElemAt: [
@@ -87,16 +87,16 @@ export async function GET(req: NextRequest) {
                     0,
                   ],
                 },
+                quantity: "$$item.quantity",
+                label: "$$item.label",
               },
-              quantity: "$$item.quantity",
-              label: "$$item.label",
             },
           },
         },
       },
-       { $unset: "_includedProducts" },
+      { $unset: "_includedProducts" },
 
-        // ✅ Lookup inventory for this specific branch
+      // ✅ Lookup inventory for this specific branch
       {
         $lookup: {
           from: "inventories",
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
           as: "inventory",
         },
       },
-       // ✅ Flatten inventory array into fields (default to 0 if no record)
+      // ✅ Flatten inventory array into fields (default to 0 if no record)
       {
         $addFields: {
           quantity: {
