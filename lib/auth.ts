@@ -19,6 +19,13 @@ export const auth = betterAuth({
     },
   },
   plugins: [nextCookies()],
+  trustedOrigins: ["https://food.harrisoninasalbbq.com.ph"],
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
 });
 
 export const { signIn, signUp, useSession } = createAuthClient();
