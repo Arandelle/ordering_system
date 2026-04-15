@@ -3,6 +3,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Branch } from "@/types/branch";
 import { useBranches } from "@/hooks/api/useBranch";
+import { useModalQuery } from "@/hooks/utils/useModalQuery";
 
 type BranchContextType = {
   selectedBranch: Branch | null;
@@ -39,6 +40,7 @@ const saveLocation = (location: [number, number] | null) => {
 };
 
 export const BranchProvider = ({ children }: { children: ReactNode }) => {
+  const {closeModal} = useModalQuery();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [userLocation, setUserLocationState] = useState<[number, number] | null>(loadLocation);
   const { data: branches = [] } = useBranches();
@@ -64,6 +66,8 @@ export const BranchProvider = ({ children }: { children: ReactNode }) => {
     } else {
       sessionStorage.removeItem(SELECTED_BRANCH_KEY);
     }
+
+    closeModal()
   };
 
   const setUserLocation = (location: [number, number] | null) => {
