@@ -11,11 +11,12 @@ import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  await connectDB();
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    await connectDB();
+    
     const customer = await getCustomerAuth(request);
 
     let customerId = null;
