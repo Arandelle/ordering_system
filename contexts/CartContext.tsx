@@ -9,6 +9,7 @@ interface CartContextType {
   removeFromCart: (id: string | number) => void;
   updateQuantity: (id: string | number, quantity: number) => void;
   clearCart: () => void;
+  totalProducts: number;
   totalItems: number;
   vatableSales: number;
   vatAmount: number;
@@ -80,6 +81,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCartItems([]);
   };
 
+  const totalProducts = cartItems.length
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // Prices are VAT-inclusive — back-calculate the breakdown
@@ -95,6 +97,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         removeFromCart,
         updateQuantity,
         clearCart,
+        totalProducts,
         totalItems,
         vatableSales,
         vatAmount,
