@@ -94,7 +94,7 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <span className="text-sm font-semibold text-stone-800">
-                      ₱{order.total.total.toFixed(2)}
+                      ₱{order.total.totalAmount.toFixed(2)}
                     </span>
                   </TableCell>
                   <TableCell className="px-6 py-4">
@@ -239,12 +239,12 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                 {/* Total */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between text-sm text-gray-500">
-                    <span>Subtotal</span>
-                    <span>₱{orderToView.total.subTotal.toLocaleString()}</span>
+                    <span>VATable Sales</span>
+                    <span>₱{orderToView.total.vatableSales.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm font-semibold text-gray-900">
                     <span>Total</span>
-                    <span>₱{orderToView.total.total.toLocaleString()}</span>
+                    <span>₱{orderToView.total.totalAmount.toLocaleString()}</span>
                   </div>
                 </div>
 

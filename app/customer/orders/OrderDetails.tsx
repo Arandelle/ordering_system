@@ -198,21 +198,21 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
         {/* Fix the summary to include tax */}
         <div className="pt-4 border-t border-gray-100 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Subtotal</span>
+            <span className="text-gray-600">VATable Sales</span>
             <span className="font-[550]">
-              ₱{order.total?.subTotal?.toFixed(2)}
+              ₱{order.total?.vatableSales?.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Tax (12%)</span>
             <span className="font-[550]">
-              ₱{(order.total.total - order.total.subTotal).toFixed(2)}
+              ₱{(order.total.vatAmount?.toFixed(2))}
             </span>
           </div>
           <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
             <span className="text-gray-900">Total</span>
             <span className="text-brand-color-500">
-              ₱{order.total?.total?.toFixed(2)}
+              ₱{order.total?.totalAmount?.toFixed(2)}
             </span>
           </div>
         </div>

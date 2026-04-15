@@ -112,7 +112,7 @@ const ReviewPage = () => {
         <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-[#ef4501] text-2xl md:text-3xl font-bold mb-2">
+            <h1 className="text-brand-color-500 text-2xl md:text-3xl font-bold mb-2">
               Rate Your Experience
             </h1>
             <p className="text-slate-600 font-semibold">Order #{order.paymentInfo.referenceNumber}</p>
@@ -157,7 +157,7 @@ const ReviewPage = () => {
 
                   {/**Item Price */}
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold text-[#ef4501]">
+                    <p className="text-sm font-semibold text-brand-color-500">
                       ₱{(item.price * item.quantity).toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -173,7 +173,7 @@ const ReviewPage = () => {
                 <button
                 type="button"
                 onClick={() => setShowAllItems(!showAllItems)}
-                className="w-full py-2 text-sm text-[#ef4501] hover:text-[#c13500] font-semibold transition-colors cursor-pointer"
+                className="w-full py-2 text-sm text-brand-color-500 hover:text-[#c13500] font-semibold transition-colors cursor-pointer"
                 >
                   {showAllItems ? "Show Less" : `+${order.items.length - ITEMS_TO_SHOW} More Items`}
                 </button>
@@ -181,8 +181,8 @@ const ReviewPage = () => {
             </div>
             <div className="border-t mt-4 pt-3 flex justify-between font-semibold text-gray-900">
               <span>Total</span>
-              <span className="text-[#ef4501]">
-                ₱{order.total.total.toFixed(2)}
+              <span className="text-brand-color-500">
+                ₱{order.total.totalAmount.toFixed(2)}
               </span>
             </div>
           </div>
@@ -219,7 +219,7 @@ const ReviewPage = () => {
 
               {/** Rating Label */}
               {displayRating > 0 && (
-                <p className="text-center text-lg font-semibold text-[#ef4501]">
+                <p className="text-center text-lg font-semibold text-brand-color-500">
                   {labels[displayRating]}
                 </p>
               )}
@@ -241,7 +241,7 @@ const ReviewPage = () => {
               <button
                 type="submit"
                 disabled={isSubmitting || rating === 0}
-                className="flex-1 bg-[#ef4501] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] transition-colors disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 bg-brand-color-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] transition-colors disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Submitting..." : "Submit Review"}
               </button>

@@ -11,32 +11,42 @@ import { OrderStatus } from "./orderConstants";
 export interface OrderType {
   _id: string;
   createdAt: string;
+  updatedAt?: string;
   status: OrderStatus;
+
+  branchId?: string;
+  customerId?: string;
+
+  branchSnapshot?: {
+    name: string;
+    code: string;
+    address: string;
+    contactNumber: string;
+  };
 
   items: CartItem[];
   paymentInfo: {
-    method: {
-      type: string,
-      description: string,
-      last4?: string,
-      scheme?: string
-    };
-    paymentLinkId?: string;
-    checkoutUrl?: string;
+    checkoutId?: string;
     referenceNumber?: string;
-
     paymentId?: string;
     paymentStatus: string;
-    paidAt: Date;
+    paidAt?: Date;
+
+    method: {
+      type: string;
+      description: string;
+      last4?: string;
+      scheme?: string;
+    };
 
     customerName: string;
     customerEmail: string;
     customerPhone: string;
   };
   total: {
-    subTotal: number;
-    tax?: number;
-    total: number;
+    vatableSales: number;
+    vatAmount?: number;
+    totalAmount: number;
   };
   estimatedTime: string;
 

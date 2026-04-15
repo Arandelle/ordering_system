@@ -134,9 +134,9 @@ const OrderSchema = new Schema(
     },
 
     total: {
-      subTotal: { type: Number, required: true },
-      tax: { type: Number, required: true },
-      total: { type: Number, required: true },
+      vatableSales: { type: Number, required: true },
+      vatAmount: { type: Number, required: true },
+      totalAmount: { type: Number, required: true },
     },
 
     estimatedTime: { type: String, default: "30-45 minutes" },
@@ -158,7 +158,7 @@ const OrderSchema = new Schema(
       vehicleType: String, // motorcycle, car, etc.
     },
 
-    note: String,
+    notes: String,
 
     isReviewed: {
       type: Boolean,

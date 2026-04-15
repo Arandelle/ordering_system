@@ -127,7 +127,7 @@ export const GuestOrderModal = ({
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const deliveryFee = order.total.total - subtotal;
+  const deliveryFee = order.total.totalAmount - subtotal;
 
   return (
     <div className={`${syne.className}`}>
@@ -199,7 +199,7 @@ export const GuestOrderModal = ({
           )}
           <div className="flex justify-between text-[15px] font-semibold text-slate-800 pt-2 border-t border-slate-100 mt-1">
             <span>Total</span>
-            <span>₱{order.total.total.toLocaleString()}</span>
+            <span>₱{order.total.totalAmount.toLocaleString()}</span>
           </div>
         </div>
       </div>
