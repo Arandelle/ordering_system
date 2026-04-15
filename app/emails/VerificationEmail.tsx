@@ -33,76 +33,85 @@ export function VerificationEmail({
       <Html>
         <Head />
         <Preview>Verify your email to access your account</Preview>
-        <Body className="bg-[#0a0a0a] font-serif m-0 p-0">
-          <Container className="max-w-140 mx-auto px-6 py-10">
-            {/* Brand Logo*/}
-            <Img
-              src={`${publicUrl}/images/harrison_logo_landscape.png`}
-              width="200"
-              alt="Harrison Logo"
-              className="mx-auto mb-3"
-            />
 
-            {/* Badge */}
-            <Text className="inline-block bg-[#1a1a1a] text-[#ef4501] text-[10px] font-mono tracking-[0.15em] uppercase px-3 py-1 border border-[#2a2a2a] rounded-sm mb-4 mt-0">
-              Email Verification
-            </Text>
+        <Section className="bg-white py-8 px-4">
+          <Section className="max-w-[600px] mx-auto bg-white rounded-xl border border-gray-100">
 
-            {/* Heading */}
-            <Heading className="text-[#f5f0e8] text-3xl font-normal tracking-tight leading-tight mt-0 mb-3">
-              Confirm your address
-            </Heading>
+            {/* ── Header ── */}
+            <Section className="px-8 py-7 border-b border-gray-100 text-center">
+              <Img
+                src={`${publicUrl}/images/harrison_logo_landscape.png`}
+                width="200"
+                alt="Harrison Logo"
+                className="mx-auto mb-3"
+              />
+              <Text className="inline-block text-xs uppercase tracking-widest text-black border-b border-[#ef4501] pb-0.5 mb-2">
+                Email Verification
+              </Text>
+              <Text className="text-sm text-gray-600 m-0">
+                Hi{" "}
+                <span className="font-medium text-black">{name}</span>,
+                you're almost there. Click the button below to verify your
+                email address and activate your account.
+              </Text>
+            </Section>
 
-            {/* Subtext */}
-            <Text className="text-[#7a7a7a] text-sm leading-relaxed mt-0 mb-8">
-              Hi {name}, you're almost there. Click the button below to verify
-              your email address and activate your account.
-            </Text>
-
-            {/* CTA Button */}
-            <Section className="mb-8">
+            {/* ── CTA ── */}
+            <Section className="px-8 py-7 border-b border-gray-100 text-center">
               <Button
                 href={verifyUrl}
-                className="bg-[#ef4501] text-[#0a0a0a] text-sm font-mono font-bold tracking-widest uppercase px-8 py-4 rounded-sm no-underline inline-block"
+                className="bg-[#ef4501] text-white text-sm font-medium tracking-[0.03em] px-7 py-3 rounded-md no-underline inline-block"
               >
-                Verify Email Address →
+                Verify email address →
               </Button>
             </Section>
 
-            {/* Expiry notice */}
-            <Section className="bg-[#111111] border border-[#2a2a2a] rounded px-4 py-3 mb-6">
-              <Text className="text-[#4a4a4a] text-xs font-mono leading-relaxed mt-0 mb-0">
-                ⏱ This link expires in{" "}
-                <span className="text-[#ef4501]">{expiryHours} hours</span>.
-                After that you'll need to request a new one.
+            {/* ── Notices ── */}
+            <Section className="px-8 py-5 border-b border-gray-100">
+              {/* Expiry */}
+              <Section className="bg-white rounded-lg px-3.5 py-2.5 mb-3">
+                <Text className="text-[11px] uppercase tracking-[0.04em] text-gray-700 mb-0.5">
+                  Link expiry
+                </Text>
+                <Text className="text-sm text-gray-600 m-0 leading-relaxed">
+                  This link expires in{" "}
+                  <span className="font-medium text-black">
+                    {expiryHours} hours
+                  </span>
+                  . After that you'll need to request a new one.
+                </Text>
+              </Section>
+
+              {/* Warning */}
+              <Section className="bg-[#FAEEDA] rounded-lg px-3.5 py-2.5 mb-3">
+                <Text className="text-[11px] uppercase tracking-[0.04em] text-[#854F0B] mb-0.5">
+                  Heads up
+                </Text>
+                <Text className="text-sm text-[#854F0B] m-0 leading-relaxed">
+                  If you didn't create an account, ignore this email. No action
+                  is needed.
+                </Text>
+              </Section>
+
+              {/* Fallback link */}
+              <Text className="text-sm text-gray-600 m-0">
+                Button not working? Copy this link:{" "}
+                <Link href={verifyUrl} className="text-[#1D9E75]">
+                  {verifyUrl}
+                </Link>
               </Text>
             </Section>
 
-            {/* Warning */}
-            <Section className="bg-[#120f0a] border border-[#2a2010] rounded px-4 py-3 mb-6">
-              <Text className="text-[#f8f801] text-xs font-mono leading-relaxed mt-0 mb-0">
-                ⚠ If you didn't create an account, ignore this email. No action
-                is needed.
+            {/* ── Footer ── */}
+            <Section className="px-8 py-5 text-center">
+              <Text className="text-xs text-gray-700 m-0">
+                © {new Date().getFullYear()} Harrison's Inasál BBQ · Do not
+                reply to this email.
               </Text>
             </Section>
 
-            {/* Fallback link */}
-            <Text className="text-[#4a4a4a] text-xs font-mono mt-0 mb-6">
-              Button not working? Copy this link:{" "}
-              <Link href={verifyUrl} className="text-[#ef4501]">
-                {verifyUrl}
-              </Link>
-            </Text>
-
-            <Hr className="border-t border-[#1a1a1a] mb-4" />
-
-            {/* Footer */}
-            <Text className="text-[#333333] text-[11px] font-mono text-center mt-0 mb-0">
-              © {new Date().getFullYear()} HarrisonInasalBBQ · Do not reply to
-              this email.
-            </Text>
-          </Container>
-        </Body>
+          </Section>
+        </Section>
       </Html>
     </Tailwind>
   );
