@@ -46,6 +46,7 @@ export function useOrderActions() {
         image: item.image,
         description: item.description,
         category: item.category,
+        quantity: 1
       });
     });
     setIsCartOpen(true);
