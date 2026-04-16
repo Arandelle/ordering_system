@@ -22,13 +22,20 @@ function getStatusSubject(status: OrderStatus, referenceNumber?: string) {
   const ref = referenceNumber ? ` — ${referenceNumber.toUpperCase()}` : "";
 
   switch (status) {
-    case "paid":      return `Order Confirmed${ref}`;
-    case "preparing": return `Your Order is Being Prepared${ref}`;
-    case "ready":     return `Your Order is Ready${ref}`;
-    case "cancelled": return `Your Order Has Been Cancelled${ref}`;
-    case "failed":    return `Your Order Could Not Be Completed${ref}`;
-    case "expired":   return `Your Order Has Expired${ref}`;
-    default:          return `Order Update${ref}`;
+    case "paid":
+      return `Order Confirmed${ref}`;
+    case "preparing":
+      return `Your Order is Being Prepared${ref}`;
+    case "ready":
+      return `Your Order is Ready${ref}`;
+    case "cancelled":
+      return `Your Order Has Been Cancelled${ref}`;
+    case "failed":
+      return `Your Order Could Not Be Completed${ref}`;
+    case "expired":
+      return `Your Order Has Expired${ref}`;
+    default:
+      return `Order Update${ref}`;
   }
 }
 
@@ -105,7 +112,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ Step 5: Update the order
-   const order = await Order.findOneAndUpdate(
+    const order = await Order.findOneAndUpdate(
       { "paymentInfo.referenceNumber": requestReferenceNumber },
       {
         $set: {
@@ -121,14 +128,17 @@ export async function POST(request: NextRequest) {
           ...(orderStatus === "cancelled" && {
             "timeline.cancelledAt": new Date(),
           }),
-          "paymentInfo.method" : fundSource ? {
-            type: fundSource.type,
-            description: fundSource.description,
-            last4: fundSource.last4 ?? null,
-            scheme: fundSource.scheme ?? null
-          } : null
+          "paymentInfo.method": fundSource
+            ? {
+                type: fundSource.type,
+                description: fundSource.description,
+                last4: fundSource.last4 ?? null,
+                scheme: fundSource.scheme ?? null,
+              }
+            : null,
         },
       },
+      { new: true, session },
     );
 
     console.log(
@@ -146,23 +156,23 @@ export async function POST(request: NextRequest) {
         await Product.findByIdAndUpdate(
           item.productId, // ← you need productId in OrderItemSchema for this!
           { $inc: { stock: item.quantity } },
-          { session },
+          { new: true, session },
         );
       }
     }
 
-     const { error: emailError } = await resend.emails.send({
+    const { error: emailError } = await resend.emails.send({
       from: EMAIL_FROM,
       to: order.paymentInfo.customerEmail,
-      subject: getStatusSubject(order.status, order.paymentInfo.referenceNumber),
+      subject: getStatusSubject(
+        order.status,
+        order.paymentInfo.referenceNumber,
+      ),
       react: OrderSummaryEmail({ order: order }),
     });
 
     if (emailError) {
-      return NextResponse.json(
-        { error: "Failed to send order summary email. Please try again." },
-        { status: 500 },
-      );
+      console.error("[Maya Webhook] Email failed:", emailError);
     }
 
     await session.commitTransaction();
