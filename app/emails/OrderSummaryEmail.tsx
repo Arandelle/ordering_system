@@ -26,6 +26,12 @@ const formatCurrency = (amount: number) =>
 /* ── Status-aware copy ── */
 function getStatusCopy(status: OrderStatus) {
   switch (status) {
+    case "pending":
+      return {
+        preview: "Order placed successfully",
+        heading: "Payment Needed",
+        message: "You're almost done! Please complete your payment to confirm your order!",
+      };
     case "paid":
       return {
         preview: "Payment received — your order is confirmed!",
@@ -75,7 +81,7 @@ function getStatusCopy(status: OrderStatus) {
 const mockOrder: OrderType = {
   _id: "64a3f2b81c9e4d0012ab81c9",
   createdAt: "2026-04-15T10:32:00.000Z",
-  status: "ready",
+  status: "pending",
   branchSnapshot: {
     name: "Century Mall",
     code: "BR-001",
@@ -311,7 +317,7 @@ const OrderSummaryEmail = ({ order = mockOrder }: OrderSummaryEmailProps) => {
               <Text className="text-sm text-gray-500 mb-1">
                 Questions?{" "}
                 <Link
-                  href="mailto:hello@harrisoninasalbbq.com.ph"
+                  href="mailto:harrisoninasalbbq@gmail.com"
                   className="text-[#1D9E75]"
                 >
                   Reply to this email
