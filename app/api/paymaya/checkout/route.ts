@@ -1,3 +1,4 @@
+import OrderMessageEmail from "@/app/emails/OrderMessageEmail";
 import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
 import { getCustomerAuth } from "@/lib/getAuth";
 import { getAuthHeader } from "@/lib/getAuthHeader";
@@ -229,7 +230,7 @@ export async function POST(request: NextRequest) {
       from: EMAIL_FROM,
       to: order[0].paymentInfo.customerEmail,
       subject: `Payment Needed!`,
-      react: OrderSummaryEmail({ order: order[0] }),
+      react: OrderMessageEmail({ order: order[0] }),
     });
 
     if (emailError) {
