@@ -1,7 +1,10 @@
+import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
 import { getMayaClientIP, isMayaAllowedIP } from "@/lib/mayaGuard";
 import { connectDB } from "@/lib/mongodb";
+import { EMAIL_FROM, resend } from "@/lib/resend";
 import { Order } from "@/models/Orders";
 import { Product } from "@/models/Product";
+import { OrderStatus } from "@/types/orderConstants";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,6 +17,20 @@ const PAYMENT_STATUS_MAP: Record<string, string> = {
   PAYMENT_CANCELLED: "cancelled",
   AUTHORIZED: "authorized", // Card payments only (hold/capture flow)
 };
+
+function getStatusSubject(status: OrderStatus, referenceNumber?: string) {
+  const ref = referenceNumber ? ` — ${referenceNumber.toUpperCase()}` : "";
+
+  switch (status) {
+    case "paid":      return `Order Confirmed${ref}`;
+    case "preparing": return `Your Order is Being Prepared${ref}`;
+    case "ready":     return `Your Order is Ready${ref}`;
+    case "cancelled": return `Your Order Has Been Cancelled${ref}`;
+    case "failed":    return `Your Order Could Not Be Completed${ref}`;
+    case "expired":   return `Your Order Has Expired${ref}`;
+    default:          return `Order Update${ref}`;
+  }
+}
 
 export async function POST(request: NextRequest) {
   // Step 1: IP whitelisting
@@ -88,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ Step 5: Update the order
-    await Order.findOneAndUpdate(
+   const order = await Order.findOneAndUpdate(
       { "paymentInfo.referenceNumber": requestReferenceNumber },
       {
         $set: {
@@ -132,6 +149,20 @@ export async function POST(request: NextRequest) {
           { session },
         );
       }
+    }
+
+     const { error: emailError } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: order.paymentInfo.customerEmail,
+      subject: getStatusSubject(order.status, order.paymentInfo.referenceNumber),
+      react: OrderSummaryEmail({ order: order }),
+    });
+
+    if (emailError) {
+      return NextResponse.json(
+        { error: "Failed to send order summary email. Please try again." },
+        { status: 500 },
+      );
     }
 
     await session.commitTransaction();
