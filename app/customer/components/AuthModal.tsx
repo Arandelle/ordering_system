@@ -195,6 +195,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               {isSignup && (
                 <InputField
                   label="Full Name"
+                  placeholder="Juan Dela Cruz"
                   leftIcon={<User size={18} />}
                   name="fullname"
                   value={formData.fullname}
@@ -204,6 +205,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               )}
               <InputField
                 label="Email Address"
+                placeholder="example@gmail.com"
                 leftIcon={<Mail size={18} />}
                 type="email"
                 name="email"
@@ -213,6 +215,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               />
               <InputField
                 label="Password"
+                placeholder="Enter your password"
                 name="password"
                 type={showPassword.password ? "text" : "password"}
                 value={formData.password}
@@ -252,11 +255,11 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </form>
 
             <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-gray-200"></div>
-              <span className="flex-shrink mx-4 text-gray-400 text-xs uppercase tracking-wider">
+              <div className="grow border-t border-gray-200"></div>
+              <span className="shrink mx-4 text-gray-400 text-xs uppercase tracking-wider">
                 or
               </span>
-              <div className="flex-grow border-t border-gray-200"></div>
+              <div className="grow border-t border-gray-200"></div>
             </div>
 
             {/* Google Login Button */}
