@@ -1,10 +1,11 @@
+import OrderMessageEmail from "@/app/emails/OrderMessageEmail";
 import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
 import { getMayaClientIP, isMayaAllowedIP } from "@/lib/mayaGuard";
 import { connectDB } from "@/lib/mongodb";
 import { EMAIL_FROM, resend } from "@/lib/resend";
 import { Order } from "@/models/Orders";
 import { Product } from "@/models/Product";
-import { OrderStatus } from "@/types/orderConstants";
+import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,18 +19,12 @@ const PAYMENT_STATUS_MAP: Record<string, string> = {
   AUTHORIZED: "authorized", // Card payments only (hold/capture flow)
 };
 
-function getStatusSubject(status: OrderStatus, referenceNumber?: string) {
+export function getStatusSubject(status: OrderStatus, referenceNumber?: string) {
   const ref = referenceNumber ? ` — ${referenceNumber.toUpperCase()}` : "";
 
   switch (status) {
     case "paid":
       return `Order Confirmed${ref}`;
-    case "preparing":
-      return `Your Order is Being Prepared${ref}`;
-    case "ready":
-      return `Your Order is Ready${ref}`;
-    case "cancelled":
-      return `Your Order Has Been Cancelled${ref}`;
     case "failed":
       return `Your Order Could Not Be Completed${ref}`;
     case "expired":
@@ -168,7 +163,7 @@ export async function POST(request: NextRequest) {
         order.status,
         order.paymentInfo.referenceNumber,
       ),
-      react: OrderSummaryEmail({ order: order }),
+      react: order.status !== ORDER_STATUSES.PAID ? OrderMessageEmail({order: order}) : OrderSummaryEmail({ order: order }),
     });
 
     if (emailError) {
