@@ -171,9 +171,9 @@ export async function POST(request: NextRequest) {
         }
       },
       redirectUrl: {
-        success: `${process.env.NEXT_PUBLIC_URL}/payment/success`,
-        failure: `${process.env.NEXT_PUBLIC_URL}/payment/failed`,
-        cancel: `${process.env.NEXT_PUBLIC_URL}/payment/cancel`,
+        success: `${process.env.NEXT_PUBLIC_URL}/payment/success?referenceNumber=${referenceNumber}`,
+        failure: `${process.env.NEXT_PUBLIC_URL}/payment/failed?referenceNumber=${referenceNumber}`,
+        cancel: `${process.env.NEXT_PUBLIC_URL}/payment/cancel?referenceNumber=${referenceNumber}`,
       },
       requestReferenceNumber: referenceNumber,
     };

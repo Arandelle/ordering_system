@@ -23,7 +23,11 @@ export async function POST(
       );
     }
 
- 
+    const { paymentInfo } = order;
+
+    const referenceNumber = paymentInfo?.referenceNumber;
+    const checkoutId = paymentInfo?.checkoutId;
+
     const payload = {
       totalAmount: {
         value: order.total.totalAmount,
@@ -31,7 +35,7 @@ export async function POST(
         details: {
           discount: 0,
           vatAmount: order.total.vatAmount,
-          vatableSales: order.total.vatableSales,
+          subTotal: order.total.vatableSales,
         },
       },
       items: order.items.map((item: any) => ({
@@ -47,16 +51,16 @@ export async function POST(
       })),
       buyer: {
         contact: {
-          email: order.paymentInfo.customerEmail,
-          phone: order.paymentInfo.customerPhone
-        }
+          email: paymentInfo.customerEmail,
+          phone: paymentInfo.customerPhone,
+        },
       },
       redirectUrl: {
-        success: `${process.env.NEXT_PUBLIC_URL}/payment/success`,
-        failure: `${process.env.NEXT_PUBLIC_URL}/payment/failed`,
-        cancel: `${process.env.NEXT_PUBLIC_URL}/payment/cancel`,
+        success: `${process.env.NEXT_PUBLIC_URL}/payment/success?referenceNumber=${referenceNumber}`,
+        failure: `${process.env.NEXT_PUBLIC_URL}/payment/failed?referenceNumber=${referenceNumber}`,
+        cancel: `${process.env.NEXT_PUBLIC_URL}/payment/cancel?referenceNumber=${referenceNumber}`,
       },
-      requestReferenceNumber: order.paymentInfo.referenceNumber,
+      requestReferenceNumber: paymentInfo.referenceNumber,
     };
 
     const response = await fetch(
