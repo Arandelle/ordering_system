@@ -158,6 +158,7 @@ export function parseExactFilters(
  * });
  */
 
+// This is one to be used for parsing query
 export function parseRequestQuery(
   request: NextRequest,
   options: {
