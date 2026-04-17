@@ -17,31 +17,40 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const admin = await requireAdmin(request);
-    const {page, limit, skip,sort, match} = parseRequestQuery(request, {
+    const { page, limit, skip, sort, match } = parseRequestQuery(request, {
       exactFields: ["status"],
-      searchFields: ["paymentInfo.customerName", "paymentInfo.customerEmail", "status", "paymentInfo.referenceNumber"],
+      searchFields: [
+        "paymentInfo.customerName",
+        "paymentInfo.customerEmail",
+        "paymentInfo.customerPhone",
+        "status",
+        "paymentInfo.referenceNumber",
+      ],
       defaultLimit: 20,
       maxLimit: 20,
-      defaultSort: {"status" : 1, createdAt: -1}
+      defaultSort: { status: 1, createdAt: -1 },
     });
 
-    const filter: Record<string, any> = {...match};
+    const filter: Record<string, any> = { ...match };
 
-    if(admin.role !== STAFF_ROLES.SUPERADMIN){
-      if(!admin.branch) return NextResponse.json({error: "No branch assigned"}, {status: 403});
-      filter.branchId = admin.branch
+    if (admin.role !== STAFF_ROLES.SUPERADMIN) {
+      if (!admin.branch)
+        return NextResponse.json(
+          { error: "No branch assigned" },
+          { status: 403 },
+        );
+      filter.branchId = admin.branch;
     }
 
-     const result = await queryOrders({
+    const result = await queryOrders({
       filter,
       page,
       limit,
       skip,
-      sort
+      sort,
     });
 
     return NextResponse.json(result);
-
   } catch (error: any) {
     if (error.message === "Unauthorized!") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
