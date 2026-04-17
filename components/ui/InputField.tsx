@@ -1,7 +1,7 @@
 "use client";
 
 import React, { forwardRef, InputHTMLAttributes } from "react";
-import clsx from "clsx";
+import { twMerge } from "tailwind-merge";
 
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -47,7 +47,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
           <input
             ref={ref}
             {...props}
-            className={clsx(
+            className={twMerge(
               "w-full py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-1 focus:ring-brand-color-500 focus:border-brand-color-500/80",
               leftIcon ? "pl-10" : "pl-4",
               rightElement ? "pr-12" : "pr-4", // 🔥 dynamic padding
