@@ -6,6 +6,8 @@
  */
 
 import { apiClient } from "@/lib/apiClient";
+import { buildQueryString } from "@/lib/buildQueryString";
+import { PaginationMeta } from "@/lib/query-helpers";
 import {
   isValidOrderStatus,
   ORDER_ACTION_CONFIG,
@@ -25,17 +27,32 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 
+interface ProductResponse {
+  data: OrderType[];
+  pagination: PaginationMeta;
+}
+
 const ORDER_ENDPOINTS = {
   admin: "/admin/orders",
   customer: "/customer/orders/",
 } as const;
 
-export const useOrders = ({ type}: { type: keyof typeof ORDER_ENDPOINTS }) => {
-  return useQuery<OrdersApiResponse, Error, OrderType[]>({
-    queryKey: ["orders", type],
-    queryFn: () => apiClient.get(ORDER_ENDPOINTS[type]),
+export const useOrders = (
+  { type }: { type: keyof typeof ORDER_ENDPOINTS },
+  params?: {
+    page?: number;
+    limit?: number;
+    sort?: string;
+    search?: string;
+    status?: string;
+    productType?: string;
+  },
+) => {
+
+  return useQuery<ProductResponse, Error>({
+    queryKey: ["orders", type, params],
+    queryFn: () => apiClient.get(`${ORDER_ENDPOINTS[type]}${buildQueryString(params)}`),
     staleTime: 30000,
-    select: (response) => [...response.data]
   });
 };
 
@@ -58,7 +75,6 @@ export const useOrder = (id: string) => {
     },
   });
 };
-
 
 // ============================================
 // MUTATIONS (CREATE/UPDATE/DELETE data)
