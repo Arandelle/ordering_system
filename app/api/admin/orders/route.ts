@@ -10,31 +10,38 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/getAuth";
 import { STAFF_ROLES } from "@/types/staff";
 import { queryOrders } from "@/lib/orders/orderService";
+import { parseRequestQuery } from "@/lib/query-helpers";
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
     const admin = await requireAdmin(request);
-    const searchParams = request.nextUrl.searchParams;
-    const filter: Record<string, any> = {};
+    const {page, limit, skip,sort, match} = parseRequestQuery(request, {
+      exactFields: ["status"],
+      searchFields: ["paymentInfo.customerName", "paymentInfo.customerEmail", "status", "paymentInfo.referenceNumber"],
+      defaultLimit: 20,
+      maxLimit: 20,
+      defaultSort: {"status" : 1, createdAt: -1}
+    });
+
+    const filter: Record<string, any> = {...match};
 
     if(admin.role !== STAFF_ROLES.SUPERADMIN){
       if(!admin.branch) return NextResponse.json({error: "No branch assigned"}, {status: 403});
       filter.branchId = admin.branch
     }
 
-    if (searchParams.get("status")) filter.status = searchParams.get("status");
-    if (searchParams.get("email")) filter["paymentInfo.customerEmail"] = searchParams.get("email")!.toLowerCase();
-
      const result = await queryOrders({
       filter,
-      page: parseInt(searchParams.get("page") || "1"),
-      limit: parseInt(searchParams.get("limit") || "20"),
-      sortBy: (searchParams.get("sortBy") as "priority" | "date") || "priority",
+      page,
+      limit,
+      skip,
+      sort
     });
 
     return NextResponse.json(result);
+
   } catch (error: any) {
     if (error.message === "Unauthorized!") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
