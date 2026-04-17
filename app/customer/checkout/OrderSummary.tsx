@@ -30,7 +30,7 @@ const CheckoutHeader = () => (
   <header className="z-20 bg-white/80 backdrop-blur-md border-b border-slate-100">
     <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
       <Link
-        href="/menu"
+        href="/"
         className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
       >
         <DynamicIcon name="ArrowLeft" size={15} />
@@ -163,12 +163,12 @@ const OrderSummaryStep = () => {
       case "name":
         return value.trim() ? "" : "Full name is required.";
       case "phone":
-        if (!value.trim()) return "Phone number is required.";
+        if (!value.trim()) return ""; // optional
         if (!/^(09|\+639)\d{9}$/.test(value.replace(/\s/g, "")))
           return "Enter a valid PH mobile number.";
         return "";
       case "email":
-        if (!value.trim()) return ""; // optional
+        if (!value.trim()) return "Valid Email address is required.";
         return /^\S+@\S+\.\S+$/.test(value)
           ? ""
           : "Enter a valid email address.";
@@ -269,7 +269,7 @@ const OrderSummaryStep = () => {
       }
 
       window.location.href = data.redirectUrl;
-      
+
       clearCart();
     } catch (error: any) {
       toast.error("Order Failed", {
@@ -334,18 +334,6 @@ const OrderSummaryStep = () => {
                 error={errors.name}
               />
               <InputField
-                label="Phone number"
-                placeholder="09171234567"
-                type="tel"
-                name="phone"
-                value={customerDetails.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
-                onBlur={() => handleBlur("phone")}
-                required
-                leftIcon={<DynamicIcon name="Phone" size={15} />}
-                error={errors.phone}
-              />
-              <InputField
                 label="Email"
                 placeholder="juan@example.com"
                 type="email"
@@ -355,6 +343,18 @@ const OrderSummaryStep = () => {
                 onBlur={() => handleBlur("email")}
                 leftIcon={<DynamicIcon name="Mail" size={15} />}
                 error={errors.email}
+                required
+              />
+              <InputField
+                label="Phone number"
+                placeholder="09171234567"
+                type="tel"
+                name="phone"
+                value={customerDetails.phone}
+                onChange={(e) => handleChange("phone", e.target.value)}
+                onBlur={() => handleBlur("phone")}
+                leftIcon={<DynamicIcon name="Phone" size={15} />}
+                error={errors.phone}
               />
               <TextareaField
                 label="Note (Optional)"
