@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { apiClient } from "@/lib/apiClient";
 import { Product, ProductPayload } from "@/types/products";
 import { PaginationMeta } from "@/lib/query-helpers";
+import { buildQueryString } from "@/lib/buildQueryString";
 
 /**
  * Fetch all product
@@ -36,7 +37,7 @@ export const useProducts = (params?: {
     queryKey: ["products", params],
 
     // Function that fetches the data
-    queryFn: () => apiClient.get<ProductResponse>(`/products?page=${params?.page}&limit=${params?.limit}`),
+    queryFn: () => apiClient.get<ProductResponse>(`/products${buildQueryString(params)}`),
 
     // Optional: Custom settings for this specific query
     staleTime: 30000, // Consider data fresh for 30 seconds
