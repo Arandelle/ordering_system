@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/apiClient";
 import { Product, ProductPayload } from "@/types/products";
+import { PaginationMeta } from "@/lib/query-helpers";
 
 /**
  * Fetch all product
@@ -17,13 +18,25 @@ import { Product, ProductPayload } from "@/types/products";
  *
  */
 
-export const useProducts = () => {
-  return useQuery<Product[]>({
+interface ProductResponse {
+  data: Product[];
+  pagination: PaginationMeta;
+}
+
+export const useProducts = (params?: {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  search?: string;
+  status?: string;
+  productType?: string;
+}) => {
+  return useQuery<ProductResponse, Error>({
     // unique key for this query - like an ID for the cache
-    queryKey: ["products"],
+    queryKey: ["products", params],
 
     // Function that fetches the data
-    queryFn: () => apiClient.get<Product[]>("/products"),
+    queryFn: () => apiClient.get<ProductResponse>(`/products?page=${params?.page}&limit=${params?.limit}`),
 
     // Optional: Custom settings for this specific query
     staleTime: 30000, // Consider data fresh for 30 seconds
@@ -72,7 +85,7 @@ export const useCreateProduct = () => {
 
     // What happens if creation fails
     onError: (error: any) => {
-      console.log(error?.message)
+      console.log(error?.message);
       toast.error(error?.message || "Something went wrong");
     },
   });
