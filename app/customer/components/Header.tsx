@@ -36,7 +36,7 @@ const Header = () => {
   }, []);
 
   const { totalItems, setIsCartOpen } = useCart();
-  const { data: placedOrders = [] } = useOrders({ type: "customer" });
+  const { data: placedOrders } = useOrders({ type: "customer" });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -55,7 +55,7 @@ const Header = () => {
   };
 
   const activeOrdersCount =
-    placedOrders.filter(
+    placedOrders?.data.filter(
       (order) =>
         order.status !== "cancelled" &&
         (order.status !== "completed" || !order.isReviewed),

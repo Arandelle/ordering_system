@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
       filter: { "paymentInfo.referenceNumber": ref.toUpperCase() },
       page: 1,
       limit: 1,
-      sortBy: "date"
     });
 
     if (!result.data?.length) {

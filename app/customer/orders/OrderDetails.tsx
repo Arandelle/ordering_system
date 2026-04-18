@@ -5,16 +5,16 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StatusBadge } from "./StatusBadge";
-import { useOrders } from "@/hooks/api/useOrders";
+import { useOrder, useOrders } from "@/hooks/api/useOrders";
 
 interface OrderDetailsProps {
   orderId: string;
 }
 
 export default function OrderDetails({ orderId }: OrderDetailsProps) {
-  const { data: placedOrders, isLoading } = useOrders({type: "customer"});
+  const { data: placedOrders, isLoading } = useOrder({type: "customer"}, orderId);
   const router = useRouter();
-  const order = placedOrders?.find((o) => o._id === orderId);
+  const order = placedOrders
 
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;

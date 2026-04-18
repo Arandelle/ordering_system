@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
       filter: { customerId: customer._id }, // customer can ONLY see their own
       page: parseInt(searchParams.get("page") || "1"),
       limit: parseInt(searchParams.get("limit") || "20"),
-      sortBy: "date",
     });
 
     return NextResponse.json(result);

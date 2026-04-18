@@ -18,7 +18,7 @@ import LoadingPage from "@/components/ui/LoadingPage";
 
 export default function OrdersTable({ orders }: { orders: OrderType[] }) {
   const [orderToViewId, setOrderToViewId] = useState<string>("");
-  const { data: orderToView, isLoading, isError } = useOrder(orderToViewId);
+  const { data: orderToView, isLoading, isError } = useOrder({type: "admin"}, orderToViewId);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString("en-US", {

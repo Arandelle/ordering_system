@@ -11,6 +11,7 @@ import { useBranch } from "@/contexts/BranchContext";
 import { useProducts } from "@/hooks/api/useProducts";
 import PromoBanner from "./PromoBanner";
 import { DynamicIcon } from "@/lib/DynamicIcon";
+import { Product } from "@/types/products";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ const MenuSection = () => {
 
   // Always fetch all products (for no-branch browsing)
   const {
-    data: allProducts = [],
+    data: allProducts,
     refetch: refetchAll,
     isLoading: isAllLoading,
     isError: isAllError,
@@ -70,9 +71,9 @@ const MenuSection = () => {
   } = useBranchProduct(branchId ?? "");
 
   // Use branch products if available, otherwise fall back to all products
-  const dynamicProducts: BranchProduct[] = branchId
+  const dynamicProducts: BranchProduct[] | Product[] = branchId
     ? (branchProductsRaw ?? [])
-    : allProducts;
+    : allProducts?.data ?? [];
 
   useScrollToSection();
 

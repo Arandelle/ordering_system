@@ -55,13 +55,13 @@ const ProductsError = ({ onRetry }: { onRetry: () => void }) => (
 
 // ── Main component ───────────────────────────────────────────────────────────
 const ProductMain = () => {
-  const { data: menuData = [], isLoading, isError, refetch } = useProducts();
+  const { data: menuData, isLoading, isError, refetch } = useProducts();
   const { isMobile, isTablet } = useBreakpoint();
   const orderUrl = useSubdomainPath("/menu", "food");
 
-  const menuList = menuData
+  const menuList = menuData?.data
     .filter((item) => item.isSignature)
-    .slice(0, SIGNATURE_LIMIT);
+    .slice(0, SIGNATURE_LIMIT) || [];
 
   const isCarousel = isMobile || isTablet;
   const visibleCount = isTablet ? TABLET_VISIBLE : MOBILE_VISIBLE;

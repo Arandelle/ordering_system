@@ -26,7 +26,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-
 interface ProductResponse {
   data: OrderType[];
   pagination: PaginationMeta;
@@ -48,10 +47,10 @@ export const useOrders = (
     productType?: string;
   },
 ) => {
-
   return useQuery<ProductResponse, Error>({
     queryKey: ["orders", type, params],
-    queryFn: () => apiClient.get(`${ORDER_ENDPOINTS[type]}${buildQueryString(params)}`),
+    queryFn: () =>
+      apiClient.get(`${ORDER_ENDPOINTS[type]}${buildQueryString(params)}`),
     staleTime: 30000,
   });
 };
@@ -60,10 +59,13 @@ export const useOrders = (
  * Fetch a single order by ID
  */
 
-export const useOrder = (id: string) => {
+export const useOrder = (
+  { type }: { type: keyof typeof ORDER_ENDPOINTS },
+  id: string,
+) => {
   return useQuery<OrderType>({
-    queryKey: ["orders", id],
-    queryFn: () => apiClient.get(`/admin/orders/${id}`),
+    queryKey: ["orders", id, type],
+    queryFn: () => apiClient.get(`${ORDER_ENDPOINTS[type]}${id}`),
     staleTime: 30000,
 
     // Validate status on fetch

@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/apiClient";
 import { Product, ProductPayload } from "@/types/products";
 import { PaginationMeta } from "@/lib/query-helpers";
 import { buildQueryString } from "@/lib/buildQueryString";
+import { BranchProduct } from "./useBranchProduct";
 
 /**
  * Fetch all product

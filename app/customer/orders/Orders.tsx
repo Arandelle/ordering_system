@@ -28,7 +28,7 @@ const TABS: Tab[] = [
 
 const Orders = () => {
   const { data: currentUser, isPending, fetchStatus } = useCustomerMe();
-  const { data: placedOrders = [], isPending: isOrdersPending } = useOrders({
+  const { data: placedOrders, isPending: isOrdersPending } = useOrders({
     type: "customer",
   });
   const { handlePayOrder, handleCancelOrder, handleBuyAgain } = useOrderActions();
@@ -45,7 +45,7 @@ const Orders = () => {
 
   const filteredOrders = useMemo(() => {
     if (activeTab === "all") {
-      return placedOrders?.sort((a, b) => {
+      return placedOrders?.data?.sort((a, b) => {
         // Pushed cancelled to bottom
         if (a.status === ORDER_STATUSES.CANCELLED && b.status !== ORDER_STATUSES.CANCELLED) return 1;
         if (a.status !== ORDER_STATUSES.CANCELLED && b.status === ORDER_STATUSES.CANCELLED) return -1;
@@ -54,15 +54,15 @@ const Orders = () => {
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-      });
+      }) || [];
     }
 
     const currentTab = TABS.find((tab) => tab.key === activeTab);
     return currentTab?.statuses
-      ? placedOrders?.filter((order) =>
+      ? placedOrders?.data.filter((order) =>
           currentTab?.statuses?.includes(order.status),
         )
-      : placedOrders?.filter((order) => order.status === activeTab);
+      : placedOrders?.data.filter((order) => order.status === activeTab);
   }, [placedOrders, activeTab]);
 
   const handleViewDetails = (orderId: string) => {
@@ -127,14 +127,14 @@ const Orders = () => {
             {TABS.map((tab) => {
               const count =
                 tab.key === ORDER_STATUSES.COMPLETED
-                  ? placedOrders?.filter(
+                  ? placedOrders?.data.filter(
                       (o) => o.status === ORDER_STATUSES.COMPLETED && !o.isReviewed,
                     ).length
                   : tab.statuses
-                    ? placedOrders?.filter((o) =>
+                    ? placedOrders?.data.filter((o) =>
                         tab.statuses?.includes(o.status),
                       ).length
-                    : placedOrders?.filter((o) => o.status === tab.key).length;
+                    : placedOrders?.data.filter((o) => o.status === tab.key).length;
 
               return (
                 <button
@@ -143,7 +143,7 @@ const Orders = () => {
                   className={`relative px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.key ? "bg-brand-color-500 text-white" : "bg-white text-gray-600 border border-gray-700 hover:border-brand-color-500 hover:text-brand-color-500"}`}
                 >
                   {tab.label}
-                  {count > 0 && tab.key !== ORDER_STATUSES.CANCELLED && (
+                  {(count ?? 0) > 0 && tab.key !== ORDER_STATUSES.CANCELLED && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center border border-white">
                       {count}
                     </span>
