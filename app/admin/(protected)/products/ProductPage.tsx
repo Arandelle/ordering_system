@@ -272,7 +272,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
   // ── Included items state ────────────────────────────────────────────────────
 
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>();
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
   const [showItemDropdown, setShowItemDropdown] = useState(false);
@@ -407,7 +407,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   useEffect(() => {
     if (
       (isComboOrSet || (isEditMode && editProduct?.includedItems?.length)) &&
-      allProducts.length === 0
+      allProducts?.length === 0
     ) {
       fetchAllProducts();
     }
@@ -418,7 +418,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
     try {
       const res = await fetch(`/api/products`);
       const data = await res.json();
-      setAllProducts(data?.products || data || []);
+      setAllProducts(data?.data || data || []);
     } catch {
       toast.error("Failed to load products");
     } finally {
@@ -502,7 +502,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
   // ── Included items ────────────────────────────────────────────────────────────
 
-  const filteredProducts = allProducts.filter((p) => {
+  const filteredProducts = allProducts?.filter((p) => {
     const alreadyAdded = formData.includedItems.some(
       (i) => i.product === p._id,
     );
@@ -510,7 +510,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
       .toLowerCase()
       .includes(itemSearch.toLowerCase());
     return !alreadyAdded && matchesSearch;
-  });
+  }) || [];
 
   const addIncludedItem = (product: Product) => {
     setFormData((prev) => ({
@@ -985,7 +985,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                           >
                             <span className="flex-1 text-sm font-medium text-gray-800 truncate">
                               {item._name ||
-                                allProducts.find((p) => p._id === item.product)
+                                allProducts?.find((p) => p._id === item.product)
                                   ?.name ||
                                 item.product}
                             </span>
