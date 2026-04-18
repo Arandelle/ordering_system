@@ -1,9 +1,7 @@
-import OrderSummaryStep from "./OrderSummary";
+import ClientPage from "./ClientPage";
 
 const Checkout = () => {
-  return (
-    <OrderSummaryStep />
-  )
-}
+  return <ClientPage />;
+};
 
 export default Checkout;
