@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
     await requireSuperAdmin(request);
 
-    const { name, category } = await request.json();
+    const { name, categoryId } = await request.json();
 
     const trimmedName = name?.trim().replace(/\s+/g, " ");
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!category) {
+    if (!categoryId) {
       return NextResponse.json(
         { error: "Category is required" },
         { status: 400 }
@@ -54,12 +54,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-increment position within the same parent category
-    const last = await SubCategory.findOne({ category }).sort({ position: -1 });
+    const last = await SubCategory.findOne({ category: categoryId }).sort({ position: -1 });
     const position = last ? last.position + 1 : 1;
 
     const subcategory = await SubCategory.create({
       name: trimmedName,
-      category,
+      category: categoryId,
       position,
     });
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
     return NextResponse.json(
-      { error: "Failed to create subcategory" },
+      { error: error instanceof Error ? error.message : "Failed to create subcategory" },
       { status: 500 }
     );
   }
