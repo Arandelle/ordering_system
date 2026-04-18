@@ -12,6 +12,7 @@ import { DynamicIcon } from "@/lib/DynamicIcon";
 import SectionHeader from "../../components/SectionHeader";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
+import { Loader2, Trash2 } from "lucide-react";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const toBase64 = (file: File): Promise<string> =>
@@ -154,6 +155,7 @@ const CategoryRow = ({
   category,
   onEdit,
   onView,
+  onDelete,
   onDragStart,
   onDragOver,
   onDrop,
@@ -165,6 +167,7 @@ const CategoryRow = ({
   category: Category & { subCategoryCount?: number };
   onEdit: () => void;
   onView: () => void;
+  onDelete: () => void;
   onDragStart: () => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: () => void;
@@ -236,6 +239,19 @@ const CategoryRow = ({
           aria-label="Edit"
         >
           <DynamicIcon name="Pencil" size={14} />
+        </button>
+
+        <button
+          onClick={onDelete}
+          disabled={isDeleting}
+          className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+          aria-label="Delete"
+        >
+          {isDeleting ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Trash2 size={14} />
+          )}
         </button>
       </PermissionGuard>
     </div>
@@ -394,6 +410,18 @@ const Page = () => {
       toast.success("Category updated!");
     },
     onError: () => toast.error("Failed to update category"),
+  });
+
+   const deleteMutation = useMutation({
+    mutationFn: categories_api.delete,
+    onMutate: (id) => setDeletingId(id),
+    onSettled: () => setDeletingId(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category deleted!");
+    },
+    onError: (error: any) =>
+      toast.error(error.message || "Failed to delete category"),
   });
 
   const reorderMutation = useMutation({
@@ -579,6 +607,7 @@ const Page = () => {
                   key={category._id}
                   category={category}
                   onEdit={() => setEditingId(category._id)}
+                  onDelete={() => deleteMutation.mutate(category._id)}
                   onView={() => setViewingCategory(category)}
                   onDragStart={() => setDragId(category._id)}
                   onDragOver={(e) => {
