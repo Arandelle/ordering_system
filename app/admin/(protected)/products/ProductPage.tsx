@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { InputField } from "@/components/ui/InputField";
 import { TextareaField } from "@/components/ui/TextAreaField";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/api/useProducts";
@@ -246,22 +246,16 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   // ── Image tab state ─────────────────────────────────────────────────────────
 
   const [activeImageTab, setActiveImageTab] = useState<ImageTab>("upload");
-  const [cloudinaryImages, setCloudinaryImages] = useState<CloudinaryImage[]>(
-    [],
-  );
+  const [cloudinaryImages, setCloudinaryImages] = useState<CloudinaryImage[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [galleryError, setGalleryError] = useState<string | null>(null);
   const [gallerySearch, setGallerySearch] = useState("");
-  const [selectedGalleryUrl, setSelectedGalleryUrl] = useState<string | null>(
-    null,
-  );
+  const [selectedGalleryUrl, setSelectedGalleryUrl] = useState<string | null>(null);
 
   // ── Category / Subcategory state ────────────────────────────────────────────
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [filteredSubcategories, setFilteredSubcategories] = useState<
-    SubCategory[]
-  >([]);
+  const [filteredSubcategories, setFilteredSubcategories] = useState<SubCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingSubcategories, setLoadingSubcategories] = useState(false);
 
@@ -272,10 +266,12 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
   // ── Included items state ────────────────────────────────────────────────────
 
-  const [allProducts, setAllProducts] = useState<Product[]>();
-  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
   const [showItemDropdown, setShowItemDropdown] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
 
@@ -291,7 +287,6 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
   useEffect(() => {
     if (editProduct) {
-      console.log("Edit Product: ", editProduct);
       const imageUrl = editProduct.image.url || "";
       setFormData({
         name: editProduct.name || "",
@@ -301,7 +296,6 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
           typeof editProduct.category === "string"
             ? editProduct.category
             : editProduct.category?._id || "",
-
         subcategory:
           typeof editProduct.subcategory === "string"
             ? editProduct.subcategory
@@ -402,29 +396,53 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
     }
   }, [activeImageTab]);
 
-  // ── Fetch solo products ──────────────────────────────────────────────────────
+  // ── Server-side product search (debounced) ───────────────────────────────────
 
   useEffect(() => {
-    if (
-      (isComboOrSet || (isEditMode && editProduct?.includedItems?.length)) &&
-      allProducts?.length === 0
-    ) {
-      fetchAllProducts();
-    }
-  }, [isComboOrSet, isEditMode]);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 
-  const fetchAllProducts = async () => {
-    setLoadingProducts(true);
-    try {
-      const res = await fetch(`/api/products`);
-      const data = await res.json();
-      setAllProducts(data?.data || data || []);
-    } catch {
-      toast.error("Failed to load products");
-    } finally {
-      setLoadingProducts(false);
+    if (!itemSearch.trim()) {
+      setSearchResults([]);
+      setShowItemDropdown(false);
+      return;
     }
-  };
+
+    searchDebounceRef.current = setTimeout(async () => {
+      setLoadingSearch(true);
+      try {
+        const res = await fetch(
+          `/api/products?search=${encodeURIComponent(itemSearch)}&limit=20&productType=${ITEM_TYPES.SOLO}`
+        );
+        const data = await res.json();
+        const results: Product[] = data?.data || data || [];
+
+        // Filter out already-added items client-side (small list, safe)
+        const addedIds = new Set(formData.includedItems.map((i) => i.product));
+        setSearchResults(results.filter((p) => !addedIds.has(p._id)));
+        setShowItemDropdown(true);
+      } catch {
+        toast.error("Failed to search products");
+      } finally {
+        setLoadingSearch(false);
+      }
+    }, 300);
+
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [itemSearch]);
+
+  // ── Close dropdown on outside click ─────────────────────────────────────────
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowItemDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // ── Tab switch ───────────────────────────────────────────────────────────────
 
@@ -438,7 +456,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
@@ -479,6 +497,12 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
       includedItems: type === ITEM_TYPES.SOLO ? [] : prev.includedItems,
       paxCount: type !== ITEM_TYPES.SET ? "" : prev.paxCount,
     }));
+    // Clear search state when switching away from combo/set
+    if (type === ITEM_TYPES.SOLO) {
+      setItemSearch("");
+      setSearchResults([]);
+      setShowItemDropdown(false);
+    }
   };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -502,16 +526,6 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
   // ── Included items ────────────────────────────────────────────────────────────
 
-  const filteredProducts = allProducts?.filter((p) => {
-    const alreadyAdded = formData.includedItems.some(
-      (i) => i.product === p._id,
-    );
-    const matchesSearch = p.name
-      .toLowerCase()
-      .includes(itemSearch.toLowerCase());
-    return !alreadyAdded && matchesSearch;
-  }) || [];
-
   const addIncludedItem = (product: Product) => {
     setFormData((prev) => ({
       ...prev,
@@ -527,6 +541,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
       ],
     }));
     setItemSearch("");
+    setSearchResults([]);
     setShowItemDropdown(false);
   };
 
@@ -540,7 +555,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   const updateIncludedItem = (
     index: number,
     field: keyof IncludedItem,
-    value: string | number | null,
+    value: string | number | null
   ) => {
     setFormData((prev) => {
       const updated = [...prev.includedItems];
@@ -630,10 +645,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
       };
 
       if (isEditMode && editProduct) {
-        await updateMutation.mutateAsync({
-          id: editProduct._id,
-          data: payload,
-        });
+        await updateMutation.mutateAsync({ id: editProduct._id, data: payload });
         toast.success("Updated successfully!");
         router.back();
       } else {
@@ -647,7 +659,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   // ── Gallery filtered ──────────────────────────────────────────────────────────
 
   const filteredGalleryImages = cloudinaryImages.filter((img) =>
-    img.public_id.toLowerCase().includes(gallerySearch.toLowerCase()),
+    img.public_id.toLowerCase().includes(gallerySearch.toLowerCase())
   );
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -684,11 +696,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
             >
               {isLoading ? (
                 <>
-                  <DynamicIcon
-                    name="LoaderCircle"
-                    size={15}
-                    className="animate-spin"
-                  />
+                  <DynamicIcon name="LoaderCircle" size={15} className="animate-spin" />
                   {isEditMode ? "Updating..." : "Creating..."}
                 </>
               ) : (
@@ -774,9 +782,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                             id="categorySelect"
                             onChange={handleCategoryChange}
                             value={
-                              showCustomCategory
-                                ? "__add_new__"
-                                : formData.category
+                              showCustomCategory ? "__add_new__" : formData.category
                             }
                             required={!showCustomCategory}
                             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand-color-500 focus:border-brand-color-500/20 outline-none transition cursor-pointer appearance-none"
@@ -788,15 +794,12 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                                   .replace(/-/g, " ")
                                   .split(" ")
                                   .map(
-                                    (w) =>
-                                      w.charAt(0).toUpperCase() + w.slice(1),
+                                    (w) => w.charAt(0).toUpperCase() + w.slice(1)
                                   )
                                   .join(" ")}
                               </option>
                             ))}
-                            <option value="__add_new__">
-                              ＋ Add New Category
-                            </option>
+                            <option value="__add_new__">＋ Add New Category</option>
                           </select>
                           <DynamicIcon
                             name="ChevronDown"
@@ -873,9 +876,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                               label="New Subcategory Name"
                               type="text"
                               value={customSubcategory}
-                              onChange={(e) =>
-                                setCustomSubcategory(e.target.value)
-                              }
+                              onChange={(e) => setCustomSubcategory(e.target.value)}
                               required
                               placeholder='e.g., "Ala-Carte"'
                             />
@@ -910,27 +911,29 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                 <SectionCard title="Included Items" iconName="ListChecks">
                   <div>
                     {/* Search box */}
-                    <div className="relative">
+                    <div className="relative" ref={dropdownRef}>
                       <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-300 rounded-xl focus-within:ring-2 focus-within:ring-brand-color-500">
-                        <DynamicIcon
-                          name="Search"
-                          size={16}
-                          className="text-gray-400 shrink-0"
-                        />
+                        {loadingSearch ? (
+                          <DynamicIcon
+                            name="LoaderCircle"
+                            size={16}
+                            className="text-gray-400 shrink-0 animate-spin"
+                          />
+                        ) : (
+                          <DynamicIcon
+                            name="Search"
+                            size={16}
+                            className="text-gray-400 shrink-0"
+                          />
+                        )}
                         <input
                           type="text"
-                          placeholder={
-                            loadingProducts
-                              ? "Loading products..."
-                              : "Search solo products to add..."
-                          }
+                          placeholder="Search products to add..."
                           value={itemSearch}
-                          onChange={(e) => {
-                            setItemSearch(e.target.value);
-                            setShowItemDropdown(true);
+                          onChange={(e) => setItemSearch(e.target.value)}
+                          onFocus={() => {
+                            if (searchResults.length > 0) setShowItemDropdown(true);
                           }}
-                          onFocus={() => setShowItemDropdown(true)}
-                          disabled={loadingProducts}
                           className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-400 text-gray-800"
                         />
                         {itemSearch && (
@@ -938,6 +941,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                             type="button"
                             onClick={() => {
                               setItemSearch("");
+                              setSearchResults([]);
                               setShowItemDropdown(false);
                             }}
                             className="text-gray-400 hover:text-gray-600"
@@ -949,13 +953,22 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
                       {/* Dropdown */}
                       {showItemDropdown && itemSearch && (
-                        <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                          {filteredProducts.length === 0 ? (
+                        <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-10">
+                          {loadingSearch ? (
+                            <div className="flex items-center gap-2 px-4 py-3 text-sm text-gray-400">
+                              <DynamicIcon
+                                name="LoaderCircle"
+                                size={14}
+                                className="animate-spin"
+                              />
+                              Searching...
+                            </div>
+                          ) : searchResults.length === 0 ? (
                             <p className="px-4 py-3 text-sm text-gray-400">
                               No matching products found
                             </p>
                           ) : (
-                            filteredProducts.slice(0, 10).map((p) => (
+                            searchResults.map((p) => (
                               <button
                                 key={p._id}
                                 type="button"
@@ -984,10 +997,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                             className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl"
                           >
                             <span className="flex-1 text-sm font-medium text-gray-800 truncate">
-                              {item._name ||
-                                allProducts?.find((p) => p._id === item.product)
-                                  ?.name ||
-                                item.product}
+                              {item._name || item.product}
                             </span>
                             <input
                               type="text"
@@ -997,7 +1007,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                                 updateIncludedItem(
                                   index,
                                   "label",
-                                  e.target.value || null,
+                                  e.target.value || null
                                 )
                               }
                               className="w-32 text-xs px-2 py-1.5 border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-brand-color-500"
@@ -1009,7 +1019,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                                   updateIncludedItem(
                                     index,
                                     "quantity",
-                                    Math.max(1, item.quantity - 1),
+                                    Math.max(1, item.quantity - 1)
                                   )
                                 }
                                 className="w-6 h-6 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm flex items-center justify-center transition"
@@ -1025,7 +1035,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                                   updateIncludedItem(
                                     index,
                                     "quantity",
-                                    item.quantity + 1,
+                                    item.quantity + 1
                                   )
                                 }
                                 className="w-6 h-6 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm flex items-center justify-center transition"
@@ -1198,8 +1208,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 max-h-[70vh] overflow-y-auto pr-1">
                         {filteredGalleryImages.map((img) => {
-                          const isSelected =
-                            selectedGalleryUrl === img.secure_url;
+                          const isSelected = selectedGalleryUrl === img.secure_url;
                           return (
                             <button
                               key={img.public_id}
@@ -1281,16 +1290,9 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                     required
                   />
                 </div>
-
-                {/* Real-time tax breakdown */}
                 <TaxBreakdown price={formData.price} />
-
                 <p className="flex items-start gap-1.5 text-[11px] text-gray-400 leading-relaxed">
-                  <DynamicIcon
-                    name="Info"
-                    size={11}
-                    className="mt-0.5 shrink-0"
-                  />
+                  <DynamicIcon name="Info" size={11} className="mt-0.5 shrink-0" />
                   Selling price is VAT-inclusive. Tax is back-computed at 12%.
                 </p>
               </SectionCard>
