@@ -1,45 +1,22 @@
 "use client";
 
-import { InputField } from "@/components/ui/InputField";
 import Image from "next/image";
-import React, { useState } from "react";
-import { date } from "zod";
+import React from "react";
 
 const BookYourTable = () => {
-  const [formData, setFormData] = useState({
-    phone: "",
-    guests: "",
-    date: "",
-    time: "",
-  });
+  const viberNumber = "%2B639603349533"; // cleaned phone number for deep link
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleViberOpen = () => {
+    // Opens Viber chat with the restaurant's number
+    window.open(`viber://chat?number=${viberNumber}`, "_blank");
   };
-
-  const handleReservation = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle reservation logic here
-    console.log("Reservation:", formData);
-  };
-
-  const workingDays = [
-    { day: "MONDAY", time: "10:00 AM - 12:00 AM" },
-    { day: "TUESDAY", time: "10:00 AM - 12:00 AM" },
-    { day: "WEDNESDAY", time: "10:00 AM - 12:00 AM" },
-    { day: "THURSDAY", time: "10:00 AM - 12:00 AM" },
-    { day: "FRIDAY", time: "10:00 AM - 12:00 AM" },
-    { day: "SATURDAY", time: "10:00 AM - 12:00 AM" },
-    { day: "SUNDAY", time: "10:00 AM - 12:00 AM" },
-  ];
 
   return (
-    <div id="reserve" className="w-full min-h-[70vh] bg-brand-color-500 relative overflow-hidden">
-      {/* Character Section */}
+    <div
+      id="reserve"
+      className="w-full min-h-[70vh] bg-brand-color-500 relative overflow-hidden"
+    >
+      {/* Top banner image */}
       <div className="hidden lg:flex lg:col-span-1 items-end justify-center overflow-hidden">
         <Image
           src="/images/banner_slider.png"
@@ -51,99 +28,71 @@ const BookYourTable = () => {
           quality={75}
         />
       </div>
-      <div className="relative py-16 px-4 md:py-24 max-w-400 mx-auto">
+
+      {/* Main content */}
+      <div className="relative py-16 px-4 md:py-24 max-w-7xl mx-auto">
         <div className="lg:max-w-[66%]">
-          {/* Form Section */}
-          <div className="flex flex-col md:flex-row justify-between bg-white rounded-2xl shadow-2xl p-8 h-full gap-2 md:gap-4 lg:gap-8">
-            {/* Book Your Table Section */}
-            <div className="w-full">
-              <h1 className="uppercase font-black text-xl md:text-2xl lg:text-4xl text-brand-color-500 mb-8">
-                Book your table
-              </h1>
+          <div className="flex flex-col justify-center bg-white rounded-2xl shadow-2xl p-10 md:p-14 gap-6">
 
-              <form onSubmit={handleReservation} className="space-y-6">
-                <InputField
-                  label="Phone"
-                  placeholder="Enter your phone number"
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                />
-                <InputField
-                  label="Number of Guests"
-                  placeholder="Enter the number of guests"
-                  type="number"
-                  name="guests"
-                  value={formData.guests}
-                  onChange={handleInputChange}
-                  required
-                  min="1"
-                />
+            {/* Eyebrow label */}
+            <p className="uppercase tracking-[0.25em] text-xs font-bold text-brand-color-500 opacity-60">
+              Reservations
+            </p>
 
-                <InputField
-                  label="Date"
-                  placeholder="Select a date"
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
-                  required
-                />
+            {/* Heading */}
+            <h1 className="uppercase font-black text-3xl md:text-4xl lg:text-5xl text-brand-color-500 leading-tight">
+              Book Your Table
+            </h1>
 
-                <InputField
-                  label="Time"
-                  placeholder="Select a time"
-                  type="time"
-                  name="time"
-                  value={formData.time}
-                  onChange={handleInputChange}
-                  required
-                />
+            {/* Message */}
+            <p className="text-gray-600 text-base md:text-lg leading-relaxed max-w-md">
+              Ready to join us? Message us on{" "}
+              <span className="font-bold text-brand-color-500">Viber</span> and
+              we'll get your table sorted in no time. We're open{" "}
+              <span className="font-bold text-brand-color-500">
+                every day, 10:00 AM – 12:00 AM
+              </span>
+              .
+            </p>
 
-                <button
-                  type="submit"
-                  className="w-full mt-8 px-6 py-3 border-2 border-brand-color-500 text-brand-color-500 font-black text-sm uppercase rounded-lg hover:bg-brand-color-500 hover:text-white transition-all duration-300 transform hover:scale-105"
+            {/* Divider */}
+            <div className="w-12 h-1 bg-brand-color-500 rounded-full" />
+
+            {/* Contact note */}
+            <p className="text-sm text-gray-500 font-medium">
+              You can also book Harrison House for a full day.
+            </p>
+
+            {/* Viber CTA Button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-2">
+              <button
+                onClick={handleViberOpen}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-brand-color-500 text-white font-black text-sm uppercase rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer"
+              >
+                {/* Viber icon (SVG inline) */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-5 h-5 shrink-0"
                 >
-                  Make Reservation
-                </button>
-              </form>
-            </div>
+                  <path d="M11.985 0C5.405 0 .005 5.085.005 11.385c0 3.15 1.29 6.015 3.39 8.13L2.005 24l4.665-1.35a11.94 11.94 0 0 0 5.315 1.245c6.585 0 11.985-5.085 11.985-11.385C23.97 5.085 18.57 0 11.985 0zm0 20.79c-1.74 0-3.39-.45-4.83-1.245l-3.375.975.99-3.285A9.224 9.224 0 0 1 2.82 11.4c0-5.085 4.11-9.195 9.165-9.195 5.07 0 9.165 4.11 9.165 9.195 0 5.07-4.095 9.39-9.165 9.39zm5.07-6.885c-.27-.135-1.62-.81-1.875-.9-.255-.09-.435-.135-.615.135s-.705.9-.87 1.08c-.165.195-.315.21-.585.075-.27-.135-1.14-.42-2.175-1.335-.81-.72-1.35-1.605-1.515-1.875-.165-.27-.015-.405.12-.54.12-.12.27-.315.405-.48.135-.165.18-.285.27-.48.09-.195.045-.36-.015-.495-.06-.135-.615-1.5-.855-2.055-.225-.54-.45-.465-.615-.465-.165 0-.345-.015-.525-.015a1.03 1.03 0 0 0-.735.345c-.255.27-.96.945-.96 2.295 0 1.35.99 2.655 1.125 2.835.135.195 1.95 2.97 4.725 4.17.66.285 1.17.45 1.575.585.66.21 1.26.18 1.74.105.525-.075 1.62-.66 1.86-1.305.225-.645.225-1.2.165-1.305-.075-.12-.255-.18-.525-.315z" />
+                </svg>
+                Message Us on Viber
+              </button>
 
-            {/* Working Days Section */}
-            <div className="w-full">
-              <h2 className="uppercase font-black text-xl md:text-2xl lg:text-4xl text-brand-color-500 mb-8">
-                Working Days
-              </h2>
-
-              <div className="space-y-4">
-                {workingDays.map((dayItem, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between pb-3 border-b border-gray-300"
-                  >
-                    <span className="text-brand-color-500 font-bold uppercase tracking-wide">
-                      {dayItem.day}
-                    </span>
-                    <span className="text-brand-color-500 font-black text-lg">
-                      {dayItem.time}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 text-center">
-                <p className="text-xs text-gray-500 uppercase font-semibold">
-                  Book Harrison House for a day! Call{" "}
-                  <span className="font-black">082 998 167 0632</span>
-                </p>
-              </div>
+              {/* Phone number display */}
+              <a
+                href={`tel:+${viberNumber}`}
+                className="text-brand-color-500 font-black text-sm underline underline-offset-4 hover:opacity-70 transition-opacity"
+              >
+                +63 960 334 9533
+              </a>
             </div>
           </div>
         </div>
 
-        {/* Character Section */}
+        {/* Character / Harrison image */}
         <div className="hidden lg:block absolute -right-100 -top-12">
           <div className="relative">
             <div className="absolute inset-0 translate-y-2 scale-50 rounded-full bg-orange-500 opacity-90 blur-3xl" />
