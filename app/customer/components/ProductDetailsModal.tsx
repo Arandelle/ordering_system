@@ -3,12 +3,11 @@
 import React, { useState } from "react";
 import { Star, Check, Minus, Plus, ShoppingBag } from "lucide-react";
 import Image from "next/image";
-import { BranchProduct } from "@/hooks/api/useBranchProduct";
+import { BranchProduct } from "@/hooks/api/useBranchProductInfinite";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 import { syne } from "@/app/font";
-import { useRouter, useSearchParams } from "next/navigation";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
