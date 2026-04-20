@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { BranchProduct } from "@/hooks/api/useBranchProduct";
+import { BranchProduct } from "@/hooks/api/useBranchProductInfinite";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import { ShoppingBag, AlertTriangle } from "lucide-react";
 import Image from "next/image";
