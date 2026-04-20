@@ -71,7 +71,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${larken.className} antialiased`}>
+      <body className={`${syne.className} antialiased`}>
         <QueryProvider>
           <Toaster richColors position="top-right" closeButton />
           <Suspense fallback={<LoadingPage />}>{children}</Suspense>
