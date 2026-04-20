@@ -8,7 +8,6 @@ import { apiClient } from "@/lib/apiClient";
 import { Product, ProductPayload } from "@/types/products";
 import { PaginationMeta } from "@/lib/query-helpers";
 import { buildQueryString } from "@/lib/buildQueryString";
-import { BranchProduct } from "./useBranchProduct";
 
 /**
  * Fetch all product
@@ -38,7 +37,7 @@ export const useProducts = (params?: {
     queryKey: ["products", params],
 
     // Function that fetches the data
-    queryFn: () => apiClient.get<ProductResponse>(`/products${buildQueryString(params)}?limit=1000`),
+    queryFn: () => apiClient.get<ProductResponse>(`/products${buildQueryString(params)}`),
 
     // Optional: Custom settings for this specific query
     staleTime: 30000, // Consider data fresh for 30 seconds
