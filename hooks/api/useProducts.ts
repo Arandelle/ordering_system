@@ -38,7 +38,7 @@ export const useProducts = (params?: {
     queryKey: ["products", params],
 
     // Function that fetches the data
-    queryFn: () => apiClient.get<ProductResponse>(`/products${buildQueryString(params)}`),
+    queryFn: () => apiClient.get<ProductResponse>(`/products${buildQueryString(params)}?limit=1000`),
 
     // Optional: Custom settings for this specific query
     staleTime: 30000, // Consider data fresh for 30 seconds
