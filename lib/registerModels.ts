@@ -8,3 +8,4 @@ import "@/models/Orders"
 import "@/models/Product"
 import "@/models/Staff"
 import "@/models/SubCategory"
+import "@/models/Setting";
