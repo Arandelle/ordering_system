@@ -8,6 +8,8 @@ import Image from "next/image";
 import ProductDetailModal from "./ProductDetailsModal";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { ITEM_TYPES } from "@/types/products";
+import { getStoreStatus } from "@/lib/storeStatus";
+import { useSettings } from "@/hooks/api/useSettings";
 
 interface ProductCardProps {
   item: BranchProduct;
@@ -33,6 +35,15 @@ const getIncludedItemsText = (
     return i.quantity > 1 ? `${i.quantity}x ${name}` : name;
   });
 
+const IsCloseToday = () => (
+  <>
+    <div className="absolute inset-0 bg-black/50 z-10" />
+    <div className="absolute left-3 top-3 z-20 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+      Close Today
+    </div>
+  </>
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -41,7 +52,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   selectedBranch,
 }) => {
   const { openModal } = useModalQuery();
+  const {data: operatingSched} = useSettings();
   const [showDetail, setShowDetail] = useState(false);
+
+  const storeStatus = operatingSched ? getStoreStatus(operatingSched.operatingHours) : null
 
   // ── Derived state (declared early, used throughout) ───────────────────────
   // Stock info is only meaningful when a branch is selected
@@ -53,7 +67,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const isLowStock = hasBranch && status === STOCK_STATUSES.LOW_STOCK;
   const isCombo = item.productType === ITEM_TYPES.COMBO;
   const isSet = item.productType === ITEM_TYPES.SET;
-  const isNonSolo = item.productType !== ITEM_TYPES.SOLO && item.productType != null;
+  const isNonSolo =
+    item.productType !== ITEM_TYPES.SOLO && item.productType != null;
   const includedItemsText = getIncludedItemsText(item.includedItems);
   const hasIncludedItems = isNonSolo && includedItemsText.length > 0;
 
@@ -75,6 +90,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
             quality={92}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
+
+          {/* */}
+          {!storeStatus?.isOpen && <IsCloseToday />}
+
           {/* Stock badges */}
           {isOutOfStock ? (
             <>
@@ -145,14 +164,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   ? openModal(MODAL_TYPES.MAP)
                   : setShowDetail(true);
               }}
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || !storeStatus?.isOpen}
               className={`text-white p-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg ${
-                isOutOfStock
+                isOutOfStock || !storeStatus?.isOpen
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-[#1a1a1a] hover:bg-brand-color-500"
               }`}
             >
-              {isOutOfStock ? (
+              {isOutOfStock || !storeStatus?.isOpen ? (
                 <AlertTriangle size={18} />
               ) : (
                 <ShoppingBag size={18} />
