@@ -4,6 +4,7 @@ import { Product } from "@/models/Product";
 import { Inventory } from "@/models/Inventory";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import "@/lib/registerModels";
+import { buildPaginationMeta } from "@/lib/query-helpers";
 
 /**
  * GET /api/branch/products
@@ -38,8 +39,14 @@ export async function GET(req: NextRequest) {
 
     console.log(`[BRANCH_PRODUCTS] Fetching products for branch: ${branchId}`);
 
+    const page = parseInt(searchParams.get("page") ?? "1");
+    const limit = parseInt(searchParams.get("limit") ?? "20");
+    const categoryName = searchParams.get("categoryName");
+    const subcategoryName = searchParams.get("subcategoryName");
+    const skip = (page - 1) * limit;
+
     // Use aggregation pipeline to get products sorted by category position
-    const products = await Product.aggregate([
+    const basePipeline: any[] = [
       {
         $lookup: {
           from: "categories",
@@ -94,7 +101,12 @@ export async function GET(req: NextRequest) {
       },
       { $unset: "_includedProducts" },
 
-      // ✅ Lookup inventory for this specific branch
+      ...(categoryName ? [{ $match: { "category.name": categoryName } }] : []),
+      ...(subcategoryName
+        ? [{ $match: { "subcategory.name": subcategoryName } }]
+        : []),
+
+      // Lookup inventory for this specific branch
       {
         $lookup: {
           from: "inventories",
@@ -172,91 +184,58 @@ export async function GET(req: NextRequest) {
           status: 1,
         },
       },
+    ];
+
+    const [countResult, products] = await Promise.all([
+      Product.aggregate([...basePipeline, { $count: "total" }]),
+      Product.aggregate([...basePipeline, { $skip: skip }, { $limit: limit }]),
     ]);
 
-    console.log(`[BRANCH_PRODUCTS] Found ${products.length} total products`);
-
-    // Fetch inventory for this specific branch
-    const inventories = await Inventory.find({ branchId })
-      .select("productId quantity reorderLevel")
-      .lean();
-
-    console.log(
-      `[BRANCH_PRODUCTS] Found ${inventories.length} inventory records for branch`,
-    );
-
-    // Map productId -> inventory data for quick lookup
-    const inventoryMap = new Map(
-      inventories.map((inv) => [
-        inv.productId.toString(),
-        {
-          quantity: inv.quantity,
-          reorderLevel: inv.reorderLevel ?? 10,
-        },
-      ]),
-    );
+    const total = countResult[0]?.total ?? 0;
 
     // Merge inventory data into each product (preserving category.position sort order)
-    const result = products.map((product) => {
-      const inv = inventoryMap.get(product._id.toString());
-
-      const quantity = inv?.quantity ?? 0;
-      const reorderLevel = inv?.reorderLevel ?? 10;
-
-      let status = STOCK_STATUSES.IN_STOCK;
-      if (quantity === 0) {
-        status = STOCK_STATUSES.OUT_OF_STOCK;
-      } else if (quantity <= reorderLevel) {
-        status = STOCK_STATUSES.LOW_STOCK;
-      }
-
-      return {
-        _id: product._id.toString(),
-        name: product.name,
-        price: product.price,
-        image: {
-          url: product.image?.url || "",
-          public_id: product.image?.public_id || "",
-        },
-        info: product.info || "Product info is not available",
-        description:
-          product.description || "Product description is not available",
-        category: {
-          _id: product.category?._id?.toString() || "",
-          name: product.category?.name || "Uncategorized",
-        },
-        subcategory: product.subcategory?._id
-          ? {
-              _id: product.subcategory._id.toString(),
-              name: product.subcategory.name,
-            }
-          : null,
-        productType: product.productType || "solo",
-        includedItems:
-          product.includedItems?.map((item: any) => ({
-            _id: item.product?._id?.toString() || "",
-            productName: item.product?.name || "",
-            quantity: item.quantity,
-            label: item.label,
-          })) || [],
-        paxCount: product.paxCount,
-        isPopular: product.isPopular || false,
-        isSignature: product.isSignature || false,
-        quantity,
-        status,
-      };
-    });
-
-    console.log(
-      `[BRANCH_PRODUCTS] Returning ${result.length} products with stock info`,
-    );
+    const result = products.map((product) => ({
+      _id: product._id.toString(),
+      name: product.name,
+      price: product.price,
+      image: {
+        url: product.image?.url || "",
+        public_id: product.image?.public_id || "",
+      },
+      info: product.info || "Product info is not available",
+      description:
+        product.description || "Product description is not available",
+      category: {
+        _id: product.category?._id?.toString() || "",
+        name: product.category?.name || "Uncategorized",
+      },
+      subcategory: product.subcategory?._id
+        ? {
+            _id: product.subcategory._id.toString(),
+            name: product.subcategory.name,
+          }
+        : null,
+      productType: product.productType || "solo",
+      includedItems:
+        product.includedItems?.map((item: any) => ({
+          _id: item.product?._id?.toString() || "",
+          productName: item.product?.name || "",
+          quantity: item.quantity,
+          label: item.label,
+        })) || [],
+      paxCount: product.paxCount,
+      isPopular: product.isPopular || false,
+      isSignature: product.isSignature || false,
+      quantity: product.quantity,
+      status: product.status,
+    }));
 
     return NextResponse.json(
       {
         success: true,
         branchId,
-        totalProducts: result.length,
         data: result,
+        pagination: buildPaginationMeta(total, page, limit),
       },
       { status: 200 },
     );
