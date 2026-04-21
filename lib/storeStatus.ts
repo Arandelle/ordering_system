@@ -26,10 +26,25 @@ export function getStoreStatus(
   const openMinutes = openH * 60 + openM;
   const closeMinutes = closeH * 60 + closeM;
 
-  if (currentMinutes < openMinutes)
-    return { isOpen: false, reason: "before_hours" };
-  if (currentMinutes >= closeMinutes)
-    return { isOpen: false, reason: "after_hours" };
+  const crossesMidnight = closeMinutes <= openMinutes;
+
+  if (!crossesMidnight) {
+    if (currentMinutes < openMinutes)
+      return { isOpen: false, reason: "before_hours" };
+
+    if (currentMinutes >= closeMinutes)
+      return { isOpen: false, reason: "after_hours" };
+  } else {
+    const isWithinHours =
+      currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+
+    if (!isWithinHours) {
+      if (currentMinutes < openMinutes)
+        return { isOpen: false, reason: "before_hours" };
+
+      return { isOpen: false, reason: "after_hours" };
+    }
+  }
 
   return { isOpen: true };
 }
