@@ -39,7 +39,7 @@ const IsCloseToday = () => (
   <>
     <div className="absolute inset-0 bg-black/50 z-10" />
     <div className="absolute left-3 top-3 z-20 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-      Close Today
+      Store closed today
     </div>
   </>
 );
