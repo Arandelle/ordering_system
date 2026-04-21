@@ -114,5 +114,21 @@ export const useToggleBranchStatus = () => {
   });
 };
 
+export const useDeleteBranch = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/branch/${id}`),
+     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+      toast.success("Branch deleted successfully!");
+    },
+    onError: (error) => {
+      console.error("Delete branch status error:", error);
+      toast.error(error.message || "Failed to delete branch");
+    },
+  })
+}
+
 // Export helpers for use in components
 export { formatBranchFormDataForAPI, formatBranchDataForForm };
