@@ -1,4 +1,4 @@
-import { requireSuperAdmin } from "@/lib/getAuth";
+import { getAdminAuth, requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Branch } from "@/models/Branch";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,9 +8,14 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const data = await Branch.find({isActive: true}).sort({ createdAt: -1 }).lean();
+    const user = await getAdminAuth(request).catch(() => null);
+
+    const filter = user?.role === "superadmin" ? {} : { isActive: true };
+
+    const data = await Branch.find(filter).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json(data, { status: 200 });
+
   } catch (error) {
     console.error("GET /api/branches error: ", error);
     return NextResponse.json(
@@ -25,9 +30,6 @@ export async function GET(request: NextRequest) {
 const branchSchema = z.object({
   name: z.string().min(1, "Branch name is required").trim(),
   address: z.string().min(1, "Address is required").trim(),
-  contactNumber: z.string().optional(),
-  open: z.string().optional(),
-  close: z.string().optional(),
   location: z.object({
     coordinates: z
       .array(z.number())
@@ -38,7 +40,7 @@ const branchSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    await requireSuperAdmin(request)
+    await requireSuperAdmin(request);
 
     const body = await request.json();
     const parsed = branchSchema.safeParse(body);
@@ -50,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, address, contactNumber, open, close, location } = parsed.data;
+    const { name, address, location } = parsed.data;
 
     // Generate unique branch code
     const count = await Branch.countDocuments();
@@ -60,11 +62,6 @@ export async function POST(request: NextRequest) {
       name,
       code,
       address,
-      contactNumber,
-      operatingHours: {
-        open,
-        close,
-      },
       location: {
         type: "Point",
         coordinates: location.coordinates, // [longitue, latitude] as GeoJSON format
