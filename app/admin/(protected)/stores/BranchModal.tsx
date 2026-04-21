@@ -12,14 +12,14 @@ type BranchModalProps = {
   setForm: React.Dispatch<React.SetStateAction<BranchFormData>>;
   errors: BranchFormErrors;
   setErrors: React.Dispatch<React.SetStateAction<BranchFormErrors>>;
-  branchToEdit: Branch | null;
-  setBranchToEdit: React.Dispatch<React.SetStateAction<Branch | null>>;
+  branchToUpdate: Branch | null;
+  setBranchToUpdate: React.Dispatch<React.SetStateAction<Branch | null>>;
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const BranchModal = ({
-  branchToEdit,
-  setBranchToEdit,
+  branchToUpdate,
+  setBranchToUpdate,
   setShowModal,
   form,
   setForm,
@@ -49,9 +49,9 @@ const BranchModal = ({
       setErrors(errors);
       return;
     }
-    if (branchToEdit) {
+    if (branchToUpdate) {
       await updateBranch.mutateAsync({
-        id: branchToEdit._id,
+        id: branchToUpdate._id,
         branchData: form,
       });
     } else {
@@ -61,7 +61,7 @@ const BranchModal = ({
     setShowModal(false);
     setForm(emptyForm);
     setErrors({});
-    setBranchToEdit(null);
+    setBranchToUpdate(null);
   };
 
   const handleChangeForm = (e: ChangeEvent<HTMLInputElement>) => {
@@ -257,7 +257,7 @@ const BranchModal = ({
           )}
           {createBranch.isPending || updateBranch.isPending
             ? "Saving..."
-            : branchToEdit
+            : branchToUpdate
               ? "Update Branch"
               : "Create Branch"}
         </button>
@@ -267,7 +267,7 @@ const BranchModal = ({
       {isMapOpen && (
         <Modal
           onClose={() => setIsMapOpen(false)}
-          title={`${branchToEdit ? "Update" : "Select"} Branch Location ${branchToEdit ? `for ${branchToEdit.name}` : ""}`}
+          title={`${branchToUpdate ? "Update" : "Select"} Branch Location ${branchToUpdate ? `for ${branchToUpdate.name}` : ""}`}
         >
           <MapParent onSelectCoordinates={handleMapCoordinates} />
         </Modal>
