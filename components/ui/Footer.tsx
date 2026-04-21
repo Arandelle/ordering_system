@@ -1,28 +1,29 @@
 "use client";
 
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
-import {
-  Clock,
-  Facebook,
-  Instagram,
-  Mail,
-  MapPin,
-  Phone,
-  PhoneCall,
-  Twitter,
-} from "lucide-react";
 import HeaderLogo from "../BrandLogo";
 import { LINKS } from "@/constant/links";
-import { getLucideIcon } from "@/helper/iconUtils";
+import { InputField } from "./InputField";
+import { DynamicIcon } from "@/lib/DynamicIcon";
+import { useSettings } from "@/hooks/api/useSettings";
 
 const Footer = ({
   variant = "customer",
 }: {
   variant?: "marketing" | "customer";
 }) => {
+
+  const {data: settings} = useSettings();
+
+  const contact = {
+    phone: settings?.contact.phone || "09687080780",
+    email: settings?.contact.email || "jp@foodlab.com",
+    viber: settings?.contact.viber || "09687080780"
+  }
+
   const currentYear = new Date().getFullYear();
   const homeUrl = useSubdomainPath("/", "");
-  const menuUrl = useSubdomainPath("/menu", "food");
+  const menuUrl = useSubdomainPath("/", "food");
   const bestSellerUrl = useSubdomainPath("/?section=bestsellers", "food");
   const ourStoryUrl = useSubdomainPath("/?section=story", "food");
 
@@ -56,16 +57,16 @@ const Footer = ({
       value: "Makati, Metro Manila, Philippines",
       href: LINKS.MAIN_BRANCH_LINK,
     },
-    { icon: "Phone", value: "+63 912 345 6789", href: "tel:+639123456789" },
+    { icon: "Phone", value: contact.phone, href: `tel:${contact.phone}` },
     {
       icon: "Mail",
-      value: "harrisoninasalbbq@gmail.com",
-      href: "https://mail.google.com/mail/?view=cm&fs=1&to=harrisoninasalbbq@gmail.com&subject=Inquiry",
+      value: contact.email,
+      href: `https://mail.google.com/mail/?view=cm&fs=1&to=${contact.email}&subject=Inquiry`,
     },
     {
       icon: "PhoneCall",
-      value: "+63 960 334 9533",
-      href: "viber://chat?number=%2B639603349533",
+      value: contact.viber,
+      href: `viber://chat?number=%2B${contact.viber}`,
     },
   ];
 
@@ -91,19 +92,19 @@ const Footer = ({
                 href="#"
                 className="w-10 h-10 bg-white/10 hover:bg-brand-color-500 rounded-full flex items-center justify-center transition-colors"
               >
-                <Facebook size={18} />
+                <DynamicIcon name="Facebook" size={18} />
               </a>
               <a
                 href=""
                 className="w-10 h-10 bg-white/10 hover:bg-brand-color-500 rounded-full flex items-center justify-center transition-colors"
               >
-                <Instagram size={18} />
+                <DynamicIcon name="Instagram" size={18} />
               </a>
               <a
                 href=""
                 className="w-10 h-10 bg-white/10 hover:bg-brand-color-500 rounded-full flex items-center justify-center transition-colors"
               >
-                <Twitter size={18} />
+                <DynamicIcon name="Twitter" size={18} />
               </a>
             </div>
           </div>
@@ -146,23 +147,21 @@ const Footer = ({
           <div>
             <h4 className="font-semibold text-lg mb-4">Contact Us</h4>
             <ul className="space-y-4">
-              {contactUs.map((item, index) => {
-                const Icon = getLucideIcon(item.icon);
-                return (
-                  <a
-                    key={index}
-                    href={item.href}
-                    target="_blank"
-                    className="flex items-start gap-3"
-                  >
-                    <Icon
-                      size={18}
-                      className="text-brand-color-500 shrink-0 mt-0.5"
-                    />
-                    <span className="text-gray-400 text-sm">{item.value}</span>
-                  </a>
-                );
-              })}
+              {contactUs.map((item, index) => (
+                <a
+                  key={index}
+                  href={item.href}
+                  target="_blank"
+                  className="flex items-start gap-3"
+                >
+                  <DynamicIcon
+                    name={item.icon}
+                    size={18}
+                    className="text-brand-color-500 shrink-0 mt-0.5"
+                  />
+                  <span className="text-gray-400 text-sm">{item.value}</span>
+                </a>
+              ))}
             </ul>
           </div>
         </div>
@@ -187,11 +186,11 @@ const Footer = ({
               }}
               className="flex w-full max-w-md gap-3"
             >
-              <input
+              <InputField
                 type="email"
                 placeholder="Enter your email"
                 required
-                className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-brand-color-500 transition-colors"
+                leftIcon={<DynamicIcon name="Mail" />}
               />
               <button
                 type="submit"
@@ -206,7 +205,7 @@ const Footer = ({
 
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <p className="text-gray-400 text-sm">
               © {currentYear} Harrison – House of Inasal & BBQ. All rights

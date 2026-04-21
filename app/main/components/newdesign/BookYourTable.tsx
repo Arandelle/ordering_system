@@ -1,14 +1,27 @@
 "use client";
 
+import { formatDays } from "@/helper/formatDays";
+import { formatTime } from "@/helper/formatTime";
+import { formatToViberNumber } from "@/helper/formatToViberNumber";
+import { useSettings } from "@/hooks/api/useSettings";
 import Image from "next/image";
 import React from "react";
 
 const BookYourTable = () => {
-  const viberNumber = "%2B639603349533"; // cleaned phone number for deep link
+  const { data: settings } = useSettings();
+
+  const { contact, operatingHours } = settings ?? {};
+
+  const formattedViber = formatToViberNumber(contact?.viber);
+
+  const openTime = formatTime(operatingHours?.openTime || "10:00 AM");
+  const closeTime = formatTime(operatingHours?.closeTime || "12:00 AM");
+  const days = operatingHours?.days ?? [];
 
   const handleViberOpen = () => {
-    // Opens Viber chat with the restaurant's number
-    window.open(`viber://chat?number=${viberNumber}`, "_blank");
+    if (!formattedViber) return;
+
+    window.open(`viber://chat?number=${formattedViber}`, "_blank");
   };
 
   return (
@@ -33,7 +46,6 @@ const BookYourTable = () => {
       <div className="relative py-16 px-4 md:py-24 max-w-7xl mx-auto">
         <div className="lg:max-w-[66%]">
           <div className="flex flex-col justify-center bg-white rounded-2xl shadow-2xl p-10 md:p-14 gap-6">
-
             {/* Eyebrow label */}
             <p className="uppercase tracking-[0.25em] text-xs font-bold text-brand-color-500 opacity-60">
               Reservations
@@ -45,15 +57,21 @@ const BookYourTable = () => {
             </h1>
 
             {/* Message */}
-            <p className="text-gray-600 text-base md:text-lg leading-relaxed max-w-md">
-              Ready to join us? Message us on{" "}
-              <span className="font-bold text-brand-color-500">Viber</span> and
-              we'll get your table sorted in no time. We're open{" "}
-              <span className="font-bold text-brand-color-500">
-                every day, 10:00 AM – 12:00 AM
-              </span>
-              .
-            </p>
+            <div>
+              <p className="text-gray-600 text-base md:text-lg leading-relaxed max-w-md">
+                Ready to join us? Message us on{" "}
+                <span className="font-bold text-brand-color-500">Viber</span>{" "}
+                and we'll get your table sorted in no time. We're open everyday
+              </p>
+              <p className="font-bold text-brand-color-500">
+                <span className="font-semibold">{formatDays(days)}</span>
+              </p>
+              {days.length > 0 && openTime && closeTime && (
+                <span className="text-brand-color-500">
+                  {openTime} – {closeTime}
+                </span>
+              )}
+            </div>
 
             {/* Divider */}
             <div className="w-12 h-1 bg-brand-color-500 rounded-full" />
@@ -83,10 +101,10 @@ const BookYourTable = () => {
 
               {/* Phone number display */}
               <a
-                href={`tel:+${viberNumber}`}
+                href={`tel:+${contact?.viber}`}
                 className="text-brand-color-500 font-black text-sm underline underline-offset-4 hover:opacity-70 transition-opacity"
               >
-                +63 960 334 9533
+                {contact?.viber}
               </a>
             </div>
           </div>
