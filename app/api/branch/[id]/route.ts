@@ -67,7 +67,7 @@ export async function PUT(
       );
     }
 
-    const { name, address, contactNumber, open, close, location } = body;
+    const { name, address, location } = body;
 
     // Validate required fields
     if (!name?.trim() || !address?.trim()) {
@@ -95,12 +95,7 @@ export async function PUT(
     // Build update object
     const updatedData: any = {
       name,
-      address,
-      contactNumber,
-      operatingHours: {
-        open,
-        close,
-      },
+      address
     };
 
     // only update location if provided
