@@ -1,3 +1,4 @@
+import { formatTime } from "@/helper/formatTime";
 import { Days, SettingsType } from "@/hooks/api/useSettings";
 
 const DAYS: Days[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -6,45 +7,102 @@ export type StoreStatus =
   | { isOpen: true }
   | {
       isOpen: false;
-      reason: "manual_close" | "day_off" | "before_hours" | "after_hours";
+      message: string;
     };
+
+function toMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
 
 export function getStoreStatus(
   operatingHours: SettingsType["operatingHours"],
 ): StoreStatus {
-  if (operatingHours.isClosed) return { isOpen: false, reason: "manual_close" };
+  if (!operatingHours) {
+    return {
+      isOpen: false,
+      message: "Store hours not available right now.",
+    };
+  }
+
+  const { isClosed, days = [], openTime, closeTime } = operatingHours;
+
+  if (isClosed) {
+    return {
+      isOpen: false,
+      message: "We are currently not accepting orders at the moment.",
+    };
+  }
+
+  if (!openTime || !closeTime) {
+    return {
+      isOpen: false,
+      message: "Store hours are not properly configured.",
+    };
+  }
 
   const now = new Date();
-  const todayLabel = DAYS[(now.getDay() + 6) % 7];
+  const todayIndex = (now.getDay() + 6) % 7; // Mon=0 ... Sun=6
+  const yesterdayIndex = (todayIndex + 6) % 7;
 
-  if (!operatingHours.days.includes(todayLabel))
-    return { isOpen: false, reason: "day_off" };
+  const todayLabel = DAYS[todayIndex];
+  const yesterdayLabel = DAYS[yesterdayIndex];
 
-  const [openH, openM] = operatingHours.openTime.split(":").map(Number);
-  const [closeH, closeM] = operatingHours.closeTime.split(":").map(Number);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const openMinutes = openH * 60 + openM;
-  const closeMinutes = closeH * 60 + closeM;
+  const openMinutes = toMinutes(openTime);
+  const closeMinutes = toMinutes(closeTime);
 
   const crossesMidnight = closeMinutes <= openMinutes;
 
+  const hoursMessage = `We are currently closed. Ordering hours are from ${formatTime(openTime)} - ${formatTime(closeTime)}.`;
+
   if (!crossesMidnight) {
-    if (currentMinutes < openMinutes)
-      return { isOpen: false, reason: "before_hours" };
+    const isOpenToday =
+      days.includes(todayLabel) &&
+      currentMinutes >= openMinutes &&
+      currentMinutes < closeMinutes;
 
-    if (currentMinutes >= closeMinutes)
-      return { isOpen: false, reason: "after_hours" };
-  } else {
-    const isWithinHours =
-      currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+    if (!isOpenToday) {
+      if (!days.includes(todayLabel)) {
+        return {
+          isOpen: false,
+          message: "We are closed today and not accepting orders at the moment.",
+        };
+      }
 
-    if (!isWithinHours) {
-      if (currentMinutes < openMinutes)
-        return { isOpen: false, reason: "before_hours" };
-
-      return { isOpen: false, reason: "after_hours" };
+      return {
+        isOpen: false,
+        message: hoursMessage,
+      };
     }
+
+    return { isOpen: true };
   }
 
-  return { isOpen: true };
+  // Overnight schedule, e.g. 10:00 PM to 2:00 AM
+  const isOpenFromTodaySchedule =
+    days.includes(todayLabel) && currentMinutes >= openMinutes;
+
+  const isOpenFromYesterdaySchedule =
+    days.includes(yesterdayLabel) && currentMinutes < closeMinutes;
+
+  if (isOpenFromTodaySchedule || isOpenFromYesterdaySchedule) {
+    return { isOpen: true };
+  }
+
+  // Optional: better message when current day is not in schedule and also not in spillover
+  if (
+    !days.includes(todayLabel) &&
+    !(days.includes(yesterdayLabel) && currentMinutes < closeMinutes)
+  ) {
+    return {
+      isOpen: false,
+      message: "We are closed today and not accepting orders at the moment.",
+    };
+  }
+
+  return {
+    isOpen: false,
+    message: hoursMessage,
+  };
 }
