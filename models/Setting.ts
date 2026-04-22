@@ -32,14 +32,17 @@ const SettingsSchema = new Schema(
         {
           type: String,
           enum: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          default: []
         },
       ],
       openTime: {
         type: String,
+          default: "10:00",
         match: [/^\d{2}:\d{2}$/, "Use HH:MM format"],
       },
       closeTime: {
         type: String,
+        default: "23:00",
         match: [/^\d{2}:\d{2}$/, "Use HH:MM format"],
       },
       isClosed: { type: Boolean, default: false },
