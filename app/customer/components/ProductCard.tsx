@@ -35,14 +35,36 @@ const getIncludedItemsText = (
     return i.quantity > 1 ? `${i.quantity}x ${name}` : name;
   });
 
-const IsCloseToday = () => (
-  <>
-    <div className="absolute inset-0 bg-black/50 z-10" />
-    <div className="absolute left-3 top-3 z-20 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-      Store closed today
-    </div>
-  </>
-);
+const StoreClosedOverlay = ({ message }: { message: string }) => {
+  // Split message into headline + detail (simple heuristic)
+  const [headline, ...rest] = message.split(". ");
+  const detail = rest.join(". ");
+
+  return (
+    <>
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/60 z-10 backdrop-blur-[2px]" />
+
+      {/* Content */}
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4">
+        <div className="bg-white/95 rounded-xl shadow-lg px-4 py-3 max-w-[90%]">
+          
+          {/* Headline */}
+          <p className="text-sm font-bold text-red-600">
+            {headline}
+          </p>
+
+          {/* Optional detail */}
+          {detail && (
+            <p className="text-[11px] text-gray-600 mt-1 leading-tight">
+              {detail}
+            </p>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -52,10 +74,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
   selectedBranch,
 }) => {
   const { openModal } = useModalQuery();
-  const {data: operatingSched} = useSettings();
+  const { data: operatingSched } = useSettings();
   const [showDetail, setShowDetail] = useState(false);
 
-  const storeStatus = operatingSched ? getStoreStatus(operatingSched.operatingHours) : null
+  const storeStatus = operatingSched
+    ? getStoreStatus(operatingSched.operatingHours)
+    : null;
 
   // ── Derived state (declared early, used throughout) ───────────────────────
   // Stock info is only meaningful when a branch is selected
@@ -92,7 +116,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
 
           {/* */}
-          {!storeStatus?.isOpen && <IsCloseToday />}
+          {storeStatus && !storeStatus.isOpen && (
+            <StoreClosedOverlay message={storeStatus.message} />
+          )}
 
           {/* Stock badges */}
           {isOutOfStock ? (

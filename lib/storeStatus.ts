@@ -66,7 +66,7 @@ export function getStoreStatus(
       if (!days.includes(todayLabel)) {
         return {
           isOpen: false,
-          message: "We are closed today and not accepting orders at the moment.",
+          message: "Closed Today. We are closed today and not accepting orders at the moment.",
         };
       }
 
@@ -97,7 +97,7 @@ export function getStoreStatus(
   ) {
     return {
       isOpen: false,
-      message: "We are closed today and not accepting orders at the moment.",
+      message: "Closed Today. We are closed today and not accepting orders at the moment.",
     };
   }
 
