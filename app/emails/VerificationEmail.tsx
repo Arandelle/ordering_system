@@ -17,7 +17,7 @@ import {
 interface VerificationEmailProps {
   name: string;
   verifyUrl: string;
-  expiryHours?: number;
+  expiryMinutes?: number;
 }
 
 const publicUrl =
@@ -26,7 +26,7 @@ const publicUrl =
 export function VerificationEmail({
   name,
   verifyUrl,
-  expiryHours = 24,
+  expiryMinutes = 15,
 }: VerificationEmailProps) {
   return (
     <Tailwind>
@@ -76,7 +76,7 @@ export function VerificationEmail({
                 <Text className="text-sm text-gray-600 m-0 leading-relaxed">
                   This link expires in{" "}
                   <span className="font-medium text-black">
-                    {expiryHours} hours
+                    {expiryMinutes} minutes
                   </span>
                   . After that you'll need to request a new one.
                 </Text>
@@ -84,11 +84,8 @@ export function VerificationEmail({
 
               {/* Warning */}
               <Section className="bg-[#FAEEDA] rounded-lg px-3.5 py-2.5 mb-3">
-                <Text className="text-[11px] uppercase tracking-[0.04em] text-[#854F0B] mb-0.5">
-                  Heads up
-                </Text>
                 <Text className="text-sm text-[#854F0B] m-0 leading-relaxed">
-                  If you didn't create an account, ignore this email. No action
+                  If you didn't request this, ignore this email. No action
                   is needed.
                 </Text>
               </Section>
