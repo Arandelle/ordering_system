@@ -14,10 +14,22 @@ const db = client.db();
 export const auth = betterAuth({
   database: mongodbAdapter(db, { client }),
 
+  user: {
+    additionalFields: {
+      firstName: {
+        type: "string",
+        required: false
+      },
+      lastName: {
+        type: "string",
+        required: false
+      }
+    }
+  },
+
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
-    autoSignIn: false,
 
     // 🔹 SEND RESET EMAIL
     sendResetPassword: async ({ user, url }) => {
@@ -49,12 +61,14 @@ export const auth = betterAuth({
   },
 
   emailVerification: {
+    expiresIn: 60 * 15,
+    callbackURL: "/verified",
     async sendVerificationEmail({ user, url }) {
       const html = await render(
         VerificationEmail({
           name: user.name || "there",
           verifyUrl: url,
-          expiryHours: 24,
+          expiryMinutes: 15,
         }),
       );
 
@@ -62,7 +76,7 @@ export const auth = betterAuth({
         from: EMAIL_FROM,
         to: user.email,
         subject: "Verify your email",
-        html,
+        html, 
       });
     },
   },
@@ -71,6 +85,14 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      mapProfileToUser: (profile) => {
+        return {
+          firtName: profile.given_name,
+          lastName: profile.family_name,
+          name: [profile.given_name, profile.family_name].filter(Boolean).join("") || profile.name, 
+          image: profile.picture
+        }
+      }
     },
   },
 
