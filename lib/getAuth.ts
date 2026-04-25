@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "./mongodb";
 import Staff from "@/models/Staff";
 import { Customer } from "@/models/Customer";
+import { auth } from "./auth";
+import { headers } from "next/headers";
+import { User } from "@/models/User";
 
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET is not defined in env variables!");
@@ -89,4 +92,17 @@ export async function requireCustomerAuth(request: NextRequest) {
   const customerRecord = await Customer.findById(customer.id).lean();
   if (!customerRecord || !customerRecord.isActive) throw new Error("Unauthorized");
   return customerRecord;
+}
+
+
+// use new authenticaton better auth
+export async function requireBetterAuth() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) throw new Error("Unauthorized!");
+
+  await connectDB();
+  const user = await User.findOne({ _id: session.session.userId }).lean();
+  if (!user) throw new Error("Unauthorized!");
+
+  return user;
 }
