@@ -1,4 +1,3 @@
-import { requireCustomerAuth } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { queryOrders } from "@/lib/orders/orderService";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,7 +8,6 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   await connectDB();
-  const customer = await requireCustomerAuth(request);
   
   const { id } = await context.params;
   const order = await queryOrders({

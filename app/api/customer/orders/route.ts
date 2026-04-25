@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
-import { requireBetterAuth, requireCustomerAuth } from "@/lib/getAuth";
+import { requireBetterAuth } from "@/lib/getAuth";
 import { queryOrders } from "@/lib/orders/orderService";
 
 export async function GET(request: NextRequest) {
