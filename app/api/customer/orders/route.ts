@@ -1,12 +1,12 @@
 import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
-import { requireCustomerAuth } from "@/lib/getAuth";
+import { requireBetterAuth, requireCustomerAuth } from "@/lib/getAuth";
 import { queryOrders } from "@/lib/orders/orderService";
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const customer = await requireCustomerAuth(request);
+    const customer = await requireBetterAuth();
 
     // ============================================
     // QUERY PARAMETERS
