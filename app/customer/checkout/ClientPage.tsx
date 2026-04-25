@@ -1,24 +1,30 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CustomerDetails from "./CustomerDetails";
 import { CheckoutHeader } from "./CheckoutHeader";
 import { syne } from "@/app/font";
 import { useBranch } from "@/contexts/BranchContext";
 import { useModalQuery } from "@/hooks/utils/useModalQuery";
 import CartList from "./CartList";
-import { CustomerSchema, OrderFormState } from "./FormSchema";
+import { OrderFormState } from "./FormSchema";
 import useFormErrors from "./useFormErrors";
 import ShippingAddress from "./ShippingAddress";
 import BranchSelector from "./BranchSelector";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import { useMyAddress } from "../hooks/useMyAddress";
+import LoadingPage from "@/components/ui/LoadingPage";
 
-
-export type CheckoutStep = "customer" | "shipping"
+export type CheckoutStep = "customer" | "shipping";
 
 const ClientPage = () => {
- const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+  const { data: myAddress } = useMyAddress();
+  const { shippingAddress } = myAddress ?? {};
+
+  const router = useRouter();
   const { selectedBranch } = useBranch();
   const { openModal } = useModalQuery();
 
@@ -46,7 +52,11 @@ const ClientPage = () => {
 
   const { customerErrors, shippingErrors } = useFormErrors(orderDetails);
 
-  const handleStateChange = (type: keyof OrderFormState,field: string, value: string) => {
+  const handleStateChange = (
+    type: keyof OrderFormState,
+    field: string,
+    value: string,
+  ) => {
     setOrderDetails((prev) => ({
       ...prev,
       [type]: { ...prev[type], [field]: value },
@@ -57,9 +67,39 @@ const ClientPage = () => {
     router.push("?step=shipping"); // or however you manage search params
   };
 
+  useEffect(() => {
+    if (!session?.user || !myAddress) return;
+
+    setOrderDetails((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        firstName: prev.customer.firstName || session.user.firstName || "",
+        lastName: prev.customer.lastName || session.user.lastName || "",
+        customerEmail: prev.customer.customerEmail || session.user.email || "",
+        customerPhone: prev.customer.customerPhone || session.user.phone || "",
+      },
+      shippingAddress: {
+        line1: shippingAddress?.line1 || "",
+        line2: shippingAddress?.line2 || "",
+        city: shippingAddress?.city || "",
+        province: shippingAddress?.province || "",
+        zipCode: shippingAddress?.zipCode || "",
+        country: "Philippines",
+        landmark: shippingAddress?.landmark || "",
+      },
+    }));
+  }, [session]);
+
+  if(isPending){
+    return <div className="h-screen flex items-center">
+      <LoadingPage />
+    </div>
+  }
+
   return (
     <div className={`${syne.className} min-h-screen bg-slate-50`}>
-      <CheckoutHeader step={step}/>
+      <CheckoutHeader step={step} />
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 items-start">
           <div className="bg-white rounded-2xl border border-slate-100 p-6">
