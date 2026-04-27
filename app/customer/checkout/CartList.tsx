@@ -3,13 +3,12 @@ import { useCart } from "@/contexts/CartContext";
 import { useCreateOrder } from "@/hooks/api/useOrders";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { Branch } from "@/types/branch";
-import { OrderType } from "@/types/OrderTypes";
 import Link from "next/link";
-import React from "react";
 import { toast } from "sonner";
 import { CustomerSchema, OrderFormState, ShippingSchema } from "./FormSchema";
 import useFormErrors from "./useFormErrors";
-import { CheckoutStep } from "./ClientPage";
+import { usePathname } from "next/navigation";
+import { CheckoutStep } from "@/contexts/CheckoutContext";
 
 /** Single cart row */
 const CartRow = ({
@@ -79,16 +78,14 @@ const CartRow = ({
 type CartListProps = {
   selectedBranch: Branch | null;
   orderDetails: OrderFormState;
-  step: CheckoutStep;
   onNext: () => void;
 };
 
-const CartList = ({
-  selectedBranch,
-  orderDetails,
-  step,
-  onNext,
-}: CartListProps) => {
+const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
+  const pathname = usePathname();
+  const isDetails = pathname === CheckoutStep.DETAILS;
+  const isShipping = pathname === CheckoutStep.SHIPPING;
+
   const { mutateAsync: createOrder, isPending } = useCreateOrder();
   const { validateAll, customerErrors, shippingErrors } =
     useFormErrors(orderDetails);
@@ -122,15 +119,14 @@ const CartList = ({
 
   const isNextDisabled =
     !selectedBranch ||
-    (step === "customer" && isDetailsIncomplete) ||
-    (step === "shipping" && isShippingIncomplete);
+    (isDetails && isDetailsIncomplete) ||
+    (isShipping && isShippingIncomplete);
 
   const handleNext = () => {
     // validate current step only before proceeding
-    const result =
-      step === "customer"
-        ? CustomerSchema.safeParse(orderDetails.customer)
-        : ShippingSchema.safeParse(orderDetails.shippingAddress);
+    const result = isDetails
+      ? CustomerSchema.safeParse(orderDetails.customer)
+      : ShippingSchema.safeParse(orderDetails.shippingAddress);
 
     if (!result.success) {
       toast.error("Please fix the errors before continuing.");
@@ -142,8 +138,15 @@ const CartList = ({
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
+    
     if (!validateAll()) {
-      toast.error("Please complete all required fields.");
+      const errors = Object.values(customerErrors || shippingErrors).filter(Boolean);
+
+      if (errors.length > 0) {
+        errors.forEach((error) => toast.error(error));
+      } else {
+        toast.error("Please complete all required fields.");
+      }
       return;
     }
 
@@ -202,7 +205,7 @@ const CartList = ({
     }
   };
 
-  const isSubmitStep = step === "shipping";
+  const isSubmitStep = isShipping;
 
   if (cartItems.length === 0) {
     return (
@@ -314,6 +317,7 @@ const CartList = ({
             Select a branch to continue
           </p>
         )}
+
         {isNextDisabled && selectedBranch && (
           <p className="text-xs text-center text-slate-400">
             Complete all required fields to continue

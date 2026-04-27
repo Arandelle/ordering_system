@@ -1,7 +1,7 @@
-import ClientPage from "./ClientPage";
+import { redirect } from "next/navigation";
 
 const Checkout = () => {
-  return <ClientPage />;
+  redirect("/checkout/details");
 };
 
 export default Checkout;
