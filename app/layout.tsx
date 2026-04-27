@@ -73,7 +73,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${syne.className} antialiased`}>
         <QueryProvider>
-          <Toaster richColors position="top-right" closeButton />
+          <Toaster richColors position="top-right" closeButton expand/>
           <Suspense fallback={<LoadingPage />}>{children}</Suspense>
           {modal}
         </QueryProvider>
