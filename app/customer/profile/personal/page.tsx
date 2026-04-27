@@ -6,6 +6,8 @@ import { SectionCard } from "../component/SectionCard";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { InputField } from "@/components/ui/InputField";
 import { authClient } from "@/lib/auth-client";
+import { apiClient } from "@/lib/apiClient";
+import { fileToBase64 } from "@/lib/fileUtils";
 
 interface PersonalForm {
   firstName: string;
@@ -25,12 +27,44 @@ const PersonalTab = () => {
     email: session?.user?.email ?? "",
     phone: session?.user?.phone ?? "",
   });
+
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const imageData = await fileToBase64(file);
+    setPreview(imageData);
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!preview) return;
+    setUploadingAvatar(true);
+    try {
+      const { secure_url, public_id } = await apiClient.post<{
+        secure_url: string;
+        public_id: string;
+      }>("/customer/upload-avatar", {
+        imageFile: preview,
+        oldPublicId: session?.user?.publicId ?? undefined,
+      });
+
+      await authClient.updateUser({ image: secure_url, publicId: public_id });
+      setPreview(null);
+      toast.success("Avatar updated!");
+    } catch {
+      toast.error("Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSave = async () => {
@@ -65,15 +99,15 @@ const PersonalTab = () => {
       >
         <div className="flex items-center gap-5">
           <div className="relative">
-            {session?.user?.image ? (
+            {(preview ?? session?.user?.image) ? (
               <img
-                src={session.user.image}
+                src={preview || session?.user?.image || ""}
                 alt="Avatar"
                 className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-100"
               />
             ) : (
               <div className="w-20 h-20 rounded-2xl bg-brand-color-100 flex items-center justify-center border-2 border-brand-color-200">
-                <span className={`text-2xl font-bold text-brand-color-500`}>
+                <span className="text-2xl font-bold text-brand-color-500">
                   {initials}
                 </span>
               </div>
@@ -83,23 +117,21 @@ const PersonalTab = () => {
               disabled={uploadingAvatar}
               className="absolute -bottom-2 -right-2 w-7 h-7 bg-brand-color-500 hover:bg-brand-color-600 text-white rounded-lg flex items-center justify-center transition-colors shadow-md cursor-pointer"
             >
-              {uploadingAvatar ? (
-                <DynamicIcon
-                  name="Loader2"
-                  size={12}
-                  className="animate-spin"
-                />
-              ) : (
-                <DynamicIcon name="Pencil" size={12} />
-              )}
+              <DynamicIcon
+                name={uploadingAvatar ? "Loader2" : "Pencil"}
+                size={12}
+                className={uploadingAvatar ? "animate-spin" : ""}
+              />
             </button>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               className="hidden"
+              onChange={handleAvatarChange}
             />
           </div>
+
           <div>
             <p className="text-sm font-semibold text-gray-800">
               {session?.user?.name || "Your Name"}
@@ -110,6 +142,26 @@ const PersonalTab = () => {
             <p className="text-xs text-gray-400 mt-1">
               JPG, PNG or GIF · Max 2MB
             </p>
+
+            {/* Show upload button only when preview is pending */}
+            {preview && (
+              <button
+                onClick={handleAvatarUpload}
+                disabled={uploadingAvatar}
+                className="mt-2 flex items-center gap-1.5 bg-brand-color-500 hover:bg-brand-color-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60 cursor-pointer"
+              >
+                {uploadingAvatar ? (
+                  <DynamicIcon
+                    name="Loader2"
+                    size={12}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <DynamicIcon name="Upload" size={12} />
+                )}
+                {uploadingAvatar ? "Uploading..." : "Upload Photo"}
+              </button>
+            )}
           </div>
         </div>
       </SectionCard>
