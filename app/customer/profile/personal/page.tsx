@@ -8,6 +8,7 @@ import { InputField } from "@/components/ui/InputField";
 import { authClient } from "@/lib/auth-client";
 import { apiClient } from "@/lib/apiClient";
 import { fileToBase64 } from "@/lib/fileUtils";
+import { ImagePreviewModal } from "@/components/ImagePreviewModal";
 
 interface PersonalForm {
   firstName: string;
@@ -31,6 +32,7 @@ const PersonalTab = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -104,6 +106,7 @@ const PersonalTab = () => {
                 src={preview || session?.user?.image || ""}
                 alt="Avatar"
                 className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-100"
+                onClick={() => setShowPreview(true)}
               />
             ) : (
               <div className="w-20 h-20 rounded-2xl bg-brand-color-100 flex items-center justify-center border-2 border-brand-color-200">
@@ -112,6 +115,18 @@ const PersonalTab = () => {
                 </span>
               </div>
             )}
+
+            <button
+              className="absolute top-2 left-2 cursor-pointer"
+              onClick={() => setShowPreview(true)}
+            >
+              <DynamicIcon
+                name="Maximize2"
+                className="text-gray-400"
+                size={12}
+              />
+            </button>
+
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
@@ -240,6 +255,13 @@ const PersonalTab = () => {
           </button>
         </div>
       </SectionCard>
+
+      {showPreview && (
+        <ImagePreviewModal
+          src={preview || session?.user?.image || ""}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
     </div>
   );
 };
