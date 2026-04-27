@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddressForm } from "../profile/page";
+import { AddressForm } from "../profile/address/page";
 import { toast } from "sonner";
 
 interface AddressResponse {
