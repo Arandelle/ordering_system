@@ -15,46 +15,6 @@ const ShippingAddressSchema = new Schema(
 
 const UserSchema = new Schema(
   {
-    name: {
-      type: String,
-      required: [true, "Full name is required"],
-      trim: true,
-    },
-    firstName: {
-      type: String,
-      required: false,
-      trim: true,
-      default: "",
-    },
-    lastName: {
-      type: String,
-      required: false,
-      trim: true,
-      default: "",
-    },
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      trim: true,
-      lowercase: true,
-    },
-    emailVerified: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    image: {
-      type: String,
-      required: false,
-      trim: true,
-      default: "",
-    },
-    phone: {
-      type: String,
-      required: false,
-      trim: true,
-      default: "",
-    },
     // Default shipping address saved on profile
     shippingAddress: {
       type: ShippingAddressSchema,
