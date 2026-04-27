@@ -27,6 +27,10 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
+      publicId: {
+        type: "string",
+        required: false
+      }
     },
   },
 
