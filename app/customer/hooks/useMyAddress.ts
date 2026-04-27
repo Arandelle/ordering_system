@@ -10,7 +10,7 @@ interface AddressResponse {
 export const useMyAddress = () => {
     return useQuery<AddressResponse>({
         queryKey: ["user_address"],
-         queryFn: () => apiClient.get("/auth/customer/me"),
+         queryFn: () => apiClient.get("/customer/address"),
     retry: false, // don't retry on 401
     staleTime: 1000 * 60 * 5, // cache for 5 mins
     })
@@ -21,7 +21,7 @@ export const useUpdateAddress = () => {
 
   return useMutation({
     mutationFn: ({ address }: { address: AddressForm }) =>
-      apiClient.put("/auth/customer/me", {address}),
+      apiClient.put("/customer/address", {address}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user_address"] });
       toast.success("Address updated successfully!");
