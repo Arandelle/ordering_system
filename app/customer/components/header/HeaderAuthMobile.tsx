@@ -68,7 +68,11 @@ export const HeaderMobileMenu = ({
             <div className="flex flex-col gap-2 pt-2">
               <div className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-lg">
                 <div className="w-8 h-8 rounded-full bg-brand-color-500 flex items-center justify-center text-white text-sm font-bold">
-                  {session.user.name?.[0]?.toUpperCase()}
+                  <img
+                    src={session.user.image ?? "/images/harrison_logo.png"}
+                    alt="Profile"
+                    className="rounded-full border border-gray-200"
+                  />  
                 </div>
                 <div>
                   <p className="text-white text-sm font-semibold">
