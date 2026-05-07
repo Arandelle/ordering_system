@@ -7,10 +7,26 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { CustomerSchema, OrderFormState, ShippingSchema } from "./FormSchema";
 import useFormErrors from "./useFormErrors";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CheckoutStep } from "@/contexts/CheckoutContext";
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
+import { CreateOrderPayload } from "@/types/OrderTypes";
+
+const createCodOrder = async (payload: CreateOrderPayload) => {
+  const res = await fetch("/api/cod-checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error ?? "Failed to place order.");
+  }
+
+  return res.json();
+};
 
 /** Single cart row */
 const CartRow = ({
@@ -83,7 +99,74 @@ type CartListProps = {
   onNext: () => void;
 };
 
+type PaymentButtonProps = {
+  id: "maya" | "cod";
+  label: string;
+  description: string;
+  badge?: string;
+  imageSrc: string;
+  imageAlt: string;
+  selectedPayment: "maya" | "cod";
+  setSelectedPayment: (payment: "maya" | "cod") => void;
+};
+
+const PaymentButton = ({
+  id,
+  label,
+  description,
+  badge,
+  imageSrc,
+  imageAlt,
+  selectedPayment,
+  setSelectedPayment,
+}: PaymentButtonProps) => {
+  const isSelected = selectedPayment === id;
+
+  return (
+    <button
+      onClick={() => setSelectedPayment(id)}
+      className={`flex flex-col p-4 rounded-xl border-2 transition-all text-left w-full gap-6
+        ${
+          isSelected
+            ? "border-green-500 bg-green-50"
+            : "border-gray-200 bg-white hover:border-gray-300"
+        }`}
+    >
+      <div className="flex items-start justify-between w-full">
+        <div className="w-20 h-20 rounded-xl bg-white flex items-center justify-center shrink-0">
+          <img
+            src={imageSrc}
+            alt={imageAlt}
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <div
+          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
+          ${isSelected ? "border-green-500" : "border-gray-300"}`}
+        >
+          {isSelected && (
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-green-500">{label}</span>
+          {badge && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-600 font-medium">
+              {badge}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-500">{description}</p>
+      </div>
+    </button>
+  );
+};
+
 const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
+  const router = useRouter();
   const pathname = usePathname();
   const isDetails = pathname === CheckoutStep.DETAILS;
   const isShipping = pathname === CheckoutStep.SHIPPING;
@@ -108,9 +191,10 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   } = useCart();
 
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<"maya" | "cod" | null>(
-    null,
+  const [selectedPayment, setSelectedPayment] = useState<"maya" | "cod">(
+    "maya",
   );
+  const [isCodPending, setIsCodPending] = useState(false);
 
   // check if current step has any errors or empty required fields
   const isDetailsIncomplete =
@@ -173,39 +257,54 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       return;
     }
 
+    const orderPayload = {
+      branchId: selectedBranch!._id,
+      firstName,
+      lastName,
+      customerEmail,
+      customerPhone: customerPhone || "",
+      paymentMethod: selectedPayment,
+      notes,
+      items: cartItems
+        .filter((item) => item.quantity > 0)
+        .map((item) => ({ _id: item._id, quantity: item.quantity })),
+      shippingAddress: {
+        line1,
+        line2,
+        city,
+        zipCode,
+        province,
+        country,
+        landmark,
+      },
+    };
+
     try {
-      const data = await createOrder({
-        branchId: selectedBranch!._id,
-        firstName,
-        lastName,
-        customerEmail,
-        customerPhone: customerPhone || "",
-        notes,
+      if (selectedPayment === "cod") {
+        setIsCodPending(true);
+        try {
+          await createCodOrder(orderPayload);
+          toast.success("Order placed successfully!");
+          clearCart();
+          router.push("/");
+        } finally {
+          setIsCodPending(false);
+        }
+      } else {
+        const data = await createOrder({
+          ...orderPayload,
+          paymentMethod: "maya",
+        });
 
-        items: cartItems
-          .filter((item) => item.quantity > 0)
-          .map((item) => ({ _id: item._id, quantity: item.quantity })),
+        if (!data.redirectUrl) {
+          throw new Error(
+            "Payment link was not generated. Please try again or contact support.",
+          );
+        }
 
-        shippingAddress: {
-          line1,
-          line2,
-          city,
-          zipCode,
-          province,
-          country,
-          landmark,
-        },
-      });
-
-      if (!data.redirectUrl) {
-        throw new Error(
-          "Payment link was not generated. Please try again or contact support.",
-        );
+        clearCart();
+        window.location.href = data.redirectUrl;
       }
-
-      window.location.href = data.redirectUrl;
-
-      clearCart();
     } catch (error: any) {
       toast.error("Order Failed", {
         description: error.message,
@@ -294,16 +393,16 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       <>
         <button
           onClick={
-            isSubmitStep ? handlePlaceOrder : handleNext
+            isSubmitStep ? () => setShowPaymentOptions(true) : handleNext
           }
-          disabled={isPending || isNextDisabled}
+          disabled={isPending || isNextDisabled || isCodPending}
           className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all ${
-            isPending || isNextDisabled
+            isPending || isNextDisabled || isCodPending
               ? "cursor-not-allowed bg-gray-200 text-gray-400"
               : "cursor-pointer bg-brand-color-500 hover:bg-[#c13500] active:scale-[0.98] text-white shadow-sm shadow-brand-color-500/20"
           }`}
         >
-          {isPending ? (
+          {isPending || isCodPending ? (
             <span className="flex items-center gap-2 justify-center">
               Placing order…
               <DynamicIcon name="Loader" size={14} className="animate-spin" />
@@ -347,86 +446,39 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           title="Choose Payment Method"
           onClose={() => setShowPaymentOptions(false)}
         >
-          <div className="flex flex-col gap-3 p-1">
-            {/* Maya */}
-            <button
-              onClick={() => setSelectedPayment("maya")}
-              className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full
-      ${
-        selectedPayment === "maya"
-          ? "border-blue-500 bg-blue-50"
-          : "border-gray-200 bg-white hover:border-gray-300"
-      }`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-800 to-blue-500 flex items-center justify-center text-2xl flex-shrink-0">
-                💜
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-800">Maya</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">
-                    Instant
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  Pay via Maya e-wallet or card
-                </p>
-              </div>
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
-      ${selectedPayment === "maya" ? "border-blue-500" : "border-gray-300"}`}
-              >
-                {selectedPayment === "maya" && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                )}
-              </div>
-            </button>
-
-            {/* Cash on Delivery */}
-            <button
-              onClick={() => setSelectedPayment("cod")}
-              className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full
-      ${
-        selectedPayment === "cod"
-          ? "border-green-500 bg-green-50"
-          : "border-gray-200 bg-white hover:border-gray-300"
-      }`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-800 to-green-500 flex items-center justify-center text-2xl flex-shrink-0">
-                💵
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-800">
-                    Cash on Delivery
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 font-medium">
-                    No fee
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  Pay when your order arrives
-                </p>
-              </div>
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
-      ${selectedPayment === "cod" ? "border-green-500" : "border-gray-300"}`}
-              >
-                {selectedPayment === "cod" && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                )}
-              </div>
-            </button>
-
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-3">
+              {/* Maya */}
+              <PaymentButton
+                id="maya"
+                label="Maya"
+                description="Pay via Maya e-wallet or card"
+                badge="Instant"
+                imageSrc="/images/maya-white.png"
+                imageAlt="Maya"
+                selectedPayment={selectedPayment}
+                setSelectedPayment={setSelectedPayment}
+              />
+              <PaymentButton
+                id="cod"
+                label="Cash on Delivery"
+                description="Pay when your order arrives"
+                badge="No fee"
+                imageSrc="/images/cod-icon.png"
+                imageAlt="Cash on Delivery"
+                selectedPayment={selectedPayment}
+                setSelectedPayment={setSelectedPayment}
+              />
+            </div>
             {/* Confirm */}
             <button
               disabled={!selectedPayment}
               onClick={() => {
-                // handle confirm with selectedPayment value
+                handlePlaceOrder();
                 setShowPaymentOptions(false);
               }}
-              className="w-full py-3 mt-1 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-700
-      disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="w-full py-3 mt-1 rounded-xl font-semibold text-white bg-green-500 hover:bg-green-600
+    disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               Confirm Payment
             </button>

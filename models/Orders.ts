@@ -129,6 +129,12 @@ const OrderSchema = new Schema(
       paymentId: String,
       paymentStatus: String,
 
+      paymentMethod: {
+        type: String,
+        enum: ["maya", "cod"],
+        required: true,
+      },
+
       method: {
         type: {
           type: String, // "card" || "maya-wallet"

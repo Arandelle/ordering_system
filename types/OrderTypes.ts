@@ -129,6 +129,9 @@ export interface CreateOrderPayload {
     _id: string;
     quantity: number;
   }[];
+
+  paymentMethod: string,
+
   shippingAddress: {
     line1: string;
     line2?: string;

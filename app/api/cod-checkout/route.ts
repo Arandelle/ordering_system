@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
 
     // Separate Maya payload items from Order snapshot items
     const orderItems = [];
-    const mayaItems = [];
 
     for (const cartItem of items) {
       if (!cartItem._id || !cartItem.quantity) {
@@ -136,22 +135,6 @@ export async function POST(request: NextRequest) {
         category: product.category,
         quantity: cartItem.quantity,
       });
-
-      // ✅ Maya payload format (separate — not saved to DB)
-      mayaItems.push({
-        productId: product._id,
-        name: product.name,
-        quantity: cartItem.quantity,
-        code: String(product._id),
-        description: product.description,
-        amount: {
-          value: product.price,
-        },
-        totalAmount: {
-          value: product.price * cartItem.quantity,
-          currency: "PHP",
-        },
-      });
     }
 
     if (totalPrice < MINIMUM_AMOUNT) {
@@ -167,62 +150,6 @@ export async function POST(request: NextRequest) {
 
     const referenceNumber = `ORDER-${Date.now()}`;
 
-    const payload = {
-      totalAmount: {
-        value: totalPrice,
-        currency: "PHP",
-        details: {
-          discount: 0,
-          vatAmount,
-          vatableSales,
-        },
-      },
-      items: mayaItems,
-      buyer: {
-        firstName,
-        lastName,
-
-        contact: {
-          email: customerEmail,
-          phone: customerPhone,
-        },
-
-        shippingAddress: {
-          line1,
-          line2,
-          city,
-          state: province,
-          zipCode,
-          countryCode: "PH",
-        },
-      },
-      redirectUrl: {
-        success: `${process.env.NEXT_PUBLIC_URL}/payment/success?referenceNumber=${referenceNumber}`,
-        failure: `${process.env.NEXT_PUBLIC_URL}/payment/failed?referenceNumber=${referenceNumber}`,
-        cancel: `${process.env.NEXT_PUBLIC_URL}/payment/cancel?referenceNumber=${referenceNumber}`,
-      },
-      requestReferenceNumber: referenceNumber,
-    };
-
-    const response = await fetch(
-      "https://pg-sandbox.paymaya.com/checkout/v1/checkouts",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: getAuthHeader(),
-        },
-        body: JSON.stringify(payload),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message ?? "Maya checkout failed");
-    }
-
     const order = await Order.create(
       [
         {
@@ -237,7 +164,6 @@ export async function POST(request: NextRequest) {
           status: ORDER_STATUSES.PENDING,
           items: orderItems, // clean snapshot, matches OrderItemSchema
           paymentInfo: {
-            checkoutId: data.checkoutId,
             referenceNumber,
             firstName,
             lastName,
@@ -248,7 +174,6 @@ export async function POST(request: NextRequest) {
           },
           total: { vatableSales, vatAmount, totalAmount: totalPrice },
           notes, // optional
-          //  No timeline.createdAt — timestamps:true already gives you createdAt
         },
       ],
       { session },
@@ -274,8 +199,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         referenceNumber,
-        checkoutId: data.checkoutId,
-        redirectUrl: data.redirectUrl,
       },
       { status: 201 },
     );
