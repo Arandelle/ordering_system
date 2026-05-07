@@ -101,6 +101,17 @@ export function getStoreStatus(
     };
   }
 
+  console.log({
+  days,
+  todayLabel,
+  openTime,
+  closeTime,
+  currentMinutes,
+  openMinutes,
+  closeMinutes,
+  crossesMidnight,
+});
+
   return {
     isOpen: false,
     message: hoursMessage,

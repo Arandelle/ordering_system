@@ -74,12 +74,19 @@ export async function requireSuperAdmin(request: NextRequest) {
 
 // use new authenticaton better auth
 export async function requireBetterAuth() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized!");
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) return null;
 
   await connectDB();
-  const user = await User.findOne({ _id: session.session.userId }).lean();
-  if (!user) throw new Error("Unauthorized!");
+
+  const user = await User.findOne({
+    _id: session.session.userId,
+  }).lean();
+
+  if (!user) return null;
 
   return user;
 }

@@ -9,6 +9,8 @@ import { CustomerSchema, OrderFormState, ShippingSchema } from "./FormSchema";
 import useFormErrors from "./useFormErrors";
 import { usePathname } from "next/navigation";
 import { CheckoutStep } from "@/contexts/CheckoutContext";
+import { useState } from "react";
+import Modal from "@/components/ui/Modal";
 
 /** Single cart row */
 const CartRow = ({
@@ -105,6 +107,11 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     clearCart,
   } = useCart();
 
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<"maya" | "cod" | null>(
+    null,
+  );
+
   // check if current step has any errors or empty required fields
   const isDetailsIncomplete =
     !orderDetails.customer.firstName ||
@@ -138,9 +145,10 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
-    
     if (!validateAll()) {
-      const errors = Object.values(customerErrors || shippingErrors).filter(Boolean);
+      const errors = Object.values(customerErrors || shippingErrors).filter(
+        Boolean,
+      );
 
       if (errors.length > 0) {
         errors.forEach((error) => toast.error(error));
@@ -285,7 +293,9 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       {/* CTA */}
       <>
         <button
-          onClick={isSubmitStep ? handlePlaceOrder : handleNext}
+          onClick={
+            isSubmitStep ? handlePlaceOrder : handleNext
+          }
           disabled={isPending || isNextDisabled}
           className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all ${
             isPending || isNextDisabled
@@ -331,6 +341,98 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       >
         Need to add more items?
       </Link>
+
+      {showPaymentOptions && (
+        <Modal
+          title="Choose Payment Method"
+          onClose={() => setShowPaymentOptions(false)}
+        >
+          <div className="flex flex-col gap-3 p-1">
+            {/* Maya */}
+            <button
+              onClick={() => setSelectedPayment("maya")}
+              className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full
+      ${
+        selectedPayment === "maya"
+          ? "border-blue-500 bg-blue-50"
+          : "border-gray-200 bg-white hover:border-gray-300"
+      }`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-800 to-blue-500 flex items-center justify-center text-2xl flex-shrink-0">
+                💜
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-800">Maya</span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">
+                    Instant
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Pay via Maya e-wallet or card
+                </p>
+              </div>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+      ${selectedPayment === "maya" ? "border-blue-500" : "border-gray-300"}`}
+              >
+                {selectedPayment === "maya" && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                )}
+              </div>
+            </button>
+
+            {/* Cash on Delivery */}
+            <button
+              onClick={() => setSelectedPayment("cod")}
+              className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left w-full
+      ${
+        selectedPayment === "cod"
+          ? "border-green-500 bg-green-50"
+          : "border-gray-200 bg-white hover:border-gray-300"
+      }`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-800 to-green-500 flex items-center justify-center text-2xl flex-shrink-0">
+                💵
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-800">
+                    Cash on Delivery
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 font-medium">
+                    No fee
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Pay when your order arrives
+                </p>
+              </div>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+      ${selectedPayment === "cod" ? "border-green-500" : "border-gray-300"}`}
+              >
+                {selectedPayment === "cod" && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                )}
+              </div>
+            </button>
+
+            {/* Confirm */}
+            <button
+              disabled={!selectedPayment}
+              onClick={() => {
+                // handle confirm with selectedPayment value
+                setShowPaymentOptions(false);
+              }}
+              className="w-full py-3 mt-1 rounded-xl font-semibold text-white bg-gray-900 hover:bg-gray-700
+      disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              Confirm Payment
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

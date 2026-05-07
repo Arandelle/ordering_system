@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { authClient } from "@/lib/auth-client";
@@ -20,9 +20,14 @@ export const HeaderAuthDesktop = ({
   isLoggingOut,
   onOpenModal,
 }: Props) => {
+   const [isMounted, setIsMounted] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  if (sessionPending) {
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || sessionPending) {
     return (
       <div className="flex items-center gap-3 animate-pulse">
         <div className="w-8 h-8 rounded-full bg-gray-300" />
