@@ -54,7 +54,7 @@ export const useOrders = (
     queryFn: () =>
       apiClient.get(`${ORDER_ENDPOINTS[type]}${buildQueryString(params)}`),
     staleTime: 30000,
-    enabled: !!session?.user,
+    // enabled: !!session?.user,
     retry: false,
     refetchOnWindowFocus: false,
   });

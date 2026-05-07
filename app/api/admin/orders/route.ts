@@ -33,7 +33,10 @@ export async function GET(request: NextRequest) {
 
     const filter: Record<string, any> = { ...match };
 
-    if (admin.role !== STAFF_ROLES.SUPERADMIN) {
+    if (
+      admin.role !== STAFF_ROLES.SUPERADMIN &&
+      admin.role !== STAFF_ROLES.CASHIER
+    ) {
       if (!admin.branch)
         return NextResponse.json(
           { error: "No branch assigned" },
