@@ -12,7 +12,8 @@ export type StoreStatus =
 
 function toMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
+  const total = hours * 60 + minutes;
+  return total === 0 ? 1440 : total; // treat 00:00 as end of day
 }
 
 export function getStoreStatus(
@@ -66,7 +67,8 @@ export function getStoreStatus(
       if (!days.includes(todayLabel)) {
         return {
           isOpen: false,
-          message: "Closed Today. We are closed today and not accepting orders at the moment.",
+          message:
+            "Closed Today. We are closed today and not accepting orders at the moment.",
         };
       }
 
@@ -97,20 +99,23 @@ export function getStoreStatus(
   ) {
     return {
       isOpen: false,
-      message: "Closed Today. We are closed today and not accepting orders at the moment.",
+      message:
+        "Closed Today. We are closed today and not accepting orders at the moment.",
     };
   }
 
   console.log({
-  days,
-  todayLabel,
-  openTime,
-  closeTime,
-  currentMinutes,
-  openMinutes,
-  closeMinutes,
-  crossesMidnight,
-});
+    days,
+    todayLabel,
+    openTime,
+    closeTime,
+    currentMinutes,
+    openMinutes,
+    closeMinutes,
+    crossesMidnight,
+  });
+
+  console.log({ todayLabel, days, includes: days.includes(todayLabel) });
 
   return {
     isOpen: false,
