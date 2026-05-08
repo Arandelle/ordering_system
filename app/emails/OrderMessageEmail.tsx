@@ -112,10 +112,12 @@ const mockOrder: OrderType = {
     },
     referenceNumber: "TXN-20260415-0081",
     paymentStatus: "unpaid",
-    firstname: "Maria",
-    lastname: "Santos",
+    firstName: "Maria",
+    lastName: "Santos",
     customerEmail: "maria.santos@gmail.com",
     customerPhone: "+63 917 555 0123",
+
+    paymentMethod: "maya",
 
     shippingAddress: {
       line1: "Santol St.",
@@ -135,7 +137,7 @@ const publicUrl =
 
 const OrderMessageEmail = ({ order = mockOrder }: OrderMessageEmailProps) => {
   const { status, paymentInfo } = order;
-  const {firstname} = paymentInfo
+  const {firstName} = paymentInfo
   const accentColor = getAccentColor(status);
   const { preview, heading, message, ctaLabel, ctaHref } = getStatusContent(
     status,
@@ -169,7 +171,7 @@ const OrderMessageEmail = ({ order = mockOrder }: OrderMessageEmailProps) => {
                 {heading}
               </Text>
               <Text className="text-sm text-gray-600 m-0">
-                Hi <span className="font-medium text-black">{firstname}</span>
+                Hi <span className="font-medium text-black">{firstName}</span>
                 {" — "}
                 {message}
               </Text>
