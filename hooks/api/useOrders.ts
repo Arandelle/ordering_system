@@ -32,6 +32,10 @@ interface ProductResponse {
   pagination: PaginationMeta;
 }
 
+interface SpecificProductResponse {
+  data: OrderType;
+}
+
 const ORDER_ENDPOINTS = {
   admin: "/admin/orders/",
   customer: "/customer/orders/",
@@ -68,18 +72,10 @@ export const useOrder = (
   { type }: { type: keyof typeof ORDER_ENDPOINTS },
   id: string,
 ) => {
-  return useQuery<OrderType>({
+  return useQuery<SpecificProductResponse, Error>({
     queryKey: ["orders", id, type],
     queryFn: () => apiClient.get(`${ORDER_ENDPOINTS[type]}${id}`),
     staleTime: 30000,
-
-    // Validate status on fetch
-    select: (data) => {
-      if (!isValidOrderStatus(data.status)) {
-        console.warn(`Invalid status received: ${data.status}`);
-      }
-      return data;
-    },
   });
 };
 
