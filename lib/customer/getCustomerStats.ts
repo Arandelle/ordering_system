@@ -1,13 +1,14 @@
 import { Order } from "@/models/Orders";
+import { ORDER_STATUSES } from "@/types/orderConstants";
 
 export async function getCustomerStats(emails: string[]) {
   const stats = await Order.aggregate([
-    { $match: { "paymentInfo.customerEmail": { $in: emails } } },
+    { $match: { "paymentInfo.customerEmail": { $in: emails }, status: ORDER_STATUSES.COMPLETED }},
     {
       $group: {
         _id: "$paymentInfo.customerEmail",
         totalOrders: { $sum: 1 },
-        totalSpent: { $sum: "$total.total" },
+        totalSpent: { $sum: "$total.totalAmount" },
       },
     },
   ]);
