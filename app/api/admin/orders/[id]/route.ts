@@ -55,7 +55,8 @@ export async function GET(
 
     // Check if staff is authorized for this order's branch
     if (
-      staff.role !== STAFF_ROLES.SUPERADMIN && staff.role !== STAFF_ROLES.CASHIER &&
+      staff.role !== STAFF_ROLES.SUPERADMIN &&
+      staff.role !== STAFF_ROLES.CASHIER &&
       order.branchId?.toString() !== staff.branch?.toString()
     ) {
       return NextResponse.json(
@@ -197,7 +198,9 @@ export async function PATCH(
     // ============================================
 
     const previousStatus = order.status;
-    order.status = newStatus;
+    const updateData: Record<string, any> = {
+      status: newStatus,
+    };
 
     // ============================================
     // UPDATE TIMELINE
@@ -211,13 +214,14 @@ export async function PATCH(
       if (!order.timeline) {
         order.timeline = {};
       }
-      order.timeline[timelineField] = new Date();
+      updateData[`timeline.${timelineField}`] = new Date();
     }
 
     // Save order
-    await order.save();
+    await Order.updateOne({ _id: id }, { $set: updateData });
+    const updatedOrder = await Order.findById(id);
 
-    if (order.status === ORDER_STATUSES.COMPLETED) {
+    if (newStatus === ORDER_STATUSES.COMPLETED) {
       const { error: emailError } = await resend.emails.send({
         from: EMAIL_FROM,
         to: order.paymentInfo.customerEmail,
@@ -238,11 +242,11 @@ export async function PATCH(
     // ============================================
 
     return NextResponse.json({
-      _id: order._id.toString(),
-      status: order.status,
-      updatedAt: order.updatedAt,
+      _id: updatedOrder._id.toString(),
+      status: updatedOrder.status,
+      updatedAt: updatedOrder.updatedAt,
       previousStatus,
-      timeline: order.timeline || {},
+      timeline: updatedOrder.timeline || {},
       message: `Order status updated from ${previousStatus} to ${newStatus}`,
     });
   } catch (error: any) {
