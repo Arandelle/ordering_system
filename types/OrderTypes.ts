@@ -32,6 +32,8 @@ export interface OrderType {
     paymentStatus: string;
     paidAt?: Date;
 
+    paymentMethod: "cod" | "maya";
+
     method: {
       type: string;
       description: string;
@@ -39,8 +41,8 @@ export interface OrderType {
       scheme?: string;
     };
 
-    firstname: string;
-    lastname: string;
+    firstName: string;
+    lastName: string;
     customerEmail: string;
     customerPhone: string;
 
