@@ -196,8 +196,17 @@ export function getNextStatus(currentStatus: OrderStatus): OrderStatus | null {
  * @returns Action config with label and variant, or null
  */
 export function getActionConfig(
-  status: OrderStatus
+  status: OrderStatus,
+  paymentMethod: "cod" | "maya"
 ): { label: string; variant: string } | null {
+
+  if(status === ORDER_STATUSES.PENDING){
+     // Only COD can be manually accepted at pending
+    return paymentMethod === "cod"
+      ? { label: "Accept Order", variant: "bg-[#ef4501] hover:bg-[#c13500]" }
+      : null; // Maya must wait for payment confirmation
+  }
+
   return ORDER_ACTION_CONFIG[status];
 }
  
