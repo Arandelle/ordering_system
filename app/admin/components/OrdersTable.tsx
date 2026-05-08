@@ -18,7 +18,11 @@ import LoadingPage from "@/components/ui/LoadingPage";
 
 export default function OrdersTable({ orders }: { orders: OrderType[] }) {
   const [orderToViewId, setOrderToViewId] = useState<string>("");
-  const { data: orderToView, isLoading, isError } = useOrder({type: "admin"}, orderToViewId);
+  const {
+    data: orderToView,
+    isLoading,
+    isError,
+  } = useOrder({ type: "admin" }, orderToViewId);
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString("en-US", {
@@ -30,17 +34,17 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
   };
 
   const headerTitles = [
-    "Order ID",
     "Customer",
     "Items",
     "Total",
     "Reference",
+    "Payment Method",
     "Status",
     "Time",
     "Actions",
   ];
 
-  const vatableSales = orderToView?.total?.vatableSales ?? 0
+  const vatableSales = orderToView?.total?.vatableSales ?? 0;
   const totalAmount = orderToView?.total?.totalAmount ?? 0;
 
   return (
@@ -66,73 +70,85 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
           </TableHeader>
           <TableBody className="divide-y divide-stone-100">
             {orders.length > 0 ? (
-              orders.map((order) => (
-                <TableRow
-                  key={order._id}
-                  className="hover:bg-stone-50 transition-colors"
-                >
-                  <TableCell>
-                    <span className="text-sm font-semibold text-stone-800">
-                      {order._id.substring(0, 8) + "..."}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium text-gray-900">
-                        {order.paymentInfo.firstname ?? "—"} {order.paymentInfo.lastname ?? "—"}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {order.paymentInfo.customerEmail ?? "—"}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {order.paymentInfo.customerPhone ?? "—"}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <span className="text-sm text-stone-600">
-                      {order.items.length} item
-                      {order.items.length > 1 ? "s" : ""}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <span className="text-sm font-semibold text-stone-800">
-                      ₱{order.total.totalAmount?.toFixed(2)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <span className="text-xs font-medium text-stone-600 uppercase">
-                      {order.paymentInfo.referenceNumber}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <StatusBadge status={order.status} />
-                  </TableCell>
-                  <TableCell className="px-6 py-4">
-                    <span className="text-xs text-stone-500">
-                      {formatDate(order.createdAt)}
-                    </span>
-                  </TableCell>
+              orders.map((order) => {
+                const isMaya = order.paymentInfo.paymentMethod === "maya";
 
-                  <TableCell className="px-6 py-4">
-                    <div className="flex flex-col lg:flex-row gap-2 items-center justify-center">
-                      <button
-                        onClick={() => setOrderToViewId(order._id)}
-                        className="text-xs font-bold bg-blue-700 hover:bg-blue-800 py-2 px-3 text-white rounded-full cursor-pointer text-nowrap"
+                return (
+                  <TableRow
+                    key={order._id}
+                    className="hover:bg-stone-50 transition-colors"
+                  >
+                    <TableCell className="px-6 py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-medium text-gray-900">
+                          {order.paymentInfo.firstName ?? "—"}{" "}
+                          {order.paymentInfo.lastName ?? "—"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {order.paymentInfo.customerEmail ?? "—"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {order.paymentInfo.customerPhone ?? "—"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <span className="text-sm text-stone-600">
+                        {order.items.length} item
+                        {order.items.length > 1 ? "s" : ""}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <span className="text-sm font-semibold text-stone-800">
+                        ₱{order.total.totalAmount?.toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <span className="text-xs font-medium text-stone-600 uppercase">
+                        {order.paymentInfo.referenceNumber}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          isMaya
+                            ? "bg-green-100 text-green-700"
+                            : "text-orange-700 bg-orange-100"
+                        }`}
                       >
-                        View Details
-                      </button>
+                        {isMaya ? "Maya" : "Cash on Delivery"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <StatusBadge status={order.status} />
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <span className="text-xs text-stone-500">
+                        {formatDate(order.createdAt)}
+                      </span>
+                    </TableCell>
 
-                      <PermissionGuard permission="orders.update">
-                        <OrderActionButton
-                          orderId={order._id}
-                          status={order.status}
-                        />
-                      </PermissionGuard>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                    <TableCell className="px-6 py-4">
+                      <div className="flex flex-col lg:flex-row gap-2 items-center justify-center">
+                        <button
+                          onClick={() => setOrderToViewId(order._id)}
+                          className="text-xs font-bold bg-blue-700 hover:bg-blue-800 py-2 px-3 text-white rounded-full cursor-pointer text-nowrap"
+                        >
+                          View Details
+                        </button>
+
+                        <PermissionGuard permission="orders.update">
+                          <OrderActionButton
+                            orderId={order._id}
+                            status={order.status}
+                            paymentMethod={order.paymentInfo.paymentMethod}
+                          />
+                        </PermissionGuard>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={8} className="py-12 text-center">
@@ -164,7 +180,7 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                   <div>
                     <p className="text-xs text-gray-400">Order ID</p>
                     <p className="text-sm font-mono font-medium text-gray-700">
-                      {orderToView._id}
+                      {orderToView._id ?? "--"}
                     </p>
                   </div>
                   <StatusBadge status={orderToView.status ?? ""} />
@@ -181,7 +197,8 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                     <div className="flex items-center gap-2">
                       <UserIcon size={14} className="text-gray-400" />
                       <span className="text-sm text-gray-700">
-                        {orderToView.paymentInfo?.firstname ?? "—"} {orderToView.paymentInfo.lastname ?? "—"}
+                        {orderToView.paymentInfo?.firstName ?? "—"}{" "}
+                        {orderToView.paymentInfo?.lastName ?? "—"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -200,6 +217,42 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                 </div>
 
                 <hr className="border-stone-100" />
+
+                {/* Shipping Address */}
+                {orderToView.paymentInfo?.shippingAddress && (
+                  <>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                        Shipping Address
+                      </p>
+                      <div className="flex flex-col gap-1 text-sm text-gray-700 bg-stone-50 rounded-lg px-3 py-2.5">
+                        <span>
+                          {orderToView.paymentInfo.shippingAddress.line1}
+                          {orderToView.paymentInfo.shippingAddress.line2 && (
+                            <>
+                              , {orderToView.paymentInfo.shippingAddress.line2}
+                            </>
+                          )}
+                        </span>
+                        <span>
+                          {orderToView.paymentInfo.shippingAddress.city},{" "}
+                          {orderToView.paymentInfo.shippingAddress.province}{" "}
+                          {orderToView.paymentInfo.shippingAddress.postalCode}
+                        </span>
+                        <span className="text-gray-400">
+                          {orderToView.paymentInfo.shippingAddress.country}
+                        </span>
+                        {orderToView.paymentInfo.shippingAddress.landmark && (
+                          <span className="text-xs text-gray-400 mt-0.5">
+                            📍 Landmark:{" "}
+                            {orderToView.paymentInfo.shippingAddress.landmark}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <hr className="border-stone-100" />
+                  </>
+                )}
 
                 {/* Order Items */}
                 <div>
@@ -230,7 +283,7 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                           </div>
                         </div>
                         <p className="text-sm font-medium text-gray-700">
-                          ₱{(item.price * item.quantity).toLocaleString() ?? "-"}
+                          ₱{(item.price * item.quantity).toLocaleString()}
                         </p>
                       </div>
                     ))}
@@ -261,14 +314,41 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                   <div className="flex flex-col gap-1.5 text-sm text-gray-700">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Method</span>
-                      <span className="capitalize font-medium">
-                        {orderToView.paymentInfo?.method?.type ?? "—"}
+                      <span
+                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          orderToView.paymentInfo?.paymentMethod === "maya"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-orange-100 text-orange-700"
+                        }`}
+                      >
+                        {orderToView.paymentInfo?.paymentMethod === "maya"
+                          ? "Maya"
+                          : "Cash on Delivery"}
                       </span>
                     </div>
+                    {orderToView.paymentInfo?.method && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Card</span>
+                        <span className="font-medium capitalize">
+                          {orderToView.paymentInfo.method.scheme}{" "}
+                          {orderToView.paymentInfo.method.last4 && (
+                            <span className="font-mono">
+                              ••••{orderToView.paymentInfo.method.last4}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-400">Reference</span>
                       <span className="font-mono text-xs">
                         {orderToView.paymentInfo?.referenceNumber ?? "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Status</span>
+                      <span className="capitalize font-medium">
+                        {orderToView.paymentInfo?.paymentStatus ?? "—"}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -283,6 +363,33 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                     </div>
                   </div>
                 </div>
+
+                {/* Timeline */}
+                {orderToView.timeline &&
+                  Object.keys(orderToView.timeline).length > 0 && (
+                    <>
+                      <hr className="border-stone-100" />
+                      <div>
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                          Timeline
+                        </p>
+                        <div className="flex flex-col gap-1.5 text-sm text-gray-700">
+                          {Object.entries(orderToView.timeline)
+                            .filter(([_, value]) => value)
+                            .map(([key, value]) => (
+                              <div key={key} className="flex justify-between">
+                                <span className="text-gray-400 capitalize">
+                                  {key.replace("At", "")}
+                                </span>
+                                <span className="text-xs">
+                                  {new Date(value as string).toLocaleString()}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                 {/* Note */}
                 {orderToView.notes && (
