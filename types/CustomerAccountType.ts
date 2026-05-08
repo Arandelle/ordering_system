@@ -1,6 +1,7 @@
 export type Customer = {
   _id?: string;
-  fullname: string;
+  firstName: string;
+  lastName: string;
   phone?: string;
   email: string;
   password: string;
@@ -9,7 +10,8 @@ export type Customer = {
 };
 
 export type CustomerCreateInput = {
-  fullname: string;
+  firsName: string;
+  lastName: string;
   phone?: string;
   email: string;
   password: string;
