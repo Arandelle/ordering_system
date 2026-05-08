@@ -20,6 +20,7 @@ import { STAFF_ROLES } from "@/types/staff";
 import { EMAIL_FROM, resend } from "@/lib/resend";
 import { getStatusSubject } from "@/app/api/paymaya/webhook/route";
 import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
+import { OrderType } from "@/types/OrderTypes";
 
 // ============================================
 // GET /api/orders/[id]
@@ -65,32 +66,12 @@ export async function GET(
       );
     }
 
+    const orderData = order.toObject();
+
     // Return order data in consistent format
     return NextResponse.json({
-      _id: order._id.toString(),
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
-      status: order.status,
-      items: order.items,
-      paymentInfo: {
-        method: order.paymentInfo?.method || "paymaya",
-        paymentLinkId: order.paymentInfo?.checkoutId,
-        checkoutUrl: order.paymentInfo?.checkoutUrl,
-        referenceNumber: order.paymentInfo?.referenceNumber,
-        paymentId: order.paymentInfo?.paymentId,
-        paymentStatus: order.paymentInfo?.paymentStatus,
-        paidAt: order.paymentInfo?.paidAt,
-        customerName: order.paymentInfo?.customerName,
-        customerEmail: order.paymentInfo?.customerEmail,
-        customerPhone: order.paymentInfo?.customerPhone,
-      },
-      total: order.total,
-      estimatedTime: order.estimatedTime,
-      timeline: order.timeline || {},
-      dispatchInfo: order.dispatchInfo || null,
-      notes: order.notes,
-      isReviewed: order.isReviewed,
-      reviewedAt: order.reviewedAt,
+      ...orderData,
+      _id: orderData._id.toString(),
     });
   } catch (error: any) {
     console.error("GET /api/orders/[id] error:", error);
