@@ -50,8 +50,8 @@ export default function OrdersTable({
     "Actions",
   ];
 
-  const vatableSales = orderToView?.total?.vatableSales ?? 0;
-  const totalAmount = orderToView?.total?.totalAmount ?? 0;
+  const vatableSales = orderToView?.data.total?.vatableSales ?? 0;
+  const totalAmount = orderToView?.data.total?.totalAmount ?? 0;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
@@ -194,10 +194,10 @@ export default function OrdersTable({
                   <div>
                     <p className="text-xs text-gray-400">Order ID</p>
                     <p className="text-sm font-mono font-medium text-gray-700">
-                      {orderToView._id ?? "--"}
+                      {orderToView.data._id ?? "--"}
                     </p>
                   </div>
-                  <StatusBadge status={orderToView.status ?? ""} />
+                  <StatusBadge status={orderToView.data.status ?? ""} />
                 </div>
 
                 <hr className="border-stone-100" />
@@ -211,20 +211,20 @@ export default function OrdersTable({
                     <div className="flex items-center gap-2">
                       <UserIcon size={14} className="text-gray-400" />
                       <span className="text-sm text-gray-700">
-                        {orderToView.paymentInfo?.firstName ?? "—"}{" "}
-                        {orderToView.paymentInfo?.lastName ?? "—"}
+                        {orderToView.data.paymentInfo?.firstName ?? "—"}{" "}
+                        {orderToView.data.paymentInfo?.lastName ?? "—"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MailIcon size={14} className="text-gray-400" />
                       <span className="text-sm text-gray-700">
-                        {orderToView.paymentInfo?.customerEmail ?? "—"}
+                        {orderToView.data.paymentInfo?.customerEmail ?? "—"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <PhoneIcon size={14} className="text-gray-400" />
                       <span className="text-sm text-gray-700">
-                        {orderToView.paymentInfo?.customerPhone ?? "—"}
+                        {orderToView.data.paymentInfo?.customerPhone ?? "—"}
                       </span>
                     </div>
                   </div>
@@ -233,7 +233,7 @@ export default function OrdersTable({
                 <hr className="border-stone-100" />
 
                 {/* Shipping Address */}
-                {orderToView.paymentInfo?.shippingAddress && (
+                {orderToView.data.paymentInfo?.shippingAddress && (
                   <>
                     <div>
                       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
@@ -241,25 +241,25 @@ export default function OrdersTable({
                       </p>
                       <div className="flex flex-col gap-1 text-sm text-gray-700 bg-stone-50 rounded-lg px-3 py-2.5">
                         <span>
-                          {orderToView.paymentInfo.shippingAddress.line1}
-                          {orderToView.paymentInfo.shippingAddress.line2 && (
+                          {orderToView.data.paymentInfo.shippingAddress.line1}
+                          {orderToView.data.paymentInfo.shippingAddress.line2 && (
                             <>
-                              , {orderToView.paymentInfo.shippingAddress.line2}
+                              , {orderToView.data.paymentInfo.shippingAddress.line2}
                             </>
                           )}
                         </span>
                         <span>
-                          {orderToView.paymentInfo.shippingAddress.city},{" "}
-                          {orderToView.paymentInfo.shippingAddress.province}{" "}
-                          {orderToView.paymentInfo.shippingAddress.postalCode}
+                          {orderToView.data.paymentInfo.shippingAddress.city},{" "}
+                          {orderToView.data.paymentInfo.shippingAddress.province}{" "}
+                          {orderToView.data.paymentInfo.shippingAddress.postalCode}
                         </span>
                         <span className="text-gray-400">
-                          {orderToView.paymentInfo.shippingAddress.country}
+                          {orderToView.data.paymentInfo.shippingAddress.country}
                         </span>
-                        {orderToView.paymentInfo.shippingAddress.landmark && (
+                        {orderToView.data.paymentInfo.shippingAddress.landmark && (
                           <span className="text-xs text-gray-400 mt-0.5">
                             📍 Landmark:{" "}
-                            {orderToView.paymentInfo.shippingAddress.landmark}
+                            {orderToView.data.paymentInfo.shippingAddress.landmark}
                           </span>
                         )}
                       </div>
@@ -274,7 +274,7 @@ export default function OrdersTable({
                     Items
                   </p>
                   <div className="flex flex-col gap-2">
-                    {orderToView.items.map((item, index) => (
+                    {orderToView.data.items.map((item, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between"
@@ -330,24 +330,24 @@ export default function OrdersTable({
                       <span className="text-gray-400">Method</span>
                       <span
                         className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          orderToView.paymentInfo?.paymentMethod === "maya"
+                          orderToView.data.paymentInfo?.paymentMethod === "maya"
                             ? "bg-purple-100 text-purple-700"
                             : "bg-orange-100 text-orange-700"
                         }`}
                       >
-                        {orderToView.paymentInfo?.paymentMethod === "maya"
+                        {orderToView.data.paymentInfo?.paymentMethod === "maya"
                           ? "Maya"
                           : "Cash on Delivery"}
                       </span>
                     </div>
-                    {orderToView.paymentInfo?.method && (
+                    {orderToView.data.paymentInfo?.method && (
                       <div className="flex justify-between">
                         <span className="text-gray-400">Card</span>
                         <span className="font-medium capitalize">
-                          {orderToView.paymentInfo.method.scheme}{" "}
-                          {orderToView.paymentInfo.method.last4 && (
+                          {orderToView.data.paymentInfo.method.scheme}{" "}
+                          {orderToView.data.paymentInfo.method.last4 && (
                             <span className="font-mono">
-                              ••••{orderToView.paymentInfo.method.last4}
+                              ••••{orderToView.data.paymentInfo.method.last4}
                             </span>
                           )}
                         </span>
@@ -356,21 +356,21 @@ export default function OrdersTable({
                     <div className="flex justify-between">
                       <span className="text-gray-400">Reference</span>
                       <span className="font-mono text-xs">
-                        {orderToView.paymentInfo?.referenceNumber ?? "—"}
+                        {orderToView.data.paymentInfo?.referenceNumber ?? "—"}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Status</span>
                       <span className="capitalize font-medium">
-                        {orderToView.paymentInfo?.paymentStatus ?? "—"}
+                        {orderToView.data.paymentInfo?.paymentStatus ?? "—"}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Paid At</span>
                       <span>
-                        {orderToView.paymentInfo?.paidAt
+                        {orderToView.data.paymentInfo?.paidAt
                           ? new Date(
-                              orderToView.paymentInfo.paidAt,
+                              orderToView.data.paymentInfo.paidAt,
                             ).toLocaleString()
                           : "—"}
                       </span>
@@ -378,17 +378,17 @@ export default function OrdersTable({
                   </div>
                 </div>
 
-                {/* Timeline */}
-                {orderToView.timeline &&
-                  Object.keys(orderToView.timeline).length > 0 && (
+                {/* data.timeline */}
+                {orderToView.data.timeline &&
+                  Object.keys(orderToView.data.timeline).length > 0 && (
                     <>
                       <hr className="border-stone-100" />
                       <div>
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-                          Timeline
+                          data.timeline
                         </p>
                         <div className="flex flex-col gap-1.5 text-sm text-gray-700">
-                          {Object.entries(orderToView.timeline)
+                          {Object.entries(orderToView.data.timeline)
                             .filter(([_, value]) => value)
                             .map(([key, value]) => (
                               <div key={key} className="flex justify-between">
@@ -406,7 +406,7 @@ export default function OrdersTable({
                   )}
 
                 {/* Note */}
-                {orderToView.notes && (
+                {orderToView.data.notes && (
                   <>
                     <hr className="border-stone-100" />
                     <div>
@@ -414,7 +414,7 @@ export default function OrdersTable({
                         Note
                       </p>
                       <p className="text-sm text-gray-600 bg-stone-50 rounded-lg px-3 py-2">
-                        {orderToView.notes}
+                        {orderToView.data.notes}
                       </p>
                     </div>
                   </>
