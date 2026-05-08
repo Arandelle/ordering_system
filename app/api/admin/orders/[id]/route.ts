@@ -14,6 +14,9 @@ import {
   isValidOrderStatus,
   TIMELINE_FIELD_MAP,
   ORDER_STATUSES,
+  canTransitionTo,
+  getNextStatus,
+  getTimelineField,
 } from "@/types/orderConstants";
 import { requireAdmin } from "@/lib/getAuth";
 import { STAFF_ROLES } from "@/types/staff";
@@ -150,25 +153,14 @@ export async function PATCH(
     // ============================================
 
     const currentStatus = order.status as OrderStatus;
-    const allowedNextStatus =
-      STATUS_TRANSITIONS[currentStatus as keyof typeof STATUS_TRANSITIONS];
-
     // Check if transition is valid
-    if (allowedNextStatus !== newStatus) {
-      const transitionMap = Object.entries(STATUS_TRANSITIONS).reduce(
-        (acc, [status, nextStatus]) => {
-          acc[status] = nextStatus;
-          return acc;
-        },
-        {} as Record<string, string | null>,
-      );
-
+    if (!canTransitionTo(currentStatus, newStatus)) {
       return NextResponse.json(
         {
           error: `Cannot transition from "${currentStatus}" to "${newStatus}"`,
           currentStatus,
-          allowedNextStatus: allowedNextStatus || "no transitions allowed",
-          allTransitions: transitionMap,
+          allowedNextStatus:
+            getNextStatus(currentStatus) ?? "no transitions allowed",
         },
         { status: 400 },
       );
@@ -188,13 +180,9 @@ export async function PATCH(
     // ============================================
 
     // Auto-update timeline when status changes
-    const timelineField =
-      TIMELINE_FIELD_MAP[newStatus as keyof typeof TIMELINE_FIELD_MAP];
+    const timelineField = getTimelineField(newStatus);
 
     if (timelineField && timelineField !== null) {
-      if (!order.timeline) {
-        order.timeline = {};
-      }
       updateData[`timeline.${timelineField}`] = new Date();
     }
 
