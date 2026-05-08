@@ -68,7 +68,10 @@ const CustomersPage = () => {
   });
 
   const customerList = response?.data ?? [];
-  const totalRevenue = customerList.reduce((sum, c) => sum + (c.totalSpent ?? 0), 0);
+  const totalRevenue = customerList.reduce(
+    (sum, c) => sum + (c.totalSpent ?? 0),
+    0,
+  );
   const average = totalRevenue / customerList.length;
 
   const customerHeaders = [
@@ -160,7 +163,16 @@ const CustomersPage = () => {
                   <TableCell className="mx-auto flex justify-center">
                     <div className="flex items-center gap-3 w-full max-w-60 min-w-44 justify-between">
                       <div className="w-10 h-10 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold">
-                        {customer.firstName?.charAt(0) ?? "?"}
+                        {customer.image ? (
+                          <img
+                            src={customer.image}
+                            alt={`${customer.firstName}-photo`}
+                            loading="lazy"
+                            className="object-cover rounded-full"
+                          />
+                        ) : (
+                          <span> {customer.firstName?.charAt(0) ?? "?"}</span>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-stone-800">
@@ -172,16 +184,16 @@ const CustomersPage = () => {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="text-sm text-stone-700">{customer.email}</p>
+                      <p className="text-sm text-stone-700">{customer.email ?? "--"}</p>
                       <p className="text-xs text-stone-500 mt-1">
-                        {customer.phone}
+                        {customer.phone ?? "--"}
                       </p>
                     </div>
                   </TableCell>
 
                   <TableCell>
                     <span className="text-sm font-semibold text-stone-800">
-                      {customer.totalOrders}
+                      {customer.totalOrders ?? 0}
                     </span>
                   </TableCell>
                   <TableCell>
