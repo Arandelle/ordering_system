@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
     );
 
     const skip = (page - 1) * limit;
-    const filter = { isActive: true };
+    const filter = {};
 
     const [data, total] = await Promise.all([
-      User.find(filter, "fullname email phone createdAt")
+      User.find(filter, "name firstName lastName email phone createdAt")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
