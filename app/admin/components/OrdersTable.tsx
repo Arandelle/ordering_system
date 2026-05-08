@@ -16,7 +16,13 @@ import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
 import PermissionGuard from "@/lib/PermissionGuard";
 import LoadingPage from "@/components/ui/LoadingPage";
 
-export default function OrdersTable({ orders }: { orders: OrderType[] }) {
+export default function OrdersTable({
+  orders,
+  isPending,
+}: {
+  orders: OrderType[];
+  isPending: boolean;
+}) {
   const [orderToViewId, setOrderToViewId] = useState<string>("");
   const {
     data: orderToView,
@@ -68,7 +74,7 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-stone-100">
+          <TableBody className="divide-y divide-stone-100 relative">
             {orders.length > 0 ? (
               orders.map((order) => {
                 const isMaya = order.paymentInfo.paymentMethod === "maya";
@@ -155,6 +161,16 @@ export default function OrdersTable({ orders }: { orders: OrderType[] }) {
                   <p className="text-sm text-gray-500">
                     No orders found on this branch.
                   </p>
+                </TableCell>
+              </TableRow>
+            )}
+
+            {isPending && (
+              <TableRow>
+                <TableCell>
+                  <div className="h-full bg-white">
+                    <LoadingPage />
+                  </div>
                 </TableCell>
               </TableRow>
             )}

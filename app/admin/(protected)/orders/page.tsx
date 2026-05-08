@@ -21,7 +21,7 @@ const OrdersPage = () => {
   const [limit, setLimit] = useState(10);
 
   // ✅ pass all filters to the server
-  const { data } = useOrders(
+  const { data, isPending } = useOrders(
     { type: "admin" },
     {
       page: currentPage,
@@ -63,7 +63,7 @@ const OrdersPage = () => {
       placeholder="Search for customer, email, status, reference"
       />
 
-      <OrdersTable orders={orders} />
+      <OrdersTable orders={orders} isPending={isPending} />
 
       {pagination && (
         <Pagination
