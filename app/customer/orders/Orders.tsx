@@ -182,9 +182,7 @@ const Orders = () => {
                 : order.items.slice(0, 3);
               const hasMoreItems = order.items.length > 3;
               const hiddenItemsCount = order.items.length - 3;
-
-              console.log(order.items);
-
+              
               return (
                 <div
                   key={order._id}

@@ -1,0 +1,270 @@
+import LoadingPage from "@/components/ui/LoadingPage";
+import Modal from "@/components/ui/Modal";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { SpecificProductResponse } from "@/hooks/api/useOrders";
+import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
+import React from "react";
+
+interface OrderDetailsType {
+  setOrderToViewId: (item: string) => void;
+  isLoading: boolean;
+  isError: boolean;
+  orderToView: SpecificProductResponse | undefined;
+}
+
+const AdminOrderDetails = ({
+  setOrderToViewId,
+  isLoading,
+  isError,
+  orderToView,
+}: OrderDetailsType) => {
+    
+  const vatableSales = orderToView?.data?.total?.vatableSales ?? 0;
+  const totalAmount = orderToView?.data?.total?.totalAmount ?? 0;
+
+  return (
+    <Modal title="Order Details" onClose={() => setOrderToViewId("")}>
+      {isLoading && (
+        <div className="relative flex items-center justify-center py-12 h-[50vh]">
+          <LoadingPage />
+        </div>
+      )}
+      {isError && (
+        <p className="text-center text-sm text-red-500 py-8">
+          Failed to load order.
+        </p>
+      )}
+      {orderToView && (
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-400">Order ID</p>
+              <p className="text-sm font-mono font-medium text-gray-700">
+                {orderToView.data?._id ?? "--"}
+              </p>
+            </div>
+            <StatusBadge status={orderToView.data?.status ?? ""} />
+          </div>
+
+          <hr className="border-stone-100" />
+
+          {/* Customer Info */}
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+              Customer
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <UserIcon size={14} className="text-gray-400" />
+                <span className="text-sm text-gray-700">
+                  {orderToView.data?.paymentInfo?.firstName ?? "—"}{" "}
+                  {orderToView.data?.paymentInfo?.lastName ?? "—"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MailIcon size={14} className="text-gray-400" />
+                <span className="text-sm text-gray-700">
+                  {orderToView.data?.paymentInfo?.customerEmail ?? "—"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <PhoneIcon size={14} className="text-gray-400" />
+                <span className="text-sm text-gray-700">
+                  {orderToView.data?.paymentInfo?.customerPhone ?? "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-stone-100" />
+
+          {/* Shipping Address */}
+          {orderToView.data?.paymentInfo?.shippingAddress && (
+            <>
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                  Shipping Address
+                </p>
+                <div className="flex flex-col gap-1 text-sm text-gray-700 bg-stone-50 rounded-lg px-3 py-2.5">
+                  <span>
+                    {orderToView.data?.paymentInfo.shippingAddress.line1}
+                    {orderToView.data?.paymentInfo.shippingAddress.line2 && (
+                      <>
+                        , {orderToView.data?.paymentInfo.shippingAddress.line2}
+                      </>
+                    )}
+                  </span>
+                  <span>
+                    {orderToView.data?.paymentInfo.shippingAddress.city},{" "}
+                    {orderToView.data?.paymentInfo.shippingAddress.province}{" "}
+                    {orderToView.data?.paymentInfo.shippingAddress.postalCode}
+                  </span>
+                  <span className="text-gray-400">
+                    {orderToView.data?.paymentInfo.shippingAddress.country}
+                  </span>
+                  {orderToView.data?.paymentInfo.shippingAddress.landmark && (
+                    <span className="text-xs text-gray-400 mt-0.5">
+                      📍 Landmark:{" "}
+                      {orderToView.data?.paymentInfo.shippingAddress.landmark}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <hr className="border-stone-100" />
+            </>
+          )}
+
+          {/* Order Items */}
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+              Items
+            </p>
+            <div className="flex flex-col gap-2">
+              {orderToView.data?.items.map((item, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-12 h-12 rounded-lg object-cover bg-stone-100"
+                      />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-gray-400">x{item.quantity}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-gray-700">
+                    ₱{(item.price * item.quantity).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <hr className="border-stone-100" />
+
+          {/* Total */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>VATable Sales</span>
+              <span>₱{vatableSales?.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-sm font-semibold text-gray-900">
+              <span>Total</span>
+              <span>₱{totalAmount.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <hr className="border-stone-100" />
+
+          {/* Payment Info */}
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+              Payment
+            </p>
+            <div className="flex flex-col gap-1.5 text-sm text-gray-700">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Method</span>
+                <span
+                  className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    orderToView.data?.paymentInfo?.paymentMethod === "maya"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-orange-100 text-orange-700"
+                  }`}
+                >
+                  {orderToView.data?.paymentInfo?.paymentMethod === "maya"
+                    ? "Maya"
+                    : "Cash on Delivery"}
+                </span>
+              </div>
+              {orderToView.data?.paymentInfo?.method && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Card</span>
+                  <span className="font-medium capitalize">
+                    {orderToView.data?.paymentInfo.method.scheme}{" "}
+                    {orderToView.data?.paymentInfo.method.last4 && (
+                      <span className="font-mono">
+                        ••••{orderToView.data?.paymentInfo.method.last4}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-gray-400">Reference</span>
+                <span className="font-mono text-xs">
+                  {orderToView.data?.paymentInfo?.referenceNumber ?? "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Status</span>
+                <span className="capitalize font-medium">
+                  {orderToView.data?.paymentInfo?.paymentStatus ?? "—"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Paid At</span>
+                <span>
+                  {orderToView.data?.paymentInfo?.paidAt
+                    ? new Date(
+                        orderToView.data?.paymentInfo.paidAt,
+                      ).toLocaleString()
+                    : "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* data.timeline */}
+          {orderToView.data?.timeline &&
+            Object.keys(orderToView.data?.timeline).length > 0 && (
+              <>
+                <hr className="border-stone-100" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                    data.timeline
+                  </p>
+                  <div className="flex flex-col gap-1.5 text-sm text-gray-700">
+                    {Object.entries(orderToView.data?.timeline)
+                      .filter(([_, value]) => value)
+                      .map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-gray-400 capitalize">
+                            {key.replace("At", "")}
+                          </span>
+                          <span className="text-xs">
+                            {new Date(value as string).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+          {/* Note */}
+          {orderToView.data?.notes && (
+            <>
+              <hr className="border-stone-100" />
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                  Note
+                </p>
+                <p className="text-sm text-gray-600 bg-stone-50 rounded-lg px-3 py-2">
+                  {orderToView.data?.notes}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </Modal>
+  );
+};
+
+export default AdminOrderDetails;

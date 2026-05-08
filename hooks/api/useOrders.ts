@@ -32,7 +32,7 @@ interface ProductResponse {
   pagination: PaginationMeta;
 }
 
-interface SpecificProductResponse {
+export interface SpecificProductResponse {
   data: OrderType;
 }
 
@@ -76,6 +76,7 @@ export const useOrder = (
     queryKey: ["orders", id, type],
     queryFn: () => apiClient.get(`${ORDER_ENDPOINTS[type]}${id}`),
     staleTime: 30000,
+    enabled: !!id,
   });
 };
 

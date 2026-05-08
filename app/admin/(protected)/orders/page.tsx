@@ -1,7 +1,7 @@
 "use client";
 
 import { InputField } from "@/components/ui/InputField";
-import OrdersTable from "@/app/admin/components/OrdersTable";
+import OrdersTable from "@/app/admin/(protected)/orders/components/OrdersTable";
 import React, { useState } from "react";
 import { useOrders } from "@/hooks/api/useOrders";
 import Pagination from "@/components/ui/Pagination";

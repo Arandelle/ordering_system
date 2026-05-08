@@ -1,11 +1,12 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StatusBadge } from "./StatusBadge";
 import { useOrder } from "@/hooks/api/useOrders";
+import LoadingPage from "@/components/ui/LoadingPage";
+import Modal from "@/components/ui/Modal";
 
 interface OrderDetailsProps {
   orderId: string;
@@ -19,15 +20,19 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;
 
-  console.log("placedOrders", placedOrders);
-console.log("order", order);
-
   useEffect(() => {
     // After hydration, if no order found, redirect
     if (!isLoading && !order) {
       router.push("/orders");
     }
   }, [isLoading, order, router]);
+
+  if(isLoading){
+    return(
+      <LoadingPage className="h-screen"/>
+    )
+  }
+
 
   // If no order after loading, show nothing (redirect will happen)
   if (!order) {
@@ -49,6 +54,9 @@ console.log("order", order);
     <div
       className={`space-y-6 max-w-5xl max-h-[calc(100vh-100px)] overflow-y-auto mx-auto p-4 hide-scrollbar`}
     >
+      {isLoading && (
+        <LoadingPage />
+      )}
       {/* Header */}
       <div className="border-b pb-4">
         <div className="flex justify-between items-start mb-2">
