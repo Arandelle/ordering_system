@@ -160,11 +160,11 @@ const CustomersPage = () => {
                   <TableCell className="mx-auto flex justify-center">
                     <div className="flex items-center gap-3 w-full max-w-60 min-w-44 justify-between">
                       <div className="w-10 h-10 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold">
-                        {customer.fullname?.charAt(0) ?? "?"}
+                        {customer.firstName?.charAt(0) ?? "?"}
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-stone-800">
-                          {customer.fullname}
+                          {customer.firstName}
                         </p>
                         <p className="text-xs text-stone-500">{customer._id}</p>
                       </div>
