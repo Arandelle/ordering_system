@@ -1,30 +1,59 @@
 import { connectDB } from "@/lib/mongodb";
-import { queryOrders } from "@/lib/orders/orderService";
+import { Order } from "@/models/Orders";
 import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
+import {
+  ORDER_ACTION_CONFIG,
+  OrderStatus,
+  STATUS_PRIORITY,
+} from "@/types/orderConstants";
 
-// app/api/orders/guest/[id]/route.ts
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  await connectDB();
-  
-  const { id } = await context.params;
-  const order = await queryOrders({
-    filter: { _id: id },
-    limit: 1,
-  });
+  try {
+    await connectDB();
 
-  const found = order.data[0];
-  if (!found) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const { id } = await context.params;
 
-  // Block if belongs to registered customer
-  if (found.customerId) {
+    if (!Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid order ID" },
+        { status: 400 },
+      );
+    }
+
+    const order = await Order.findById(id).lean();
+
+    if (!order) {
+      return NextResponse.json(
+        { error: "Order not found" },
+        { status: 404 },
+      );
+    }
+
+    const formattedOrder = {
+      _id: order._id,
+      customerId: order.customerId?.toString() ?? null,
+      createdAt: order.createdAt,
+      status: order.status,
+      items: order.items,
+      total: order.total,
+      paymentInfo: order.paymentInfo,
+      estimatedTime: order.estimatedTime,
+      isReviewed: order.isReviewed,
+      actionConfig: ORDER_ACTION_CONFIG[order.status as OrderStatus],
+      priority: STATUS_PRIORITY[order.status as OrderStatus],
+    };
+
+    return NextResponse.json({ data: formattedOrder });
+  } catch (error) {
+    console.error("GET guest order error:", error);
+
     return NextResponse.json(
-      { error: "Sign in to view this order.", code: "AUTH_REQUIRED" },
-      { status: 403 },
+      { error: "Failed to fetch order" },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json({ data: found });
 }
