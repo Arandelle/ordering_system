@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StatusBadge } from "./StatusBadge";
-import { useOrder, useOrders } from "@/hooks/api/useOrders";
+import { useOrder } from "@/hooks/api/useOrders";
 
 interface OrderDetailsProps {
   orderId: string;
@@ -14,10 +14,13 @@ interface OrderDetailsProps {
 export default function OrderDetails({ orderId }: OrderDetailsProps) {
   const { data: placedOrders, isLoading } = useOrder({type: "customer"}, orderId);
   const router = useRouter();
-  const order = placedOrders
-
+  const order = placedOrders?.data;
+  
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;
+
+  console.log("placedOrders", placedOrders);
+console.log("order", order);
 
   useEffect(() => {
     // After hydration, if no order found, redirect
@@ -41,9 +44,6 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
     });
   };
 
-  const timeAgo = formatDistanceToNow(new Date(order.createdAt), {
-    addSuffix: true,
-  });
 
   return (
     <div
@@ -60,7 +60,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
               </span>
             </h2>
             <p className="text-sm text-gray-500">
-              Placed {timeAgo} • {formatDate(order.createdAt)}
+              Placed • {formatDate(order.createdAt)}
             </p>
           </div>
           <StatusBadge status={order.status} />
@@ -143,8 +143,8 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
         <h3 className="font-semibold mb-3">Order Items</h3>
         <div className="space-y-3">
           {(showAllItems
-            ? order.items
-            : order.items.slice(0, ITEMS_TO_SHOW)
+            ? order.items ?? []
+            : order.items.slice(0, ITEMS_TO_SHOW) ?? []
           ).map((item, index) => (
             <div
               key={`${item._id}-${index}`}
@@ -174,7 +174,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
           ))}
 
           {/* View more/less button with linear overlay */}
-          {order.items.length > ITEMS_TO_SHOW && (
+          {(order.items?.length ?? 0) > ITEMS_TO_SHOW && (
             <div className="relative -mx-4">
               {!showAllItems && (
                 <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white via-white/60 to-transparent pointer-events-none" />
