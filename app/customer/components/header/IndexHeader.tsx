@@ -13,9 +13,11 @@ import { HeaderCartActions } from "./HeaderCartActions";
 import { HeaderAuthDesktop } from "./HeaderAuthDesktop";
 import { HeaderMobileMenu } from "./HeaderAuthMobile";
 import { HeaderModals } from "./HeaderModal";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const { data: session, isPending: sessionPending } = authClient.useSession();
+  const router = useRouter()
 
   const { modal: modalType, openModal, closeModal } = useModalQuery();
 
@@ -40,6 +42,7 @@ const Header = () => {
           closeModal();
           toast.success("Logged out successfully");
           setIsLoggingOut(false);
+          router.push("/")
         },
       },
     });
