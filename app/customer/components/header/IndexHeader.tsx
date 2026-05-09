@@ -47,7 +47,6 @@ const Header = () => {
           closeModal();
 
           await queryClient.invalidateQueries({ queryKey: ["orders"] });
-          console.log("Called this")
           toast.success("Logged out successfully");
           setIsLoggingOut(false);
           router.push("/");
