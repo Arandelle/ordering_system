@@ -155,6 +155,26 @@ export async function PATCH(
     // ============================================
 
     const currentStatus = order.status as OrderStatus;
+
+    const paymentMethod = order.paymentInfo?.paymentMethod as "cod" | "maya";
+
+    if (
+      paymentMethod === "maya" &&
+      currentStatus === ORDER_STATUSES.PENDING &&
+      newStatus === ORDER_STATUSES.PREPARING
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Maya orders cannot be accepted while payment is still pending. Wait for payment confirmation first.",
+          currentStatus,
+          paymentMethod,
+          requiredStatus: ORDER_STATUSES.PAID,
+        },
+        { status: 400 },
+      );
+    }
+
     // Check if transition is valid
     if (!canTransitionTo(currentStatus, newStatus, "admin")) {
       return NextResponse.json(
