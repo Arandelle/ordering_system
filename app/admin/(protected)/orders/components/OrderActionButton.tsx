@@ -15,11 +15,7 @@ interface Props {
   role: "admin" | "customer";
 }
 
-export function OrderActionButton({
-  orderId,
-  status,
-  role,
-}: Props) {
+export function OrderActionButton({ orderId,paymentMethod, status, role }: Props) {
   const nextStatuses = STATUS_TRANSITIONS[status];
   const { mutate, isPending } = useUpdateOrder();
 
@@ -39,6 +35,17 @@ export function OrderActionButton({
         const actionConfig = getActionConfig(status, nextStatus);
 
         if (!actionConfig) return null;
+
+        if (actionConfig.roles && !actionConfig.roles.includes(role)) {
+          return null;
+        }
+
+        if (
+          actionConfig.paymentMethods &&
+          !actionConfig.paymentMethods.includes(paymentMethod)
+        ) {
+          return null;
+        }
 
         return (
           <button
