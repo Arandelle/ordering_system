@@ -19,7 +19,6 @@ import {
 import {
   CreateOrderPayload,
   CreateOrderResponse,
-  OrdersApiResponse,
   OrderType,
   UpdateOrderPayLoad,
   UpdateOrderResponse,
@@ -30,10 +29,6 @@ import { toast } from "sonner";
 interface ProductResponse {
   data: OrderType[];
   pagination: PaginationMeta;
-}
-
-export interface SpecificProductResponse {
-  data: OrderType;
 }
 
 const ORDER_ENDPOINTS = {
@@ -72,7 +67,7 @@ export const useOrder = (
   { type }: { type: keyof typeof ORDER_ENDPOINTS },
   id: string,
 ) => {
-  return useQuery<SpecificProductResponse, Error>({
+  return useQuery<OrderType, Error>({
     queryKey: ["orders", id, type],
     queryFn: () => apiClient.get(`${ORDER_ENDPOINTS[type]}${id}`),
     staleTime: 30000,
