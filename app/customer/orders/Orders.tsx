@@ -11,65 +11,285 @@ import { useOrderActions } from "@/hooks/useOrderActions";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { authClient } from "@/lib/auth-client";
 
+/* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
   key: string;
   label: string;
   statuses?: OrderStatus[];
 };
 
+/* ─── Tab config ─────────────────────────────────────────────────────── */
 const TABS: Tab[] = [
   { key: "all", label: "All" },
-  { key: "pending", label: "To Pay", statuses: [ORDER_STATUSES.PENDING, ORDER_STATUSES.PAID] },
-  { key: "preparing", label: "To Dispatch" },
-  { key: "to-receive", label: "To Receive", statuses: [ORDER_STATUSES.DISPATCHED, ORDER_STATUSES.READY] },
-  { key: "completed", label: "To Review" },
+  { key: "pending", label: "To pay", statuses: [ORDER_STATUSES.PENDING, ORDER_STATUSES.PAID] },
+  { key: "preparing", label: "To dispatch" },
+  { key: "to-receive", label: "To receive", statuses: [ORDER_STATUSES.DISPATCHED, ORDER_STATUSES.READY] },
+  { key: "completed", label: "To review" },
   { key: "cancelled", label: "Cancelled" },
 ];
 
-const Orders = () => {
-  const {data: currentUser, isPending} = authClient.useSession();
-  const { data: placedOrders, isPending: isOrdersPending } = useOrders({
-    type: "customer",
+/* ─── Status pill ────────────────────────────────────────────────────── */
+const STATUS_STYLES: Record<string, string> = {
+  [ORDER_STATUSES.PENDING]:    "bg-amber-50 text-amber-800",
+  [ORDER_STATUSES.PAID]:       "bg-green-50 text-green-800",
+  [ORDER_STATUSES.PREPARING]:  "bg-blue-50 text-blue-800",
+  [ORDER_STATUSES.DISPATCHED]: "bg-purple-50 text-purple-800",
+  [ORDER_STATUSES.READY]:      "bg-purple-50 text-purple-800",
+  [ORDER_STATUSES.COMPLETED]:  "bg-green-50 text-green-800",
+  [ORDER_STATUSES.CANCELLED]:  "bg-red-50 text-red-800",
+  [ORDER_STATUSES.EXPIRED]:    "bg-gray-100 text-gray-600",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  [ORDER_STATUSES.PENDING]:    "To pay",
+  [ORDER_STATUSES.PAID]:       "Paid",
+  [ORDER_STATUSES.PREPARING]:  "Preparing",
+  [ORDER_STATUSES.DISPATCHED]: "Dispatched",
+  [ORDER_STATUSES.READY]:      "Ready",
+  [ORDER_STATUSES.COMPLETED]:  "Completed",
+  [ORDER_STATUSES.CANCELLED]:  "Cancelled",
+  [ORDER_STATUSES.EXPIRED]:    "Expired",
+};
+
+function StatusPill({ status }: { status: OrderStatus }) {
+  return (
+    <span
+      className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${STATUS_STYLES[status] ?? "bg-gray-100 text-gray-600"}`}
+    >
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
+/* ─── Image mosaic ───────────────────────────────────────────────────── */
+function ItemMosaic({ items }: { items: Array<{ image?: string; name: string }> }) {
+  const SIZE = "w-[140px] h-[140px] flex-shrink-0";
+
+  // Single item → full square image
+  if (items.length === 1) {
+    return (
+      <div className={`${SIZE} overflow-hidden bg-gray-100`}>
+        {items[0].image ? (
+          <img src={items[0].image} alt={items[0].name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <DynamicIcon name="Package" size={32} className="text-gray-300" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Multiple items → top slot + bottom slot (with +N overlay if needed)
+  const [first, second] = items;
+  const extra = items.length - 2;
+
+  return (
+    <div className={`${SIZE} grid grid-rows-2 gap-px bg-gray-200`}>
+      {/* Top slot */}
+      <div className="overflow-hidden bg-gray-100">
+        {first?.image ? (
+          <img src={first.image} alt={first.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <DynamicIcon name="Package" size={22} className="text-gray-300" />
+          </div>
+        )}
+      </div>
+
+      {/* Bottom slot — may show +N overlay */}
+      <div className="relative overflow-hidden bg-gray-100">
+        {second?.image ? (
+          <img src={second.image} alt={second.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <DynamicIcon name="Package" size={22} className="text-gray-300" />
+          </div>
+        )}
+        {extra > 0 && (
+          <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+            <span className="text-white text-[13px] font-medium">+{extra}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Order card ─────────────────────────────────────────────────────── */
+function OrderCard({
+  order,
+  onViewDetails,
+  onPayOrder,
+  onCancelOrder,
+  onBuyAgain,
+  onLeaveReview,
+  onTrackOrder,
+}: {
+  order: any;
+  onViewDetails: () => void;
+  onPayOrder: () => void;
+  onCancelOrder: () => void;
+  onBuyAgain: () => void;
+  onLeaveReview: () => void;
+  onTrackOrder: () => void;
+}) {
+  const isCancelled =
+    order.status === ORDER_STATUSES.CANCELLED || order.status === ORDER_STATUSES.EXPIRED;
+  const isCompleted = order.status === ORDER_STATUSES.COMPLETED;
+  const needsReview = isCompleted && !order.isReviewed;
+  const itemNames = order.items.map((i: any) => i.name).join(", ");
+  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
+
+  return (
+    <div
+      className={[
+        "bg-white rounded-2xl border overflow-hidden transition-all duration-150",
+        needsReview ? "border-green-200" : "border-gray-100",
+        isCancelled ? "opacity-70" : "hover:border-gray-200 hover:shadow-sm",
+      ].join(" ")}
+    >
+      {/* ── Top: image + body ── */}
+      <div className="flex">
+        <ItemMosaic items={order.items} />
+
+        <div className="flex-1 min-w-0 px-4 py-3.5 flex flex-col justify-between">
+          {/* Header row */}
+          <div>
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <span className="font-mono text-[11px] text-gray-400 tracking-wide">
+                #{order.paymentInfo?.referenceNumber ?? order._id.slice(-6).toUpperCase()}
+              </span>
+              <StatusPill status={order.status} />
+            </div>
+
+            {/* Item names – 2-line clamp */}
+            <p className="text-[13px] text-gray-800 leading-snug line-clamp-2 mb-2">
+              {itemNames}
+            </p>
+
+            {/* Meta chips */}
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1 text-[12px] text-gray-400">
+                <DynamicIcon name="Clock" size={13} />
+                {formattedDate}
+              </span>
+              <span className="flex items-center gap-1 text-[12px] text-gray-400">
+                <DynamicIcon name="MapPin" size={13} />
+                Pickup
+              </span>
+            </div>
+          </div>
+
+          {/* Footer row: total + primary CTA */}
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-[15px] font-medium text-gray-900">
+              <span className="text-[11px] font-normal text-gray-400 mr-0.5">₱</span>
+              {order.total?.totalAmount?.toFixed(2)}
+            </p>
+
+            <div className="flex gap-1.5">
+              {order.status === ORDER_STATUSES.PENDING && (
+                <>
+                  <button
+                    onClick={onPayOrder}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-800 text-[12px] font-medium transition-colors hover:bg-green-100"
+                  >
+                    <DynamicIcon name="ExternalLink" size={13} />
+                    Pay now
+                  </button>
+                  <button
+                    onClick={onCancelOrder}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-700 text-[12px] font-medium transition-colors hover:bg-red-50"
+                  >
+                    <DynamicIcon name="X" size={13} />
+                    Cancel
+                  </button>
+                </>
+              )}
+
+              {(order.status === ORDER_STATUSES.PAID ||
+                order.status === ORDER_STATUSES.PREPARING) && (
+                <button
+                  onClick={onTrackOrder}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 text-[12px] font-medium transition-colors hover:bg-gray-50"
+                >
+                  <DynamicIcon name="Package" size={13} />
+                  Track
+                </button>
+              )}
+
+              {needsReview && (
+                <button
+                  onClick={onLeaveReview}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-color-500 text-white text-[12px] font-medium transition-colors hover:bg-[#c53600]"
+                >
+                  <DynamicIcon name="Star" size={13} />
+                  Leave review
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Divider + secondary actions ── */}
+      <div className="border-t border-gray-100 px-4 py-2.5 flex justify-end gap-2">
+        {(isCompleted || isCancelled) && (
+          <button
+            onClick={onBuyAgain}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-[12px] font-medium transition-colors hover:bg-gray-50"
+          >
+            <DynamicIcon name="ShoppingCart" size={13} />
+            Buy again
+          </button>
+        )}
+        <button
+          onClick={onViewDetails}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-[12px] font-medium transition-colors hover:bg-gray-50"
+        >
+          <DynamicIcon name="Eye" size={13} />
+          View details
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main page ──────────────────────────────────────────────────────── */
+const Orders = () => {
+  const { data: currentUser, isPending } = authClient.useSession();
+  const { data: placedOrders, isPending: isOrdersPending } = useOrders({ type: "customer" });
   const { handlePayOrder, handleCancelOrder, handleBuyAgain } = useOrderActions();
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Get active tab from URL query params
   const activeTab = searchParams.get("status") || "all";
 
-  // Track expanded orders
-  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
-
   const filteredOrders = useMemo(() => {
+    if (!placedOrders?.data) return [];
+
     if (activeTab === "all") {
-      return placedOrders?.data?.sort((a, b) => {
-        // Pushed cancelled to bottom
+      return [...placedOrders.data].sort((a, b) => {
         if (a.status === ORDER_STATUSES.CANCELLED && b.status !== ORDER_STATUSES.CANCELLED) return 1;
         if (a.status !== ORDER_STATUSES.CANCELLED && b.status === ORDER_STATUSES.CANCELLED) return -1;
-
-        // Sort date by descending
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      }) || [];
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
     }
 
     const currentTab = TABS.find((tab) => tab.key === activeTab);
     return currentTab?.statuses
-      ? placedOrders?.data.filter((order) =>
-          currentTab?.statuses?.includes(order.status),
-        )
-      : placedOrders?.data.filter((order) => order.status === activeTab);
+      ? placedOrders.data.filter((o) => currentTab.statuses!.includes(o.status))
+      : placedOrders.data.filter((o) => o.status === activeTab);
   }, [placedOrders, activeTab]);
 
-  const handleViewDetails = (orderId: string) => {
-    router.push(`/orders/${orderId}`);
-  };
-
-  // Handle tab change by updating url
   const handleTabChange = (tabKey: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (tabKey === "all") {
@@ -77,30 +297,10 @@ const Orders = () => {
     } else {
       params.set("status", tabKey);
     }
-
-    const newUrl = params.toString()
-      ? `${pathname}?${params.toString()}`
-      : pathname;
-    router.push(newUrl);
+    router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname);
   };
 
-
-
-  const toggleOrderExpansion = (orderId: string) => {
-    setExpandedOrders((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(orderId)) {
-        newSet.delete(orderId);
-      } else {
-        newSet.add(orderId);
-      }
-
-      return newSet;
-    });
-  };
-
-
-  // Early returns AFTER all hooks
+  /* Early returns after all hooks */
   if ((isPending || isOrdersPending) && isPending) {
     return (
       <div className="relative h-screen">
@@ -109,277 +309,89 @@ const Orders = () => {
     );
   }
 
-  // Not logged in — show guest lookup
-  if (!currentUser) {
-    return <GuestOrderLookup />;
-  }
+  if (!currentUser) return <GuestOrderLookup />;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="mb-8 space-y-2">
-          <h1 className="text-3xl font-bold text-slate-800">My Orders</h1>
-          <p className="text-slate-600">Track and manage your orders</p>
-        </div>
-        {/** Navigation Tabs */}
-        <div className="overflow-y-visible overflow-x-auto mb-8 pb-2 scrollbar-hide">
-          <div className="flex gap-2 py-3">
-            {TABS.map((tab) => {
-              const count =
-                tab.key === ORDER_STATUSES.COMPLETED
-                  ? placedOrders?.data.filter(
-                      (o) => o.status === ORDER_STATUSES.COMPLETED && !o.isReviewed,
-                    ).length
-                  : tab.statuses
-                    ? placedOrders?.data.filter((o) =>
-                        tab.statuses?.includes(o.status),
-                      ).length
-                    : placedOrders?.data.filter((o) => o.status === tab.key).length;
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto px-4 py-8">
 
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => handleTabChange(tab.key)}
-                  className={`relative px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${activeTab === tab.key ? "bg-brand-color-500 text-white" : "bg-white text-gray-600 border border-gray-700 hover:border-brand-color-500 hover:text-brand-color-500"}`}
-                >
-                  {tab.label}
-                  {(count ?? 0) > 0 && tab.key !== ORDER_STATUSES.CANCELLED && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center border border-white">
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => router.push("/")}
-              className="px-6 py-2.5 rounded-full text-sm font-semibold transition-all whitespace-nowrap cursor-pointer bg-brand-color-500 text-white hover:bg-[#c13500]"
-            >
-              Add new order!
-            </button>
-          </div>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-[22px] font-medium text-gray-900 tracking-tight">My orders</h1>
+          <p className="text-[13px] text-gray-500 mt-0.5">Track and manage your purchases</p>
         </div>
 
-        {/** Orders */}
-        {filteredOrders?.length === 0 ? (
+        {/* Tabs */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 mb-6 scrollbar-hide">
+          {TABS.map((tab) => {
+            const count =
+              tab.key === ORDER_STATUSES.COMPLETED
+                ? placedOrders?.data.filter(
+                    (o) => o.status === ORDER_STATUSES.COMPLETED && !o.isReviewed,
+                  ).length
+                : tab.statuses
+                  ? placedOrders?.data.filter((o) => tab.statuses!.includes(o.status)).length
+                  : placedOrders?.data.filter((o) => o.status === tab.key).length;
+
+            const isActive = activeTab === tab.key;
+
+            return (
+              <button
+                key={tab.key}
+                onClick={() => handleTabChange(tab.key)}
+                className={[
+                  "relative px-4 py-1.5 rounded-full text-[13px] whitespace-nowrap cursor-pointer transition-all border",
+                  isActive
+                    ? "bg-brand-color-500 border-brand-color-500 text-white font-medium"
+                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800",
+                ].join(" ")}
+              >
+                {tab.label}
+                {(count ?? 0) > 0 && tab.key !== ORDER_STATUSES.CANCELLED && (
+                  <span
+                    className={[
+                      "absolute -top-1 -right-1 w-4 h-4 text-[10px] font-semibold rounded-full flex items-center justify-center border border-white",
+                      isActive ? "bg-white text-brand-color-500" : "bg-brand-color-500 text-white",
+                    ].join(" ")}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => router.push("/")}
+            className="px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap cursor-pointer bg-brand-color-500 text-white border border-brand-color-500 hover:bg-[#c13500] transition-colors"
+          >
+            + New order
+          </button>
+        </div>
+
+        {/* Orders list */}
+        {filteredOrders.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DynamicIcon name="Package" size={40} className="text-gray-400" />
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <DynamicIcon name="Package" size={28} className="text-gray-300" />
             </div>
-            <p className="text-gray-500 text-lg font-medium">
-              No {activeTab !== "all" ? activeTab : ""} orders found.
-            </p>
-            <p className="text-gray-400 text-sm mt-1">
-              Your orders will appear here.
-            </p>
+            <p className="text-gray-500 text-[15px] font-medium">No orders here</p>
+            <p className="text-gray-400 text-[13px] mt-1">Your orders will appear once placed.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {filteredOrders?.map((order) => {
-              const isExpanded = expandedOrders.has(order._id);
-              const itemsToShow = isExpanded
-                ? order.items
-                : order.items.slice(0, 3);
-              const hasMoreItems = order.items.length > 3;
-              const hiddenItemsCount = order.items.length - 3;
-              
-              return (
-                <div
-                  key={order._id}
-                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow border border-gray-100 overflow-hidden"
-                >
-                  {/** Header */}
-                  <div className="bg-linear-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-100">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-bold text-slate-700 text-lg">
-                          Order #{" "}
-                          <span className="uppercase text-gray-400">
-                            {order.paymentInfo?.referenceNumber}
-                          </span>
-                        </p>
-                        <div className="flex text-sm text-gray-600 items-center gap-4 py-2">
-                          <p className="flex items-center gap-1">
-                            <DynamicIcon name="Clock" size={16} />
-                            {new Date(order.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </p>
-
-                          <p className="flex items-center gap-1">
-                            <DynamicIcon name="MapPin" size={16} />
-                            Pickup
-                          </p>
-                        </div>
-                      </div>
-                      <StatusBadge status={order.status} />
-                    </div>
-                  </div>
-
-                  {/** Items */}
-                  <div className="px-6 py-4">
-                    <div className="space-y-4">
-                      {itemsToShow.map((item, index) => (
-                        <div
-                          key={`${item._id}-${index}`}
-                          className="flex gap-4"
-                        >
-                          {/** Item Image */}
-                          <div className="w-20 h-20 flex shrink-0 bg-gray-100 rounded-xl overflow-hidden">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <DynamicIcon
-                                  name="Package"
-                                  size={24}
-                                  className="text-gray-400"
-                                />
-                              </div>
-                            )}
-                          </div>
-
-                          {/** Item Details */}
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <h3 className="font-semibold text-gray-900 truncate">
-                              {item.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              Quanity: {item.quantity}
-                            </p>
-                            <p className="text-sm font-semibold text-brand-color-500">
-                              ₱{item.price.toFixed(2)} each
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/** Show more/less button */}
-                    {hasMoreItems && (
-                      <button
-                        type="button"
-                        onClick={() => toggleOrderExpansion(order._id)}
-                        className="w-full py-2 text-sm text-brand-color-500 hover:text-[#c13500] font-semibold transition-colors cursor-pointer text-center flex items-center justify-center gap-2"
-                      >
-                        {isExpanded ? (
-                          <>
-                            <DynamicIcon name="ChevronUp" size={18} />
-                            Show Less
-                          </>
-                        ) : (
-                          <>
-                            <DynamicIcon name="ChevronDown" size={18} />+
-                            {hiddenItemsCount} More{" "}
-                            {hiddenItemsCount === 1 ? "Item" : "Items"}
-                          </>
-                        )}
-                      </button>
-                    )}
-
-                    {/** Order Summary */}
-                    <div className="mt-6 pt-4 border-t border-gray-100 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">VATable Sales</span>
-                        <span className="font-[550]">
-                          ₱{order.total?.vatableSales?.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Tax (12%)</span>
-                        <span className="font-[550]">
-                          ₱
-                          {(order.total?.vatAmount?.toFixed(2))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
-                        <span className="text-gray-900">Total</span>
-                        <span className="text-brand-color-500">
-                          ₱{order.total?.totalAmount?.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/** Action Buttons */}
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                    <div className="flex flex-wrap gap-3 justify-end">
-                      {/** Cancel Order - Only for pending orders */}
-                      {order.status === ORDER_STATUSES.PENDING && (
-                        <>
-                          <button
-                            onClick={() => handlePayOrder(order._id)}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 border text-white text-sm font-semibold transition-all"
-                          >
-                            <DynamicIcon name="ExternalLink" size={16} /> Pay
-                            Order!
-                          </button>
-                          <button
-                            onClick={() => handleCancelOrder(order._id)}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-300 hover:bg-red-50 text-red-600 text-sm font-semibold transition-all"
-                          >
-                            <DynamicIcon name="X" size={16} /> Cancel Order
-                          </button>
-                        </>
-                      )}
-                      {/** View Details - Always Available */}
-                      <button
-                        onClick={() => handleViewDetails(order._id)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-300 hover:border-gray-400 text-gray-700 text-sm font-semibold transition-all"
-                      >
-                        <DynamicIcon name="Eye" size={16} /> View Details
-                      </button>
-
-                      {/** Track Order - For paid and preparing order */}
-                      {(order.status === ORDER_STATUSES.PAID ||
-                        order.status === ORDER_STATUSES.PREPARING) && (
-                        <button
-                          onClick={() => router.push("/support")}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-blue-300 hover:bg-blue-50 text-blue-600 text-sm font-semibold transition-all"
-                        >
-                          <DynamicIcon name="Package" size={16} /> Track Order
-                        </button>
-                      )}
-
-                      {/* Leave Review & Buy Again - For completed orders */}
-                      {order.status === ORDER_STATUSES.COMPLETED && !order.isReviewed && (
-                        <button
-                          onClick={() =>
-                            router.push(`/orders/${order._id}/review`)
-                          }
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-color-500 hover:bg-[#c53600] text-white text-sm font-semibold transition-all shadow-md"
-                        >
-                          <DynamicIcon name="Star" size={16} /> Leave Review
-                        </button>
-                      )}
-
-                      {(order.status === ORDER_STATUSES.COMPLETED ||
-                        order.status === ORDER_STATUSES.CANCELLED ||
-                        order.status === ORDER_STATUSES.EXPIRED) && (
-                        <button
-                          onClick={() => handleBuyAgain(order.items)}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-brand-color-500 hover:bg-orange-50 text-brand-color-500 text-sm font-semibold transition-all"
-                        >
-                          <DynamicIcon name="ShoppingCart" size={16} /> Buy
-                          Again
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex flex-col gap-3">
+            {filteredOrders.map((order) => (
+              <OrderCard
+                key={order._id}
+                order={order}
+                onViewDetails={() => router.push(`/orders/${order._id}`)}
+                onPayOrder={() => handlePayOrder(order._id)}
+                onCancelOrder={() => handleCancelOrder(order._id)}
+                onBuyAgain={() => handleBuyAgain(order.items)}
+                onLeaveReview={() => router.push(`/orders/${order._id}/review`)}
+                onTrackOrder={() => router.push("/support")}
+              />
+            ))}
           </div>
         )}
       </div>
