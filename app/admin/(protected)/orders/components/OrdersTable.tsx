@@ -1,4 +1,4 @@
-import StatusBadge from "../../../../../components/ui/StatusBadge";
+import StatusBadge from "@/components/ui/StatusBadge";
 import {
   Table,
   TableBody,
@@ -6,16 +6,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../../../components/ui/table";
+} from "@/components/ui/table";
 import { OrderType } from "@/types/OrderTypes";
 import { OrderActionButton } from "./OrderActionButton";
 import { useState } from "react";
-import Modal from "../../../../../components/ui/Modal";
-import { useOrder } from "@/hooks/api/useOrders";
-import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
 import PermissionGuard from "@/lib/PermissionGuard";
 import LoadingPage from "@/components/ui/LoadingPage";
 import AdminOrderDetails from "./AdminOrderDetails";
+import { formatDate } from "@/helper/formatDate";
 
 export default function OrdersTable({
   orders,
@@ -25,20 +23,6 @@ export default function OrdersTable({
   isPending: boolean;
 }) {
   const [orderToViewId, setOrderToViewId] = useState<string>("");
-  const {
-    data: orderToView,
-    isLoading,
-    isError,
-  } = useOrder({ type: "admin" }, orderToViewId);
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const headerTitles = [
     "Customer",
@@ -176,9 +160,7 @@ export default function OrdersTable({
         {orderToViewId && (
           <AdminOrderDetails
             setOrderToViewId={setOrderToViewId}
-            isLoading={isLoading}
-            isError={isError}
-            orderToView={orderToView}
+            id={orderToViewId}
           />
         )}
       </div>
