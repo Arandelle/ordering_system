@@ -7,5 +7,5 @@ export default async function OrderPage({
 }) {
   const { id } = await params;
 
-  return <OrderDetails orderId={id} />;
+  return <OrderDetails orderId={id} variant="page"/>;
 }
