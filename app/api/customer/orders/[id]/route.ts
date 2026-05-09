@@ -51,7 +51,7 @@ export async function GET(
       priority: STATUS_PRIORITY[order.status as OrderStatus],
     };
 
-    return NextResponse.json({ data: formattedOrder });
+    return NextResponse.json({  ...formattedOrder });
   } catch (error) {
     console.error("GET guest order error:", error);
 
