@@ -1,15 +1,8 @@
-/**
- * OrderActionButton.tsx
- *
- * Button to transition order to next status
- * Uses ORDER_ACTION_CONFIG for UI styling and labels
- * Uses STATUS_TRANSITIONS to validate the transition
- */
-
 "use client";
 
 import { useUpdateOrder } from "@/hooks/api/useOrders";
 import {
+  canTransitionTo,
   getActionConfig,
   OrderStatus,
   STATUS_TRANSITIONS,
@@ -19,36 +12,40 @@ interface Props {
   orderId: string;
   status: OrderStatus;
   paymentMethod: "cod" | "maya";
+  role: "admin" | "customer";
 }
 
-export function OrderActionButton({ orderId, status, paymentMethod }: Props) {
+export function OrderActionButton({
+  orderId,
+  status,
+  role,
+}: Props) {
   const nextStatuses = STATUS_TRANSITIONS[status];
-
   const { mutate, isPending } = useUpdateOrder();
 
-  // Don't show button if no transition or no config
-  if (!nextStatuses || nextStatuses.length === 0) return null;
+  if (!nextStatuses?.length) return null;
 
   const handleClick = (nextStatus: OrderStatus) => {
-    mutate({
-      id: orderId,
-      data: { status: nextStatus },
-    });
+    mutate({ id: orderId, data: { status: nextStatus } });
   };
 
-  // OrderActionButton.tsx
+  const allowedStatuses = nextStatuses.filter((nextStatus) =>
+    canTransitionTo(status, nextStatus, role),
+  );
+
   return (
     <div className="flex gap-2">
-      {nextStatuses.map((nextStatus) => {
-        const actionConfig = getActionConfig(nextStatus, paymentMethod);
+      {allowedStatuses.map((nextStatus) => {
+        const actionConfig = getActionConfig(status, nextStatus);
 
-        if (!actionConfig) return;
+        if (!actionConfig) return null;
+
         return (
           <button
             key={nextStatus}
             onClick={() => handleClick(nextStatus)}
             disabled={isPending}
-            className={`text-xs rounded-full font-bold text-white py-2 px-4 cursor-pointer text-nowrap ${actionConfig.variant}`}
+            className={`text-xs rounded-full font-bold text-white py-2 px-4 cursor-pointer text-nowrap disabled:opacity-60 disabled:cursor-not-allowed ${actionConfig.variant}`}
           >
             {isPending ? "Updating..." : actionConfig.label}
           </button>
