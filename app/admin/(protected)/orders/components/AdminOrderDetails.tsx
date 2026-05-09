@@ -130,10 +130,13 @@ const AdminOrderDetails = ({ setOrderToViewId, id }: OrderDetailsType) => {
                       <p className="text-sm font-medium text-gray-800">
                         {item.name}
                       </p>
-                      <p className="text-xs text-gray-400">x{item.quantity}</p>
+                      <p className="text-xs text-gray-400">
+                        ₱{item.price.toLocaleString()} × {item.quantity}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-gray-700">
+
+                  <p className="text-sm font-semibold text-gray-800">
                     ₱{(item.price * item.quantity).toLocaleString()}
                   </p>
                 </div>
