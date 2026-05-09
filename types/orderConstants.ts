@@ -176,7 +176,7 @@ export const TIMELINE_FIELD_MAP: Record<
 export function canTransitionTo(
   currentStatus: OrderStatus,
   targetStatus: OrderStatus,
-  role: "admin" | "customer"
+  role: "admin" | "customer",
 ): boolean {
   const allowed = STATUS_TRANSITIONS[currentStatus];
   if (!allowed?.includes(targetStatus)) return false;
@@ -185,7 +185,11 @@ export function canTransitionTo(
     return targetStatus === ORDER_STATUSES.CANCELLED;
   }
 
-  return true; // admin can do anything in the allowed list
+  if (role === "admin") {
+    return targetStatus !== ORDER_STATUSES.CANCELLED;
+  }
+
+  return false;
 }
  
 /**
