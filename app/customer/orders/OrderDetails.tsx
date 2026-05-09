@@ -16,6 +16,9 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
   const { data: placedOrders, isLoading } = useOrder({type: "customer"}, orderId);
   const router = useRouter();
   const order = placedOrders;
+
+  console.log("placedOrders:", placedOrders);
+console.log("order:", order);
   
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;
@@ -140,7 +143,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
         <div className="space-y-3">
           {(showAllItems
             ? order.items ?? []
-            : order.items.slice(0, ITEMS_TO_SHOW) ?? []
+            : order.items?.slice(0, ITEMS_TO_SHOW) ?? []
           ).map((item, index) => (
             <div
               key={`${item._id}-${index}`}
@@ -202,7 +205,7 @@ export default function OrderDetails({ orderId }: OrderDetailsProps) {
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Tax (12%)</span>
             <span className="font-[550]">
-              ₱{(order.total.vatAmount?.toFixed(2))}
+              ₱{(order.total?.vatAmount?.toFixed(2))}
             </span>
           </div>
           <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
