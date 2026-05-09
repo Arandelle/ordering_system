@@ -16,18 +16,3 @@ export const useLogoutAdmin = () => {
     },
   });
 };
-
-export const useLogoutCustomer = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => apiClient.post("/auth/customer/logout"),
-    onSuccess: () => {
-      queryClient.clear(); // ← clears customer-me and other cached data
-      window.location.href = "/";
-    },
-    onError: () => {
-      toast.error("Failed to logout. Try again.");
-    },
-  });
-};
