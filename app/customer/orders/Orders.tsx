@@ -1,8 +1,7 @@
 "use client";
 
-import { StatusBadge } from "./StatusBadge";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useOrders } from "@/hooks/api/useOrders";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { GuestOrderLookup } from "./GuestPage";
@@ -10,7 +9,7 @@ import LoadingPage from "@/components/ui/LoadingPage";
 import { useOrderActions } from "@/hooks/useOrderActions";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { authClient } from "@/lib/auth-client";
-import { Flame } from "lucide-react";
+import { ItemMosaic } from "../components/ItemMosaic";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
@@ -70,79 +69,6 @@ function StatusPill({ status }: { status: OrderStatus }) {
   );
 }
 
-const ObjectImage = ({ image }: { image: string }) => {
-  return (
-    <object
-      data={image}
-      type="image/jpeg"
-      className="w-full h-full object-cover"
-    >
-      <div className="w-full h-full flex flex-col items-center justify-center bg-orange-50">
-        <DynamicIcon name="Flame" size={20} className="text-orange-200" />
-        <p className="text-xs">No image found</p>
-      </div>
-    </object>
-  );
-};
-
-/* ─── Image mosaic ───────────────────────────────────────────────────── */
-function ItemMosaic({
-  items,
-}: {
-  items: Array<{ image?: string; name: string }>;
-}) {
-  const SIZE = "w-[140px] h-[140px] flex-shrink-0";
-
-  // Single item → full square image
-  if (items.length === 1) {
-    return (
-      <div className={`${SIZE} overflow-hidden bg-gray-100`}>
-        {items[0].image ? (
-          <ObjectImage image={items[0].image} />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <DynamicIcon name="Package" size={32} className="text-gray-300" />
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Multiple items → top slot + bottom slot (with +N overlay if needed)
-  const [first, second] = items;
-  const extra = items.length - 2;
-
-  return (
-    <div className={`${SIZE} grid grid-rows-2 gap-px bg-gray-200`}>
-      {/* Top slot */}
-      <div className="overflow-hidden bg-gray-100 relative">
-        {first?.image ? (
-          <ObjectImage image={first.image}/>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <DynamicIcon name="Package" size={22} className="text-gray-300" />
-          </div>
-        )}
-      </div>
-
-      {/* Bottom slot — may show +N overlay */}
-      <div className="relative overflow-hidden bg-gray-100">
-        {second?.image ? (
-           <ObjectImage image={second.image}/>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <DynamicIcon name="Package" size={22} className="text-gray-300" />
-          </div>
-        )}
-        {extra > 0 && (
-          <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
-            <span className="text-white text-[13px] font-medium">+{extra}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 /* ─── Order card ─────────────────────────────────────────────────────── */
 function OrderCard({
@@ -189,6 +115,7 @@ function OrderCard({
     >
       {/* ── Top: image + body ── */}
       <div className="flex">
+        
         <ItemMosaic items={order.items} />
 
         <div className="flex-1 min-w-0 px-4 py-3.5 flex flex-col justify-between">
