@@ -11,7 +11,6 @@
 import { useUpdateOrder } from "@/hooks/api/useOrders";
 import {
   getActionConfig,
-  ORDER_ACTION_CONFIG,
   OrderStatus,
   STATUS_TRANSITIONS,
 } from "@/types/orderConstants";
@@ -23,17 +22,14 @@ interface Props {
 }
 
 export function OrderActionButton({ orderId, status, paymentMethod }: Props) {
-  const nextStatus = STATUS_TRANSITIONS[status];
-  const actionConfig = getActionConfig(status, paymentMethod);
-  
+  const nextStatuses = STATUS_TRANSITIONS[status];
+
   const { mutate, isPending } = useUpdateOrder();
 
   // Don't show button if no transition or no config
-  if (!nextStatus || !actionConfig) {
-    return null;
-  }
+  if (!nextStatuses || nextStatuses.length === 0) return null;
 
-  const handleClick = () => {
+  const handleClick = (nextStatus: OrderStatus) => {
     mutate({
       id: orderId,
       data: { status: nextStatus },
@@ -42,12 +38,22 @@ export function OrderActionButton({ orderId, status, paymentMethod }: Props) {
 
   // OrderActionButton.tsx
   return (
-    <button
-      onClick={handleClick}
-      disabled={isPending}
-      className={`text-xs rounded-full font-bold text-white py-2 px-4 cursor-pointer text-nowrap ${actionConfig.variant}`}
-    >
-      {isPending ? "Updating..." : actionConfig.label}
-    </button>
+    <div className="flex gap-2">
+      {nextStatuses.map((nextStatus) => {
+        const actionConfig = getActionConfig(nextStatus, paymentMethod);
+
+        if (!actionConfig) return;
+        return (
+          <button
+            key={nextStatus}
+            onClick={() => handleClick(nextStatus)}
+            disabled={isPending}
+            className={`text-xs rounded-full font-bold text-white py-2 px-4 cursor-pointer text-nowrap ${actionConfig.variant}`}
+          >
+            {isPending ? "Updating..." : actionConfig.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
