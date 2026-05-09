@@ -1,26 +1,23 @@
 import LoadingPage from "@/components/ui/LoadingPage";
 import Modal from "@/components/ui/Modal";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { SpecificProductResponse } from "@/hooks/api/useOrders";
+import { useOrder } from "@/hooks/api/useOrders";
 import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
-import React from "react";
 
 interface OrderDetailsType {
   setOrderToViewId: (item: string) => void;
-  isLoading: boolean;
-  isError: boolean;
-  orderToView: SpecificProductResponse | undefined;
+  id: string;
 }
 
-const AdminOrderDetails = ({
-  setOrderToViewId,
-  isLoading,
-  isError,
-  orderToView,
-}: OrderDetailsType) => {
-    
-  const vatableSales = orderToView?.data?.total?.vatableSales ?? 0;
-  const totalAmount = orderToView?.data?.total?.totalAmount ?? 0;
+const AdminOrderDetails = ({ setOrderToViewId, id }: OrderDetailsType) => {
+  const {
+    data: orderToView,
+    isLoading,
+    isError,
+  } = useOrder({ type: "admin" }, id);
+
+  const vatableSales = orderToView?.total?.vatableSales ?? 0;
+  const totalAmount = orderToView?.total?.totalAmount ?? 0;
 
   return (
     <Modal title="Order Details" onClose={() => setOrderToViewId("")}>
@@ -41,10 +38,10 @@ const AdminOrderDetails = ({
             <div>
               <p className="text-xs text-gray-400">Order ID</p>
               <p className="text-sm font-mono font-medium text-gray-700">
-                {orderToView.data?._id ?? "--"}
+                {orderToView._id ?? "--"}
               </p>
             </div>
-            <StatusBadge status={orderToView.data?.status ?? ""} />
+            <StatusBadge status={orderToView.status ?? ""} />
           </div>
 
           <hr className="border-stone-100" />
@@ -58,20 +55,20 @@ const AdminOrderDetails = ({
               <div className="flex items-center gap-2">
                 <UserIcon size={14} className="text-gray-400" />
                 <span className="text-sm text-gray-700">
-                  {orderToView.data?.paymentInfo?.firstName ?? "—"}{" "}
-                  {orderToView.data?.paymentInfo?.lastName ?? "—"}
+                  {orderToView.paymentInfo?.firstName ?? "—"}{" "}
+                  {orderToView.paymentInfo?.lastName ?? "—"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <MailIcon size={14} className="text-gray-400" />
                 <span className="text-sm text-gray-700">
-                  {orderToView.data?.paymentInfo?.customerEmail ?? "—"}
+                  {orderToView.paymentInfo?.customerEmail ?? "—"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <PhoneIcon size={14} className="text-gray-400" />
                 <span className="text-sm text-gray-700">
-                  {orderToView.data?.paymentInfo?.customerPhone ?? "—"}
+                  {orderToView.paymentInfo?.customerPhone ?? "—"}
                 </span>
               </div>
             </div>
@@ -80,7 +77,7 @@ const AdminOrderDetails = ({
           <hr className="border-stone-100" />
 
           {/* Shipping Address */}
-          {orderToView.data?.paymentInfo?.shippingAddress && (
+          {orderToView.paymentInfo?.shippingAddress && (
             <>
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
@@ -88,25 +85,23 @@ const AdminOrderDetails = ({
                 </p>
                 <div className="flex flex-col gap-1 text-sm text-gray-700 bg-stone-50 rounded-lg px-3 py-2.5">
                   <span>
-                    {orderToView.data?.paymentInfo.shippingAddress.line1}
-                    {orderToView.data?.paymentInfo.shippingAddress.line2 && (
-                      <>
-                        , {orderToView.data?.paymentInfo.shippingAddress.line2}
-                      </>
+                    {orderToView.paymentInfo.shippingAddress.line1}
+                    {orderToView.paymentInfo.shippingAddress.line2 && (
+                      <>, {orderToView.paymentInfo.shippingAddress.line2}</>
                     )}
                   </span>
                   <span>
-                    {orderToView.data?.paymentInfo.shippingAddress.city},{" "}
-                    {orderToView.data?.paymentInfo.shippingAddress.province}{" "}
-                    {orderToView.data?.paymentInfo.shippingAddress.postalCode}
+                    {orderToView.paymentInfo.shippingAddress.city},{" "}
+                    {orderToView.paymentInfo.shippingAddress.province}{" "}
+                    {orderToView.paymentInfo.shippingAddress.postalCode}
                   </span>
                   <span className="text-gray-400">
-                    {orderToView.data?.paymentInfo.shippingAddress.country}
+                    {orderToView.paymentInfo.shippingAddress.country}
                   </span>
-                  {orderToView.data?.paymentInfo.shippingAddress.landmark && (
+                  {orderToView.paymentInfo.shippingAddress.landmark && (
                     <span className="text-xs text-gray-400 mt-0.5">
                       📍 Landmark:{" "}
-                      {orderToView.data?.paymentInfo.shippingAddress.landmark}
+                      {orderToView.paymentInfo.shippingAddress.landmark}
                     </span>
                   )}
                 </div>
@@ -121,7 +116,7 @@ const AdminOrderDetails = ({
               Items
             </p>
             <div className="flex flex-col gap-2">
-              {orderToView.data?.items.map((item, index) => (
+              {orderToView.items.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {item.image && (
@@ -172,24 +167,24 @@ const AdminOrderDetails = ({
                 <span className="text-gray-400">Method</span>
                 <span
                   className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                    orderToView.data?.paymentInfo?.paymentMethod === "maya"
+                    orderToView.paymentInfo?.paymentMethod === "maya"
                       ? "bg-purple-100 text-purple-700"
                       : "bg-orange-100 text-orange-700"
                   }`}
                 >
-                  {orderToView.data?.paymentInfo?.paymentMethod === "maya"
+                  {orderToView.paymentInfo?.paymentMethod === "maya"
                     ? "Maya"
                     : "Cash on Delivery"}
                 </span>
               </div>
-              {orderToView.data?.paymentInfo?.method && (
+              {orderToView.paymentInfo?.method && (
                 <div className="flex justify-between">
                   <span className="text-gray-400">Card</span>
                   <span className="font-medium capitalize">
-                    {orderToView.data?.paymentInfo.method.scheme}{" "}
-                    {orderToView.data?.paymentInfo.method.last4 && (
+                    {orderToView.paymentInfo.method.scheme}{" "}
+                    {orderToView.paymentInfo.method.last4 && (
                       <span className="font-mono">
-                        ••••{orderToView.data?.paymentInfo.method.last4}
+                        ••••{orderToView.paymentInfo.method.last4}
                       </span>
                     )}
                   </span>
@@ -198,22 +193,20 @@ const AdminOrderDetails = ({
               <div className="flex justify-between">
                 <span className="text-gray-400">Reference</span>
                 <span className="font-mono text-xs">
-                  {orderToView.data?.paymentInfo?.referenceNumber ?? "—"}
+                  {orderToView.paymentInfo?.referenceNumber ?? "—"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Status</span>
                 <span className="capitalize font-medium">
-                  {orderToView.data?.paymentInfo?.paymentStatus ?? "—"}
+                  {orderToView.paymentInfo?.paymentStatus ?? "—"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Paid At</span>
                 <span>
-                  {orderToView.data?.paymentInfo?.paidAt
-                    ? new Date(
-                        orderToView.data?.paymentInfo.paidAt,
-                      ).toLocaleString()
+                  {orderToView.paymentInfo?.paidAt
+                    ? new Date(orderToView.paymentInfo.paidAt).toLocaleString()
                     : "—"}
                 </span>
               </div>
@@ -221,8 +214,8 @@ const AdminOrderDetails = ({
           </div>
 
           {/* data.timeline */}
-          {orderToView.data?.timeline &&
-            Object.keys(orderToView.data?.timeline).length > 0 && (
+          {orderToView.timeline &&
+            Object.keys(orderToView.timeline).length > 0 && (
               <>
                 <hr className="border-stone-100" />
                 <div>
@@ -230,7 +223,7 @@ const AdminOrderDetails = ({
                     data.timeline
                   </p>
                   <div className="flex flex-col gap-1.5 text-sm text-gray-700">
-                    {Object.entries(orderToView.data?.timeline)
+                    {Object.entries(orderToView.timeline)
                       .filter(([_, value]) => value)
                       .map(([key, value]) => (
                         <div key={key} className="flex justify-between">
@@ -248,7 +241,7 @@ const AdminOrderDetails = ({
             )}
 
           {/* Note */}
-          {orderToView.data?.notes && (
+          {orderToView.notes && (
             <>
               <hr className="border-stone-100" />
               <div>
@@ -256,7 +249,7 @@ const AdminOrderDetails = ({
                   Note
                 </p>
                 <p className="text-sm text-gray-600 bg-stone-50 rounded-lg px-3 py-2">
-                  {orderToView.data?.notes}
+                  {orderToView.notes}
                 </p>
               </div>
             </>
