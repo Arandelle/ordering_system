@@ -10,6 +10,7 @@ import LoadingPage from "@/components/ui/LoadingPage";
 import { useOrderActions } from "@/hooks/useOrderActions";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { authClient } from "@/lib/auth-client";
+import { Flame } from "lucide-react";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
@@ -21,34 +22,42 @@ type Tab = {
 /* ─── Tab config ─────────────────────────────────────────────────────── */
 const TABS: Tab[] = [
   { key: "all", label: "All" },
-  { key: "pending", label: "To pay", statuses: [ORDER_STATUSES.PENDING, ORDER_STATUSES.PAID] },
+  {
+    key: "pending",
+    label: "To pay",
+    statuses: [ORDER_STATUSES.PENDING, ORDER_STATUSES.PAID],
+  },
   { key: "preparing", label: "To dispatch" },
-  { key: "to-receive", label: "To receive", statuses: [ORDER_STATUSES.DISPATCHED, ORDER_STATUSES.READY] },
+  {
+    key: "to-receive",
+    label: "To receive",
+    statuses: [ORDER_STATUSES.DISPATCHED, ORDER_STATUSES.READY],
+  },
   { key: "completed", label: "To review" },
   { key: "cancelled", label: "Cancelled" },
 ];
 
 /* ─── Status pill ────────────────────────────────────────────────────── */
 const STATUS_STYLES: Record<string, string> = {
-  [ORDER_STATUSES.PENDING]:    "bg-amber-50 text-amber-800",
-  [ORDER_STATUSES.PAID]:       "bg-green-50 text-green-800",
-  [ORDER_STATUSES.PREPARING]:  "bg-blue-50 text-blue-800",
+  [ORDER_STATUSES.PENDING]: "bg-amber-50 text-amber-800",
+  [ORDER_STATUSES.PAID]: "bg-green-50 text-green-800",
+  [ORDER_STATUSES.PREPARING]: "bg-blue-50 text-blue-800",
   [ORDER_STATUSES.DISPATCHED]: "bg-purple-50 text-purple-800",
-  [ORDER_STATUSES.READY]:      "bg-purple-50 text-purple-800",
-  [ORDER_STATUSES.COMPLETED]:  "bg-green-50 text-green-800",
-  [ORDER_STATUSES.CANCELLED]:  "bg-red-50 text-red-800",
-  [ORDER_STATUSES.EXPIRED]:    "bg-gray-100 text-gray-600",
+  [ORDER_STATUSES.READY]: "bg-purple-50 text-purple-800",
+  [ORDER_STATUSES.COMPLETED]: "bg-green-50 text-green-800",
+  [ORDER_STATUSES.CANCELLED]: "bg-red-50 text-red-800",
+  [ORDER_STATUSES.EXPIRED]: "bg-gray-100 text-gray-600",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  [ORDER_STATUSES.PENDING]:    "To pay",
-  [ORDER_STATUSES.PAID]:       "Paid",
-  [ORDER_STATUSES.PREPARING]:  "Preparing",
+  [ORDER_STATUSES.PENDING]: "To pay",
+  [ORDER_STATUSES.PAID]: "Paid",
+  [ORDER_STATUSES.PREPARING]: "Preparing",
   [ORDER_STATUSES.DISPATCHED]: "Dispatched",
-  [ORDER_STATUSES.READY]:      "Ready",
-  [ORDER_STATUSES.COMPLETED]:  "Completed",
-  [ORDER_STATUSES.CANCELLED]:  "Cancelled",
-  [ORDER_STATUSES.EXPIRED]:    "Expired",
+  [ORDER_STATUSES.READY]: "Ready",
+  [ORDER_STATUSES.COMPLETED]: "Completed",
+  [ORDER_STATUSES.CANCELLED]: "Cancelled",
+  [ORDER_STATUSES.EXPIRED]: "Expired",
 };
 
 function StatusPill({ status }: { status: OrderStatus }) {
@@ -61,8 +70,27 @@ function StatusPill({ status }: { status: OrderStatus }) {
   );
 }
 
+const ObjectImage = ({ image }: { image: string }) => {
+  return (
+    <object
+      data={image}
+      type="image/jpeg"
+      className="w-full h-full object-cover"
+    >
+      <div className="w-full h-full flex flex-col items-center justify-center bg-orange-50">
+        <DynamicIcon name="Flame" size={20} className="text-orange-200" />
+        <p className="text-xs">No image found</p>
+      </div>
+    </object>
+  );
+};
+
 /* ─── Image mosaic ───────────────────────────────────────────────────── */
-function ItemMosaic({ items }: { items: Array<{ image?: string; name: string }> }) {
+function ItemMosaic({
+  items,
+}: {
+  items: Array<{ image?: string; name: string }>;
+}) {
   const SIZE = "w-[140px] h-[140px] flex-shrink-0";
 
   // Single item → full square image
@@ -70,7 +98,7 @@ function ItemMosaic({ items }: { items: Array<{ image?: string; name: string }> 
     return (
       <div className={`${SIZE} overflow-hidden bg-gray-100`}>
         {items[0].image ? (
-          <img src={items[0].image} alt={items[0].name} className="w-full h-full object-cover" />
+          <ObjectImage image={items[0].image} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <DynamicIcon name="Package" size={32} className="text-gray-300" />
@@ -87,9 +115,9 @@ function ItemMosaic({ items }: { items: Array<{ image?: string; name: string }> 
   return (
     <div className={`${SIZE} grid grid-rows-2 gap-px bg-gray-200`}>
       {/* Top slot */}
-      <div className="overflow-hidden bg-gray-100">
+      <div className="overflow-hidden bg-gray-100 relative">
         {first?.image ? (
-          <img src={first.image} alt={first.name} className="w-full h-full object-cover" />
+          <ObjectImage image={first.image}/>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <DynamicIcon name="Package" size={22} className="text-gray-300" />
@@ -100,7 +128,7 @@ function ItemMosaic({ items }: { items: Array<{ image?: string; name: string }> 
       {/* Bottom slot — may show +N overlay */}
       <div className="relative overflow-hidden bg-gray-100">
         {second?.image ? (
-          <img src={second.image} alt={second.name} className="w-full h-full object-cover" />
+           <ObjectImage image={second.image}/>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <DynamicIcon name="Package" size={22} className="text-gray-300" />
@@ -135,7 +163,8 @@ function OrderCard({
   onTrackOrder: () => void;
 }) {
   const isCancelled =
-    order.status === ORDER_STATUSES.CANCELLED || order.status === ORDER_STATUSES.EXPIRED;
+    order.status === ORDER_STATUSES.CANCELLED ||
+    order.status === ORDER_STATUSES.EXPIRED;
   const isCompleted = order.status === ORDER_STATUSES.COMPLETED;
   const needsReview = isCompleted && !order.isReviewed;
   const itemNames = order.items.map((i: any) => i.name).join(", ");
@@ -145,6 +174,10 @@ function OrderCard({
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  const isCodPending =
+    order.paymentInfo?.paymentMethod === "cod" &&
+    order.status === ORDER_STATUSES.PENDING;
 
   return (
     <div
@@ -163,9 +196,17 @@ function OrderCard({
           <div>
             <div className="flex items-start justify-between gap-2 mb-1.5">
               <span className="font-mono text-[11px] text-gray-400 tracking-wide">
-                #{order.paymentInfo?.referenceNumber ?? order._id.slice(-6).toUpperCase()}
+                #
+                {order.paymentInfo?.referenceNumber ??
+                  order._id.slice(-6).toUpperCase()}
               </span>
-              <StatusPill status={order.status} />
+              {isCodPending ? (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">
+                  Awaiting pickup
+                </span>
+              ) : (
+                <StatusPill status={order.status} />
+              )}
             </div>
 
             {/* Item names – 2-line clamp */}
@@ -189,20 +230,25 @@ function OrderCard({
           {/* Footer row: total + primary CTA */}
           <div className="flex items-center justify-between mt-3">
             <p className="text-[15px] font-medium text-gray-900">
-              <span className="text-[11px] font-normal text-gray-400 mr-0.5">₱</span>
+              <span className="text-[11px] font-normal text-gray-400 mr-0.5">
+                ₱
+              </span>
               {order.total?.totalAmount?.toFixed(2)}
             </p>
 
             <div className="flex gap-1.5">
               {order.status === ORDER_STATUSES.PENDING && (
                 <>
-                  <button
-                    onClick={onPayOrder}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-800 text-[12px] font-medium transition-colors hover:bg-green-100"
-                  >
-                    <DynamicIcon name="ExternalLink" size={13} />
-                    Pay now
-                  </button>
+                  {order.paymentInfo?.paymentMethod !== "cod" && (
+                    <button
+                      onClick={onPayOrder}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-800 text-[12px] font-medium transition-colors hover:bg-green-100"
+                    >
+                      <DynamicIcon name="ExternalLink" size={13} />
+                      Pay now
+                    </button>
+                  )}
+
                   <button
                     onClick={onCancelOrder}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-700 text-[12px] font-medium transition-colors hover:bg-red-50"
@@ -263,24 +309,36 @@ function OrderCard({
 
 /* ─── Main page ──────────────────────────────────────────────────────── */
 const Orders = () => {
-  const { data: currentUser, isPending } = authClient.useSession();
-  const { data: placedOrders, isPending: isOrdersPending } = useOrders({ type: "customer" });
-  const { handlePayOrder, handleCancelOrder, handleBuyAgain } = useOrderActions();
-
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  const { data: currentUser, isPending } = authClient.useSession();
   const activeTab = searchParams.get("status") || "all";
+  const { data: placedOrders, isPending: isOrdersPending } = useOrders(
+    { type: "customer" },
+    { status: activeTab === "all" ? undefined : activeTab },
+  );
+  const { handlePayOrder, handleCancelOrder, handleBuyAgain } =
+    useOrderActions();
 
   const filteredOrders = useMemo(() => {
     if (!placedOrders?.data) return [];
 
     if (activeTab === "all") {
       return [...placedOrders.data].sort((a, b) => {
-        if (a.status === ORDER_STATUSES.CANCELLED && b.status !== ORDER_STATUSES.CANCELLED) return 1;
-        if (a.status !== ORDER_STATUSES.CANCELLED && b.status === ORDER_STATUSES.CANCELLED) return -1;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        if (
+          a.status === ORDER_STATUSES.CANCELLED &&
+          b.status !== ORDER_STATUSES.CANCELLED
+        )
+          return 1;
+        if (
+          a.status !== ORDER_STATUSES.CANCELLED &&
+          b.status === ORDER_STATUSES.CANCELLED
+        )
+          return -1;
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       });
     }
 
@@ -297,7 +355,9 @@ const Orders = () => {
     } else {
       params.set("status", tabKey);
     }
-    router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname);
+    router.push(
+      params.toString() ? `${pathname}?${params.toString()}` : pathname,
+    );
   };
 
   /* Early returns after all hooks */
@@ -314,24 +374,31 @@ const Orders = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
-
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-[22px] font-medium text-gray-900 tracking-tight">My orders</h1>
-          <p className="text-[13px] text-gray-500 mt-0.5">Track and manage your purchases</p>
+          <h1 className="text-[22px] font-medium text-gray-900 tracking-tight">
+            My orders
+          </h1>
+          <p className="text-[13px] text-gray-500 mt-0.5">
+            Track and manage your purchases
+          </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 mb-6 scrollbar-hide">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 mb-6 scrollbar-hide py-1">
           {TABS.map((tab) => {
             const count =
               tab.key === ORDER_STATUSES.COMPLETED
                 ? placedOrders?.data.filter(
-                    (o) => o.status === ORDER_STATUSES.COMPLETED && !o.isReviewed,
+                    (o) =>
+                      o.status === ORDER_STATUSES.COMPLETED && !o.isReviewed,
                   ).length
                 : tab.statuses
-                  ? placedOrders?.data.filter((o) => tab.statuses!.includes(o.status)).length
-                  : placedOrders?.data.filter((o) => o.status === tab.key).length;
+                  ? placedOrders?.data.filter((o) =>
+                      tab.statuses!.includes(o.status),
+                    ).length
+                  : placedOrders?.data.filter((o) => o.status === tab.key)
+                      .length;
 
             const isActive = activeTab === tab.key;
 
@@ -351,7 +418,9 @@ const Orders = () => {
                   <span
                     className={[
                       "absolute -top-1 -right-1 w-4 h-4 text-[10px] font-semibold rounded-full flex items-center justify-center border border-white",
-                      isActive ? "bg-white text-brand-color-500" : "bg-brand-color-500 text-white",
+                      isActive
+                        ? "bg-white text-brand-color-500"
+                        : "bg-brand-color-500 text-white",
                     ].join(" ")}
                   >
                     {count}
@@ -375,8 +444,12 @@ const Orders = () => {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <DynamicIcon name="Package" size={28} className="text-gray-300" />
             </div>
-            <p className="text-gray-500 text-[15px] font-medium">No orders here</p>
-            <p className="text-gray-400 text-[13px] mt-1">Your orders will appear once placed.</p>
+            <p className="text-gray-500 text-[15px] font-medium">
+              No orders here
+            </p>
+            <p className="text-gray-400 text-[13px] mt-1">
+              Your orders will appear once placed.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
