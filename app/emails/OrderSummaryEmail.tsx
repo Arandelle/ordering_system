@@ -220,7 +220,7 @@ const OrderSummaryEmail = ({ order = mockOrder }: OrderSummaryEmailProps) => {
                     Payment
                   </Text>
                   <Text className="text-sm font-medium uppercase text-black mb-0.5">
-                    {paymentInfo.method.type ?? "N/A"}
+                    {paymentInfo.paymentMethod ?? "N/A"}
                   </Text>
                   <Text className="text-sm font-medium text-black mb-0.5">
                     {paymentInfo.method.description}
