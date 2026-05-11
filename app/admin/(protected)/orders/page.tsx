@@ -1,17 +1,10 @@
 "use client";
 
-import { InputField } from "@/components/ui/InputField";
 import OrdersTable from "@/app/admin/(protected)/orders/components/OrdersTable";
 import React, { useState } from "react";
-import { useOrders } from "@/hooks/api/useOrders";
 import Pagination from "@/components/ui/Pagination";
-import {
-  ORDER_STATUS_OPTIONS,
-  ORDER_STATUSES,
-  OrderStatus,
-} from "@/types/orderConstants";
-import { Search } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
 
 const OrdersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,8 +14,7 @@ const OrdersPage = () => {
   const [limit, setLimit] = useState(10);
 
   // ✅ pass all filters to the server
-  const { data, isPending } = useOrders(
-    { type: "admin" },
+  const { data, isPending } = useAdminOrders(
     {
       page: currentPage,
       limit,

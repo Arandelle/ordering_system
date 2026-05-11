@@ -1,7 +1,7 @@
 import LoadingPage from "@/components/ui/LoadingPage";
 import Modal from "@/components/ui/Modal";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { useOrder } from "@/hooks/api/useOrders";
+import { useAdminOrder } from "@/hooks/api/admin/useAdminOrders";
 import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
 
 interface OrderDetailsType {
@@ -10,11 +10,7 @@ interface OrderDetailsType {
 }
 
 const AdminOrderDetails = ({ setOrderToViewId, id }: OrderDetailsType) => {
-  const {
-    data: orderToView,
-    isLoading,
-    isError,
-  } = useOrder({ type: "admin" }, id);
+  const { data: orderToView, isLoading, isError } = useAdminOrder(id);
 
   const vatableSales = orderToView?.total?.vatableSales ?? 0;
   const totalAmount = orderToView?.total?.totalAmount ?? 0;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useUpdateOrder } from "@/hooks/api/useOrders";
+import { useAdminUpdateOrder } from "@/hooks/api/admin/useAdminOrders";
 import {
   canTransitionTo,
   getActionConfig,
@@ -12,12 +12,11 @@ interface Props {
   orderId: string;
   status: OrderStatus;
   paymentMethod: "cod" | "maya";
-  role: "admin" | "customer";
 }
 
-export function OrderActionButton({ orderId,paymentMethod, status, role }: Props) {
+export function OrderActionButton({ orderId,paymentMethod, status }: Props) {
   const nextStatuses = STATUS_TRANSITIONS[status];
-  const { mutate, isPending } = useUpdateOrder();
+  const { mutate, isPending } = useAdminUpdateOrder();
 
   if (!nextStatuses?.length) return null;
 
@@ -26,7 +25,7 @@ export function OrderActionButton({ orderId,paymentMethod, status, role }: Props
   };
 
   const allowedStatuses = nextStatuses.filter((nextStatus) =>
-    canTransitionTo(status, nextStatus, role),
+    canTransitionTo(status, nextStatus, "admin"),
   );
 
   return (
@@ -36,7 +35,7 @@ export function OrderActionButton({ orderId,paymentMethod, status, role }: Props
 
         if (!actionConfig) return null;
 
-        if (actionConfig.roles && !actionConfig.roles.includes(role)) {
+        if (actionConfig.roles && !actionConfig.roles.includes("admin")) {
           return null;
         }
 

@@ -130,7 +130,6 @@ export default function OrdersTable({
                             orderId={order._id}
                             status={order.status}
                             paymentMethod={order.paymentInfo.paymentMethod}
-                            role="admin"
                           />
                         </PermissionGuard>
                       </div>
