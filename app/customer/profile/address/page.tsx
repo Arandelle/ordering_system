@@ -8,6 +8,7 @@ import { SectionCard } from "../component/SectionCard";
 import { toast } from "sonner";
 import { useMyAddress, useUpdateAddress } from "../../hooks/useMyAddress";
 import { useEffect, useState } from "react";
+import LoadingPage from "@/components/ui/LoadingPage";
 
 export interface AddressForm {
   line1: string;
@@ -34,7 +35,7 @@ const PROVINCES = [
 
 const AddressTab = () => {
   const updateAddress = useUpdateAddress();
-  const { data: myAddress } = useMyAddress();
+  const { data: myAddress, isPending } = useMyAddress();
 
   const [form, setForm] = useState<AddressForm>({
     line1: "",
@@ -71,6 +72,36 @@ const AddressTab = () => {
       setSaving(false);
     }
   };
+
+  if (isPending) {
+    return (
+      <SectionCard
+        title="Shipping Address"
+        subtitle="Default address for deliveries and orders"
+        icon="MapPin"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-pulse">
+          {/* Line 1 */}
+          <div className="sm:col-span-2 h-10 bg-gray-100 rounded-xl" />
+          {/* Line 2 */}
+          <div className="sm:col-span-2 h-10 bg-gray-100 rounded-xl" />
+          {/* City + Province */}
+          <div className="h-10 bg-gray-100 rounded-xl" />
+          <div className="h-10 bg-gray-100 rounded-xl" />
+          {/* ZIP + Country */}
+          <div className="h-10 bg-gray-100 rounded-xl" />
+          <div className="h-10 bg-gray-100 rounded-xl" />
+          {/* Landmark */}
+          <div className="sm:col-span-2 h-10 bg-gray-100 rounded-xl" />
+        </div>
+
+        {/* Save button skeleton */}
+        <div className="mt-6 flex justify-end">
+          <div className="h-10 w-36 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <SectionCard

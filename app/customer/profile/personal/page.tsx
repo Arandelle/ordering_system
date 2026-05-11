@@ -20,7 +20,7 @@ interface PersonalForm {
 // ─── Tab: Personal Info ───────────────────────────────────────────────────────
 
 const PersonalTab = () => {
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   const [form, setForm] = useState<PersonalForm>({
     firstName: session?.user?.firstName ?? "",
@@ -90,6 +90,34 @@ const PersonalTab = () => {
     `${form.firstName?.[0] ?? ""}${form.lastName?.[0] ?? ""}`.toUpperCase() ||
     session?.user?.name?.[0]?.toUpperCase() ||
     "?";
+
+  if (isPending) {
+    return (
+      <SectionCard
+        title="Basic Information"
+        subtitle="Your personal details"
+        icon="User"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-pulse">
+          <div className="sm:col-span-2 h-10 bg-gray-100 rounded-xl" />
+
+          <div className="sm:col-span-2 h-10 bg-gray-100 rounded-xl" />
+
+          <div className="h-10 bg-gray-100 rounded-xl" />
+          <div className="h-10 bg-gray-100 rounded-xl" />
+
+          <div className="h-10 bg-gray-100 rounded-xl" />
+          <div className="h-10 bg-gray-100 rounded-xl" />
+
+          <div className="sm:col-span-2 h-10 bg-gray-100 rounded-xl" />
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <div className="h-10 w-36 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
