@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { OrderParams, useOrderBase, useOrdersBase, useUpdateOrder } from "../shared/useOrdersBase";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CreateOrderPayload,
   CreateOrderResponse,
@@ -71,6 +71,25 @@ export const useCreateOrder = () => {
       // Refresh orders list
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
+  });
+};
+
+export type OrderSummary = {
+  pending: number;
+  preparing: number;
+  dispatched: number;
+  completed: number;
+  cancelled: number;
+  total: number;
+};
+ 
+export const useCustomerOrderSummary = () => {
+  return useQuery<OrderSummary, Error>({
+    queryKey: ["orders", "summary"],
+    queryFn: () => apiClient.get("/orders/summary"),
+    staleTime: 30_000,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 };
 
