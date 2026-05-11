@@ -1,3 +1,5 @@
+'use client'
+
 import StatusBadge from "@/components/ui/StatusBadge";
 import {
   Table,
@@ -9,11 +11,10 @@ import {
 } from "@/components/ui/table";
 import { OrderType } from "@/types/OrderTypes";
 import { OrderActionButton } from "./OrderActionButton";
-import { useState } from "react";
 import PermissionGuard from "@/lib/PermissionGuard";
 import LoadingPage from "@/components/ui/LoadingPage";
-import AdminOrderDetails from "./AdminOrderDetails";
 import { formatDate } from "@/helper/formatDate";
+import { useRouter } from "next/navigation";
 
 export default function OrdersTable({
   orders,
@@ -22,7 +23,8 @@ export default function OrdersTable({
   orders: OrderType[];
   isPending: boolean;
 }) {
-  const [orderToViewId, setOrderToViewId] = useState<string>("");
+
+  const router = useRouter();
 
   const headerTitles = [
     "Customer",
@@ -119,7 +121,7 @@ export default function OrdersTable({
                     <TableCell className="px-6 py-4">
                       <div className="flex flex-col lg:flex-row gap-2 items-center justify-center">
                         <button
-                          onClick={() => setOrderToViewId(order._id)}
+                          onClick={() => router.push(`/orders/${order._id}`)}
                           className="text-xs font-bold bg-blue-700 hover:bg-blue-800 py-2 px-3 text-white rounded-full cursor-pointer text-nowrap"
                         >
                           View Details
@@ -157,13 +159,6 @@ export default function OrdersTable({
             )}
           </TableBody>
         </Table>
-
-        {orderToViewId && (
-          <AdminOrderDetails
-            setOrderToViewId={setOrderToViewId}
-            id={orderToViewId}
-          />
-        )}
       </div>
     </div>
   );
