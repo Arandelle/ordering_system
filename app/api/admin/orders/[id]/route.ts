@@ -215,10 +215,10 @@ export async function PATCH(
         from: EMAIL_FROM,
         to: order.paymentInfo.customerEmail,
         subject: getStatusSubject(
-          order.status,
+          ORDER_STATUSES.COMPLETED,
           order.paymentInfo.referenceNumber,
         ),
-        react: OrderSummaryEmail({ order: order }),
+        react: OrderSummaryEmail({ order: updatedOrder }),
       });
 
       if (emailError) {
