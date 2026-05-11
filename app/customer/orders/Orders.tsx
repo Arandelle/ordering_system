@@ -78,7 +78,6 @@ function OrderCard({
   onCancelOrder,
   onBuyAgain,
   onLeaveReview,
-  onTrackOrder,
 }: {
   order: any;
   onViewDetails: () => void;
@@ -86,7 +85,6 @@ function OrderCard({
   onCancelOrder: () => void;
   onBuyAgain: () => void;
   onLeaveReview: () => void;
-  onTrackOrder: () => void;
 }) {
   const isCancelled =
     order.status === ORDER_STATUSES.CANCELLED ||
@@ -184,17 +182,6 @@ function OrderCard({
                     Cancel
                   </button>
                 </>
-              )}
-
-              {(order.status === ORDER_STATUSES.PAID ||
-                order.status === ORDER_STATUSES.PREPARING) && (
-                <button
-                  onClick={onTrackOrder}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 text-[12px] font-medium transition-colors hover:bg-gray-50"
-                >
-                  <DynamicIcon name="Package" size={13} />
-                  Track
-                </button>
               )}
 
               {needsReview && (
@@ -389,7 +376,6 @@ const Orders = () => {
                 onCancelOrder={() => handleCancelOrder(order._id)}
                 onBuyAgain={() => handleBuyAgain(order.items)}
                 onLeaveReview={() => router.push(`/orders/${order._id}/review`)}
-                onTrackOrder={() => router.push("/support")}
               />
             ))}
           </div>
