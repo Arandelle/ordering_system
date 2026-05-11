@@ -10,13 +10,6 @@ import { authClient } from "@/lib/auth-client";
 import { buildQueryString } from "@/lib/buildQueryString";
 import { PaginationMeta } from "@/lib/query-helpers";
 import {
-  isValidOrderStatus,
-  ORDER_ACTION_CONFIG,
-  OrderStatus,
-  STATUS_PRIORITY,
-  STATUS_TRANSITIONS,
-} from "@/types/orderConstants";
-import {
   CreateOrderPayload,
   CreateOrderResponse,
   OrderType,
@@ -175,39 +168,4 @@ export const useCancelCustomerOrder = () => {
       toast.error(error.message);
     },
   });
-};
-
-// ============================================
-// HELPER HOOKS
-// ============================================
-
-/**
- * Get the action config for a specific order status
- * Returns button label and styling, or null if no action
- */
-export const useOrderActionConfig = (status: string) => {
-  if (!isValidOrderStatus(status)) {
-    return null;
-  }
-  return ORDER_ACTION_CONFIG[status];
-};
-
-/**
- * Check if an order can transition to a new status
- */
-export const useCanTransition = (currentStatus: string) => {
-  if (!isValidOrderStatus(currentStatus)) {
-    return null;
-  }
-  return STATUS_TRANSITIONS[currentStatus];
-};
-
-/**
- * Get priority score for sorting
- */
-export const useStatusPriority = (status: string) => {
-  if (!isValidOrderStatus(status)) {
-    return Infinity; // Low priority for invalid statuses
-  }
-  return STATUS_PRIORITY[status];
 };
