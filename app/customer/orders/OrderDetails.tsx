@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useOrder } from "@/hooks/api/useOrders";
@@ -9,6 +8,8 @@ import { formatDate } from "@/helper/formatDate";
 import { OrderActionButton } from "@/app/admin/(protected)/orders/components/OrderActionButton";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { OrderType } from "@/types/OrderTypes";
+import { OrderItemImage } from "../components/OrderItemImage";
+import { toast } from "sonner";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface OrderDetailsProps {
@@ -24,38 +25,74 @@ const TIMELINE_STEPS: {
   icon: string;
   status: OrderStatus;
 }[] = [
-  { key: "paidAt",       label: "Payment confirmed", icon: "💳", status: ORDER_STATUSES.PAID },
-  { key: "preparingAt",  label: "Preparing",          icon: "👨‍🍳", status: ORDER_STATUSES.PREPARING },
-  { key: "readyAt",      label: "Ready",              icon: "✅", status: ORDER_STATUSES.READY },
-  { key: "dispatchedAt", label: "Dispatched",         icon: "🚗", status: ORDER_STATUSES.DISPATCHED },
-  { key: "completedAt",  label: "Completed",          icon: "🎉", status: ORDER_STATUSES.COMPLETED },
-  { key: "cancelledAt",  label: "Cancelled",          icon: "❌", status: ORDER_STATUSES.CANCELLED },
-  { key: "failedAt",     label: "Failed",             icon: "⚠️", status: ORDER_STATUSES.FAILED },
-  { key: "expiredAt",    label: "Expired",            icon: "⏰", status: ORDER_STATUSES.EXPIRED },
+  {
+    key: "paidAt",
+    label: "Payment confirmed",
+    icon: "💳",
+    status: ORDER_STATUSES.PAID,
+  },
+  {
+    key: "preparingAt",
+    label: "Preparing",
+    icon: "👨‍🍳",
+    status: ORDER_STATUSES.PREPARING,
+  },
+  { key: "readyAt", label: "Ready", icon: "✅", status: ORDER_STATUSES.READY },
+  {
+    key: "dispatchedAt",
+    label: "Dispatched",
+    icon: "🚗",
+    status: ORDER_STATUSES.DISPATCHED,
+  },
+  {
+    key: "completedAt",
+    label: "Completed",
+    icon: "🎉",
+    status: ORDER_STATUSES.COMPLETED,
+  },
+  {
+    key: "cancelledAt",
+    label: "Cancelled",
+    icon: "❌",
+    status: ORDER_STATUSES.CANCELLED,
+  },
+  {
+    key: "failedAt",
+    label: "Failed",
+    icon: "⚠️",
+    status: ORDER_STATUSES.FAILED,
+  },
+  {
+    key: "expiredAt",
+    label: "Expired",
+    icon: "⏰",
+    status: ORDER_STATUSES.EXPIRED,
+  },
 ];
 
 const STATUS_PILL: Record<OrderStatus, string> = {
-  [ORDER_STATUSES.PENDING]:    "bg-amber-50 text-amber-700 border-amber-200",
-  [ORDER_STATUSES.PAID]:       "bg-green-50 text-green-700 border-green-200",
-  [ORDER_STATUSES.PREPARING]:  "bg-blue-50 text-blue-700 border-blue-200",
-  [ORDER_STATUSES.READY]:      "bg-purple-50 text-purple-700 border-purple-200",
+  [ORDER_STATUSES.PENDING]: "bg-amber-50 text-amber-700 border-amber-200",
+  [ORDER_STATUSES.PAID]: "bg-green-50 text-green-700 border-green-200",
+  [ORDER_STATUSES.PREPARING]: "bg-blue-50 text-blue-700 border-blue-200",
+  [ORDER_STATUSES.READY]: "bg-purple-50 text-purple-700 border-purple-200",
   [ORDER_STATUSES.DISPATCHED]: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  [ORDER_STATUSES.COMPLETED]:  "bg-emerald-50 text-emerald-700 border-emerald-200",
-  [ORDER_STATUSES.CANCELLED]:  "bg-red-50 text-red-700 border-red-200",
-  [ORDER_STATUSES.FAILED]:     "bg-gray-100 text-gray-600 border-gray-200",
-  [ORDER_STATUSES.EXPIRED]:    "bg-gray-100 text-gray-500 border-gray-200",
+  [ORDER_STATUSES.COMPLETED]:
+    "bg-emerald-50 text-emerald-700 border-emerald-200",
+  [ORDER_STATUSES.CANCELLED]: "bg-red-50 text-red-700 border-red-200",
+  [ORDER_STATUSES.FAILED]: "bg-gray-100 text-gray-600 border-gray-200",
+  [ORDER_STATUSES.EXPIRED]: "bg-gray-100 text-gray-500 border-gray-200",
 };
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  [ORDER_STATUSES.PENDING]:    "To pay",
-  [ORDER_STATUSES.PAID]:       "Paid",
-  [ORDER_STATUSES.PREPARING]:  "Preparing",
-  [ORDER_STATUSES.READY]:      "Ready",
+  [ORDER_STATUSES.PENDING]: "To pay",
+  [ORDER_STATUSES.PAID]: "Paid",
+  [ORDER_STATUSES.PREPARING]: "Preparing",
+  [ORDER_STATUSES.READY]: "Ready",
   [ORDER_STATUSES.DISPATCHED]: "Dispatched",
-  [ORDER_STATUSES.COMPLETED]:  "Completed",
-  [ORDER_STATUSES.CANCELLED]:  "Cancelled",
-  [ORDER_STATUSES.FAILED]:     "Failed",
-  [ORDER_STATUSES.EXPIRED]:    "Expired",
+  [ORDER_STATUSES.COMPLETED]: "Completed",
+  [ORDER_STATUSES.CANCELLED]: "Cancelled",
+  [ORDER_STATUSES.FAILED]: "Failed",
+  [ORDER_STATUSES.EXPIRED]: "Expired",
 };
 
 /* ─── Sub-components ─────────────────────────────────────────────────── */
@@ -67,9 +104,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Card({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={`bg-white border border-gray-100 rounded-2xl p-4 ${className}`}>
+    <div
+      className={`bg-white border border-gray-100 rounded-2xl p-4 ${className}`}
+    >
       {children}
     </div>
   );
@@ -81,20 +126,26 @@ export default function OrderDetails({
   variant = "page",
   role = "customer",
 }: OrderDetailsProps) {
-  const { data: order, isLoading } = useOrder({ type: role === "admin" ? "admin" : "customer" }, orderId);
+  const { data: order, isLoading } = useOrder(
+    { type: role === "admin" ? "admin" : "customer" },
+    orderId,
+  );
   const router = useRouter();
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;
 
   useEffect(() => {
     if (!isLoading && !order && variant === "page") {
+      toast.warning("Order not found!");
       router.push("/orders");
     }
   }, [isLoading, order, router, variant]);
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center ${variant === "modal" ? "min-h-[420px]" : "min-h-screen"}`}>
+      <div
+        className={`flex items-center justify-center ${variant === "modal" ? "min-h-105" : "min-h-screen"}`}
+      >
         <LoadingPage className="h-[50vh]" />
       </div>
     );
@@ -105,7 +156,9 @@ export default function OrderDetails({
   const isCod = order.paymentInfo?.paymentMethod === "cod";
   const isCodPending = isCod && order.status === ORDER_STATUSES.PENDING;
   const activeTimeline = TIMELINE_STEPS.filter((s) => order.timeline?.[s.key]);
-  const itemsToShow = showAllItems ? order.items ?? [] : order.items?.slice(0, ITEMS_TO_SHOW) ?? [];
+  const itemsToShow = showAllItems
+    ? (order.items ?? [])
+    : (order.items?.slice(0, ITEMS_TO_SHOW) ?? []);
   const hasMoreItems = (order.items?.length ?? 0) > ITEMS_TO_SHOW;
 
   return (
@@ -122,17 +175,25 @@ export default function OrderDetails({
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
             <p className="font-mono text-[11px] text-gray-400 mb-0.5 tracking-wide">
-              #{order.paymentInfo?.referenceNumber ?? order._id.slice(-8).toUpperCase()}
+              #
+              {order.paymentInfo?.referenceNumber ??
+                order._id.slice(-8).toUpperCase()}
             </p>
-            <p className="text-[13px] text-gray-500">{formatDate(order.createdAt)}</p>
+            <p className="text-[13px] text-gray-500">
+              {formatDate(order.createdAt)}
+            </p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Payment method pill */}
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${isCod ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-purple-50 text-purple-700 border-purple-200"}`}>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${isCod ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-purple-50 text-purple-700 border-purple-200"}`}
+            >
               {isCod ? "COD" : "Maya"}
             </span>
             {/* Status pill */}
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${STATUS_PILL[order.status]}`}>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${STATUS_PILL[order.status]}`}
+            >
               {isCodPending ? "Awaiting pickup" : STATUS_LABELS[order.status]}
             </span>
           </div>
@@ -148,11 +209,15 @@ export default function OrderDetails({
           </div>
           <div>
             <p className="text-gray-400 text-[11px]">Phone</p>
-            <p className="text-gray-800 font-medium">{order.paymentInfo?.customerPhone}</p>
+            <p className="text-gray-800 font-medium">
+              {order.paymentInfo?.customerPhone}
+            </p>
           </div>
           <div className="col-span-2">
             <p className="text-gray-400 text-[11px]">Email</p>
-            <p className="text-gray-800 font-medium">{order.paymentInfo?.customerEmail}</p>
+            <p className="text-gray-800 font-medium">
+              {order.paymentInfo?.customerEmail}
+            </p>
           </div>
         </div>
 
@@ -160,7 +225,9 @@ export default function OrderDetails({
         {order.estimatedTime && (
           <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-[13px] text-gray-600">
             <span>⏱</span>
-            <span>Estimated: <strong>{order.estimatedTime}</strong></span>
+            <span>
+              Estimated: <strong>{order.estimatedTime}</strong>
+            </span>
           </div>
         )}
 
@@ -182,12 +249,17 @@ export default function OrderDetails({
         <Card>
           <SectionLabel>Delivery address</SectionLabel>
           <div className="text-[13px] text-gray-700 space-y-0.5">
-            <p className="font-medium">{order.paymentInfo.shippingAddress.line1}</p>
+            <p className="font-medium">
+              {order.paymentInfo.shippingAddress.line1}
+            </p>
             {order.paymentInfo.shippingAddress.line2 && (
-              <p className="text-gray-500">{order.paymentInfo.shippingAddress.line2}</p>
+              <p className="text-gray-500">
+                {order.paymentInfo.shippingAddress.line2}
+              </p>
             )}
             <p className="text-gray-500">
-              {order.paymentInfo.shippingAddress.city}, {order.paymentInfo.shippingAddress.province}{" "}
+              {order.paymentInfo.shippingAddress.city},{" "}
+              {order.paymentInfo.shippingAddress.province}{" "}
               {order.paymentInfo.shippingAddress.postalCode}
             </p>
             {order.paymentInfo.shippingAddress.landmark && (
@@ -200,25 +272,32 @@ export default function OrderDetails({
       )}
 
       {/* ── Dispatch info ── */}
-      {order.dispatchInfo?.riderName && order.status === ORDER_STATUSES.DISPATCHED && (
-        <Card className="border-blue-100 bg-blue-50/40">
-          <SectionLabel>Rider info</SectionLabel>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[13px]">
-            <div>
-              <p className="text-gray-400 text-[11px]">Rider</p>
-              <p className="text-gray-800 font-medium">{order.dispatchInfo.riderName}</p>
+      {order.dispatchInfo?.riderName &&
+        order.status === ORDER_STATUSES.DISPATCHED && (
+          <Card className="border-blue-100 bg-blue-50/40">
+            <SectionLabel>Rider info</SectionLabel>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[13px]">
+              <div>
+                <p className="text-gray-400 text-[11px]">Rider</p>
+                <p className="text-gray-800 font-medium">
+                  {order.dispatchInfo.riderName}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-[11px]">Phone</p>
+                <p className="text-gray-800 font-medium">
+                  {order.dispatchInfo.riderPhone}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-[11px]">Vehicle</p>
+                <p className="text-gray-800 font-medium capitalize">
+                  {order.dispatchInfo.vehicleType}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-gray-400 text-[11px]">Phone</p>
-              <p className="text-gray-800 font-medium">{order.dispatchInfo.riderPhone}</p>
-            </div>
-            <div>
-              <p className="text-gray-400 text-[11px]">Vehicle</p>
-              <p className="text-gray-800 font-medium capitalize">{order.dispatchInfo.vehicleType}</p>
-            </div>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
 
       {/* ── Timeline ── */}
       {activeTimeline.length > 0 && (
@@ -229,7 +308,7 @@ export default function OrderDetails({
               <div key={step.key} className="flex items-start gap-3">
                 {/* Connector line */}
                 <div className="flex flex-col items-center">
-                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[14px] flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[14px] shrink-0">
                     {step.icon}
                   </div>
                   {i < activeTimeline.length - 1 && (
@@ -237,8 +316,12 @@ export default function OrderDetails({
                   )}
                 </div>
                 <div className="pt-1">
-                  <p className="text-[13px] font-medium text-gray-800">{step.label}</p>
-                  <p className="text-[11px] text-gray-400">{formatDate(order.timeline![step.key]!)}</p>
+                  <p className="text-[13px] font-medium text-gray-800">
+                    {step.label}
+                  </p>
+                  <p className="text-[11px] text-gray-400">
+                    {formatDate(order.timeline![step.key]!)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -248,27 +331,22 @@ export default function OrderDetails({
 
       {/* ── Items ── */}
       <Card>
-        <SectionLabel>
-          Items · {order.items?.length ?? 0}
-        </SectionLabel>
+        <SectionLabel>Items · {order.items?.length ?? 0}</SectionLabel>
         <div className="space-y-3">
           {itemsToShow.map((item, index) => (
             <div key={`${item._id}-${index}`} className="flex gap-3">
-              <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                <Image
-                  src={item.image || "/images/harrison_logo.png"}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                />
+              <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                <OrderItemImage image={item.image} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-gray-800 truncate">{item.name}</p>
+                <p className="text-[13px] font-medium text-gray-800 truncate">
+                  {item.name}
+                </p>
                 <p className="text-[12px] text-gray-400 mt-0.5">
                   ₱{item.price.toLocaleString()} × {item.quantity}
                 </p>
               </div>
-              <div className="text-right flex-shrink-0">
+              <div className="text-right shrink-0">
                 <p className="text-[13px] font-semibold text-gray-800">
                   ₱{(item.price * item.quantity).toLocaleString()}
                 </p>
@@ -297,11 +375,15 @@ export default function OrderDetails({
         <div className="space-y-2 text-[13px]">
           <div className="flex justify-between text-gray-600">
             <span>VATable sales</span>
-            <span className="font-medium text-gray-800">₱{order.total?.vatableSales?.toFixed(2)}</span>
+            <span className="font-medium text-gray-800">
+              ₱{order.total?.vatableSales?.toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>VAT (12%)</span>
-            <span className="font-medium text-gray-800">₱{order.total?.vatAmount?.toFixed(2)}</span>
+            <span className="font-medium text-gray-800">
+              ₱{order.total?.vatAmount?.toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between pt-2 border-t border-gray-100">
             <span className="font-semibold text-gray-900">Total</span>
@@ -317,9 +399,13 @@ export default function OrderDetails({
         <Card>
           <SectionLabel>Branch</SectionLabel>
           <div className="text-[13px] space-y-0.5">
-            <p className="font-medium text-gray-800">{order.branchSnapshot.name}</p>
+            <p className="font-medium text-gray-800">
+              {order.branchSnapshot.name}
+            </p>
             <p className="text-gray-500">{order.branchSnapshot.address}</p>
-            <p className="text-gray-400">{order.branchSnapshot.contactNumber}</p>
+            <p className="text-gray-400">
+              {order.branchSnapshot.contactNumber}
+            </p>
           </div>
         </Card>
       )}
@@ -330,9 +416,13 @@ export default function OrderDetails({
           <SectionLabel>Payment</SectionLabel>
           <div className="flex items-center justify-between text-[13px]">
             <div>
-              <p className="font-medium text-gray-800 capitalize">{order.paymentInfo.method.description}</p>
+              <p className="font-medium text-gray-800 capitalize">
+                {order.paymentInfo.method.description}
+              </p>
               {order.paymentInfo.method.last4 && (
-                <p className="text-gray-400 text-[12px]">•••• {order.paymentInfo.method.last4}</p>
+                <p className="text-gray-400 text-[12px]">
+                  •••• {order.paymentInfo.method.last4}
+                </p>
               )}
             </div>
             {order.paymentInfo.method.scheme && (
