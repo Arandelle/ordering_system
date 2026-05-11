@@ -1,21 +1,18 @@
-import { apiClient } from "@/lib/apiClient";
-import { PaginationMeta } from "@/lib/query-helpers";
 import {
-  OrderType,
-  UpdateOrderPayLoad,
-  UpdateOrderResponse,
-} from "@/types/OrderTypes";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { OrderParams, useOrderBase, useOrdersBase } from "../useOrdersBase";
+  OrderParams,
+  useOrderBase,
+  useOrdersBase,
+  useUpdateOrder,
+} from "../shared/useOrdersBase";
 
+const userType = "admin"
 
 export const useAdminOrders = (params?: OrderParams) => {
-  return useOrdersBase("admin", params);
+  return useOrdersBase(userType, params);
 };
 
 export const useAdminOrder = (id: string) => {
-  return useOrderBase("admin", id);
+  return useOrderBase(userType, id);
 };
 
 /**
@@ -24,21 +21,5 @@ export const useAdminOrder = (id: string) => {
  */
 
 export const useAdminUpdateOrder = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    UpdateOrderResponse,
-    Error,
-    { id: string; data: UpdateOrderPayLoad }
-  >({
-    mutationFn: ({ id, data }: { id: string; data: UpdateOrderPayLoad }) =>
-      apiClient.patch(`/admin/orders/${id}`, data),
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
+  return useUpdateOrder(userType);
 };
