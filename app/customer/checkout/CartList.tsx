@@ -188,6 +188,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     vatAmount,
     totalPrice,
     clearCart,
+    syncCart
   } = useCart();
 
   const [showPaymentOptions, setShowPaymentOptions] = useState(false);
@@ -229,6 +230,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
+    await syncCart();
     if (!validateAll()) {
       const errors = Object.values(customerErrors || shippingErrors).filter(
         Boolean,
