@@ -1,4 +1,4 @@
-import OrderDetails from "../OrderDetails";
+import OrderDetailsModal from "@/components/OrderDetailsModal";
 
 export default async function OrderPage({
   params,
@@ -7,5 +7,5 @@ export default async function OrderPage({
 }) {
   const { id } = await params;
 
-  return <OrderDetails orderId={id} variant="page"/>;
+  return <OrderDetailsModal orderId={id} role="customer"/>;
 }
