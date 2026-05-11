@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useOrder } from "@/hooks/api/useOrders";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { formatDate } from "@/helper/formatDate";
 import { OrderActionButton } from "@/app/admin/(protected)/orders/components/OrderActionButton";
@@ -10,6 +9,7 @@ import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { OrderType } from "@/types/OrderTypes";
 import { OrderItemImage } from "../components/OrderItemImage";
 import { toast } from "sonner";
+import { useCustomerOrder } from "@/hooks/api/customers/useCustomerOrders";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 interface OrderDetailsProps {
@@ -126,10 +126,7 @@ export default function OrderDetails({
   variant = "page",
   role = "customer",
 }: OrderDetailsProps) {
-  const { data: order, isLoading } = useOrder(
-    { type: role === "admin" ? "admin" : "customer" },
-    orderId,
-  );
+  const { data: order, isLoading } = useCustomerOrder(orderId);
   const router = useRouter();
   const [showAllItems, setShowAllItems] = useState(false);
   const ITEMS_TO_SHOW = 3;

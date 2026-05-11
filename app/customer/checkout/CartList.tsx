@@ -1,6 +1,6 @@
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
-import { useCreateOrder } from "@/hooks/api/useOrders";
+import { useCreateOrder } from "@/hooks/api/customers/useCustomerOrders";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { Branch } from "@/types/branch";
 import Link from "next/link";

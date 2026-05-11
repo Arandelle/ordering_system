@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { useCart } from "@/contexts/CartContext";
-import { useOrders } from "@/hooks/api/useOrders";
+import { useCustomerOrders } from "@/hooks/api/customers/useCustomerOrders";
 
 interface Props {
   mounted: boolean;
@@ -11,7 +11,7 @@ interface Props {
 
 export const HeaderCartActions = ({ mounted }: Props) => {
   const { totalItems, setIsCartOpen } = useCart();
-  const { data: placedOrders } = useOrders({ type: "customer" });
+  const { data: placedOrders } = useCustomerOrders();
 
   const activeOrdersCount =
     placedOrders?.data.filter(

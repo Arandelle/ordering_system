@@ -1,14 +1,13 @@
-import { useOrders } from "@/hooks/api/useOrders";
-import { getLucideIcon } from "@/helper/iconUtils";
-import { LogOut, X } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "../../../components/BrandLogo";
-import { useState } from "react";
 import { useLogoutAdmin } from "@/hooks/api/useLogout";
 import LogoutModal from "../../../components/ui/LogoutModal";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
+import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
+import { DynamicIcon } from "@/lib/DynamicIcon";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -33,7 +32,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 
   const currentUser = useStaffContext()
   const pathname = usePathname();
-  const { data: placedOrders} = useOrders({type: "admin"});
+  const { data: placedOrders} = useAdminOrders();
   const logout = useLogoutAdmin();
 
   const pendingCount = placedOrders?.data.filter(
@@ -67,7 +66,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
             onClick={onClose}
             className="lg:hidden p-2 hover:bg-white/50 rounded-lg transition-colors"
           >
-            <X size={20} />
+            <DynamicIcon name="X" size={20} />
           </button>
         </div>
 
@@ -75,7 +74,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
           <ul className="space-y-2">
             {visibleNavItems.map((item) => {
               const isActive = pathname === item.path;
-              const Icon = getLucideIcon(item.icon);
+
               return (
                 <li key={item.path} className="relative">
                   <Link
@@ -83,7 +82,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                     onClick={onClose}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duratin-200 group ${isActive ? "bg-brand-color-500/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-brand-color-500"}`}
                   >
-                    <Icon size={18} />
+                    <DynamicIcon name={item.icon} size={18} />
                     <span className="font-semibold text-sm">{item.name}</span>
                     {isActive && (
                       <span className="ml-auto w-2 h-2 rounded-full bg-white" />
@@ -111,7 +110,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
               onClick={() => setLogoutModal(true)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
             >
-              <LogOut size={16} />
+              <DynamicIcon name="LogOut" size={16} />
               <span>Logout</span>
             </button>
           </div>

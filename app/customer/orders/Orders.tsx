@@ -2,7 +2,6 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo } from "react";
-import { useOrders } from "@/hooks/api/useOrders";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { GuestOrderLookup } from "./GuestPage";
 import LoadingPage from "@/components/ui/LoadingPage";
@@ -10,6 +9,7 @@ import { useOrderActions } from "@/hooks/useOrderActions";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { authClient } from "@/lib/auth-client";
 import { ItemMosaic } from "../components/ItemMosaic";
+import { useCustomerOrders } from "@/hooks/api/customers/useCustomerOrders";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
@@ -69,7 +69,6 @@ function StatusPill({ status }: { status: OrderStatus }) {
   );
 }
 
-
 /* ─── Order card ─────────────────────────────────────────────────────── */
 function OrderCard({
   order,
@@ -113,7 +112,6 @@ function OrderCard({
     >
       {/* ── Top: image + body ── */}
       <div className="flex">
-        
         <ItemMosaic items={order.items} />
 
         <div className="flex-1 min-w-0 px-4 py-3.5 flex flex-col justify-between">
@@ -228,10 +226,9 @@ const Orders = () => {
   const searchParams = useSearchParams();
   const { data: currentUser, isPending } = authClient.useSession();
   const activeTab = searchParams.get("status") || "all";
-  const { data: placedOrders, isPending: isOrdersPending } = useOrders(
-    { type: "customer" },
-    { status: activeTab === "all" ? undefined : activeTab },
-  );
+  const { data: placedOrders, isPending: isOrdersPending } = useCustomerOrders({
+    status: activeTab === "all" ? undefined : activeTab,
+  });
   const { handlePayOrder, handleCancelOrder, handleBuyAgain } =
     useOrderActions();
 

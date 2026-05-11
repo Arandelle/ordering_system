@@ -12,9 +12,10 @@ interface Props {
   orderId: string;
   status: OrderStatus;
   paymentMethod: "cod" | "maya";
+  role: "admin" | "customer";
 }
 
-export function OrderActionButton({ orderId,paymentMethod, status }: Props) {
+export function OrderActionButton({ orderId,paymentMethod, status, role }: Props) {
   const nextStatuses = STATUS_TRANSITIONS[status];
   const { mutate, isPending } = useAdminUpdateOrder();
 
@@ -25,7 +26,7 @@ export function OrderActionButton({ orderId,paymentMethod, status }: Props) {
   };
 
   const allowedStatuses = nextStatuses.filter((nextStatus) =>
-    canTransitionTo(status, nextStatus, "admin"),
+    canTransitionTo(status, nextStatus, role),
   );
 
   return (
@@ -35,7 +36,7 @@ export function OrderActionButton({ orderId,paymentMethod, status }: Props) {
 
         if (!actionConfig) return null;
 
-        if (actionConfig.roles && !actionConfig.roles.includes("admin")) {
+        if (actionConfig.roles && !actionConfig.roles.includes(role)) {
           return null;
         }
 
