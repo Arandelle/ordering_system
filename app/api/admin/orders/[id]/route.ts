@@ -51,7 +51,7 @@ export async function GET(
       );
     }
 
-    const order = await Order.findById(id);
+    const order = await Order.findById(id).lean();
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -69,12 +69,10 @@ export async function GET(
       );
     }
 
-    const orderData = order.toObject();
-
     // Return order data in consistent format
     return NextResponse.json({
-      ...orderData,
-      _id: orderData._id.toString(),
+      ...order,
+      _id: order._id.toString(),
     });
   } catch (error: any) {
     console.error("GET /api/orders/[id] error:", error);
