@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         "paymentInfo.referenceNumber",
       ],
       defaultLimit: 20,
-      maxLimit: 20,
+      maxLimit: 50,
       defaultSort: { status: 1, createdAt: -1 },
     });
 
