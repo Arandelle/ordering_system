@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
+import { authClient } from "@/lib/auth-client";
 import { buildQueryString } from "@/lib/buildQueryString";
 import { PaginationMeta } from "@/lib/query-helpers";
 import {
@@ -32,12 +33,17 @@ export function useOrdersBase(
   type: keyof typeof ORDER_ENDPOINTS,
   params?: OrderParams,
 ) {
+
+  const {data: session, isPending} = authClient.useSession();
+  const isCustomer = type === "customer";
+
   return useQuery<ProductResponse, Error>({
     queryKey: ["orders", type, params],
     queryFn: () =>
       apiClient.get(`${ORDER_ENDPOINTS[type]}${buildQueryString(params)}`),
     staleTime: 30000,
     retry: false,
+    enabled: isCustomer ? !!session?.user && !isPending : true,
     refetchOnWindowFocus: false,
   });
 }

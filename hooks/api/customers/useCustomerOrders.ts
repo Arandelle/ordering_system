@@ -6,6 +6,7 @@ import {
   CreateOrderResponse,
 } from "@/types/OrderTypes";
 import { apiClient } from "@/lib/apiClient";
+import { authClient } from "@/lib/auth-client";
 
 const userType = "customer"
 
@@ -84,10 +85,14 @@ export type OrderSummary = {
 };
  
 export const useCustomerOrderSummary = () => {
+
+  const {data: session} = authClient.useSession();
+
   return useQuery<OrderSummary, Error>({
     queryKey: ["orders", "summary"],
     queryFn: () => apiClient.get("/orders/summary"),
     staleTime: 30_000,
+    enabled: !!session?.user,
     retry: false,
     refetchOnWindowFocus: false,
   });
