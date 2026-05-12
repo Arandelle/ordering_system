@@ -42,8 +42,8 @@ const InventoryTable = () => {
     "Category",
     "Price",
     "Stock",
-    "Incoming Order",
-    "Available",
+    "Pending Order",
+    "Sellable",
     "Status",
     "Action",
   ];
@@ -311,15 +311,36 @@ const InventoryTable = () => {
                       Reorder: {item.reorderLevel}
                     </span>
                   </TableCell>
+
+                  {/* Incoming Orders — amber, draws attention */}
                   <TableCell className="text-center">
-                    <span className="font-semibold text-slate-900">
-                      {item.reserved}
-                    </span>
+                    {(item.reserved || 0) > 0 ? (
+                      <span className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-sm">
+                        <span>⏳</span>
+                        {item.reserved}
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-slate-400">—</span>
+                    )}
                   </TableCell>
-                   <TableCell className="text-center">
-                    <span className="font-semibold text-slate-900">
-                      {item.available}
-                    </span>
+
+                  {/* Sellable — green/amber/red based on level */}
+                  <TableCell className="text-center">
+                    {item.available === 0 ? (
+                      <span  className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-red-600`}>
+                        <span>✕</span> 0
+                      </span>
+                    ) : (item.available || 0) <= item.reorderLevel ? (
+                      <span  className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-amber-600`}>
+                        <span>⚠️</span>
+                        {item.available}
+                      </span>
+                    ) : (
+                      <span  className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-green-600`}>
+                        <span>✓</span>
+                        {item.available}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <span
