@@ -48,7 +48,7 @@ const InventorySchema = new Schema(
   },
 );
 
-InventorySchema.virtual("availablbe").get(function () {
+InventorySchema.virtual("available").get(function () {
   return this.quantity - this.reserved;
 });
 
