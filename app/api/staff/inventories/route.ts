@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    const staff = await requireAdmin(req)
+    const staff = await requireAdmin(req);
 
     const branchId = staff.branch;
 
@@ -41,22 +41,22 @@ export async function GET(req: NextRequest) {
     const inventories = await Inventory.find({ branchId: branchId });
 
     const inventoryMap = new Map(
-      inventories.map((inv) => [
-        inv.productId.toString(),
-        { quantity: inv.quantity, reorderLevel: inv.reorderLevel },
-      ]),
+      inventories.map((inv) => [inv.productId.toString(), inv]),
     );
 
     const result = products.map((product) => {
       const inv = inventoryMap.get(product._id.toString());
 
-      const quantity = inv?.quantity ?? 0;
-      const reorderLevel = inv?.reorderLevel ?? 10;
+      // Convert to plain object - includes virtuals if toObject : { virtuals: true}
+      const invData = inv
+        ? inv.toObject()
+        : { quantity: 0, reserved: 0, available: 0, reorderLevel: 0 };
 
       let status = STOCK_STATUSES.IN_STOCK;
 
-      if (quantity === 0) status = STOCK_STATUSES.OUT_OF_STOCK;
-      else if (quantity <= reorderLevel) status = STOCK_STATUSES.LOW_STOCK;
+      if (invData.quantity === 0) status = STOCK_STATUSES.OUT_OF_STOCK;
+      else if (invData.quantity <= invData.reorderLevel)
+        status = STOCK_STATUSES.LOW_STOCK;
 
       return {
         id: product._id.toString(),
@@ -67,9 +67,12 @@ export async function GET(req: NextRequest) {
         name: product.name,
         price: product.price,
         category: product.category?.name ?? "Uncategorized",
-        quantity,
-        reorderLevel,
         status,
+
+        quantity: invData.quantity,
+        reserved: invData.reserved,
+        available: invData.available, // comes from virtual automatically
+        reorderLevel: invData.reorderLevel,
       };
     });
 
@@ -78,7 +81,10 @@ export async function GET(req: NextRequest) {
     console.error("SYNC ERROR:", error);
 
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to sync inventory" },
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to sync inventory",
+      },
       { status: 500 },
     );
   }
