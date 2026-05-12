@@ -27,6 +27,17 @@ export async function POST(request: NextRequest) {
       throw new Error("Store settings not found.");
     }
 
+    const storeStatus = getStoreStatus(settings.operatingHours);
+
+    if (!storeStatus.isOpen) {
+      return NextResponse.json(
+        {
+          error: storeStatus.message,
+        },
+        { status: 403 },
+      );
+    }
+
     const customer = await requireBetterAuth();
 
     let customerId = null;
@@ -51,8 +62,6 @@ export async function POST(request: NextRequest) {
       notes,
       shippingAddress,
     } = body;
-
-    const { line1, line2, city, province, zipCode } = shippingAddress;
 
     if (!branchId) {
       return NextResponse.json(
@@ -104,22 +113,24 @@ export async function POST(request: NextRequest) {
         throw new Error(`${product.name} is not available at this branch.`);
       }
 
-      if (inventory.quantity === 0) {
+      const available = inventory.available // from model virtual
+
+      if (available === 0) {
         throw new Error(
-          `${product.name} only has ${inventory.quantity} item(s) left in stock.`,
+          `${product.name} is out of stock.`,
         );
       }
 
-      if (inventory.quantity < cartItem.quantity) {
+      if (available < cartItem.quantity) {
         throw new Error(
-          `${product.name} only has ${inventory.quantity} item(s) left in stock.`,
+          `${product.name} only has ${available} item(s) available.`,
         );
       }
 
       // Deduct stock inside the transaction
       await Inventory.findOneAndUpdate(
         { productId: cartItem._id, branchId: branchId },
-        { $inc: { quantity: -cartItem.quantity } },
+        { $inc: { reserved: cartItem.quantity } },
         { session },
       );
 
@@ -182,7 +193,7 @@ export async function POST(request: NextRequest) {
     const { error: emailError } = await resend.emails.send({
       from: EMAIL_FROM,
       to: order[0].paymentInfo.customerEmail,
-      subject: `Payment Needed!`,
+      subject: `Successfully Placed Order!`,
       react: OrderMessageEmail({ order: order[0] }),
     });
 

@@ -116,22 +116,26 @@ export async function POST(request: NextRequest) {
         throw new Error(`${product.name} is not available at this branch.`);
       }
 
-      if (inventory.quantity === 0) {
+      const available = inventory.available; // from the model virtual
+
+
+
+      if (available === 0) {
         throw new Error(
-          `${product.name} only has ${inventory.quantity} item(s) left in stock.`,
+          `${product.name} is out of stock.`,
         );
       }
 
-      if (inventory.quantity < cartItem.quantity) {
+      if (available < cartItem.quantity) {
         throw new Error(
-          `${product.name} only has ${inventory.quantity} item(s) left in stock.`,
+          `${product.name} only has ${available} item(s) available.`,
         );
       }
 
-      // Deduct stock inside the transaction
+      // only increment reserved, quantity stays untouched until paid
       await Inventory.findOneAndUpdate(
         { productId: cartItem._id, branchId: branchId },
-        { $inc: { quantity: -cartItem.quantity } },
+        { $inc: { reserved: cartItem.quantity } },
         { session },
       );
 
