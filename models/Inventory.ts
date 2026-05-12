@@ -21,6 +21,12 @@ const InventorySchema = new Schema(
       default: 0,
     },
 
+    reserved: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     reorderLevel: {
       type: Number,
       default: 10,
@@ -31,9 +37,22 @@ const InventorySchema = new Schema(
       ref: "Staff",
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+
+    // then we can just do
+    // inventory.available  // automatically computed
+    // instead of inventory.quantity - inventory.reserved  // repeated everywhere
+  },
 );
+
+InventorySchema.virtual("availablbe").get(function () {
+  return this.quantity - this.reserved;
+});
 
 InventorySchema.index({ productId: 1, branchId: 1 }, { unique: true });
 
-export const Inventory = models.Inventory || mongoose.model("Inventory", InventorySchema)
+export const Inventory =
+  models.Inventory || mongoose.model("Inventory", InventorySchema);
