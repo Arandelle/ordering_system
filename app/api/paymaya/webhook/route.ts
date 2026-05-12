@@ -3,8 +3,8 @@ import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
 import { getMayaClientIP, isMayaAllowedIP } from "@/lib/mayaGuard";
 import { connectDB } from "@/lib/mongodb";
 import { EMAIL_FROM, resend } from "@/lib/resend";
+import { Inventory } from "@/models/Inventory";
 import { Order } from "@/models/Orders";
-import { Product } from "@/models/Product";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     // Maya may send the same event multiple times (retries or manual re-trigger from dashboard)
     const existingOrder = await Order.findOne({
       "paymentInfo.referenceNumber": requestReferenceNumber,
-    });
+    }).session(session);
 
     if (!existingOrder) {
       console.error(
@@ -140,6 +140,16 @@ export async function POST(request: NextRequest) {
       `[Maya Webhook] ✅ Order ${requestReferenceNumber} → ${orderStatus}`,
     );
 
+    if(orderStatus === ORDER_STATUSES.PAID){
+      for(const item of existingOrder.items){
+        await Inventory.findOneAndUpdate(
+          {productId: item.productId, branchId: existingOrder.branchId},
+          { $inc: { quantity: -item.quantity, reserved: -item.quantity}},
+          {session}
+        )
+      }
+    }
+
     // in your webhook, after updating order status
     const shouldRestoreStock = ["failed", "expired", "cancelled"].includes(
       orderStatus,
@@ -148,9 +158,9 @@ export async function POST(request: NextRequest) {
     if (shouldRestoreStock) {
       // restore stock for each item
       for (const item of existingOrder.items) {
-        await Product.findByIdAndUpdate(
-          item.productId, // ← you need productId in OrderItemSchema for this!
-          { $inc: { stock: item.quantity } },
+        await Inventory.findOneAndUpdate(
+          {productId: item.productId, branchId: existingOrder.branchId}, // ← you need productId in OrderItemSchema for this!
+          { $inc: { reserved: -item.quantity } },
           { new: true, session },
         );
       }
