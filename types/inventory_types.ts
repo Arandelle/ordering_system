@@ -7,7 +7,9 @@ export interface InventoryItem {
   name: string;
   price: number;
   quantity: number;
+  reserved?: number;
   reorderLevel: number;
+  available?: number;
   category: string;
   status: string
 }
