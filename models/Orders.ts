@@ -201,6 +201,13 @@ const OrderSchema = new Schema(
     },
 
     reviewedAt: Date,
+
+    // used by Inngest sleepUntil + cron job safety net
+    expiresAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 30 * 60 * 1000), // 30 min from now
+      index: true, // cron queries this field frequently
+    },
   },
   { timestamps: true },
 );
@@ -210,8 +217,8 @@ const OrderSchema = new Schema(
 // ============================================
 
 // Optimize queries by status
-OrderSchema.index({ status: 1, createdAt: -1 });
-
+OrderSchema.index({ status: 1, createdAt: -1});
+OrderSchema.index({ status: 1, expiresAt: -1});
 // Optimize customer queries
 OrderSchema.index({ "paymentInfo.customerEmail": 1 });
 
