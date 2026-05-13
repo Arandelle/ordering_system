@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import ForgotPasswordButton from "@/components/ui/ForgotPasswordButton";
 import { maskEmail } from "@/lib/maskEmail";
+import { mergeGuestCartOnLogin } from "@/contexts/CartContext";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -93,6 +94,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         },
       },
     );
+    await mergeGuestCartOnLogin();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,6 +143,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
           },
         },
       );
+
+      await mergeGuestCartOnLogin();
     }
   };
 
@@ -182,8 +186,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
           </div>
           <h2 className="text-lg font-semibold">Check your email</h2>
           <p className="text-sm text-gray-600">
-            If this email can be used to create or access an account, <br/> we’ve sent
-            instructions to {" "}
+            If this email can be used to create or access an account, <br />{" "}
+            we’ve sent instructions to{" "}
             <span className="text-red-500">{maskEmail(formData.email)}</span>.
           </p>
         </div>
