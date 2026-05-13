@@ -1,5 +1,20 @@
 import mongoose, { models, Schema } from "mongoose";
-import { OrderItemSchema } from "./Orders";
+
+export const CartItemSchema = new Schema(
+  {
+    _id: { type: String, required: true }, // preserves your MenuItem._id
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    description: { type: String },
+    image: { type: String },
+    category: {
+      _id: { type: String },
+      name: { type: String },
+    },
+    quantity: { type: Number, required: true, min: 1 },
+  },
+  { _id: false }, // prevent Mongoose from overriding your string _id
+);
 
 const CartSchema = new Schema(
   {
@@ -11,7 +26,7 @@ const CartSchema = new Schema(
       required: true,
     },
     items: {
-      type: [OrderItemSchema],
+      type: [CartItemSchema],
       default: [],
     },
     expiresAt: {
