@@ -62,7 +62,7 @@ export function OrderActionButton({
           paymentStatus !== "PAYMENT_SUCCESS" &&
           nextStatus === ORDER_STATUSES.PREPARING;
 
-        if (isMayaUnpaid) return null;
+        if (isMayaUnpaid) return null; 
 
         return (
           <button
