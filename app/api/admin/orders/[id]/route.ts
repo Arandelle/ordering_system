@@ -24,6 +24,7 @@ import { EMAIL_FROM, resend } from "@/lib/resend";
 import { getStatusSubject } from "@/app/api/paymaya/webhook/route";
 import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
 import { OrderType } from "@/types/OrderTypes";
+import { PAYMENT_STATUSES, PaymentStatus } from "@/types/paymentConstants";
 
 // ============================================
 // GET /api/orders/[id]
@@ -155,13 +156,13 @@ export async function PATCH(
     const currentStatus = order.status as OrderStatus;
 
     const paymentMethod = order.paymentInfo?.paymentMethod as "cod" | "maya";
-    const paymentStatus = order.paymentInfo?.method?.paymentStatus;
+    const paymentStatus = order.paymentInfo?.paymentStatus as PaymentStatus;
 
     if (
       paymentMethod === "maya" &&
       currentStatus === ORDER_STATUSES.PENDING &&
       newStatus === ORDER_STATUSES.PREPARING &&
-      paymentStatus !== "PAYMENT_SUCCESS"
+      paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS
     ) {
       return NextResponse.json(
         {
@@ -169,7 +170,7 @@ export async function PATCH(
             "Maya orders cannot be accepted while payment is still pending. Wait for payment confirmation first.",
           currentStatus,
           paymentMethod,
-          requiredStatus: "PAYMENT_SUCCESS",
+          requiredStatus: PAYMENT_STATUSES.PAYMENT_SUCCESS,
         },
         { status: 400 },
       );
