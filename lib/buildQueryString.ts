@@ -1,14 +1,18 @@
-export function buildQueryString(params?: Record<string, any>) : string {
-    if(!params) return "";
+export function buildQueryString(params?: Record<string, any>) {
+  if (!params) return "";
 
-    const query = new URLSearchParams();
+  const searchParams = new URLSearchParams();
 
-    Object.entries(params).forEach(([key, val]) => {
-        if (val !== undefined && val !== null && val !== ""){
-            query.set(key, String(val))
-        }
-    });
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
 
-    const qs = query.toString();
-    return qs ? `?${qs}` : "";
+    if (Array.isArray(value)) {
+      value.forEach((v) => searchParams.append(key, String(v)));
+    } else {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : "";
 }
