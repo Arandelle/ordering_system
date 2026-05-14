@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import { authClient } from "@/lib/auth-client";
 import { buildQueryString } from "@/lib/buildQueryString";
 import { PaginationMeta } from "@/lib/query-helpers";
+import { OrderStatus } from "@/types/orderConstants";
 import {
   OrderType,
   UpdateOrderPayLoad,
@@ -25,7 +26,7 @@ export type OrderParams = {
   limit?: number;
   sort?: string;
   search?: string;
-  status?: string;
+  status?: OrderStatus | OrderStatus[];
   productType?: string;
 };
 
