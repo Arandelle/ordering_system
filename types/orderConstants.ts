@@ -12,7 +12,6 @@
 
 export const ORDER_STATUSES = {
   PENDING: "pending",
-  PAID: "paid",
   PREPARING: "preparing",
   READY: "ready",
   DISPATCHED: "dispatched",
@@ -31,7 +30,6 @@ export type OrderStatus = (typeof ORDER_STATUSES)[keyof typeof ORDER_STATUSES];
 // =================== USED for select options =====================
 export const ORDER_STATUS_FILTER_LIST = [
   ORDER_STATUSES.PENDING,
-  ORDER_STATUSES.PAID,
   ORDER_STATUSES.PREPARING,
   ORDER_STATUSES.READY,
   ORDER_STATUSES.DISPATCHED,
@@ -58,7 +56,6 @@ export const ORDER_STATUS_OPTIONS = ORDER_STATUS_FILTER_LIST.map((status) => ({
  */
 
 export const STATUS_PRIORITY: Record<OrderStatus, number> = {
-  [ORDER_STATUSES.PAID]: 0, // Needs immediate attention
   [ORDER_STATUSES.PENDING]: 1, // Awaiting payment
   [ORDER_STATUSES.PREPARING]: 2, // In kitchen
   [ORDER_STATUSES.READY]: 3, // Ready for pickup/delivery
@@ -85,7 +82,6 @@ export const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[] | null> = {
     ORDER_STATUSES.PREPARING,
     ORDER_STATUSES.CANCELLED,
   ], // Accept order for cod
-  [ORDER_STATUSES.PAID]: [ORDER_STATUSES.PREPARING], // Staff accepts the paid order
   [ORDER_STATUSES.PREPARING]: [ORDER_STATUSES.READY], // Food ready
   [ORDER_STATUSES.READY]: [ORDER_STATUSES.DISPATCHED], // Dispatch to customer
   [ORDER_STATUSES.DISPATCHED]: [ORDER_STATUSES.COMPLETED], // Delivery complete
@@ -131,15 +127,6 @@ export const ORDER_ACTION_CONFIG: Record<
       label: "Cancel Order",
       variant: "bg-red-600 hover:bg-red-700",
       roles: ["customer"],
-    },
-  },
-
-  [ORDER_STATUSES.PAID]: {
-    [ORDER_STATUSES.PREPARING]: {
-      label: "Accept Order",
-      variant: "bg-[#ef4501] hover:bg-[#c13500]",
-      roles: ["admin"],
-      paymentMethods: ["maya"],
     },
   },
 
@@ -194,7 +181,6 @@ export const TIMELINE_FIELD_MAP: Record<
   | null
 > = {
   [ORDER_STATUSES.PENDING]: null, // No timestamp on pending
-  [ORDER_STATUSES.PAID]: "paidAt",
   [ORDER_STATUSES.PREPARING]: "preparingAt",
   [ORDER_STATUSES.READY]: "readyAt",
   [ORDER_STATUSES.DISPATCHED]: "dispatchedAt",
