@@ -3,23 +3,30 @@
 import LoadingPage from "@/components/ui/LoadingPage";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useOrderBase } from "@/hooks/api/shared/useOrdersBase";
+import { ORDER_STATUSES } from "@/types/orderConstants";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 import { MailIcon, PhoneIcon, UserIcon } from "lucide-react";
 
 interface OrderDetailsProps {
   orderId: string;
   role: "admin" | "customer";
-  variant: "modal" | "page"
+  variant: "modal" | "page";
 }
 
 const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
-    
   const { data: orderToView, isLoading, isError } = useOrderBase(role, orderId);
 
   const vatableSales = orderToView?.total?.vatableSales ?? 0;
   const totalAmount = orderToView?.total?.totalAmount ?? 0;
 
+  const isMaya =
+    orderToView && orderToView.paymentInfo.paymentMethod === "maya";
+  const isMayaPaid =
+    isMaya &&
+    orderToView.paymentInfo?.paymentStatus === PAYMENT_STATUSES.PAYMENT_SUCCESS;
+
   const content = (
-   <>
+    <>
       {isLoading && (
         <div className="relative flex items-center justify-center py-12 h-[50vh]">
           <LoadingPage />
@@ -40,7 +47,21 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                 {orderToView._id ?? "--"}
               </p>
             </div>
+            {/** Status badge */}
             <StatusBadge status={orderToView.status ?? ""} />
+            {orderToView.status === ORDER_STATUSES.PENDING &&
+              isMaya &&
+              (isMayaPaid ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 w-fit">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Paid
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 w-fit">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Awaiting for payment
+                </span>
+              ))}
           </div>
           <hr className="border-stone-100" />
           {/* Customer Info */}
@@ -247,7 +268,7 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
         </div>
       )}
     </>
-  )
+  );
 
   if (variant === "page") {
     return (
