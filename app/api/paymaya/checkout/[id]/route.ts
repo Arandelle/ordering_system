@@ -16,7 +16,7 @@ export async function POST(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    if (order.status === "paid") {
+    if (order.paymentInfo?.paymentStatus === "PAYMENT_SUCCESS") {
       return NextResponse.json(
         { error: "Order already paid" },
         { status: 400 },
@@ -24,11 +24,9 @@ export async function POST(
     }
 
     const { paymentInfo, shippingAddress } = order;
-    const { line1, line2, city, province, country, zipCode } =
-      shippingAddress;
+    const { line1, line2, city, province, zipCode } = shippingAddress ?? {};
 
     const referenceNumber = paymentInfo?.referenceNumber;
-    const checkoutId = paymentInfo?.checkoutId;
 
     const payload = {
       totalAmount: {
@@ -59,15 +57,18 @@ export async function POST(
           phone: paymentInfo.customerPhone,
         },
 
-        shippingAddress: {
-          line1,
-          line2,
-          city,
-          province,
-          state: province,
-          zipCode,
-          countryCode: "PH",
-        },
+        ...(shippingAddress && {
+          shippingAddress: {
+            line1,
+            line2,
+            city,
+            province,
+            state: province,
+            zipCode,
+            countryCode: "PH",
+          },
+        }),
+
       },
       redirectUrl: {
         success: `${process.env.NEXT_PUBLIC_URL}/payment/success?referenceNumber=${referenceNumber}`,
