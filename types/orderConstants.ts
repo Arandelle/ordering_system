@@ -116,7 +116,7 @@ export const ORDER_ACTION_CONFIG: Record<
       label: "Accept Order",
       variant: "bg-[#ef4501] hover:bg-[#c13500]",
       roles: ["admin"],
-      paymentMethods: ["cod"],
+      paymentMethods: ["cod", "maya"],
     },
 
     [ORDER_STATUSES.CANCELLED]: {
