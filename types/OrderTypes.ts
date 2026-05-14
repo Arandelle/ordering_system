@@ -60,7 +60,7 @@ export interface OrderType {
 
     shippingAddress: {
       line1: string;
-      line2: string;
+      line2?: string;
       city: string;
       province: string;
       postalCode: string;
@@ -87,7 +87,6 @@ export interface OrderType {
     paidAt?: string;
     preparingAt?: string;
     readyAt?: string;
-    dispatchedAt?: string;
     completedAt?: string;
     cancelledAt?: string;
     failedAt?: string;
