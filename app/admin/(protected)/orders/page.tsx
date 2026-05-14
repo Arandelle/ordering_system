@@ -5,11 +5,14 @@ import React, { useState } from "react";
 import Pagination from "@/components/ui/Pagination";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
+import { OrderStatus } from "@/types/orderConstants";
+
+type statusFilterType = "all" | OrderStatus;
 
 const OrdersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<statusFilterType>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -33,7 +36,7 @@ const OrdersPage = () => {
   };
 
   const handleStatus = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setStatusFilter(e.target.value);
+    setStatusFilter(e.target.value as statusFilterType);
     setCurrentPage(1);
   };
 
