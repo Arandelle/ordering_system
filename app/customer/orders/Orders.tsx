@@ -306,35 +306,11 @@ const Orders = () => {
     limit: ITEM_PER_PAGE,
   });
 
+  const filteredOrders = placedOrders?.data ?? []
+
   const { handlePayOrder, handleCancelOrder, handleBuyAgain } =
     useOrderActions();
 
-  const filteredOrders = useMemo(() => {
-    if (!placedOrders?.data) return [];
-
-    if (activeTab === "all") {
-      return [...placedOrders.data].sort((a, b) => {
-        if (
-          a.status === ORDER_STATUSES.CANCELLED &&
-          b.status !== ORDER_STATUSES.CANCELLED
-        )
-          return 1;
-        if (
-          a.status !== ORDER_STATUSES.CANCELLED &&
-          b.status === ORDER_STATUSES.CANCELLED
-        )
-          return -1;
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      });
-    }
-
-    const currentTab = TABS.find((tab) => tab.key === activeTab);
-    return currentTab?.statuses
-      ? placedOrders.data.filter((o) => currentTab.statuses!.includes(o.status))
-      : placedOrders.data.filter((o) => o.status === activeTab);
-  }, [placedOrders, activeTab]);
 
   // Derive tab badge counts from summary (never from the filtered list)
   const getTabCount = (tab: Tab): number | undefined => {
@@ -375,7 +351,7 @@ const Orders = () => {
   };
 
   /* Early returns after all hooks */
-  if ((isPending || isOrdersPending) && isPending) {
+  if (isPending || isOrdersPending) {
     return (
       <div className="relative h-screen">
         <LoadingPage />
