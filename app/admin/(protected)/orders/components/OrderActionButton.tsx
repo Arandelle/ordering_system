@@ -4,18 +4,27 @@ import { useAdminUpdateOrder } from "@/hooks/api/admin/useAdminOrders";
 import {
   canTransitionTo,
   getActionConfig,
+  ORDER_STATUSES,
   OrderStatus,
   STATUS_TRANSITIONS,
 } from "@/types/orderConstants";
+import { PaymentStatus } from "@/types/paymentConstants";
 
 interface Props {
   orderId: string;
   status: OrderStatus;
   paymentMethod: "cod" | "maya";
+  paymentStatus: PaymentStatus;
   role: "admin" | "customer";
 }
 
-export function OrderActionButton({ orderId,paymentMethod, status, role }: Props) {
+export function OrderActionButton({
+  orderId,
+  status,
+  paymentMethod,
+  paymentStatus,
+  role,
+}: Props) {
   const nextStatuses = STATUS_TRANSITIONS[status];
   const { mutate, isPending } = useAdminUpdateOrder();
 
@@ -46,6 +55,14 @@ export function OrderActionButton({ orderId,paymentMethod, status, role }: Props
         ) {
           return null;
         }
+
+        // Maya orders must be paid before admin can accept
+        const isMayaUnpaid =
+          paymentMethod === "maya" &&
+          paymentStatus !== "PAYMENT_SUCCESS" &&
+          nextStatus === ORDER_STATUSES.PREPARING;
+
+        if (isMayaUnpaid) return null;
 
         return (
           <button
