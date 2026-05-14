@@ -36,9 +36,17 @@ export async function queryOrders(options: OrderQueryOptions) {
             default: 99,
           },
         },
+
+        reviewPriority: {
+          $cond: [
+            { $eq: ["$status", "completed"] },
+            { $cond: ["$isReviewed", 1, 0] },
+            0,
+          ],
+        },
       },
     },
-    { $sort: { statusPriority: 1, createdAt: -1 } }, // sort BEFORE pagination
+    { $sort: { statusPriority: 1, reviewPriority: 1, createdAt: -1 } }, // sort BEFORE pagination
     {
       $facet: {
         data: [{ $skip: skip }, { $limit: limit }],
