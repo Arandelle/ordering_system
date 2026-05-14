@@ -15,6 +15,7 @@ import {
   useCustomerOrderSummary,
 } from "@/hooks/api/customers/useCustomerOrders";
 import Pagination from "@/components/ui/Pagination";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
@@ -26,19 +27,19 @@ type Tab = {
 /* ─── Tab config ─────────────────────────────────────────────────────── */
 const TABS: Tab[] = [
   { key: "all", label: "All" },
+  { key: ORDER_STATUSES.PENDING, label: "Pending" },
+  { key: ORDER_STATUSES.PREPARING, label: "Preparing" },
+  { key: ORDER_STATUSES.READY, label: "To receive" },
+  { key: ORDER_STATUSES.COMPLETED, label: "Completed" },
   {
-    key: "pending",
-    label: "To pay",
-    statuses: [ORDER_STATUSES.PENDING],
+    key: ORDER_STATUSES.CANCELLED,
+    label: "Cancelled",
+    statuses: [
+      ORDER_STATUSES.CANCELLED,
+      ORDER_STATUSES.FAILED,
+      ORDER_STATUSES.EXPIRED,
+    ], // ← multi
   },
-  { key: "preparing", label: "To dispatch" },
-  {
-    key: "dispatched",
-    label: "To receive",
-    statuses: [ORDER_STATUSES.READY],
-  },
-  { key: "completed", label: "Completed" },
-  { key: "cancelled", label: "Cancelled" },
 ];
 
 /* ─── Status pill ────────────────────────────────────────────────────── */
@@ -48,15 +49,17 @@ const STATUS_STYLES: Record<string, string> = {
   [ORDER_STATUSES.READY]: "bg-purple-50 text-purple-800",
   [ORDER_STATUSES.COMPLETED]: "bg-green-50 text-green-800",
   [ORDER_STATUSES.CANCELLED]: "bg-red-50 text-red-800",
+  [ORDER_STATUSES.FAILED]: "bg-red-50 text-red-700",
   [ORDER_STATUSES.EXPIRED]: "bg-gray-100 text-gray-600",
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  [ORDER_STATUSES.PENDING]: "To pay",
+  [ORDER_STATUSES.PENDING]: "Pending",
   [ORDER_STATUSES.PREPARING]: "Preparing",
   [ORDER_STATUSES.READY]: "Ready",
   [ORDER_STATUSES.COMPLETED]: "Completed",
   [ORDER_STATUSES.CANCELLED]: "Cancelled",
+  [ORDER_STATUSES.FAILED]: "Failed",
   [ORDER_STATUSES.EXPIRED]: "Expired",
 };
 
@@ -114,11 +117,6 @@ function OrderCard({
   onBuyAgain: () => void;
   onLeaveReview: () => void;
 }) {
-  const isCancelled =
-    order.status === ORDER_STATUSES.CANCELLED ||
-    order.status === ORDER_STATUSES.EXPIRED;
-  const isCompleted = order.status === ORDER_STATUSES.COMPLETED;
-  const needsReview = isCompleted && !order.isReviewed;
   const itemNames = order.items.map((i: any) => i.name).join(", ");
   const formattedDate = new Date(order.createdAt).toLocaleDateString("en-US", {
     month: "short",
@@ -127,9 +125,23 @@ function OrderCard({
     minute: "2-digit",
   });
 
+  const isCancelled =
+    order.status === ORDER_STATUSES.CANCELLED ||
+    order.status === ORDER_STATUSES.FAILED ||
+    order.status === ORDER_STATUSES.EXPIRED;
+
+  const isCompleted = order.status === ORDER_STATUSES.COMPLETED;
+
+  const needsReview = isCompleted && !order.isReviewed;
+
   const isCodPending =
     order.paymentInfo?.paymentMethod === "cod" &&
     order.status === ORDER_STATUSES.PENDING;
+
+  const needPayment =
+    order.status === ORDER_STATUSES.PENDING &&
+    order.paymentInfo?.paymentMethod === "maya" &&
+    order.paymentInfo?.paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS;
 
   return (
     <div
@@ -156,6 +168,18 @@ function OrderCard({
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">
                   Awaiting pickup
                 </span>
+              ) : order.status === ORDER_STATUSES.PENDING &&
+                order.paymentInfo?.paymentMethod === "maya" ? (
+                order.paymentInfo?.paymentStatus ===
+                PAYMENT_STATUSES.PAYMENT_SUCCESS ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-800">
+                    Paid
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800">
+                    Unpaid
+                  </span>
+                )
               ) : (
                 <StatusPill status={order.status} />
               )}
@@ -172,10 +196,6 @@ function OrderCard({
                 <DynamicIcon name="Clock" size={13} />
                 {formattedDate}
               </span>
-              <span className="flex items-center gap-1 text-[12px] text-gray-400">
-                <DynamicIcon name="MapPin" size={13} />
-                Pickup
-              </span>
             </div>
           </div>
 
@@ -189,25 +209,25 @@ function OrderCard({
             </p>
 
             <div className="flex gap-1.5">
-              {order.status === ORDER_STATUSES.PENDING && (
+              {order.status === ORDER_STATUSES.PENDING && needPayment && (
                 <>
-                  {order.paymentInfo?.paymentMethod !== "cod" && (
+                  <button
+                    onClick={onPayOrder}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-800 text-[12px] font-medium transition-colors hover:bg-green-100"
+                  >
+                    <DynamicIcon name="ExternalLink" size={13} />
+                    Pay now
+                  </button>
+                  {order.paymentInfo?.paymentStatus !==
+                    PAYMENT_STATUSES.PAYMENT_SUCCESS && (
                     <button
-                      onClick={onPayOrder}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-800 text-[12px] font-medium transition-colors hover:bg-green-100"
+                      onClick={onCancelOrder}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-700 text-[12px] font-medium transition-colors hover:bg-red-50"
                     >
-                      <DynamicIcon name="ExternalLink" size={13} />
-                      Pay now
+                      <DynamicIcon name="X" size={13} />
+                      Cancel
                     </button>
                   )}
-
-                  <button
-                    onClick={onCancelOrder}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-700 text-[12px] font-medium transition-colors hover:bg-red-50"
-                  >
-                    <DynamicIcon name="X" size={13} />
-                    Cancel
-                  </button>
                 </>
               )}
 
@@ -257,13 +277,31 @@ const Orders = () => {
   const searchParams = useSearchParams();
 
   const { data: currentUser, isPending } = authClient.useSession();
-  const activeTab = searchParams.get("status") || "all";
+  const activeTab = useMemo(() => {
+    const statuses = searchParams.getAll("status");
+    if (statuses.length === 0) return "all";
+
+    const matched = TABS.find((tab) => {
+      const tabStatuses = tab.statuses ?? [tab.key];
+      return (
+        tabStatuses.length === statuses.length &&
+        tabStatuses.every((s) => statuses.includes(s))
+      );
+    });
+
+    return matched?.key ?? statuses[0];
+  }, [searchParams]);
   const currentPage = Number(searchParams.get("page") || "1");
 
   const { data: orderSummary } = useCustomerOrderSummary();
 
+  const currentTab = TABS.find((tab) => tab.key === activeTab);
+
   const { data: placedOrders, isPending: isOrdersPending } = useCustomerOrders({
-    status: activeTab === "all" ? undefined : activeTab,
+    status:
+      activeTab === "all"
+        ? undefined
+        : (currentTab?.statuses ?? [activeTab as OrderStatus]),
     page: currentPage,
     limit: ITEM_PER_PAGE,
   });
@@ -309,23 +347,20 @@ const Orders = () => {
   const totalItems: number = placedOrders?.pagination?.total ?? 0;
   const totalPages: number = Math.ceil(totalItems / ITEM_PER_PAGE);
 
-const handleTabChange = (tabKey: string, statuses?: string[]) => {
-  const params = new URLSearchParams(searchParams.toString());
-  params.delete("page");
-  params.delete("status");
+  const handleTabChange = (tab: Tab) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    params.delete("status");
 
-  if (tabKey !== "all") {
-    if (statuses?.length) {
-      statuses.forEach((s) => params.append("status", s));
-    } else {
-      params.set("status", tabKey);
+    if (tab.key !== "all") {
+      const statusesToSend = tab.statuses ?? [tab.key];
+      statusesToSend.forEach((s) => params.append("status", s));
     }
-  }
 
-  router.push(
-    params.toString() ? `${pathname}?${params.toString()}` : pathname,
-  );
-};
+    router.push(
+      params.toString() ? `${pathname}?${params.toString()}` : pathname,
+    );
+  };
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -372,7 +407,7 @@ const handleTabChange = (tabKey: string, statuses?: string[]) => {
             return (
               <button
                 key={tab.key}
-              onClick={() => handleTabChange(tab.key, tab.statuses)}
+                onClick={() => handleTabChange(tab)}
                 className={[
                   "relative px-4 py-1.5 rounded-full text-[13px] whitespace-nowrap cursor-pointer transition-all border",
                   isActive
