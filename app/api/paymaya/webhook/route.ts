@@ -19,7 +19,7 @@ const PAYMENT_STATUS_MAP: Record<string, string> = {
   AUTHORIZED: "authorized", // Card payments only (hold/capture flow)
 };
 
-export function getStatusSubject(status: OrderStatus, referenceNumber?: string) {
+export function getStatusSubject(status: string, referenceNumber?: string) {
   const ref = referenceNumber ? ` — ${referenceNumber.toUpperCase()}` : "";
 
   switch (status) {
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       `[Maya Webhook] ✅ Order ${requestReferenceNumber} → ${orderStatus}`,
     );
 
-    if(orderStatus === ORDER_STATUSES.PAID){
+    if(paymentStatus === "PAYMENT_SUCCESS"){
       for(const item of existingOrder.items){
         await Inventory.findOneAndUpdate(
           {productId: item.productId, branchId: existingOrder.branchId},
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
         order.status,
         order.paymentInfo.referenceNumber,
       ),
-      react: order.status !== ORDER_STATUSES.PAID ? OrderMessageEmail({order: order}) : OrderSummaryEmail({ order: order }),
+      react: order.paymentInfo.paymentStatus !== "PAYMENT_SUCCESS" ? OrderMessageEmail({order: order}) : OrderSummaryEmail({ order: order }),
     });
 
     if (emailError) {

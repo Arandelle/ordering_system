@@ -15,43 +15,59 @@ export async function GET(request: NextRequest) {
         $group: {
           _id: "$status",
           count: { $sum: 1 },
-          // Count unreviewed completed orders separately for the "To review" badge
           unreviewedCount: {
-            $sum: {
-              $cond: [{ $eq: ["$isReviewed", false] }, 1, 0],
-            },
+            $sum: { $cond: [{ $eq: ["$isReviewed", false] }, 1, 0] },
           },
         },
       },
     ]);
 
-    // Map raw status count into tab keys (matching TABS config in the frontend)
     const byStatus: Record<string, number> = {};
+    const unreviewedByStatus: Record<string, number> = {};
 
     for (const row of counts) {
       byStatus[row._id] = row.count;
+      unreviewedByStatus[row._id] = row.unreviewedCount;
     }
 
-    const unreviewedCompleted =
-      counts.find((r) => r._id === "completed")?.unreviewedCount ?? 0;
-
     const summary = {
-      // "To pay" tab: PENDING (excluding COD) + PAID
-      pending: (byStatus["pending"] ?? 0) + (byStatus["paid"] ?? 0),
-      // "To dispatch" tab
-      preparing: byStatus["preparing"] ?? 0,
-      // "To receive" tab
+      // "To pay": only genuinely unpaid orders (excludes COD — they show "Awaiting pickup" not a pay badge)
+      // COD pending orders are in byStatus["pending"] too, so if you want to exclude them
+      // you'd need a separate pipeline stage. For now this matches your existing behavior.
+      pending: byStatus["pending"] ?? 0,
+
+      // "To dispatch": payment confirmed (paid) + actively being prepared
+      preparing: (byStatus["paid"] ?? 0) + (byStatus["preparing"] ?? 0),
+
+      // "To receive": out for delivery or ready at counter
       dispatched: (byStatus["dispatched"] ?? 0) + (byStatus["ready"] ?? 0),
-      // "To review" tab — only unreviewed completed orders get a badge
-      completed: unreviewedCompleted,
-      // Cancelled — badge intentionally not shown on the frontend but included for completeness
-      cancelled: (byStatus["cancelled"] ?? 0) + (byStatus["expired"] ?? 0),
-      // Grand total across all statuses
+
+      // "Completed": badge only shows unreviewed count (actionable)
+      completed: unreviewedByStatus["completed"] ?? 0,
+
+      // Terminal statuses — kept for completeness, badges intentionally hidden on frontend
+      cancelled: byStatus["cancelled"] ?? 0,
+      expired: byStatus["expired"] ?? 0,
+      failed: byStatus["failed"] ?? 0, // if you have a failed payment status
+
+      // Raw per-status breakdown — useful for frontend if you ever need granular data
+      // without re-hitting the API
+      raw: {
+        pending: byStatus["pending"] ?? 0,
+        paid: byStatus["paid"] ?? 0,
+        preparing: byStatus["preparing"] ?? 0,
+        dispatched: byStatus["dispatched"] ?? 0,
+        ready: byStatus["ready"] ?? 0,
+        completed: byStatus["completed"] ?? 0,
+        cancelled: byStatus["cancelled"] ?? 0,
+        expired: byStatus["expired"] ?? 0,
+        failed: byStatus["failed"] ?? 0,
+      },
+
       total: counts.reduce((sum, r) => sum + r.count, 0),
     };
 
-     return NextResponse.json(summary);
-
+    return NextResponse.json(summary);
   } catch (error) {
     return NextResponse.json(
       {

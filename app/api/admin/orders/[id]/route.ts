@@ -155,11 +155,13 @@ export async function PATCH(
     const currentStatus = order.status as OrderStatus;
 
     const paymentMethod = order.paymentInfo?.paymentMethod as "cod" | "maya";
+    const paymentStatus = order.paymentInfo?.method?.paymentStatus;
 
     if (
       paymentMethod === "maya" &&
       currentStatus === ORDER_STATUSES.PENDING &&
-      newStatus === ORDER_STATUSES.PREPARING
+      newStatus === ORDER_STATUSES.PREPARING &&
+      paymentStatus !== "PAYMENT_SUCCESS"
     ) {
       return NextResponse.json(
         {
@@ -167,7 +169,7 @@ export async function PATCH(
             "Maya orders cannot be accepted while payment is still pending. Wait for payment confirmation first.",
           currentStatus,
           paymentMethod,
-          requiredStatus: ORDER_STATUSES.PAID,
+          requiredStatus: "PAYMENT_SUCCESS",
         },
         { status: 400 },
       );

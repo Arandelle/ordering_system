@@ -8,7 +8,6 @@ interface StatusBadgeProps {
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const statusStyles: Record<OrderType["status"], string> = {
     pending: "bg-amber-500",
-    paid: "bg-green-500",
     preparing: "bg-blue-500",
     dispatched: "bg-red-500",
     ready: "bg-orange-500",

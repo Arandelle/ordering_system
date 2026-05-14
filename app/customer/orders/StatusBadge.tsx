@@ -18,11 +18,6 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
       color: "bg-yellow-100 text-yellow-700 border border-yellow-200",
       icon: <CreditCard size={14} />,
     },
-    paid: {
-      label: "Payment Confirmed",
-      color: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-      icon: <CreditCard size={14} />,
-    },
     preparing: {
       label: "Preparing Order",
       color: "bg-blue-100 text-blue-700 border border-blue-200",

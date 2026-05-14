@@ -26,13 +26,13 @@ const formatCurrency = (amount: number) =>
 /* ── Status-aware copy ── */
 function getStatusCopy(status: OrderStatus) {
   switch (status) {
-    case "paid":
-      return {
-        preview: "Payment received — your order is confirmed!",
-        heading: "Payment confirmed",
-        message:
-          "Your payment has been received and your order is confirmed. We will begin processing it shortly.",
-      };
+    // case "paid":
+    //   return {
+    //     preview: "Payment received — your order is confirmed!",
+    //     heading: "Payment confirmed",
+    //     message:
+    //       "Your payment has been received and your order is confirmed. We will begin processing it shortly.",
+    //   };
     case "completed":
       return {
         preview: "Your order is completed.",

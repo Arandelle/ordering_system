@@ -22,7 +22,6 @@ interface OrderMessageEmailProps {
 /* ── Status accent color ── */
 function getAccentColor(status: OrderStatus): string {
   switch (status) {
-    case "paid":
     case "preparing":
     case "completed":
       return "#1D9E75";

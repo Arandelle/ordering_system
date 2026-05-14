@@ -29,7 +29,7 @@ const TABS: Tab[] = [
   {
     key: "pending",
     label: "To pay",
-    statuses: [ORDER_STATUSES.PENDING, ORDER_STATUSES.PAID],
+    statuses: [ORDER_STATUSES.PENDING],
   },
   { key: "preparing", label: "To dispatch" },
   {
@@ -44,7 +44,6 @@ const TABS: Tab[] = [
 /* ─── Status pill ────────────────────────────────────────────────────── */
 const STATUS_STYLES: Record<string, string> = {
   [ORDER_STATUSES.PENDING]: "bg-amber-50 text-amber-800",
-  [ORDER_STATUSES.PAID]: "bg-green-50 text-green-800",
   [ORDER_STATUSES.PREPARING]: "bg-blue-50 text-blue-800",
   [ORDER_STATUSES.DISPATCHED]: "bg-purple-50 text-purple-800",
   [ORDER_STATUSES.READY]: "bg-purple-50 text-purple-800",
@@ -55,7 +54,6 @@ const STATUS_STYLES: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   [ORDER_STATUSES.PENDING]: "To pay",
-  [ORDER_STATUSES.PAID]: "Paid",
   [ORDER_STATUSES.PREPARING]: "Preparing",
   [ORDER_STATUSES.DISPATCHED]: "Dispatched",
   [ORDER_STATUSES.READY]: "Ready",
@@ -313,18 +311,23 @@ const Orders = () => {
   const totalItems: number = placedOrders?.pagination?.total ?? 0;
   const totalPages: number = Math.ceil(totalItems / ITEM_PER_PAGE);
 
-  const handleTabChange = (tabKey: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page"); // reset to page 1 on tab change
-    if (tabKey === "all") {
-      params.delete("status");
+const handleTabChange = (tabKey: string, statuses?: string[]) => {
+  const params = new URLSearchParams(searchParams.toString());
+  params.delete("page");
+  params.delete("status");
+
+  if (tabKey !== "all") {
+    if (statuses?.length) {
+      statuses.forEach((s) => params.append("status", s));
     } else {
       params.set("status", tabKey);
     }
-    router.push(
-      params.toString() ? `${pathname}?${params.toString()}` : pathname,
-    );
-  };
+  }
+
+  router.push(
+    params.toString() ? `${pathname}?${params.toString()}` : pathname,
+  );
+};
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -371,7 +374,7 @@ const Orders = () => {
             return (
               <button
                 key={tab.key}
-                onClick={() => handleTabChange(tab.key)}
+              onClick={() => handleTabChange(tab.key, tab.statuses)}
                 className={[
                   "relative px-4 py-1.5 rounded-full text-[13px] whitespace-nowrap cursor-pointer transition-all border",
                   isActive
