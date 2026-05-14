@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import StatusBadge from "@/components/ui/StatusBadge";
 import {
@@ -15,6 +15,8 @@ import PermissionGuard from "@/lib/PermissionGuard";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { formatDate } from "@/helper/formatDate";
 import { useRouter } from "next/navigation";
+import { PAYMENT_STATUSES, PaymentStatus } from "@/types/paymentConstants";
+import { ORDER_STATUSES } from "@/types/orderConstants";
 
 export default function OrdersTable({
   orders,
@@ -23,7 +25,6 @@ export default function OrdersTable({
   orders: OrderType[];
   isPending: boolean;
 }) {
-
   const router = useRouter();
 
   const headerTitles = [
@@ -62,6 +63,10 @@ export default function OrdersTable({
             {orders.length > 0 ? (
               orders.map((order) => {
                 const isMaya = order.paymentInfo.paymentMethod === "maya";
+                const isMayaPaid =
+                  isMaya &&
+                  order.paymentInfo?.paymentStatus ===
+                    PAYMENT_STATUSES.PAYMENT_SUCCESS;
 
                 return (
                   <TableRow
@@ -110,7 +115,22 @@ export default function OrdersTable({
                       </span>
                     </TableCell>
                     <TableCell className="px-6 py-4">
-                      <StatusBadge status={order.status} />
+                      <div className="flex flex-col gap-1.5">
+                        <StatusBadge status={order.status} />
+                        {order.status === ORDER_STATUSES.PENDING &&
+                          isMaya &&
+                          (isMayaPaid ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 w-fit">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 w-fit">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                             Awaiting for payment
+                            </span>
+                          ))}
+                      </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
                       <span className="text-xs text-stone-500">
@@ -132,6 +152,9 @@ export default function OrdersTable({
                             orderId={order._id}
                             status={order.status}
                             paymentMethod={order.paymentInfo.paymentMethod}
+                            paymentStatus={
+                              order.paymentInfo.paymentStatus as PaymentStatus
+                            }
                             role="admin"
                           />
                         </PermissionGuard>
