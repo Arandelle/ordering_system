@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
 import { Settings } from "@/models/Setting";
 import { getStoreStatus } from "@/lib/storeStatus";
+import { inngest } from "@/inngest/client";
 
 export async function POST(request: NextRequest) {
   await connectDB();
@@ -118,12 +119,8 @@ export async function POST(request: NextRequest) {
 
       const available = inventory.available; // from the model virtual
 
-
-
       if (available === 0) {
-        throw new Error(
-          `${product.name} is out of stock.`,
-        );
+        throw new Error(`${product.name} is out of stock.`);
       }
 
       if (available < cartItem.quantity) {
@@ -203,14 +200,14 @@ export async function POST(request: NextRequest) {
         },
         ...(shippingAddress && {
           shippingAddress: {
-             line1,
-          line2,
-          city,
-          state: province,
-          zipCode,
-          countryCode: "PH",
-          }
-        })
+            line1,
+            line2,
+            city,
+            state: province,
+            zipCode,
+            countryCode: "PH",
+          },
+        }),
       },
       redirectUrl: {
         success: `${process.env.NEXT_PUBLIC_URL}/payment/success?referenceNumber=${referenceNumber}`,
@@ -269,6 +266,15 @@ export async function POST(request: NextRequest) {
       ],
       { session },
     );
+
+    // create event for the inngest / background job
+    await inngest.send({
+      name: "order/created",
+      data: {
+        orderId: order[0]._id.toString(),
+        referenceNumber,
+      },
+    });
 
     const { error: emailError } = await resend.emails.send({
       from: EMAIL_FROM,
