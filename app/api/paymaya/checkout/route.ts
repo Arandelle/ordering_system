@@ -131,9 +131,13 @@ export async function POST(request: NextRequest) {
 
       // only increment reserved, quantity stays untouched until paid
       await Inventory.findOneAndUpdate(
-        { productId: cartItem._id, branchId: branchId },
+        {
+          productId: cartItem._id,
+          branchId: branchId,
+          reserved: { $gte: inventory.quantity },
+        },
         { $inc: { reserved: cartItem.quantity } },
-        { session },
+        { new: true, session },
       );
 
       totalPrice += product.price * cartItem.quantity;
@@ -267,6 +271,9 @@ export async function POST(request: NextRequest) {
       { session },
     );
 
+    await session.commitTransaction();
+    session.endSession();
+
     // create event for the inngest / background job
     await inngest.send({
       name: "order/created",
@@ -289,9 +296,6 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
-
-    await session.commitTransaction();
-    session.endSession();
 
     return NextResponse.json(
       {
