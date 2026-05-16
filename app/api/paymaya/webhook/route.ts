@@ -107,10 +107,17 @@ export async function POST(request: NextRequest) {
     }
 
     const finalStatuses = ["failed", "expired", "cancelled"];
-    if (finalStatuses.includes(existingOrder.status)) {
+
+    // Skip if already paid or already in final state
+    if (
+      existingOrder.paymentInfo?.paymentStatus === "PAYMENT_SUCCESS" ||
+      finalStatuses.includes(existingOrder.status)
+    ) {
       console.log(
-        `[Maya Webhook] ⏭️ Skipping — order already in final state: ${existingOrder.status}`,
+        `[Maya Webhook] ⏭️ Skipping — already processed: ${existingOrder.status}`,
       );
+      await session.abortTransaction(); // nothing to commit
+      session.endSession();
       return ack;
     }
 
@@ -152,27 +159,33 @@ export async function POST(request: NextRequest) {
       `[Maya Webhook] ✅ Order ${requestReferenceNumber} → ${orderStatus}`,
     );
 
+    // Step 6- Inventory - PAYMENT_SUCCESS: deduct stock + remove reservation
     if (paymentStatus === "PAYMENT_SUCCESS") {
       for (const item of existingOrder.items) {
         await Inventory.findOneAndUpdate(
           { productId: item.productId, branchId: existingOrder.branchId },
-          { $inc: { quantity: -item.quantity, reserved: -item.quantity } },
+          {
+            $inc: { quantity: -item.quantity },
+            $pull: { reservations: { orderId: existingOrder._id } },
+          },
           { session },
         );
       }
     }
 
-    // in your webhook, after updating order status
-    const shouldRestoreStock = ["failed", "expired", "cancelled"].includes(
-      orderStatus,
-    );
+    // Step 7: failed/expired/cancelled: just release reservation, stock never left
+    const shouldRestoreStock = [
+      "failed",
+      "expired",
+      "cancelled",
+    ].includes(orderStatus);
 
     if (shouldRestoreStock) {
       // restore stock for each item
       for (const item of existingOrder.items) {
         await Inventory.findOneAndUpdate(
           { productId: item.productId, branchId: existingOrder.branchId }, // ← you need productId in OrderItemSchema for this!
-          { $inc: { reserved: -item.quantity } },
+          { $pull: { reservations: { orderId: existingOrder._id } } },
           { new: true, session },
         );
       }
@@ -197,6 +210,9 @@ export async function POST(request: NextRequest) {
 
     await session.commitTransaction();
     session.endSession();
+
+    return ack; // always return ack at the end
+
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
