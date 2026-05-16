@@ -1,13 +1,69 @@
 import { useState } from "react";
-import { CustomerSchema, OrderFormSchema, OrderFormState, ShippingSchema } from "./FormSchema";
+import {
+  CustomerSchema,
+  OrderFormSchema,
+  OrderFormState,
+  ShippingSchema,
+} from "./FormSchema";
 import z from "zod";
 
-export type CustomerErrors = Partial<Record<keyof z.infer<typeof CustomerSchema>, string>>;
-export type ShippingErrors = Partial<Record<keyof z.infer<typeof ShippingSchema>, string>>;
+export type CustomerErrors = Partial<
+  Record<keyof z.infer<typeof CustomerSchema>, string>
+>;
+export type ShippingErrors = Partial<
+  Record<keyof z.infer<typeof ShippingSchema>, string>
+>;
 
 const useFormErrors = (orderDetails: OrderFormState) => {
   const [customerErrors, setCustomerErrors] = useState<CustomerErrors>({});
   const [shippingErrors, setShippingErrors] = useState<ShippingErrors>({});
+
+  const validateField = (
+    step: "customer" | "shippingAddress",
+    field: string,
+    currentValue?: string,
+  ) => {
+    const schema = step === "customer" ? CustomerSchema : ShippingSchema;
+    const data =
+      step === "customer"
+        ? {
+            ...orderDetails.customer,
+            [field]:
+              currentValue ??
+              orderDetails.customer[
+                field as keyof typeof orderDetails.customer
+              ],
+          }
+        : {
+            ...orderDetails.shippingAddress,
+            [field]:
+              currentValue ??
+              orderDetails.shippingAddress[
+                field as keyof typeof orderDetails.shippingAddress
+              ],
+          };
+    const result = schema.safeParse(data);
+
+    if (result.success) {
+      if (step === "customer") {
+        setCustomerErrors((prev) => ({ ...prev, [field]: undefined }));
+      } else {
+        setShippingErrors((prev) => ({ ...prev, [field]: undefined }));
+      }
+      return;
+    }
+
+    result.error.issues.forEach((err) => {
+      const path = err.path[err.path.length - 1] as string;
+      if (path !== field) return;
+
+      if (step === "customer") {
+        setCustomerErrors((prev) => ({ ...prev, [field]: err.message }));
+      } else {
+        setShippingErrors((prev) => ({ ...prev, [field]: err.message }));
+      }
+    });
+  };
 
   const validateAll = (): boolean => {
     const result = OrderFormSchema.safeParse(orderDetails);
@@ -57,7 +113,14 @@ const useFormErrors = (orderDetails: OrderFormState) => {
     return false;
   };
 
-  return { validateAll, customerErrors, shippingErrors, setCustomerErrors, setShippingErrors };
+  return {
+    validateAll,
+    customerErrors,
+    shippingErrors,
+    setCustomerErrors,
+    setShippingErrors,
+    validateField,
+  };
 };
 
 export default useFormErrors;
