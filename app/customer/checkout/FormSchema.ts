@@ -8,7 +8,7 @@ export const CustomerSchema = z.object({
 
   customerPhone: z
     .string()
-    .regex(/^(09|\+639)\d{9}$/, "Invalid PH mobile number").optional().or(z.literal("")),
+    .regex(/^(09|\+639)\d{9}$/, "Invalid PH mobile number"),
 
   customerEmail: z
     .string()
