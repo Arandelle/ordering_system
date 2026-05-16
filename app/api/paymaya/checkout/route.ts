@@ -59,7 +59,7 @@ interface TaxBreakdown {
 // Validation helpers
 // ---------------------------------------------------------------------------
 
-async function assertStoreIsOpen(session: ClientSession): Promise<void> {
+export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
   const settings = await Settings.findOne().session(session);
   if (!settings) throw new Error("Store settings not found.");
 
@@ -67,7 +67,7 @@ async function assertStoreIsOpen(session: ClientSession): Promise<void> {
   if (!storeStatus.isOpen) throw new Error(storeStatus.message);
 }
 
-function assertValidPayload(body: CreateOrderPayload): void {
+export function assertValidPayload(body: CreateOrderPayload): void {
   const { branchId, firstName, lastName, customerPhone, items } = body;
 
   if (!branchId) throw new Error("Branch is required.");
@@ -81,7 +81,7 @@ function assertValidPayload(body: CreateOrderPayload): void {
 // Branch helpers
 // ---------------------------------------------------------------------------
 
-async function fetchBranch(branchId: string, session: ClientSession) {
+export async function fetchBranch(branchId: string, session: ClientSession) {
   const branch = await Branch.findById(branchId).session(session);
   if (!branch) throw new Error("Branch not found!");
   return branch;
@@ -144,7 +144,7 @@ async function resolveCartItem(
   };
 }
 
-async function resolveCart(
+export async function resolveCart(
   items: CreateOrderPayload["items"],
   branchId: string,
   session: ClientSession,
@@ -160,7 +160,7 @@ async function resolveCart(
   return { totalPrice, orderItems, mayaItems };
 }
 
-async function reserveInventory(
+export async function reserveInventory(
   orderItems: ResolvedCartItem["orderItem"][],
   branchId: string,
   orderId: mongoose.Types.ObjectId,
@@ -205,7 +205,7 @@ async function reserveInventory(
 // Tax calculation
 // ---------------------------------------------------------------------------
 
-function computeTax(totalPrice: number): TaxBreakdown {
+export function computeTax(totalPrice: number): TaxBreakdown {
   const vatableSales = parseFloat((totalPrice / (1 + TAX_RATE)).toFixed(2));
   const vatAmount = parseFloat((totalPrice - vatableSales).toFixed(2));
   return { vatableSales, vatAmount, totalAmount: totalPrice };
@@ -285,7 +285,7 @@ async function createMayaCheckout(
 // Order persistence
 // ---------------------------------------------------------------------------
 
-async function persistOrder(
+export async function persistOrder(
   body: CreateOrderPayload,
   branch: Awaited<ReturnType<typeof fetchBranch>>,
   orderItems: ResolvedCartItem["orderItem"][],
@@ -344,7 +344,7 @@ async function persistOrder(
 // Side effects (fire-and-forget after commit)
 // ---------------------------------------------------------------------------
 
-async function dispatchOrderCreatedEvent(
+export async function dispatchOrderCreatedEvent(
   orderId: string,
   referenceNumber: string,
   paymentMethod: string,
@@ -355,7 +355,7 @@ async function dispatchOrderCreatedEvent(
   });
 }
 
-async function sendOrderConfirmationEmail(
+export async function sendOrderConfirmationEmail(
   order: Awaited<ReturnType<typeof persistOrder>>,
 ): Promise<void> {
   const { error: emailError } = await resend.emails.send({
