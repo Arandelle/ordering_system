@@ -105,25 +105,18 @@ async function resolveCartItem(
   const inventory = await Inventory.findOne({
     productId: cartItem._id,
     branchId,
+    $expr: {
+      $gte: [
+        { $subtract: ["$quantity", { $sum: "$reservations.quantity" }] },
+        cartItem.quantity,
+      ],
+    },
   }).session(session);
 
   if (!inventory)
-    throw new Error(`${product.name} is not available at this branch.`);
-
-  const updatedInventory = await Inventory.findOneAndUpdate(
-    {
-      productId: cartItem._id,
-      branchId,
-      $expr: {
-        $gte: [{ $subtract: ["$quantity", "$reserved"] }, cartItem.quantity],
-      },
-    },
-    { $inc: { reserved: cartItem.quantity } },
-    { new: true, session },
-  );
-
-  if (!updatedInventory)
-    throw new Error(`${product.name} is out of stock or insufficient quantity.`);
+    throw new Error(
+      `${product.name} is out of stock or insufficient quantity.`,
+    );
 
   return {
     orderItem: {
@@ -165,6 +158,47 @@ async function resolveCart(
   const mayaItems = resolved.map((r) => r.mayaItem);
 
   return { totalPrice, orderItems, mayaItems };
+}
+
+async function reserveInventory(
+  orderItems: ResolvedCartItem["orderItem"][],
+  branchId: string,
+  orderId: mongoose.Types.ObjectId,
+  session: ClientSession,
+) {
+  for (const item of orderItems) {
+    const updated = await Inventory.findOneAndUpdate(
+      {
+        productId: item.productId,
+        branchId,
+        "reservations.orderId": { $ne: orderId }, // idempotent
+        $expr: {
+          $gte: [
+            { $subtract: ["$quantity", { $sum: "$reservations.quantity" }] },
+            item.quantity,
+          ],
+        },
+      },
+      { $push: { reservations: { orderId, quantity: item.quantity } } },
+      { new: true, session },
+    );
+
+    // null = already reserved (retry) OR out of stock — check which
+    if (!updated) {
+      const existing = await Inventory.findOne({
+        productId: item.productId,
+        branchId,
+        "reservations.orderId": orderId,
+      }).session(session);
+
+      if (!existing) {
+        throw new Error(
+          `${item.name} is out of stock or insufficient quantity.`,
+        );
+      }
+      // else: already reserved for this order (retry), continue
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -223,9 +257,10 @@ function buildMayaPayload(
   };
 }
 
-async function createMayaCheckout(payload: ReturnType<typeof buildMayaPayload>) {
-  if (!process.env.MAYA_PUBLIC_KEY)
-    throw new Error("Maya key not configured");
+async function createMayaCheckout(
+  payload: ReturnType<typeof buildMayaPayload>,
+) {
+  if (!process.env.MAYA_PUBLIC_KEY) throw new Error("Maya key not configured");
 
   const response = await fetch(
     "https://pg-sandbox.paymaya.com/checkout/v1/checkouts",
@@ -312,11 +347,11 @@ async function persistOrder(
 async function dispatchOrderCreatedEvent(
   orderId: string,
   referenceNumber: string,
-  paymentMethod: string
+  paymentMethod: string,
 ): Promise<void> {
   await inngest.send({
     name: "order/created",
-    data: { orderId, referenceNumber,paymentMethod },
+    data: { orderId, referenceNumber, paymentMethod },
   });
 }
 
@@ -376,7 +411,7 @@ export async function POST(request: NextRequest) {
     const referenceNumber = `ORDER-${Date.now()}`;
     const mayaPayload = buildMayaPayload(body, mayaItems, tax, referenceNumber);
     const { checkoutId, redirectUrl } = await createMayaCheckout(mayaPayload);
-    
+
     // 8. Persist order
     const order = await persistOrder(
       body,
@@ -389,14 +424,21 @@ export async function POST(request: NextRequest) {
       session,
     );
 
+    // 9. Reserve inventory now that we have orderId
+    await reserveInventory(orderItems, body.branchId, order._id, session);
+
     const paymentMethod = order?.paymentInfo?.paymentMethod;
 
     await session.commitTransaction();
     session.endSession();
 
-    // 9. Side effects (after commit — failures are non-fatal)
+    // 10. Side effects (after commit — failures are non-fatal)
     await Promise.allSettled([
-      dispatchOrderCreatedEvent(order._id.toString(), referenceNumber, paymentMethod),
+      dispatchOrderCreatedEvent(
+        order._id.toString(),
+        referenceNumber,
+        paymentMethod,
+      ),
       sendOrderConfirmationEmail(order),
     ]);
 
