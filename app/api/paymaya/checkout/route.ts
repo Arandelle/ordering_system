@@ -312,10 +312,11 @@ async function persistOrder(
 async function dispatchOrderCreatedEvent(
   orderId: string,
   referenceNumber: string,
+  paymentMethod: string
 ): Promise<void> {
   await inngest.send({
     name: "order/created",
-    data: { orderId, referenceNumber },
+    data: { orderId, referenceNumber,paymentMethod },
   });
 }
 
@@ -375,7 +376,7 @@ export async function POST(request: NextRequest) {
     const referenceNumber = `ORDER-${Date.now()}`;
     const mayaPayload = buildMayaPayload(body, mayaItems, tax, referenceNumber);
     const { checkoutId, redirectUrl } = await createMayaCheckout(mayaPayload);
-
+    
     // 8. Persist order
     const order = await persistOrder(
       body,
@@ -388,12 +389,14 @@ export async function POST(request: NextRequest) {
       session,
     );
 
+    const paymentMethod = order?.paymentInfo?.paymentMethod;
+
     await session.commitTransaction();
     session.endSession();
 
     // 9. Side effects (after commit — failures are non-fatal)
     await Promise.allSettled([
-      dispatchOrderCreatedEvent(order._id.toString(), referenceNumber),
+      dispatchOrderCreatedEvent(order._id.toString(), referenceNumber, paymentMethod),
       sendOrderConfirmationEmail(order),
     ]);
 
