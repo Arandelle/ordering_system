@@ -3,10 +3,26 @@ import { useCart } from "@/contexts/CartContext";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useCustomerUpdateOrder } from "./api/customers/useCustomerOrders";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+export const useCancelOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderId: string) =>
+      apiClient.patch(`/customer/orders/${orderId}/cancel`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Order cancelled successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message);
+    },
+  });
+};
 
 export function useOrderActions() {
-  const updateOrder = useCustomerUpdateOrder();
+  const { mutate: cancelOrder, isPending } = useCancelOrder();
   const { addToCart, setIsCartOpen } = useCart();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,15 +42,7 @@ export function useOrderActions() {
 
   const handleCancelOrder = (orderId: string) => {
     if (!confirm(`Are you sure you want to cancel order ${orderId}?`)) return;
-
-    setIsLoading(true);
-    updateOrder.mutate(
-      { id: orderId, data: { status: "cancelled" } },
-      {
-        onSuccess: () => toast.success("Order cancelled!"),
-        onSettled: () => setIsLoading(false),
-      },
-    );
+    cancelOrder(orderId);
   };
 
   const handleBuyAgain = (orderItems: any[]) => {
