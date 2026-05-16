@@ -9,11 +9,10 @@ import { toast } from "sonner";
 import { GuestOrderModal } from "./GuestOrderModal";
 import Modal from "@/components/ui/Modal";
 import { useOrderActions } from "@/hooks/useOrderActions";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export const GuestOrderLookup = () => {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const reference = searchParams.get("referenceNumber") || "";
   const { openModal: handleOpenModal } = useModalQuery();
   const [referenceNumber, setReferenceNumber] = useState("");
