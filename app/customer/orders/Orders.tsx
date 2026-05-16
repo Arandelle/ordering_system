@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { useMemo } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { GuestOrderLookup } from "./GuestPage";
 import LoadingPage from "@/components/ui/LoadingPage";
@@ -276,7 +276,14 @@ const Orders = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [isMounted, setIsMounted] = useState(false);
+
   const { data: currentUser, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   const activeTab = useMemo(() => {
     const statuses = searchParams.getAll("status");
     if (statuses.length === 0) return "all";
@@ -297,7 +304,7 @@ const Orders = () => {
 
   const currentTab = TABS.find((tab) => tab.key === activeTab);
 
-  const { data: placedOrders, isPending: isOrdersPending } = useCustomerOrders({
+  const { data: placedOrders, isLoading: isOrdersLoading } = useCustomerOrders({
     status:
       activeTab === "all"
         ? undefined
@@ -306,11 +313,10 @@ const Orders = () => {
     limit: ITEM_PER_PAGE,
   });
 
-  const filteredOrders = placedOrders?.data ?? []
+  const filteredOrders = placedOrders?.data ?? [];
 
   const { handlePayOrder, handleCancelOrder, handleBuyAgain } =
     useOrderActions();
-
 
   // Derive tab badge counts from summary (never from the filtered list)
   const getTabCount = (tab: Tab): number | undefined => {
@@ -351,15 +357,15 @@ const Orders = () => {
   };
 
   /* Early returns after all hooks */
-  if (isPending || isOrdersPending) {
+  if ((!isMounted || isPending )|| isOrdersLoading) {
     return (
-      <div className="relative h-screen">
+      <div className="relative h-screen z-0">
         <LoadingPage />
       </div>
     );
   }
 
-  if (!currentUser) return <GuestOrderLookup />;
+  if (!currentUser?.user) return <GuestOrderLookup />;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -417,7 +423,7 @@ const Orders = () => {
         </div>
 
         {/* Orders list */}
-        {isOrdersPending ? (
+        {isOrdersLoading ? (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <OrderCardSkeleton key={i} />
