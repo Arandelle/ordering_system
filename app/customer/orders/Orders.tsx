@@ -16,6 +16,8 @@ import {
 } from "@/hooks/api/customers/useCustomerOrders";
 import Pagination from "@/components/ui/Pagination";
 import { PAYMENT_STATUSES } from "@/types/paymentConstants";
+import { formatDate } from "@/helper/formatDate";
+import { useOrderState } from "./hooks/useOrderState";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
@@ -118,30 +120,19 @@ function OrderCard({
   onLeaveReview: () => void;
 }) {
   const itemNames = order.items.map((i: any) => i.name).join(", ");
-  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 
-  const isCancelled =
-    order.status === ORDER_STATUSES.CANCELLED ||
-    order.status === ORDER_STATUSES.FAILED ||
-    order.status === ORDER_STATUSES.EXPIRED;
-
-  const isCompleted = order.status === ORDER_STATUSES.COMPLETED;
-
-  const needsReview = isCompleted && !order.isReviewed;
-
-  const isCodPending =
-    order.paymentInfo?.paymentMethod === "cod" &&
-    order.status === ORDER_STATUSES.PENDING;
-
-  const needPayment =
-    order.status === ORDER_STATUSES.PENDING &&
-    order.paymentInfo?.paymentMethod === "maya" &&
-    order.paymentInfo?.paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS;
+  const actions = useOrderState(order);
+  if (!actions) return null;
+  const {
+    status,
+    isMayaPaid,
+    needPayment,
+    isCompleted,
+    needsReview,
+    isCancelled,
+    isCodPending,
+    canCancel,
+  } = actions;
 
   return (
     <div
@@ -168,20 +159,16 @@ function OrderCard({
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">
                   Awaiting pickup
                 </span>
-              ) : order.status === ORDER_STATUSES.PENDING &&
-                order.paymentInfo?.paymentMethod === "maya" ? (
-                order.paymentInfo?.paymentStatus ===
-                PAYMENT_STATUSES.PAYMENT_SUCCESS ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-800">
-                    Paid
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800">
-                    Unpaid
-                  </span>
-                )
+              ) : isMayaPaid ? (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-800">
+                  Paid
+                </span>
+              ) : needPayment ? (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800">
+                  Unpaid
+                </span>
               ) : (
-                <StatusPill status={order.status} />
+                <StatusPill status={status} />
               )}
             </div>
 
@@ -194,7 +181,7 @@ function OrderCard({
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1 text-[12px] text-gray-400">
                 <DynamicIcon name="Clock" size={13} />
-                {formattedDate}
+                {formatDate(order.createdAt)}
               </span>
             </div>
           </div>
@@ -209,7 +196,7 @@ function OrderCard({
             </p>
 
             <div className="flex gap-1.5">
-              {order.status === ORDER_STATUSES.PENDING && needPayment && (
+              {needPayment && (
                 <>
                   <button
                     onClick={onPayOrder}
@@ -218,8 +205,7 @@ function OrderCard({
                     <DynamicIcon name="ExternalLink" size={13} />
                     Pay now
                   </button>
-                  {order.paymentInfo?.paymentStatus !==
-                    PAYMENT_STATUSES.PAYMENT_SUCCESS && (
+                  {canCancel && (
                     <button
                       onClick={onCancelOrder}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-red-200 text-red-700 text-[12px] font-medium transition-colors hover:bg-red-50"
@@ -281,8 +267,8 @@ const Orders = () => {
   const { data: currentUser, isPending } = authClient.useSession();
 
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
+    setIsMounted(true);
+  }, []);
 
   const activeTab = useMemo(() => {
     const statuses = searchParams.getAll("status");
@@ -357,7 +343,7 @@ const Orders = () => {
   };
 
   /* Early returns after all hooks */
-  if ((!isMounted || isPending )|| isOrdersLoading) {
+  if (!isMounted || isPending || isOrdersLoading) {
     return (
       <div className="relative h-screen z-0">
         <LoadingPage />
