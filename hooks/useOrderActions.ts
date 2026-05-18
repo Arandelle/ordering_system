@@ -41,7 +41,6 @@ export function useOrderActions() {
   };
 
   const handleCancelOrder = (orderId: string) => {
-    if (!confirm(`Are you sure you want to cancel order ${orderId}?`)) return;
     cancelOrder(orderId);
   };
 
