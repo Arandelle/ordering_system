@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import OrdersPage from './Orders'
+import OrdersPage from './pages/Orders'
 import MenuSectionSkeleton from '@/components/ui/MenuSectionSkeleton'
 
 const page = () => {
