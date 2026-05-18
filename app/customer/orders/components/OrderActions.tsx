@@ -3,13 +3,22 @@ import { useRouter } from "next/navigation";
 import { useOrderState } from "../hooks/useOrderState";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { useOrderActions } from "@/hooks/useOrderActions";
+import CancelOrderModal from "./CancelOrderModal";
+import { useState } from "react";
 
 export function OrderActions({
   order,
 }: {
   order: OrdersApiResponse["data"][number] | null;
 }) {
-  const { handlePayOrder, handleCancelOrder, handleBuyAgain, isLoading } = useOrderActions();
+  const {
+    handlePayOrder,
+    handleCancelOrder,
+    handleBuyAgain,
+    isLoading,
+  } = useOrderActions();
+
+  const [isCancelOrder, setIsCancelOrder] = useState(false)
 
   if (!order) return null;
 
@@ -20,7 +29,7 @@ export function OrderActions({
   const { needPayment, canCancel, canBuyAgain, needsReview } = actions;
 
   return (
-    <div className="border-t border-slate-100 px-5 py-4 flex flex-col gap-2">
+    <div className="gap-2 mb-4">
       {needPayment && (
         <button
           onClick={() => handlePayOrder(order._id)}
@@ -63,7 +72,7 @@ export function OrderActions({
 
       {canCancel && (
         <button
-          onClick={() => handleCancelOrder(order._id)}
+          onClick={() => setIsCancelOrder(true)}
           disabled={isLoading}
           className="w-full flex items-center justify-center gap-2 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed text-red-600 text-sm font-semibold py-2.5 rounded-xl border border-red-200 transition-colors"
         >
@@ -79,6 +88,15 @@ export function OrderActions({
             </>
           )}
         </button>
+      )}
+
+      {isCancelOrder && (
+       <CancelOrderModal
+          order={order}
+          setIsCancel={setIsCancelOrder}
+          handleCancelOrder={handleCancelOrder}
+          isLoading={isLoading}
+        />
       )}
     </div>
   );
