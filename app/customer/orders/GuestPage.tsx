@@ -4,7 +4,7 @@ import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { apiClient } from "@/lib/apiClient";
 import { DynamicIcon } from "@/lib/DynamicIcon";
 import { OrdersApiResponse } from "@/types/OrderTypes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { GuestOrderModal } from "./GuestOrderModal";
 import Modal from "@/components/ui/Modal";
@@ -24,7 +24,7 @@ export const GuestOrderLookup = () => {
     OrdersApiResponse["data"][number] | null
   >(null);
 
-  const searchOrder = async (ref: string) => {
+  const searchOrder = useCallback(async (ref: string) => {
     const trimmed = ref.trim();
     if (!trimmed) return;
 
@@ -44,7 +44,7 @@ export const GuestOrderLookup = () => {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +52,9 @@ export const GuestOrderLookup = () => {
   };
 
   useEffect(() => {
-    if (reference) {
-      setReferenceNumber(reference);
-      searchOrder(reference);
-    }
+    if (!reference) return;
+    setReferenceNumber(reference);
+    searchOrder(reference);
   }, [reference]);
 
   return (
