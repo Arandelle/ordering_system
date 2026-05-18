@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { OrderItemImage } from "../components/OrderItemImage";
 import { useRouter } from "next/navigation";
 import { PAYMENT_STATUSES } from "@/types/paymentConstants";
+import { useOrderState } from "./hooks/useOrderState";
 
 interface GuestOrderModalProps {
   order: OrdersApiResponse["data"][number] | null;
@@ -37,24 +38,44 @@ function getPaymentBadge(order: GuestOrderModalProps["order"]) {
       return { label: "Paid", bg: "bg-green-100", text: "text-green-700" };
     }
     if (paymentStatus === PAYMENT_STATUSES.PAYMENT_FAILED) {
-      return { label: "Payment failed", bg: "bg-red-100", text: "text-red-700" };
+      return {
+        label: "Payment failed",
+        bg: "bg-red-100",
+        text: "text-red-700",
+      };
     }
     // pending / unknown Maya state
-    return { label: "Awaiting payment", bg: "bg-amber-100", text: "text-amber-700" };
+    return {
+      label: "Awaiting payment",
+      bg: "bg-amber-100",
+      text: "text-amber-700",
+    };
   }
 
   // COD — status is driven by the order, not a payment gateway
   if (order.status === ORDER_STATUSES.PENDING) {
-    return { label: "Awaiting confirmation", bg: "bg-amber-100", text: "text-amber-700" };
+    return {
+      label: "Awaiting confirmation",
+      bg: "bg-amber-100",
+      text: "text-amber-700",
+    };
   }
   if (order.status === ORDER_STATUSES.COMPLETED) {
-    return { label: "Paid on delivery", bg: "bg-green-100", text: "text-green-700" };
+    return {
+      label: "Paid on delivery",
+      bg: "bg-green-100",
+      text: "text-green-700",
+    };
   }
   if (order.status === ORDER_STATUSES.CANCELLED) {
     return { label: "Cancelled", bg: "bg-slate-100", text: "text-slate-600" };
   }
 
-  return { label: "Cash on delivery", bg: "bg-slate-100", text: "text-slate-600" };
+  return {
+    label: "Cash on delivery",
+    bg: "bg-slate-100",
+    text: "text-slate-600",
+  };
 }
 
 function OrderActions({
@@ -70,40 +91,18 @@ function OrderActions({
   onBuyAgain: (items: any[]) => void;
   isLoading: boolean;
 }) {
+  
   if (!order) return null;
 
   const router = useRouter();
+  const actions = useOrderState(order);
+  if (!actions) return null;
 
-  const status = order.status as OrderStatus;
-  const paymentMethod = order.paymentInfo?.paymentMethod;
-  const paymentStatus = order.paymentInfo?.paymentStatus;
-
-  // Show "Pay now" only for Maya orders that have NOT been successfully paid yet
-  const isMayaUnpaid =
-    paymentMethod === "maya" &&
-    paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS;
-
-  const canPay = isMayaUnpaid && (
-    status === ORDER_STATUSES.PENDING ||
-    status === ORDER_STATUSES.FAILED ||
-    status === ORDER_STATUSES.EXPIRED
-  );
-
-  // Cancel is only allowed when the order is still pending AND not yet paid
-  const canCancel =
-    status === ORDER_STATUSES.PENDING &&
-    paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS;
-
-  const canBuyAgain =
-    status === ORDER_STATUSES.COMPLETED || status === ORDER_STATUSES.CANCELLED;
-
-  const isCompleted = status === ORDER_STATUSES.COMPLETED;
-
-  if (!canPay && !canCancel && !canBuyAgain) return null;
+  const { needPayment, canCancel, canBuyAgain, needsReview } = actions;
 
   return (
     <div className="border-t border-slate-100 px-5 py-4 flex flex-col gap-2">
-      {canPay && (
+      {needPayment && (
         <button
           onClick={onPayOrder}
           disabled={isLoading}
@@ -123,7 +122,7 @@ function OrderActions({
         </button>
       )}
 
-      {isCompleted && (
+      {needsReview && (
         <button
           onClick={() => router.push(`/orders/${order._id}/review`)}
           className="w-full flex items-center justify-center gap-2 bg-brand-color-500 hover:bg-brand-color-600 active:bg-brand-color-900 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
