@@ -2,29 +2,14 @@ import { OrdersApiResponse } from "@/types/OrderTypes";
 import { useRouter } from "next/navigation";
 import { useOrderState } from "../hooks/useOrderState";
 import { DynamicIcon } from "@/lib/DynamicIcon";
-
-interface GuestOrderModalProps {
-  order: OrdersApiResponse["data"][number] | null;
-  onPayOrder: () => void;
-  onCancelOrder: () => void;
-  onBuyAgain: (items: any[]) => void;
-  isLoading: boolean;
-}
-
+import { useOrderActions } from "@/hooks/useOrderActions";
 
 export function OrderActions({
   order,
-  onPayOrder,
-  onCancelOrder,
-  onBuyAgain,
-  isLoading,
 }: {
-  order: GuestOrderModalProps["order"];
-  onPayOrder: () => void;
-  onCancelOrder: () => void;
-  onBuyAgain: (items: any[]) => void;
-  isLoading: boolean;
+  order: OrdersApiResponse["data"][number] | null;
 }) {
+  const { handlePayOrder, handleCancelOrder, handleBuyAgain, isLoading } = useOrderActions();
 
   if (!order) return null;
 
@@ -38,7 +23,7 @@ export function OrderActions({
     <div className="border-t border-slate-100 px-5 py-4 flex flex-col gap-2">
       {needPayment && (
         <button
-          onClick={onPayOrder}
+          onClick={() => handlePayOrder(order._id)}
           disabled={isLoading}
           className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
         >
@@ -68,7 +53,7 @@ export function OrderActions({
 
       {canBuyAgain && (
         <button
-          onClick={() => onBuyAgain(order.items)}
+          onClick={() => handleBuyAgain(order.items)}
           className="w-full flex items-center justify-center gap-2 bg-green-800 hover:bg-green-700 active:bg-green-900 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
         >
           <DynamicIcon name="RotateCcw" size={15} />
@@ -78,7 +63,7 @@ export function OrderActions({
 
       {canCancel && (
         <button
-          onClick={onCancelOrder}
+          onClick={() => handleCancelOrder(order._id)}
           disabled={isLoading}
           className="w-full flex items-center justify-center gap-2 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed text-red-600 text-sm font-semibold py-2.5 rounded-xl border border-red-200 transition-colors"
         >
