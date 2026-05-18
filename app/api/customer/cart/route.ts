@@ -18,7 +18,7 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
     const customer = await requireBetterAuth();
-    const { items } = await request.json();
+    const { items = [] } = await request.json();
 
     await Cart.findOneAndUpdate(
       { customerId: customer._id },
