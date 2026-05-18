@@ -12,6 +12,7 @@ import { CheckoutStep } from "@/contexts/CheckoutContext";
 import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { CreateOrderPayload } from "@/types/OrderTypes";
+import { authClient } from "@/lib/auth-client";
 
 const createCodOrder = async (payload: CreateOrderPayload) => {
   const res = await fetch("/api/customer/cod-checkout", {
@@ -176,6 +177,8 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   const isDetails = pathname === CheckoutStep.DETAILS;
   const isShipping = pathname === CheckoutStep.SHIPPING;
 
+  const { data: session } = authClient.useSession();
+
   const { mutateAsync: createOrder, isPending } = useCreateOrder();
   const { validateAll, customerErrors, shippingErrors } =
     useFormErrors(orderDetails);
@@ -282,10 +285,16 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       if (selectedPayment === "cod") {
         setIsCodPending(true);
         try {
-          const guestOrder = await createCodOrder(orderPayload);
+          const codOrder = await createCodOrder(orderPayload);
           toast.success("Order placed successfully!");
           await clearCart();
-          router.push(`/orders?referenceNumber=${encodeURIComponent(guestOrder.referenceNumber)}`);
+          if (session?.user) {
+            router.push(`/orders?status=pending`);
+          } else {
+            router.push(
+              `/orders/guest/${encodeURIComponent(codOrder.referenceNumber)}`,
+            );
+          }
         } finally {
           setIsCodPending(false);
         }
