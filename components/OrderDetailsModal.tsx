@@ -1,5 +1,6 @@
 "use client";
 
+import { OrderItemImage } from "@/app/customer/components/OrderItemImage";
 import { OrderActions } from "@/app/customer/orders/components/OrderActions";
 import LoadingPage from "@/components/ui/LoadingPage";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -44,15 +45,25 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
       )}
       {orderToView && (
         <div>
+          {/** If view by guest - show buttons */}
           {role === "guest" && <OrderActions order={orderToView} />}
+
           <div className="flex flex-col gap-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-400">Order ID</p>
-                <p className="text-sm font-mono font-medium text-gray-700">
-                  {orderToView._id ?? "--"}
-                </p>
+              <div className="flex flex-col space-y-4">
+                <div>
+                  <p className="text-xs text-gray-400">Reference ID</p>
+                  <p className="text-sm font-mono font-medium text-gray-700">
+                    {orderToView.paymentInfo?.referenceNumber ?? "--"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Order ID</p>
+                  <p className="text-sm font-mono font-medium text-gray-700">
+                    {orderToView._id ?? "--"}
+                  </p>
+                </div>
               </div>
               {/** Status badge */}
               <StatusBadge status={orderToView.status ?? ""} />
@@ -145,11 +156,9 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                   >
                     <div className="flex items-center gap-3">
                       {item.image && (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-12 h-12 rounded-lg object-cover bg-stone-100"
-                        />
+                        <div className="w-12 h-12 rounded-lg">
+                          <OrderItemImage image={item.image} name={item.name} />
+                        </div>
                       )}
                       <div>
                         <p className="text-sm font-medium text-gray-800">
