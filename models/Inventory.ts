@@ -81,6 +81,7 @@ InventorySchema.virtual("available").get(function () {
 });
 
 InventorySchema.index({ productId: 1, branchId: 1 }, { unique: true });
+InventorySchema.index({ "reservations.orderId": 1 });
 
 export const Inventory =
   models.Inventory || mongoose.model("Inventory", InventorySchema);
