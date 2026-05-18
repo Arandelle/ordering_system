@@ -5,6 +5,7 @@ import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { format } from "date-fns";
 import { OrderItemImage } from "../components/OrderItemImage";
 import { useRouter } from "next/navigation";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 
 interface GuestOrderModalProps {
   order: OrdersApiResponse["data"][number] | null;
@@ -24,6 +25,38 @@ const STATUS_STYLES: Record<OrderStatus, { bg: string; text: string }> = {
   expired: { bg: "bg-red-100", text: "text-red-700" },
 };
 
+/** Derive a human-readable payment status label + badge style. */
+function getPaymentBadge(order: GuestOrderModalProps["order"]) {
+  if (!order) return null;
+
+  const paymentMethod = order.paymentInfo?.paymentMethod;
+  const paymentStatus = order.paymentInfo?.paymentStatus;
+
+  if (paymentMethod === "maya") {
+    if (paymentStatus === PAYMENT_STATUSES.PAYMENT_SUCCESS) {
+      return { label: "Paid", bg: "bg-green-100", text: "text-green-700" };
+    }
+    if (paymentStatus === PAYMENT_STATUSES.PAYMENT_FAILED) {
+      return { label: "Payment failed", bg: "bg-red-100", text: "text-red-700" };
+    }
+    // pending / unknown Maya state
+    return { label: "Awaiting payment", bg: "bg-amber-100", text: "text-amber-700" };
+  }
+
+  // COD — status is driven by the order, not a payment gateway
+  if (order.status === ORDER_STATUSES.PENDING) {
+    return { label: "Awaiting confirmation", bg: "bg-amber-100", text: "text-amber-700" };
+  }
+  if (order.status === ORDER_STATUSES.COMPLETED) {
+    return { label: "Paid on delivery", bg: "bg-green-100", text: "text-green-700" };
+  }
+  if (order.status === ORDER_STATUSES.CANCELLED) {
+    return { label: "Cancelled", bg: "bg-slate-100", text: "text-slate-600" };
+  }
+
+  return { label: "Cash on delivery", bg: "bg-slate-100", text: "text-slate-600" };
+}
+
 function OrderActions({
   order,
   onPayOrder,
@@ -42,16 +75,24 @@ function OrderActions({
   const router = useRouter();
 
   const status = order.status as OrderStatus;
+  const paymentMethod = order.paymentInfo?.paymentMethod;
+  const paymentStatus = order.paymentInfo?.paymentStatus;
 
-  const canPay =
+  // Show "Pay now" only for Maya orders that have NOT been successfully paid yet
+  const isMayaUnpaid =
+    paymentMethod === "maya" &&
+    paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS;
+
+  const canPay = isMayaUnpaid && (
     status === ORDER_STATUSES.PENDING ||
     status === ORDER_STATUSES.FAILED ||
-    status === ORDER_STATUSES.EXPIRED;
+    status === ORDER_STATUSES.EXPIRED
+  );
 
+  // Cancel is only allowed when the order is still pending AND not yet paid
   const canCancel =
-    status === ORDER_STATUSES.PENDING ||
-    status === ORDER_STATUSES.FAILED ||
-    status === ORDER_STATUSES.EXPIRED;
+    status === ORDER_STATUSES.PENDING &&
+    paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS;
 
   const canBuyAgain =
     status === ORDER_STATUSES.COMPLETED || status === ORDER_STATUSES.CANCELLED;
@@ -138,6 +179,8 @@ export const GuestOrderModal = ({
     bg: "bg-slate-100",
     text: "text-slate-700",
   };
+
+  const paymentBadge = getPaymentBadge(order);
 
   const subtotal = order.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -234,9 +277,13 @@ export const GuestOrderModal = ({
           <span className="text-sm text-slate-700">
             {order.paymentInfo?.method?.type ?? "—"}
           </span>
-          <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-            {order?.status ?? "Paid"}
-          </span>
+          {paymentBadge && (
+            <span
+              className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full ${paymentBadge.bg} ${paymentBadge.text}`}
+            >
+              {paymentBadge.label}
+            </span>
+          )}
         </div>
       </div>
 
