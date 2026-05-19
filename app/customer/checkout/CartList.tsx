@@ -1,7 +1,7 @@
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { useCreateOrder } from "@/hooks/api/customers/useCustomerOrders";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { Branch } from "@/types/branch";
 import Link from "next/link";
 import { toast } from "sonner";

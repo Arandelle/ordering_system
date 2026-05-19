@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { canAccess } from "./lib/roleBasedAccessCtrl";
 import { StaffRole } from "./types/staff";
 import { blockNonMaya, isMayaCallbackPath } from "./lib/mayaGuard";
-import { isRouteBlocked } from "./helper/pageStatus";
+import { isRouteBlocked } from "./utils/pageStatus";
 import { COOKIE_NAMES, getAdminAuth, requireAdmin } from "./lib/getAuth";
 
 export async function proxy(request: NextRequest) {

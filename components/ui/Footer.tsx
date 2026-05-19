@@ -4,7 +4,7 @@ import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import HeaderLogo from "../BrandLogo";
 import { LINKS } from "@/constant/links";
 import { InputField } from "./InputField";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useSettings } from "@/hooks/api/useSettings";
 
 const Footer = ({

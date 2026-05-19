@@ -1,5 +1,5 @@
 import Modal from "@/components/ui/Modal";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { OrderType } from "@/types/OrderTypes";
 import React from "react";
 

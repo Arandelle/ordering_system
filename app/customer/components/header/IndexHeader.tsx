@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 import BrandLogo from "@/components/BrandLogo";
 import { HeaderBranchButton } from "./HeaderBranchButton";

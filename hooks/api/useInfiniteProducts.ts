@@ -2,7 +2,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 import { Product } from "@/types/products";
-import { PaginationMeta } from "@/lib/query-helpers";
+import { PaginationMeta } from "@/utils/query-helpers";
 
 interface ProductResponse {
   data: Product[];

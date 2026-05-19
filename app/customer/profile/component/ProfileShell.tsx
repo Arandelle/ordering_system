@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 export function ProfileShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

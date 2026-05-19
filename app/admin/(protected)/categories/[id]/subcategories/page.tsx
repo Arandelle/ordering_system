@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { categories_api, subcategories_api } from "../../hooks/api";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import PermissionGuard from "@/lib/PermissionGuard";
 import { SubCategory } from "@/types/category";
 import SectionHeader from "@/app/admin/components/SectionHeader";

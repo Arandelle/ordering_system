@@ -1,6 +1,6 @@
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { authClient } from "@/lib/auth-client";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { Link } from "lucide-react";
 import React, { useState } from "react";
 

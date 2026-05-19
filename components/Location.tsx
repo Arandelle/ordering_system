@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { LINKS } from "@/constant/links";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useBranches } from "@/hooks/api/useBranch";
 
 function buildMapLink(lat: number, lng: number) {

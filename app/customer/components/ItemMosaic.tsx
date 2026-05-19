@@ -1,4 +1,4 @@
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { OrderItemImage } from "./OrderItemImage";
 
 /* ─── Image mosaic ───────────────────────────────────────────────────── */

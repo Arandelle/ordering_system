@@ -1,6 +1,6 @@
 "use client";
 
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { SalesData, TopProduct } from "@/types/adminType";
 import {
   Bar,

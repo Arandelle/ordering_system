@@ -1,5 +1,5 @@
 import { CheckoutStep } from "@/contexts/CheckoutContext";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import Link from "next/link";
 
 export const CheckoutHeader = ({ step }: { step: string }) => (

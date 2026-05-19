@@ -1,4 +1,4 @@
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 export const SectionCard = ({
   children,

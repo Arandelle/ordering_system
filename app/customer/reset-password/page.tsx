@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { InputField } from "@/components/ui/InputField";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 export default function ResetPassword() {
   const searchParams = useSearchParams();

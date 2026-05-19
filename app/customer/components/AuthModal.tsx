@@ -5,11 +5,11 @@ import BrandLogo from "../../../components/BrandLogo";
 import { MODAL_TYPES, ModalType } from "@/hooks/utils/useModalQuery";
 import { syne } from "@/app/font";
 import Modal from "@/components/ui/Modal";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import ForgotPasswordButton from "@/components/ui/ForgotPasswordButton";
-import { maskEmail } from "@/lib/maskEmail";
+import { maskEmail } from "@/helper/maskEmail";
 import { mergeGuestCartOnLogin } from "@/contexts/CartContext";
 
 interface AuthModalProps {

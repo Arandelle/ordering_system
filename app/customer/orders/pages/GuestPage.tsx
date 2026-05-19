@@ -1,7 +1,7 @@
 import { syne } from "@/app/font";
 import { InputField } from "@/components/ui/InputField";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 

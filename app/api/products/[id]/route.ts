@@ -2,7 +2,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
-import { extractPublicId } from "@/helper/extractImagePublicId";
+import { extractPublicId } from "@/utils/extractImagePublicId";
 import { requireSuperAdmin } from "@/lib/getAuth";
 
 export async function PUT(

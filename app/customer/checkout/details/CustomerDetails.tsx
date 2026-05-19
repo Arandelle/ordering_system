@@ -2,7 +2,7 @@
 
 import { InputField } from "@/components/ui/InputField";
 import { TextareaField } from "@/components/ui/TextAreaField";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { CustomerErrors } from "../useFormErrors";
 import { CustomerSchema, OrderFormState } from "../FormSchema";
 

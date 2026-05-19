@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
-import { syncInventoryForBranch } from "@/lib/inventory/syncInventory";
+import { syncInventoryForBranch } from "@/services/admin/sync-inventory.service";
 import { Product } from "@/models/Product";
 import { Inventory } from "@/models/Inventory";
 import { STOCK_STATUSES } from "@/types/inventory_types";

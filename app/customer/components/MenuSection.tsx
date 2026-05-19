@@ -12,7 +12,7 @@ import {
 } from "@/hooks/api/useBranchProductInfinite";
 import { useBranch } from "@/contexts/BranchContext";
 import PromoBanner from "./PromoBanner";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { Product } from "@/types/products";
 import { useProductsInfinite } from "@/hooks/api/useInfiniteProducts";
 

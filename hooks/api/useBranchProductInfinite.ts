@@ -2,8 +2,8 @@ import { apiClient } from "@/lib/apiClient";
 import { Product } from "@/types/products";
 import { StockStatus } from "@/types/inventory_types";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { buildQueryString } from "@/lib/buildQueryString";
-import { PaginationMeta } from "@/lib/query-helpers";
+import { buildQueryString } from "@/utils/buildQueryString";
+import { PaginationMeta } from "@/utils/query-helpers";
 
 export type BranchProduct = Product & {
   quantity?: number;

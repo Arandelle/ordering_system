@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 export const OrderItemImage = ({
   image,

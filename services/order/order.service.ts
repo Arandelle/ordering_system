@@ -4,7 +4,7 @@ import {
   OrderStatus,
   STATUS_PRIORITY,
 } from "@/types/orderConstants";
-import { buildPaginationMeta } from "../query-helpers";
+import { buildPaginationMeta } from "../../utils/query-helpers";
 
 export type OrderQueryOptions = {
   filter: Record<string, any>;

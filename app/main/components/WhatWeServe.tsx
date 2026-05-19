@@ -14,7 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { getLucideIcon } from "@/helper/iconUtils";
+import { getLucideIcon } from "@/utils/iconUtils";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const SIGNATURE_LIMIT = 4;

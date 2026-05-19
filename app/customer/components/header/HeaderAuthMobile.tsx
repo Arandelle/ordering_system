@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useCart } from "@/contexts/CartContext";
 import { authClient } from "@/lib/auth-client";
 import { MODAL_TYPES, ModalType } from "@/hooks/utils/useModalQuery";

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useCart } from "@/contexts/CartContext";
 import { useCustomerOrderSummary } from "@/hooks/api/customers/useCustomerOrders";
 

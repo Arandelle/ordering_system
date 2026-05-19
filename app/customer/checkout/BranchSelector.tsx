@@ -1,7 +1,7 @@
 // BranchSelector.tsx
 "use client";
 
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { MODAL_TYPES, ModalType } from "@/hooks/utils/useModalQuery";
 import { Branch } from "@/types/branch";
 

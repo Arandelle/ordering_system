@@ -6,8 +6,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/apiClient";
 import { Product, ProductPayload } from "@/types/products";
-import { PaginationMeta } from "@/lib/query-helpers";
-import { buildQueryString } from "@/lib/buildQueryString";
+import { PaginationMeta } from "@/utils/query-helpers";
+import { buildQueryString } from "@/utils/buildQueryString";
 
 /**
  * Fetch all product

@@ -3,7 +3,7 @@
 // ─── Tab: Address ─────────────────────────────────────────────────────────────
 
 import { InputField } from "@/components/ui/InputField";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { SectionCard } from "../component/SectionCard";
 import { toast } from "sonner";
 import { useMyAddress, useUpdateAddress } from "../../hooks/useMyAddress";

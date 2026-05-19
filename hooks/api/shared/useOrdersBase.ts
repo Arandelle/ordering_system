@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import { authClient } from "@/lib/auth-client";
-import { buildQueryString } from "@/lib/buildQueryString";
-import { PaginationMeta } from "@/lib/query-helpers";
+import { buildQueryString } from "@/utils/buildQueryString";
+import { PaginationMeta } from "@/utils/query-helpers";
 import { OrderStatus } from "@/types/orderConstants";
 import {
   OrderType,

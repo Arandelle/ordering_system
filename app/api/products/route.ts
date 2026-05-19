@@ -5,9 +5,9 @@ import cloudinary from "@/lib/cloudinary";
 import { z } from "zod";
 import "@/models/Category";
 import "@/models/SubCategory";
-import { extractPublicId } from "@/helper/extractImagePublicId";
+import { extractPublicId } from "@/utils/extractImagePublicId";
 import { requireAdmin, requireSuperAdmin } from "@/lib/getAuth";
-import { buildPaginationMeta, parseRequestQuery } from "@/lib/query-helpers";
+import { buildPaginationMeta, parseRequestQuery } from "@/utils/query-helpers";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 

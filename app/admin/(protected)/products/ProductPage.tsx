@@ -12,10 +12,10 @@ import {
   ProductType,
   Product,
 } from "@/types/products";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useRouter } from "next/navigation";
 import { categories_api, subcategories_api } from "../categories/hooks/api";
-import { fileToBase64 } from "@/lib/fileUtils";
+import { fileToBase64 } from "@/utils/fileUtils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

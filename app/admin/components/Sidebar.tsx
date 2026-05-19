@@ -7,7 +7,7 @@ import LogoutModal from "../../../components/ui/LogoutModal";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
 import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 interface SidebarProps {
   isMobileOpen: boolean;

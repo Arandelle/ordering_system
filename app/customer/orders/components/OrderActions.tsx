@@ -1,7 +1,7 @@
 import { OrdersApiResponse } from "@/types/OrderTypes";
 import { useRouter } from "next/navigation";
 import { useOrderState } from "../hooks/useOrderState";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useOrderActions } from "@/hooks/useOrderActions";
 import CancelOrderModal from "./CancelOrderModal";
 import { useState } from "react";

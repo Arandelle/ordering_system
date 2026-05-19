@@ -8,12 +8,12 @@ import { categories_api, subcategories_api } from "./hooks/api";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
 import { Category } from "@/types/category";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import SectionHeader from "../../components/SectionHeader";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import { Loader2, Trash2 } from "lucide-react";
-import { fileToBase64 } from "@/lib/fileUtils";
+import { fileToBase64 } from "@/utils/fileUtils";
 
 // ── Image Upload Button ───────────────────────────────────────────────────────
 const ImageUploadButton = ({

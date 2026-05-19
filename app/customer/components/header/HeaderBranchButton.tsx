@@ -1,6 +1,6 @@
 "use client";
 
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useBranch } from "@/contexts/BranchContext";
 import { MODAL_TYPES, ModalType } from "@/hooks/utils/useModalQuery";
 

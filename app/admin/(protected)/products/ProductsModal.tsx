@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { TextareaField } from "@/components/ui/TextAreaField";
 import { Category } from "@/types/category";
 import { IncludedItemUI, ITEM_TYPES, ProductType, Product } from "@/types/products";
-import { DynamicIcon } from "@/lib/DynamicIcon";
-import { fileToBase64 } from "@/lib/fileUtils";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { fileToBase64 } from "@/utils/fileUtils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

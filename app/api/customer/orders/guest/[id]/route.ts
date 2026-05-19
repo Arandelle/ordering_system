@@ -1,4 +1,4 @@
-import { queryOrders } from "@/lib/orders/orderService";
+import { queryOrders } from "@/services/order/order.service";
 import { NextRequest, NextResponse } from "next/server";
 
 // app/api/orders/guest/[id]/route.ts

@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { GuestOrderLookup } from "./GuestPage";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { useOrderActions } from "@/hooks/useOrderActions";

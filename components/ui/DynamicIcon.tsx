@@ -1,4 +1,4 @@
-import { getLucideIcon } from "@/helper/iconUtils";
+import { getLucideIcon } from "@/utils/iconUtils";
 
 export const DynamicIcon = ({
   name,

@@ -2,7 +2,7 @@
 
 import { InputField } from "@/components/ui/InputField";
 import { ModalType } from "@/hooks/utils/useModalQuery";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { ShippingErrors } from "../useFormErrors";
 import { OrderFormState } from "../FormSchema";
 

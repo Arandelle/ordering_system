@@ -4,7 +4,7 @@ import { Product } from "@/models/Product";
 import { Inventory } from "@/models/Inventory";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import "@/lib/registerModels";
-import { buildPaginationMeta } from "@/lib/query-helpers";
+import { buildPaginationMeta } from "@/utils/query-helpers";
 
 /**
  * GET /api/branch/products

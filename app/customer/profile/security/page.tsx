@@ -1,6 +1,6 @@
 "use client";
 
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { SectionCard } from "../component/SectionCard";
 import { InputField } from "@/components/ui/InputField";
 import { useEffect, useState } from "react";

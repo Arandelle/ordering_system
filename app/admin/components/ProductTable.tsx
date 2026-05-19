@@ -9,7 +9,7 @@ import {
 import { useDeleteProduct } from "@/hooks/api/useProducts";
 import Image from "next/image";
 import PermissionGuard from "@/lib/PermissionGuard";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { Product } from "@/types/products";
 import { useState } from "react";
 import { useRouter } from "next/navigation";

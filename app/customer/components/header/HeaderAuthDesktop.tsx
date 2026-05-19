@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { authClient } from "@/lib/auth-client";
 import { syne } from "@/app/font";
 import { MODAL_TYPES, ModalType } from "@/hooks/utils/useModalQuery";

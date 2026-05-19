@@ -1,4 +1,4 @@
-import { getCustomerStats } from "@/lib/customer/getCustomerStats";
+import { getCustomerStats } from "@/services/customer/customer-stat.service";
 import { requireAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";

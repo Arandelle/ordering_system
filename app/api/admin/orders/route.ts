@@ -9,8 +9,8 @@ import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/getAuth";
 import { STAFF_ROLES } from "@/types/staff";
-import { queryOrders } from "@/lib/orders/orderService";
-import { parseRequestQuery } from "@/lib/query-helpers";
+import { queryOrders } from "@/services/order/order.service";
+import { parseRequestQuery } from "@/utils/query-helpers";
 
 export async function GET(request: NextRequest) {
   try {

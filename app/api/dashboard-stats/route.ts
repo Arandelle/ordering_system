@@ -1,4 +1,4 @@
-import { getDashboardStats } from "@/helper/dashboardStats";
+import { getDashboardStats } from "@/services/admin/dashboard.service";
 import { requireAdmin } from "@/lib/getAuth";
 import { NextRequest, NextResponse } from "next/server";
 

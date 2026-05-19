@@ -1,6 +1,6 @@
 "use client";
 
-import { getLucideIcon } from "@/helper/iconUtils";
+import { getLucideIcon } from "@/utils/iconUtils";
 import React from "react";
 import JourneyTimeline from "./JourneyTimeline";
 

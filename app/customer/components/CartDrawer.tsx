@@ -4,7 +4,7 @@ import React from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
 import OrderNowButton from "@/components/ui/OrderNowButton";
-import { DynamicIcon } from "@/lib/DynamicIcon";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 const CartDrawer = () => {
   const router = useRouter();
