@@ -4,6 +4,43 @@ import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { extractPublicId } from "@/utils/extractImagePublicId";
 import { requireSuperAdmin } from "@/lib/getAuth";
+import mongoose from "mongoose";
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDB();
+
+    const { id } = await context.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid product id" },
+        { status: 400 },
+      );
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return NextResponse.json(
+        { error: "Product not found!" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ data: product }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
+    );
+  }
+}
 
 export async function PUT(
   request: NextRequest,
@@ -13,7 +50,7 @@ export async function PUT(
 
   try {
     await connectDB();
-    await requireSuperAdmin(request)
+    await requireSuperAdmin(request);
 
     const { id } = await context.params;
     const body = await request.json();
@@ -37,17 +74,14 @@ export async function PUT(
     if (!id) {
       return NextResponse.json(
         { error: "Product ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const existingProduct = await Product.findById(id);
 
     if (!existingProduct) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     // ── Image handling (unchanged from your original) ─────────────────────────
@@ -80,20 +114,26 @@ export async function PUT(
         }
         finalImage = {
           url: image,
-          public_id: extractPublicId(image)
+          public_id: extractPublicId(image),
         };
       }
     }
 
     // ── Update product ────────────────────────────────────────────────────────
 
-    const resolvedProductType = productType ?? existingProduct.productType ?? "solo";
+    const resolvedProductType =
+      productType ?? existingProduct.productType ?? "solo";
 
     const updated = await Product.findByIdAndUpdate(
       id,
       {
         name,
-        price: price !== undefined ? (price === null ? null : parseFloat(price)) : existingProduct.price,
+        price:
+          price !== undefined
+            ? price === null
+              ? null
+              : parseFloat(price)
+            : existingProduct.price,
         image: finalImage,
         category,
         subcategory: subcategory ?? null,
@@ -105,15 +145,16 @@ export async function PUT(
         isPopular,
         productType: resolvedProductType,
         paxCount: resolvedProductType === "set" ? (paxCount ?? null) : null,
-        includedItems: resolvedProductType !== "solo"
-          ? (includedItems ?? []).map((item: any) => ({
-              product: item.product,
-              quantity: item.quantity,
-              label: item.label ?? null,
-            }))
-          : [],
+        includedItems:
+          resolvedProductType !== "solo"
+            ? (includedItems ?? []).map((item: any) => ({
+                product: item.product,
+                quantity: item.quantity,
+                label: item.label ?? null,
+              }))
+            : [],
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     return NextResponse.json(updated, { status: 200 });
@@ -125,13 +166,13 @@ export async function PUT(
     if (error.code === 11000) {
       return NextResponse.json(
         { error: "Product already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
       { error: error.message || "Failed to update product" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -148,7 +189,7 @@ export async function DELETE(
     if (!id) {
       return NextResponse.json(
         { error: "Product ID required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -157,7 +198,7 @@ export async function DELETE(
     if (!product) {
       return NextResponse.json(
         { error: "Product not found!" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -169,12 +210,12 @@ export async function DELETE(
 
     return NextResponse.json(
       { message: "Product deleted successfully!" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete product" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
