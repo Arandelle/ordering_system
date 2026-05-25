@@ -1,4 +1,4 @@
-import '@/lib/registerModels';
+import "@/lib/registerModels";
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,24 +6,102 @@ import cloudinary from "@/lib/cloudinary";
 import { extractPublicId } from "@/utils/extractImagePublicId";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import mongoose from "mongoose";
+import { STOCK_STATUSES } from "@/types/inventory_types";
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
+  await connectDB();
+  const { id } = await context.params;
+  const branchId = new URL(request.url).searchParams.get("branchId");
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Invalid product id" }, { status: 400 });
+  }
+
+  const pipeline: any[] = [
+    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+      },
+    },
+    { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "subcategories",
+        localField: "subcategory",
+        foreignField: "_id",
+        as: "subcategory",
+      },
+    },
+    { $unwind: { path: "$subcategory", preserveNullAndEmptyArrays: true } },
+
+    ...(branchId && mongoose.Types.ObjectId.isValid(branchId)
+      ? [
+          {
+            $lookup: {
+              from: "inventories",
+              let: { productId: "$_id" },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $eq: ["$productId", "$$productId"] },
+                        { $eq: ["$branchId", { $toObjectId: branchId }] },
+                      ],
+                    },
+                  },
+                },
+                { $project: { quantity: 1, reorderLevel: 1 } },
+              ],
+              as: "inventory",
+            },
+          },
+          {
+            $addFields: {
+              quantity: {
+                $ifNull: [{ $arrayElemAt: ["$inventory.quantity", 0] }, 0],
+              },
+              reorderLevel: {
+                $ifNull: [{ $arrayElemAt: ["$inventory.reorderLevel", 0] }, 10],
+              },
+            },
+          },
+          { $unset: "inventory" },
+          {
+            $addFields: {
+              status: {
+                $switch: {
+                  branches: [
+                    {
+                      case: {
+                        $eq: ["$quantity", 0],
+                      },
+                      then: STOCK_STATUSES.OUT_OF_STOCK,
+                    },
+                    {
+                      case: {
+                        $lte: ["$quantity", "$reorderLevel"],
+                      },
+                      then: STOCK_STATUSES.LOW_STOCK,
+                    },
+                  ],
+                  default: STOCK_STATUSES.IN_STOCK,
+                },
+              },
+            },
+          },
+        ]
+      : []),
+  ];
   try {
-    await connectDB();
-
-    const { id } = await context.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { error: "Invalid product id" },
-        { status: 400 },
-      );
-    }
-
-    const product = await Product.findById(id).populate('includedItems.product', 'name image price').populate('category', 'name').populate('subcategory', 'name');
+    const [product] = await Product.aggregate(pipeline);
 
     if (!product) {
       return NextResponse.json(
