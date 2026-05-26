@@ -114,6 +114,12 @@ export const auth = betterAuth({
     "https://food.harrisoninasalbbq.com.ph",
     "http://localhost:3000",
     "http://localhost:3001",
+
     "harrison://",
+    "harrison://*",
+
+    // if testing in Expo Go
+    "exp://",
+    "exp://**",
   ],
 });
