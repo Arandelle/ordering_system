@@ -3,10 +3,13 @@ import { Cart } from "@/models/Cart";
 import { requireBetterAuth } from "@/lib/getAuth";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await connectDB();
-    const customer = await requireBetterAuth();
+    const customer = await requireBetterAuth(request);
+
+    if (!customer) return NextResponse.json({ items: [] });
+
     const cart = await Cart.findOne({ customerId: customer._id }).lean();
     return NextResponse.json({ items: cart?.items ?? [] });
   } catch {
