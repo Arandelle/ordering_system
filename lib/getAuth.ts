@@ -73,9 +73,14 @@ export async function requireSuperAdmin(request: NextRequest) {
 }
 
 // use new authenticaton better auth
-export async function requireBetterAuth() {
+export async function requireBetterAuth(request?: Request) {
+
+  const requestHeaders = request 
+  ? request.headers // Expo : Bearer token from authorization header 
+  : await headers(); // Next.js : cookies from server context
+
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: requestHeaders,
   });
 
   if (!session?.user) return null;
