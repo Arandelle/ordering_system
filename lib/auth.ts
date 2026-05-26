@@ -7,6 +7,7 @@ import { render } from "@react-email/render";
 
 import { VerificationEmail } from "@/app/emails/VerificationEmail";
 import { ForgotPasswordEmail } from "@/app/emails/ForgotPasswordEmail";
+import { expo } from "@better-auth/expo"; // ✅ correct
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 const db = client.db();
@@ -29,8 +30,8 @@ export const auth = betterAuth({
       },
       publicId: {
         type: "string",
-        required: false
-      }
+        required: false,
+      },
     },
   },
 
@@ -107,11 +108,12 @@ export const auth = betterAuth({
     },
   },
 
-  plugins: [nextCookies()],
+  plugins: [nextCookies(), expo()],
 
   trustedOrigins: [
     "https://food.harrisoninasalbbq.com.ph",
     "http://localhost:3000",
     "http://localhost:3001",
+    "harrison://",
   ],
 });

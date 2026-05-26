@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.6.11",
     "@better-auth/mongo-adapter": "^1.6.3",
     "@ducanh2912/next-pwa": "^10.2.6",
     "@react-email/components": "^1.0.12",
