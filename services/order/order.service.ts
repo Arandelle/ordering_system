@@ -62,6 +62,7 @@ export async function queryOrders(options: OrderQueryOptions) {
     _id: order._id,
     customerId: order.customerId,
     createdAt: order.createdAt,
+    branchSnapshot: order.branchSnapshot,
     status: order.status,
     items: order.items,
     total: order.total,

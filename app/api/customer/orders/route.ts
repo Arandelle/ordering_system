@@ -7,7 +7,7 @@ import { parseRequestQuery } from "@/utils/query-helpers";
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const customer = await requireBetterAuth();
+    const customer = await requireBetterAuth(request);
 
     const { page, limit, skip, sort, match } = parseRequestQuery(request, {
       exactFields: ["status"],
