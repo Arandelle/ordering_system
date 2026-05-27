@@ -3,16 +3,15 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
+import { requireBetterAuth } from "@/lib/getAuth";
 
-export async function GET() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function GET(request: Request) {
+
+  const customer = await requireBetterAuth(request);
 
   await connectDB();
 
-  const user = await User.findOne({ _id: session.user.id })
+  const user = await User.findOne({ _id: customer?._id })
     .select("shippingAddress")
     .lean();
 
