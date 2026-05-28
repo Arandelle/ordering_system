@@ -6,7 +6,6 @@ import { User } from "@/models/User";
 import { requireBetterAuth } from "@/lib/getAuth";
 
 export async function GET(request: Request) {
-
   const customer = await requireBetterAuth(request);
 
   await connectDB();
@@ -18,11 +17,8 @@ export async function GET(request: Request) {
   return NextResponse.json({ shippingAddress: user?.shippingAddress ?? null });
 }
 
-export async function PUT(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function PUT(req: Request) {
+  const customer = await requireBetterAuth(req);
 
   const body = await req.json();
   const { address } = body;
@@ -34,7 +30,7 @@ export async function PUT(req: NextRequest) {
   await connectDB();
 
   const user = await User.findOneAndUpdate(
-    { _id: session.user.id },
+    { _id: customer._id },
     { $set: { shippingAddress: address } },
     { new: true, select: "shippingAddress" },
   ).lean();
