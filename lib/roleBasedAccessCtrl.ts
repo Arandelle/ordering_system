@@ -1,6 +1,6 @@
 import { StaffRole } from "@/types/staff";
-export function canAccess(role: StaffRole, permission: string){
-    return adminPermission[role]?.has(permission) ?? false;
+export function canAccess(role: StaffRole, permission: string) {
+  return adminPermission[role]?.has(permission) ?? false;
 }
 
 // role: [resource.action] -> admin: [products.create]
@@ -9,7 +9,7 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "dashboard.read",
 
     "orders.read",
-    
+
     "products.read",
     "products.create",
     "products.update",
@@ -21,6 +21,7 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "categories.delete",
 
     "customers.read",
+    "promo-cards.read",
 
     "stores.read",
     "stores.create",
@@ -45,6 +46,7 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "orders.update",
 
     "products.read",
+    "promo-cards.read",
 
     "inventories.read",
     "inventories.create",
@@ -53,6 +55,7 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "categories.read",
 
     "customers.read",
+    "promo-cards.read",
 
     "reports.read",
 
@@ -66,5 +69,6 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "orders.update",
 
     "customers.read",
+    "promo-cards.read",
   ]),
 };
