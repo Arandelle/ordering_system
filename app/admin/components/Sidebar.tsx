@@ -16,35 +16,107 @@ interface SidebarProps {
 
 // Define navigation items with required permissions
 const navItems = [
-  { name: "Dashboard", path: "/dashboard", icon: "LayoutDashboard", permission: "dashboard.read" },
-  { name: "Orders", path: "/orders", icon: "ShoppingCart", permission: "orders.read" },
-  { name: "Products", path: "/products", icon: "Package", permission: "products.read" },
-  { name: "Inventory", path: "/inventories", icon: "Archive", permission: "inventories.read" },
-  { name: "Category", path: "/categories", icon: "Folder", permission: "categories.read" },
-  { name: "Customers", path: "/customers", icon: "Users", permission: "customers.read" },
-  { name: "Store Management", path: "/stores", icon: "Store", permission: "stores.read" },
-  { name: "Staff Management", path: "/staff", icon: "UserRoundCog", permission: "staff.read" },
-  { name: "Reports", path: "/reports", icon: "ChartLine", permission: "reports.read" },
-  { name: "Settings", path: "/settings", icon: "Settings", permission: "settings.read" },
+  {
+    name: "Dashboard",
+    path: "/dashboard",
+    icon: "LayoutDashboard",
+    permission: "dashboard.read",
+  },
+  {
+    name: "Orders",
+    path: "/orders",
+    icon: "ShoppingCart",
+    permission: "orders.read",
+  },
+    {
+    name: "Promo Cards",
+    path: "/promo-cards",
+    icon: "BadgePercent",
+    permission: "promo-cards.read",
+  },
+  {
+    name: "Products",
+    path: "/products",
+    icon: "Package",
+    permission: "products.read",
+  },
+  {
+    name: "Inventory",
+    path: "/inventories",
+    icon: "Archive",
+    permission: "inventories.read",
+  },
+  {
+    name: "Category",
+    path: "/categories",
+    icon: "Folder",
+    permission: "categories.read",
+  },
+  {
+    name: "Customers",
+    path: "/customers",
+    icon: "Users",
+    permission: "customers.read",
+  },
+  {
+    name: "Store Management",
+    path: "/stores",
+    icon: "Store",
+    permission: "stores.read",
+  },
+  {
+    name: "Staff Management",
+    path: "/staff",
+    icon: "UserRoundCog",
+    permission: "staff.read",
+  },
+  {
+    name: "Reports",
+    path: "/reports",
+    icon: "ChartLine",
+    permission: "reports.read",
+  },
+  {
+    name: "Settings",
+    path: "/settings",
+    icon: "Settings",
+    permission: "settings.read",
+  },
 ];
 
-const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
+type SidebarPromoCardPurchase = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  status: "pending" | "paid" | "failed" | "expired" | "cancelled";
+};
 
-  const currentUser = useStaffContext()
+type SidebarPromoCardsResponse = {
+  data: SidebarPromoCardPurchase[];
+  stats: {
+    total: number;
+    paid: number;
+    pending: number;
+  };
+};
+
+const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
+  const currentUser = useStaffContext();
   const pathname = usePathname();
-  const { data: placedOrders} = useAdminOrders();
+  const { data: placedOrders } = useAdminOrders();
   const logout = useLogoutAdmin();
 
-  const pendingCount = placedOrders?.data.filter(
-    (order) => order.status === "pending",
-  ).length ?? 0;
+  const pendingCount =
+    placedOrders?.data.filter((order) => order.status === "pending").length ??
+    0;
   // const lowProductStock = products.filter((order) => order.stock <= 10).length;
 
   const [logoutModal, setLogoutModal] = useState(false);
 
-
   // Filter nav items based on user permissions
-  const visibleNavItems = navItems.filter((item) => currentUser?.role ? canAccess(currentUser.role, item.permission) : false)
+  const visibleNavItems = navItems.filter((item) =>
+    currentUser?.role ? canAccess(currentUser.role, item.permission) : false,
+  );
 
   return (
     <>
@@ -92,12 +164,6 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                         {pendingCount}
                       </div>
                     )}
-{/* 
-                    {item.name === "Products" && lowProductStock > 0 && (
-                      <div className="absolute -top-1 right-0 flex items-center justify-center w-5 h-5 text-xs bg-red-600 text-white rounded-full">
-                        {lowProductStock}
-                      </div>
-                    )} */}
                   </Link>
                 </li>
               );
