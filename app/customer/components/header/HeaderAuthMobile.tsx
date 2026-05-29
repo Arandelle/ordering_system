@@ -48,6 +48,13 @@ export const HeaderMobileMenu = ({
               Cart
             </button>
             <Link
+              href="/promo-card"
+              onClick={onClose}
+              className="text-white hover:bg-brand-color-500 p-2 rounded transition-colors"
+            >
+              Promo Card
+            </Link>
+            <Link
               href="/catering"
               onClick={onClose}
               className="text-white hover:bg-brand-color-500 p-2 rounded transition-colors"
