@@ -171,6 +171,9 @@ const OrderSchema = new Schema(
       vatableSales: { type: Number, required: true },
       vatAmount: { type: Number, required: true },
       totalAmount: { type: Number, required: true },
+      subtotalAmount: { type: Number },
+      discountAmount: { type: Number, default: 0 },
+      discountCode: { type: String },
     },
 
     estimatedTime: { type: String, default: "30-45 minutes" },
