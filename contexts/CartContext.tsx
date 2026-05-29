@@ -1,6 +1,10 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
+import {
+  calculatePromoCardDiscount,
+  calculatePromoCardTotal,
+} from "@/lib/promoCard";
 import { CartItem } from "@/types/MenuTypes";
 import React, {
   createContext,
@@ -24,7 +28,11 @@ interface CartContextType {
   totalItems: number;
   vatableSales: number;
   vatAmount: number;
+  subtotalPrice: number;
+  promoCardDiscount: number;
   totalPrice: number;
+  applyPromoCardDiscount: boolean;
+  setApplyPromoCardDiscount: (apply: boolean) => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   isSyncing: boolean;
@@ -62,6 +70,7 @@ export const CartProvider: React.FC<{
 }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [applyPromoCardDiscount, setApplyPromoCardDiscount] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -194,6 +203,7 @@ export const CartProvider: React.FC<{
 
   const clearCart = useCallback(async () => {
     setCartItems([]);
+    setApplyPromoCardDiscount(false);
 
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
 
@@ -209,10 +219,16 @@ export const CartProvider: React.FC<{
 
   const totalProducts = cartItems.length;
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cartItems.reduce(
+  const subtotalPrice = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+  const promoCardDiscount = applyPromoCardDiscount
+    ? calculatePromoCardDiscount(subtotalPrice)
+    : 0;
+  const totalPrice = applyPromoCardDiscount
+    ? calculatePromoCardTotal(subtotalPrice)
+    : subtotalPrice;
   const vatableSales = totalPrice / 1.12;
   const vatAmount = totalPrice - vatableSales;
 
@@ -230,7 +246,11 @@ export const CartProvider: React.FC<{
         totalItems,
         vatableSales,
         vatAmount,
+        subtotalPrice,
+        promoCardDiscount,
         totalPrice,
+        applyPromoCardDiscount,
+        setApplyPromoCardDiscount,
         isCartOpen,
         setIsCartOpen,
         isSyncing,
