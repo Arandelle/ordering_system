@@ -5,9 +5,23 @@ import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { apiClient } from "@/lib/apiClient";
+import { authClient } from "@/lib/auth-client";
+import { PROMO_CARD } from "@/lib/promoCard";
+import { useQuery } from "@tanstack/react-query";
 
 const CartDrawer = () => {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const { data: promoCardStatus } = useQuery({
+    queryKey: ["customer", "promo-card", "status"],
+    queryFn: () =>
+      apiClient.get<{ hasPaidPromoCard: boolean }>("/customer/promo-card/status"),
+    enabled: Boolean(session?.user),
+    staleTime: 60_000,
+  });
+  const canUsePromoCardDiscount =
+    promoCardStatus?.hasPaidPromoCard === true;
   const {
     cartItems,
     isCartOpen,
@@ -18,9 +32,23 @@ const CartDrawer = () => {
     totalItems,
     vatableSales,
     vatAmount,
+    subtotalPrice,
+    promoCardDiscount,
     totalPrice,
+    applyPromoCardDiscount,
+    setApplyPromoCardDiscount,
     clearCart,
   } = useCart();
+
+  React.useEffect(() => {
+    if (!canUsePromoCardDiscount && applyPromoCardDiscount) {
+      setApplyPromoCardDiscount(false);
+    }
+  }, [
+    applyPromoCardDiscount,
+    canUsePromoCardDiscount,
+    setApplyPromoCardDiscount,
+  ]);
 
   const handleCheckout = () => {
     setIsCartOpen(false);
@@ -140,6 +168,37 @@ const CartDrawer = () => {
         {cartItems.length > 0 && (
           <div className="border-t border-gray-100 p-6 space-y-4">
             <div className="space-y-2">
+              <label className="flex items-start gap-3 rounded-xl bg-orange-50 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={applyPromoCardDiscount}
+                  onChange={(event) =>
+                    setApplyPromoCardDiscount(event.target.checked)
+                  }
+                  disabled={!canUsePromoCardDiscount}
+                  className="mt-1 h-4 w-4 accent-brand-color-500"
+                />
+                <span>
+                  <span className="block font-semibold text-gray-800">
+                    Apply {PROMO_CARD.name}
+                  </span>
+                  <span className="block text-xs text-gray-500">
+                    {canUsePromoCardDiscount
+                      ? `${(PROMO_CARD.discountRate * 100).toFixed(0)}% discount`
+                      : "Paid promo card required"}
+                  </span>
+                </span>
+              </label>
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>Subtotal</span>
+                <span>₱{subtotalPrice.toFixed(2)}</span>
+              </div>
+              {promoCardDiscount > 0 && (
+                <div className="flex items-center justify-between text-sm font-semibold text-green-600">
+                  <span>Promo card discount</span>
+                  <span>-₱{promoCardDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>VATable Sales</span>
                 <span>₱{vatableSales.toFixed(2)}</span>
