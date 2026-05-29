@@ -79,6 +79,9 @@ export interface OrderType {
     vatableSales: number;
     vatAmount?: number;
     totalAmount: number;
+    subtotalAmount?: number;
+    discountAmount?: number;
+    discountCode?: string;
   };
   estimatedTime: string;
 
@@ -145,6 +148,7 @@ export interface CreateOrderPayload {
   }[];
 
   paymentMethod: string,
+  applyPromoCardDiscount?: boolean;
 
   shippingAddress: {
     line1: string;
