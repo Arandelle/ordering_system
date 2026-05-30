@@ -7,6 +7,7 @@ interface StatusBadgeProps {
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const statusStyles: Record<OrderType["status"], string> = {
+    pending_payment: "bg-amber-500",
     pending: "bg-amber-500",
     preparing: "bg-blue-500",
     ready: "bg-orange-500",
@@ -20,7 +21,7 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
     <span
       className={`px-3 py-1 text-xs font-semibold text-white rounded-xl  ${statusStyles[status]} uppercase tracking-wide`}
     >
-      {status}
+      {status.replace("_", " ")}
     </span>
   );
 }
