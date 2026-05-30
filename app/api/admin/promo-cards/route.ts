@@ -1,5 +1,14 @@
 import { requireAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
+import {
+  PROMO_CARD,
+  PROMO_CARD_DAYS,
+  PromoCardDay,
+  PromoCardDiscountRule,
+  PromoCardVoucherRule,
+} from "@/lib/promoCard";
+import { getPromoCardConfig } from "@/lib/promoCardConfig";
+import { PromoCardConfigModel } from "@/models/PromoCardConfig";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
@@ -34,10 +43,12 @@ export async function GET(request: NextRequest) {
       ]);
 
     const totalPages = Math.ceil(total / limit);
+    const config = await getPromoCardConfig();
 
     return NextResponse.json(
       {
         data,
+        config,
         stats: {
           total,
           paid: paidCount,
@@ -62,6 +73,139 @@ export async function GET(request: NextRequest) {
           error instanceof Error
             ? error.message
             : "Failed to fetch promo card purchases.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    await connectDB();
+    await requireAdmin(request);
+
+    const body = (await request.json()) as {
+      name?: string;
+      purchasePrice?: number;
+      discountRules?: {
+        days?: PromoCardDay[];
+        discountPercent?: number;
+      }[];
+      voucherRule?: PromoCardVoucherRule;
+    };
+
+    const name = body.name?.trim();
+    const purchasePrice = Number(body.purchasePrice);
+    const rawDiscountRules = Array.isArray(body.discountRules)
+      ? body.discountRules
+      : [];
+    const voucherRule = body.voucherRule;
+
+    if (!name) {
+      return NextResponse.json(
+        { error: "Promo card name is required." },
+        { status: 400 },
+      );
+    }
+
+    if (rawDiscountRules.length === 0 || rawDiscountRules.length > 2) {
+      return NextResponse.json(
+        { error: "Add 1 to 2 discount day rules." },
+        { status: 400 },
+      );
+    }
+
+    if (!Number.isFinite(purchasePrice) || purchasePrice < 1) {
+      return NextResponse.json(
+        { error: "Promo card amount must be at least ₱1." },
+        { status: 400 },
+      );
+    }
+
+    const usedDays = new Set<string>();
+    const discountRules: PromoCardDiscountRule[] = [];
+
+    for (const rule of rawDiscountRules) {
+      const days = Array.isArray(rule.days) ? rule.days : [];
+      const discountPercent = Number(rule.discountPercent);
+
+      if (
+        days.length === 0 ||
+        days.some((day) => !PROMO_CARD_DAYS.includes(day))
+      ) {
+        return NextResponse.json(
+          { error: "Each discount rule must include valid days." },
+          { status: 400 },
+        );
+      }
+
+      if (
+        !Number.isFinite(discountPercent) ||
+        discountPercent < 0 ||
+        discountPercent > 100
+      ) {
+        return NextResponse.json(
+          { error: "Discount percent must be between 0 and 100." },
+          { status: 400 },
+        );
+      }
+
+      for (const day of days) {
+        if (usedDays.has(day)) {
+          return NextResponse.json(
+            { error: "A day can only be assigned to one discount rule." },
+            { status: 400 },
+          );
+        }
+        usedDays.add(day);
+      }
+
+      discountRules.push({
+        days,
+        discountRate: Number((discountPercent / 100).toFixed(4)),
+      });
+    }
+
+    const normalizedVoucherRule: PromoCardVoucherRule = {
+      enabled: Boolean(voucherRule?.enabled),
+      voucherAmount: Number(voucherRule?.voucherAmount ?? 0),
+      minimumPurchase: Number(voucherRule?.minimumPurchase ?? 0),
+    };
+
+    if (
+      normalizedVoucherRule.enabled &&
+      (normalizedVoucherRule.voucherAmount <= 0 ||
+        normalizedVoucherRule.minimumPurchase <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Voucher amount and minimum purchase must be greater than 0." },
+        { status: 400 },
+      );
+    }
+
+    const config = await PromoCardConfigModel.findOneAndUpdate(
+      {},
+      {
+        $set: {
+          name,
+          discountRate: discountRules[0].discountRate,
+          discountRules,
+          voucherRule: normalizedVoucherRule,
+          purchasePrice: Number(purchasePrice.toFixed(2)),
+          sku: PROMO_CARD.sku,
+        },
+      },
+      { new: true, upsert: true, runValidators: true },
+    ).lean();
+
+    return NextResponse.json({ config }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update promo card settings.",
       },
       { status: 500 },
     );
