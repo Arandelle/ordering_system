@@ -192,6 +192,18 @@ export async function PATCH(
   const paymentMethod = order.paymentInfo?.paymentMethod as "cod" | "maya";
   const paymentStatus = order.paymentInfo?.paymentStatus as PaymentStatus;
 
+  if (currentStatus === ORDER_STATUSES.PENDING_PAYMENT) {
+    return NextResponse.json(
+      {
+        error:
+          "Maya orders awaiting payment cannot be updated by admin. Wait for payment confirmation or automatic expiry.",
+        currentStatus,
+        paymentMethod,
+      },
+      { status: 400 },
+    );
+  }
+
   if (
     paymentMethod === "maya" &&
     currentStatus === ORDER_STATUSES.PENDING &&
