@@ -11,6 +11,7 @@
 // ============================================
 
 export const ORDER_STATUSES = {
+  PENDING_PAYMENT: "pending_payment",
   PENDING: "pending",
   PREPARING: "preparing",
   READY: "ready",
@@ -28,6 +29,7 @@ export type OrderStatus = (typeof ORDER_STATUSES)[keyof typeof ORDER_STATUSES];
 
 // =================== USED for select options =====================
 export const ORDER_STATUS_FILTER_LIST = [
+  ORDER_STATUSES.PENDING_PAYMENT,
   ORDER_STATUSES.PENDING,
   ORDER_STATUSES.PREPARING,
   ORDER_STATUSES.READY,
@@ -54,13 +56,14 @@ export const ORDER_STATUS_OPTIONS = ORDER_STATUS_FILTER_LIST.map((status) => ({
  */
 
 export const STATUS_PRIORITY: Record<OrderStatus, number> = {
-  [ORDER_STATUSES.PENDING]: 1, // Awaiting payment
-  [ORDER_STATUSES.PREPARING]: 2, // In kitchen
-  [ORDER_STATUSES.READY]: 3, // Ready for pickup/delivery
-  [ORDER_STATUSES.COMPLETED]: 4, // Done
-  [ORDER_STATUSES.CANCELLED]: 5, // Cancelled
-  [ORDER_STATUSES.FAILED]: 6, // Payment failed
-  [ORDER_STATUSES.EXPIRED]: 7, // Expired
+  [ORDER_STATUSES.PENDING_PAYMENT]: 1, // Awaiting external payment
+  [ORDER_STATUSES.PENDING]: 2, // Awaiting staff action
+  [ORDER_STATUSES.PREPARING]: 3, // In kitchen
+  [ORDER_STATUSES.READY]: 4, // Ready for pickup/delivery
+  [ORDER_STATUSES.COMPLETED]: 5, // Done
+  [ORDER_STATUSES.CANCELLED]: 6, // Cancelled
+  [ORDER_STATUSES.FAILED]: 7, // Payment failed
+  [ORDER_STATUSES.EXPIRED]: 8, // Expired
 };
 
 // ============================================
@@ -75,6 +78,12 @@ export const STATUS_PRIORITY: Record<OrderStatus, number> = {
  */
 
 export const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[] | null> = {
+  [ORDER_STATUSES.PENDING_PAYMENT]: [
+    ORDER_STATUSES.PENDING,
+    ORDER_STATUSES.CANCELLED,
+    ORDER_STATUSES.FAILED,
+    ORDER_STATUSES.EXPIRED,
+  ],
   [ORDER_STATUSES.PENDING]: [
     ORDER_STATUSES.PREPARING,
     ORDER_STATUSES.CANCELLED,
@@ -111,6 +120,15 @@ export const ORDER_ACTION_CONFIG: Record<
     >
   >
 > = {
+  [ORDER_STATUSES.PENDING_PAYMENT]: {
+    [ORDER_STATUSES.CANCELLED]: {
+      label: "Cancel Order",
+      variant: "bg-red-600 hover:bg-red-700",
+      roles: ["customer"],
+      paymentMethods: ["maya"],
+    },
+  },
+
   [ORDER_STATUSES.PENDING]: {
     [ORDER_STATUSES.PREPARING]: {
       label: "Accept Order",
@@ -170,6 +188,7 @@ export const TIMELINE_FIELD_MAP: Record<
   | null
 > = {
   [ORDER_STATUSES.PENDING]: null, // No timestamp on pending
+  [ORDER_STATUSES.PENDING_PAYMENT]: null, // No timestamp until terminal/paid
   [ORDER_STATUSES.PREPARING]: "preparingAt",
   [ORDER_STATUSES.READY]: "readyAt",
   [ORDER_STATUSES.COMPLETED]: "completedAt",
