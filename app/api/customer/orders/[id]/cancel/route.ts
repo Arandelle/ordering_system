@@ -2,6 +2,7 @@ import { requireBetterAuth } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Inventory } from "@/models/Inventory";
 import { Order } from "@/models/Orders";
+import { refundCustomerVoucher } from "@/services/promoCardBenefits";
 import {
   canTransitionTo,
   getTimelineField,
@@ -89,6 +90,12 @@ export async function PATCH(
         { session },
       );
     }
+
+    await refundCustomerVoucher(
+      order.customerId,
+      order.total?.voucherDiscountAmount ?? 0,
+      session,
+    );
 
     await session.commitTransaction();
     session.endSession();
