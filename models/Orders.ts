@@ -174,6 +174,7 @@ const OrderSchema = new Schema(
       subtotalAmount: { type: Number },
       discountAmount: { type: Number, default: 0 },
       discountCode: { type: String },
+      voucherDiscountAmount: { type: Number, default: 0 },
     },
 
     estimatedTime: { type: String, default: "30-45 minutes" },
