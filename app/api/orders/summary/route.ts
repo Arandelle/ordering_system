@@ -1,6 +1,7 @@
 import { requireBetterAuth } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
+import { ORDER_STATUSES } from "@/types/orderConstants";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -31,7 +32,9 @@ export async function GET(request: NextRequest) {
     }
 
     const summary = {
-      pending: byStatus["pending"] ?? 0,
+      pending:
+        (byStatus[ORDER_STATUSES.PENDING_PAYMENT] ?? 0) +
+        (byStatus[ORDER_STATUSES.PENDING] ?? 0),
       // "To dispatch": payment confirmed (paid) + actively being prepared
       preparing: (byStatus["paid"] ?? 0) + (byStatus["preparing"] ?? 0),
 
@@ -42,22 +45,23 @@ export async function GET(request: NextRequest) {
       completed: unreviewedByStatus["completed"] ?? 0,
 
       // Terminal statuses — kept for completeness, badges intentionally hidden on frontend
-      cancelled: byStatus["cancelled"] ?? 0,
-      expired: byStatus["expired"] ?? 0,
-      failed: byStatus["failed"] ?? 0, // if you have a failed payment status
+      cancelled: byStatus[ORDER_STATUSES.CANCELLED] ?? 0,
+      expired: byStatus[ORDER_STATUSES.EXPIRED] ?? 0,
+      failed: byStatus[ORDER_STATUSES.FAILED] ?? 0, // if you have a failed payment status
 
       // Raw per-status breakdown — useful for frontend if you ever need granular data
       // without re-hitting the API
       raw: {
-        pending: byStatus["pending"] ?? 0,
+        pendingPayment: byStatus[ORDER_STATUSES.PENDING_PAYMENT] ?? 0,
+        pending: byStatus[ORDER_STATUSES.PENDING] ?? 0,
         paid: byStatus["paid"] ?? 0,
-        preparing: byStatus["preparing"] ?? 0,
+        preparing: byStatus[ORDER_STATUSES.PREPARING] ?? 0,
         dispatched: byStatus["dispatched"] ?? 0,
-        ready: byStatus["ready"] ?? 0,
-        completed: byStatus["completed"] ?? 0,
-        cancelled: byStatus["cancelled"] ?? 0,
-        expired: byStatus["expired"] ?? 0,
-        failed: byStatus["failed"] ?? 0,
+        ready: byStatus[ORDER_STATUSES.READY] ?? 0,
+        completed: byStatus[ORDER_STATUSES.COMPLETED] ?? 0,
+        cancelled: byStatus[ORDER_STATUSES.CANCELLED] ?? 0,
+        expired: byStatus[ORDER_STATUSES.EXPIRED] ?? 0,
+        failed: byStatus[ORDER_STATUSES.FAILED] ?? 0,
       },
 
       total: counts.reduce((sum, r) => sum + r.count, 0),

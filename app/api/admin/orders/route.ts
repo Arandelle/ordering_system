@@ -11,6 +11,7 @@ import { requireAdmin } from "@/lib/getAuth";
 import { STAFF_ROLES } from "@/types/staff";
 import { queryOrders } from "@/services/order/order.service";
 import { parseRequestQuery } from "@/utils/query-helpers";
+import { ORDER_STATUSES } from "@/types/orderConstants";
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,6 +33,10 @@ export async function GET(request: NextRequest) {
     });
 
     const filter: Record<string, any> = { ...match };
+
+    if (!match.status) {
+      filter.status = { $ne: ORDER_STATUSES.PENDING_PAYMENT };
+    }
 
     if (
       admin.role !== STAFF_ROLES.SUPERADMIN &&
