@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "../../../components/BrandLogo";
@@ -14,8 +14,20 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+type NavItem = {
+  name: string;
+  path: string;
+  icon: string;
+  permission: string;
+  children?: {
+    name: string;
+    path: string;
+    icon: string;
+  }[];
+};
+
 // Define navigation items with required permissions
-const navItems = [
+const navItems: NavItem[] = [
   {
     name: "Dashboard",
     path: "/dashboard",
@@ -28,11 +40,23 @@ const navItems = [
     icon: "ShoppingCart",
     permission: "orders.read",
   },
-    {
+  {
     name: "Promo Cards",
     path: "/promo-cards",
     icon: "BadgePercent",
     permission: "promo-cards.read",
+    children: [
+      {
+        name: "Purchased Cards",
+        path: "/promo-cards",
+        icon: "ListChecks",
+      },
+      {
+        name: "Card Settings",
+        path: "/promo-cards/settings",
+        icon: "SlidersHorizontal",
+      },
+    ],
   },
   {
     name: "Products",
@@ -84,20 +108,15 @@ const navItems = [
   },
 ];
 
-type SidebarPromoCardPurchase = {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  status: "pending" | "paid" | "failed" | "expired" | "cancelled";
-};
-
-type SidebarPromoCardsResponse = {
-  data: SidebarPromoCardPurchase[];
-  stats: {
-    total: number;
-    paid: number;
-    pending: number;
-  };
+const getActiveParentPath = (currentPath: string) => {
+  return (
+    navItems.find(
+      (item) =>
+        item.children?.length &&
+        (currentPath === item.path ||
+          item.children.some((child) => child.path === currentPath)),
+    )?.path ?? null
+  );
 };
 
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
@@ -105,6 +124,9 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   const pathname = usePathname();
   const { data: placedOrders } = useAdminOrders();
   const logout = useLogoutAdmin();
+  const [expandedItemPath, setExpandedItemPath] = useState<string | null>(
+    () => getActiveParentPath(pathname),
+  );
 
   const pendingCount =
     placedOrders?.data.filter((order) => order.status === "pending").length ??
@@ -117,6 +139,16 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   const visibleNavItems = navItems.filter((item) =>
     currentUser?.role ? canAccess(currentUser.role, item.permission) : false,
   );
+
+  useEffect(() => {
+    setExpandedItemPath(getActiveParentPath(pathname));
+  }, [pathname]);
+
+  const toggleExpandedItem = (path: string) => {
+    setExpandedItemPath((currentPath) => {
+      return currentPath === path ? null : path;
+    });
+  };
 
   return (
     <>
@@ -145,26 +177,76 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
         <nav className="py-6 px-3 overflow-y-auto h-[calc(100vh-80px)]">
           <ul className="space-y-2">
             {visibleNavItems.map((item) => {
-              const isActive = pathname === item.path;
+              const hasChildren = Boolean(item.children?.length);
+              const hasActiveChild = item.children?.some(
+                (child) => child.path === pathname,
+              );
+              const isActive = pathname === item.path || Boolean(hasActiveChild);
+              const isExpanded = expandedItemPath === item.path;
 
               return (
                 <li key={item.path} className="relative">
-                  <Link
-                    href={item.path}
-                    onClick={onClose}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duratin-200 group ${isActive ? "bg-brand-color-500/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-brand-color-500"}`}
+                  <div
+                    className={`flex items-center rounded-xl transition-all duration-200 group ${isActive ? "bg-brand-color-500/80 text-white" : "text-gray-600 hover:bg-slate-100 hover:text-brand-color-500"}`}
                   >
-                    <DynamicIcon name={item.icon} size={18} />
-                    <span className="font-semibold text-sm">{item.name}</span>
-                    {isActive && (
-                      <span className="ml-auto w-2 h-2 rounded-full bg-white" />
+                    <Link
+                      href={item.path}
+                      onClick={() => {
+                        setExpandedItemPath(hasChildren ? item.path : null);
+
+                        onClose();
+                      }}
+                      className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3"
+                    >
+                      <DynamicIcon name={item.icon} size={18} />
+                      <span className="truncate text-sm font-semibold">
+                        {item.name}
+                      </span>
+                      {isActive && !hasChildren && (
+                        <span className="ml-auto h-2 w-2 rounded-full bg-white" />
+                      )}
+                    </Link>
+                    {hasChildren && (
+                      <button
+                        type="button"
+                        aria-label={`${isExpanded ? "Collapse" : "Expand"} ${item.name}`}
+                        aria-expanded={isExpanded}
+                        onClick={() => toggleExpandedItem(item.path)}
+                        className="mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-black/5"
+                      >
+                        <DynamicIcon
+                          name="ChevronDown"
+                          size={16}
+                          className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        />
+                      </button>
                     )}
                     {item.name === "Orders" && pendingCount > 0 && (
                       <div className="absolute -top-1 right-0 flex items-center justify-center w-5 h-5 text-xs bg-red-600 text-white rounded-full">
                         {pendingCount}
                       </div>
                     )}
-                  </Link>
+                  </div>
+                  {hasChildren && isExpanded && (
+                    <ul className="mt-1 space-y-1 pl-6">
+                      {item.children?.map((child) => (
+                        <li key={child.path}>
+                          <Link
+                            href={child.path}
+                            onClick={onClose}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                              pathname === child.path
+                                ? "bg-brand-color-500/10 text-brand-color-500"
+                                : "text-gray-500 hover:bg-slate-100 hover:text-brand-color-500"
+                            }`}
+                          >
+                            <DynamicIcon name={child.icon} size={15} />
+                            <span>{child.name}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               );
             })}
