@@ -1,4 +1,9 @@
 import mongoose, { model, models, Schema } from "mongoose";
+import {
+  DEFAULT_PROMO_CARD_DISCOUNT_RULES,
+  DEFAULT_PROMO_CARD_VOUCHER_RULE,
+  PROMO_CARD_DAYS,
+} from "@/lib/promoCard";
 
 export const PROMO_CARD_PURCHASE_STATUSES = [
   "pending",
@@ -7,6 +12,36 @@ export const PROMO_CARD_PURCHASE_STATUSES = [
   "expired",
   "cancelled",
 ] as const;
+
+const DiscountRuleSchema = new Schema(
+  {
+    days: {
+      type: [String],
+      enum: PROMO_CARD_DAYS,
+      required: true,
+      default: [],
+    },
+    discountRate: { type: Number, required: true, min: 0, max: 1 },
+  },
+  { _id: false },
+);
+
+const VoucherRuleSchema = new Schema(
+  {
+    enabled: { type: Boolean, default: DEFAULT_PROMO_CARD_VOUCHER_RULE.enabled },
+    voucherAmount: {
+      type: Number,
+      default: DEFAULT_PROMO_CARD_VOUCHER_RULE.voucherAmount,
+      min: 0,
+    },
+    minimumPurchase: {
+      type: Number,
+      default: DEFAULT_PROMO_CARD_VOUCHER_RULE.minimumPurchase,
+      min: 0,
+    },
+  },
+  { _id: false },
+);
 
 const PromoCardPurchaseSchema = new Schema(
   {
@@ -37,6 +72,14 @@ const PromoCardPurchaseSchema = new Schema(
     customerPhone: { type: String, required: true },
     purchasePrice: { type: Number, required: true },
     discountRate: { type: Number, required: true },
+    discountRules: {
+      type: [DiscountRuleSchema],
+      default: DEFAULT_PROMO_CARD_DISCOUNT_RULES,
+    },
+    voucherRule: {
+      type: VoucherRuleSchema,
+      default: DEFAULT_PROMO_CARD_VOUCHER_RULE,
+    },
     paidAt: Date,
     failedAt: Date,
     expiredAt: Date,
