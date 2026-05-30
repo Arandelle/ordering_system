@@ -1,6 +1,10 @@
 import { getAuthHeader } from "@/lib/getAuthHeader";
+import { requireBetterAuth } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
+import { ORDER_STATUSES } from "@/types/orderConstants";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
+import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -10,20 +14,48 @@ export async function POST(
   try {
     await connectDB();
     const { id } = await context.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
+
+    const customer = await requireBetterAuth(request);
     const order = await Order.findById(id);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    if (order.paymentInfo?.paymentStatus === "PAYMENT_SUCCESS") {
+    if (
+      order.customerId &&
+      (!customer || order.customerId.toString() !== customer._id.toString())
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (order.paymentInfo?.paymentMethod !== "maya") {
+      return NextResponse.json(
+        { error: "Only Maya orders can create a payment checkout." },
+        { status: 400 },
+      );
+    }
+
+    if (order.status !== ORDER_STATUSES.PENDING_PAYMENT) {
+      return NextResponse.json(
+        { error: "This order is no longer awaiting payment." },
+        { status: 400 },
+      );
+    }
+
+    if (order.paymentInfo?.paymentStatus === PAYMENT_STATUSES.PAYMENT_SUCCESS) {
       return NextResponse.json(
         { error: "Order already paid" },
         { status: 400 },
       );
     }
 
-    const { paymentInfo, shippingAddress } = order;
+    const { paymentInfo } = order;
+    const shippingAddress = paymentInfo.shippingAddress;
     const { line1, line2, city, province, zipCode } = shippingAddress ?? {};
 
     const referenceNumber = paymentInfo?.referenceNumber;
@@ -94,8 +126,13 @@ export async function POST(
     );
 
     const data = await response.json();
-    console.log("PayMaya status:", response.status);
-    console.log("PayMaya response:", JSON.stringify(data, null, 2));
+
+    if (!response.ok || !data.redirectUrl) {
+      return NextResponse.json(
+        { error: data.message ?? "Failed to create payment checkout." },
+        { status: 502 },
+      );
+    }
 
     order.paymentInfo.checkoutId = data.checkoutId;
 
