@@ -117,19 +117,14 @@ export default function OrdersTable({
                     <TableCell className="px-6 py-4">
                       <div className="flex flex-col gap-1.5">
                         <StatusBadge status={order.status} />
-                        {order.status === ORDER_STATUSES.PENDING &&
+                        {order.status === ORDER_STATUSES.PENDING_PAYMENT &&
                           isMaya &&
-                          (isMayaPaid ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 w-fit">
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                              Paid
+                          !isMayaPaid && (
+                            <span className="inline-flex w-fit items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                              Awaiting payment
                             </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 w-fit">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                             Awaiting for payment
-                            </span>
-                          ))}
+                          )}
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
