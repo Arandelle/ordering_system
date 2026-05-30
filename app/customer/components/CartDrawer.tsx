@@ -7,7 +7,13 @@ import OrderNowButton from "@/components/ui/OrderNowButton";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { apiClient } from "@/lib/apiClient";
 import { authClient } from "@/lib/auth-client";
-import { PROMO_CARD } from "@/lib/promoCard";
+import {
+  DEFAULT_PROMO_CARD_DISCOUNT_RULES,
+  getPromoCardDay,
+  getPromoCardDiscountRateForDay,
+  PROMO_CARD,
+  PromoCardDay,
+} from "@/lib/promoCard";
 import { useQuery } from "@tanstack/react-query";
 
 const CartDrawer = () => {
@@ -16,12 +22,34 @@ const CartDrawer = () => {
   const { data: promoCardStatus } = useQuery({
     queryKey: ["customer", "promo-card", "status"],
     queryFn: () =>
-      apiClient.get<{ hasPaidPromoCard: boolean }>("/customer/promo-card/status"),
+      apiClient.get<{
+        hasPaidPromoCard: boolean;
+        voucherBalance: number;
+        config: {
+          name: string;
+          discountRate: number;
+          purchasePrice: number;
+          sku: string;
+          discountRules: {
+            days: PromoCardDay[];
+            discountRate: number;
+          }[];
+        };
+      }>("/customer/promo-card/status"),
     enabled: Boolean(session?.user),
     staleTime: 60_000,
   });
   const canUsePromoCardDiscount =
     promoCardStatus?.hasPaidPromoCard === true;
+  const promoCardConfig = promoCardStatus?.config ?? {
+    ...PROMO_CARD,
+    discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES,
+  };
+  const activeDiscountRate = getPromoCardDiscountRateForDay(
+    promoCardConfig.discountRules,
+    getPromoCardDay(),
+    promoCardConfig.discountRate,
+  );
   const {
     cartItems,
     isCartOpen,
@@ -37,6 +65,7 @@ const CartDrawer = () => {
     totalPrice,
     applyPromoCardDiscount,
     setApplyPromoCardDiscount,
+    setPromoCardDiscountRate,
     clearCart,
   } = useCart();
 
@@ -44,10 +73,13 @@ const CartDrawer = () => {
     if (!canUsePromoCardDiscount && applyPromoCardDiscount) {
       setApplyPromoCardDiscount(false);
     }
+    setPromoCardDiscountRate(activeDiscountRate);
   }, [
+    activeDiscountRate,
     applyPromoCardDiscount,
     canUsePromoCardDiscount,
     setApplyPromoCardDiscount,
+    setPromoCardDiscountRate,
   ]);
 
   const handleCheckout = () => {
@@ -180,11 +212,11 @@ const CartDrawer = () => {
                 />
                 <span>
                   <span className="block font-semibold text-gray-800">
-                    Apply {PROMO_CARD.name}
+                    Apply {promoCardConfig.name}
                   </span>
                   <span className="block text-xs text-gray-500">
                     {canUsePromoCardDiscount
-                      ? `${(PROMO_CARD.discountRate * 100).toFixed(0)}% discount`
+                      ? `${(activeDiscountRate * 100).toFixed(0)}% discount today`
                       : "Paid promo card required"}
                   </span>
                 </span>
