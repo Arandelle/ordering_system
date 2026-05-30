@@ -16,12 +16,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 // Maya's current webhook events (use these, NOT the deprecated CHECKOUT_* events)
 // Deprecated: CHECKOUT_SUCCESS, CHECKOUT_FAILURE, CHECKOUT_DROPOUT, CHECKOUT_CANCELLED
-const PAYMENT_STATUS_MAP: Record<string, string> = {
-  PAYMENT_SUCCESS: "pending",
-  PAYMENT_FAILED: "failed",
-  PAYMENT_EXPIRED: "expired",
-  PAYMENT_CANCELLED: "cancelled",
-  AUTHORIZED: "authorized", // Card payments only (hold/capture flow)
+const PAYMENT_STATUS_MAP: Record<string, OrderStatus> = {
+  PAYMENT_SUCCESS: ORDER_STATUSES.PENDING,
+  PAYMENT_FAILED: ORDER_STATUSES.FAILED,
+  PAYMENT_EXPIRED: ORDER_STATUSES.EXPIRED,
+  PAYMENT_CANCELLED: ORDER_STATUSES.CANCELLED,
+  AUTHORIZED: ORDER_STATUSES.PENDING_PAYMENT, // Card payments only (hold/capture flow)
 };
 
 const PROMO_CARD_STATUS_MAP: Record<string, string> = {
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
           ...(paymentStatus === "PAYMENT_EXPIRED" && {
             "timeline.expiredAt": new Date(),
           }),
-          ...(orderStatus === "PAYMENT_CANCELLED" && {
+          ...(paymentStatus === "PAYMENT_CANCELLED" && {
             "timeline.cancelledAt": new Date(),
           }),
           "paymentInfo.method": fundSource
