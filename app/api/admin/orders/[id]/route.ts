@@ -27,6 +27,10 @@ import { OrderType } from "@/types/OrderTypes";
 import { PAYMENT_STATUSES, PaymentStatus } from "@/types/paymentConstants";
 import { Inventory } from "@/models/Inventory";
 import mongoose, { ClientSession } from "mongoose";
+import {
+  awardPromoCardVoucherForOrder,
+  refundCustomerVoucher,
+} from "@/services/promoCardBenefits";
 
 // ============================================
 // GET /api/orders/[id]
@@ -237,6 +241,15 @@ export async function PATCH(
 
       if (newStatus === ORDER_STATUSES.COMPLETED) {
         await completeInventory(order._id, order.branchId, session);
+        await awardPromoCardVoucherForOrder(order, session);
+      }
+
+      if (newStatus === ORDER_STATUSES.CANCELLED) {
+        await refundCustomerVoucher(
+          order.customerId,
+          order.total?.voucherDiscountAmount ?? 0,
+          session,
+        );
       }
     });
 
