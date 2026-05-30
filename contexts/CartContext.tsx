@@ -33,6 +33,7 @@ interface CartContextType {
   totalPrice: number;
   applyPromoCardDiscount: boolean;
   setApplyPromoCardDiscount: (apply: boolean) => void;
+  setPromoCardDiscountRate: (discountRate: number) => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   isSyncing: boolean;
@@ -71,6 +72,7 @@ export const CartProvider: React.FC<{
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [applyPromoCardDiscount, setApplyPromoCardDiscount] = useState(false);
+  const [promoCardDiscountRate, setPromoCardDiscountRate] = useState(0.3);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -224,10 +226,10 @@ export const CartProvider: React.FC<{
     0,
   );
   const promoCardDiscount = applyPromoCardDiscount
-    ? calculatePromoCardDiscount(subtotalPrice)
+    ? calculatePromoCardDiscount(subtotalPrice, promoCardDiscountRate)
     : 0;
   const totalPrice = applyPromoCardDiscount
-    ? calculatePromoCardTotal(subtotalPrice)
+    ? calculatePromoCardTotal(subtotalPrice, promoCardDiscountRate)
     : subtotalPrice;
   const vatableSales = totalPrice / 1.12;
   const vatAmount = totalPrice - vatableSales;
@@ -251,6 +253,7 @@ export const CartProvider: React.FC<{
         totalPrice,
         applyPromoCardDiscount,
         setApplyPromoCardDiscount,
+        setPromoCardDiscountRate,
         isCartOpen,
         setIsCartOpen,
         isSyncing,
