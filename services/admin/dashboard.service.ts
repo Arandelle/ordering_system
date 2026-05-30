@@ -1,6 +1,7 @@
 import { Order } from "@/models/Orders";
 import { connectDB } from "../../lib/mongodb";
 import { SalesData, TopProduct } from "@/types/adminType";
+import { ORDER_STATUSES } from "@/types/orderConstants";
 
 export type DashboardRange = "week" | "month" | "year";
 
@@ -31,19 +32,19 @@ export async function getDashboardStats() {
   const revenueResult = await Order.aggregate([
     {
       $match: {
-        status: {
-          $nin: ["pending", "cancelled"],
-        },
+        status: ORDER_STATUSES.COMPLETED,
       },
     },
     { $group: { _id: null, totalRevenue: { $sum: "$total.totalAmount" } } },
   ]);
   const totalRevenue = revenueResult[0]?.totalRevenue || 0;
 
-  const pendingOrders = await Order.countDocuments({ status: "pending" });
+  const pendingOrders = await Order.countDocuments({
+    status: ORDER_STATUSES.PENDING,
+  });
 
   const bestSellerResult = await Order.aggregate([
-    { $match: { status: { $nin: ["pending", "cancelled"] } } },
+    { $match: { status: ORDER_STATUSES.COMPLETED } },
     { $unwind: "$items" },
     { $group: { _id: "$items.name", totalSold: { $sum: "$items.quantity" } } },
     { $sort: { totalSold: -1 } },
