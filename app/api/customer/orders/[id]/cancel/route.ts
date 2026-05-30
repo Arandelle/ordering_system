@@ -18,8 +18,7 @@ export async function PATCH(
 ) {
   await connectDB();
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  let session: mongoose.ClientSession | null = null;
 
   try {
     const { id } = await context.params;
@@ -34,22 +33,18 @@ export async function PATCH(
 
     const customer = await requireBetterAuth(request);
 
-    const order = await Order.findById(id).session(session);
+    const order = await Order.findById(id);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     // Ownership check — guest orders have no customerId
-    if (order.customerId) {
-      // Must be logged in
-      if (!customer) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-      // Must be their own order
-      if (order.customerId.toString() !== customer._id.toString()) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+    if (
+      order.customerId &&
+      (!customer || order.customerId.toString() !== customer._id.toString())
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // ============================================
@@ -68,11 +63,14 @@ export async function PATCH(
       );
     }
 
+    session = await mongoose.startSession();
+    session.startTransaction();
+
     // Auto-update timeline when status changes
     const timelineField = getTimelineField(ORDER_STATUSES.CANCELLED);
 
-    await Order.updateOne(
-      { _id: id },
+    const updateResult = await Order.updateOne(
+      { _id: id, status: currentStatus },
       {
         $set: {
           status: ORDER_STATUSES.CANCELLED,
@@ -81,6 +79,17 @@ export async function PATCH(
       },
       { session },
     );
+
+    if (updateResult.matchedCount === 0) {
+      await session.abortTransaction();
+      session.endSession();
+      session = null;
+
+      return NextResponse.json(
+        { error: "Order status changed. Please refresh and try again." },
+        { status: 409 },
+      );
+    }
 
     // Release inventory reservations - $pull is idempotent, safe to retry
     for (const item of order.items) {
@@ -99,6 +108,7 @@ export async function PATCH(
 
     await session.commitTransaction();
     session.endSession();
+    session = null;
 
     return NextResponse.json({
       message: "Order cancelled successfully!",
@@ -106,8 +116,10 @@ export async function PATCH(
       status: ORDER_STATUSES.CANCELLED,
     });
   } catch (error: any) {
-    await session.abortTransaction();
-    session.endSession();
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
 
     if (error.name === "CastError") {
       return NextResponse.json(

@@ -1,5 +1,7 @@
 import { connectDB } from "@/lib/mongodb";
+import { Inventory } from "@/models/Inventory";
 import { Order } from "@/models/Orders";
+import { refundCustomerVoucher } from "@/services/promoCardBenefits";
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import {
@@ -31,10 +33,22 @@ export async function GET(
       return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
     }
 
+    const customer = await requireBetterAuth(request);
+    if (!customer) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const order = await Order.findById(id).lean();
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    if (
+      !order.customerId ||
+      order.customerId.toString() !== customer._id.toString()
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json({
@@ -69,6 +83,9 @@ export async function PATCH(
     }
 
     const customer = await requireBetterAuth(request);
+    if (!customer) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // Parse and validate request body
     const body = await request.json();
@@ -112,15 +129,11 @@ export async function PATCH(
       );
     }
 
-    if (order.customerId) {
-      // Must be logged in
-      if (!customer) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-      // Must be their own order
-      if (order.customerId.toString() !== customer._id.toString()) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+    if (
+      !order.customerId ||
+      order.customerId.toString() !== customer._id.toString()
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // ============================================
@@ -163,6 +176,19 @@ export async function PATCH(
 
     // Save order
     await Order.updateOne({ _id: id }, { $set: updateData });
+
+    for (const item of order.items) {
+      await Inventory.findOneAndUpdate(
+        { productId: item.productId, branchId: order.branchId },
+        { $pull: { reservations: { orderId: order._id } } },
+      );
+    }
+
+    await refundCustomerVoucher(
+      order.customerId,
+      order.total?.voucherDiscountAmount ?? 0,
+    );
+
     const updatedOrder = await Order.findById(id);
 
     // ============================================
