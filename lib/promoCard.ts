@@ -1,3 +1,6 @@
+import { DEFAULT_VOUCHER_RULE } from "@/types/voucher.types";
+import type { VoucherRule } from "@/types/voucher.types";
+
 export const PROMO_CARD = {
   name: "Harrison Promo Card",
   discountRate: 0.3,
@@ -13,7 +16,6 @@ export type PromoCardConfig = {
   discountRules: PromoCardDiscountRule[];
   voucherRule: PromoCardVoucherRule;
   validityRule: PromoCardValidityRule;
-  usageRule: PromoCardUsageRule;
 };
 
 export type PromoCardDay =
@@ -30,11 +32,7 @@ export type PromoCardDiscountRule = {
   discountRate: number;
 };
 
-export type PromoCardVoucherRule = {
-  enabled: boolean;
-  voucherAmount: number;
-  minimumPurchase: number;
-};
+export type PromoCardVoucherRule = VoucherRule;
 
 export type PromoCardValidityUnit = "day" | "month" | "year";
 
@@ -42,11 +40,6 @@ export type PromoCardValidityRule = {
   duration: number;
   unit: PromoCardValidityUnit;
   expiresAt: Date | null;
-};
-
-export type PromoCardUsageRule = {
-  isOneTimeUse: boolean;
-  isConsumable: boolean;
 };
 
 export const PROMO_CARD_DAYS: PromoCardDay[] = [
@@ -69,21 +62,13 @@ export const DEFAULT_PROMO_CARD_DISCOUNT_RULES: PromoCardDiscountRule[] = [
   { days: PROMO_CARD_DAYS, discountRate: PROMO_CARD.discountRate },
 ];
 
-export const DEFAULT_PROMO_CARD_VOUCHER_RULE: PromoCardVoucherRule = {
-  enabled: false,
-  voucherAmount: 1000,
-  minimumPurchase: 3000,
-};
+export const DEFAULT_PROMO_CARD_VOUCHER_RULE: PromoCardVoucherRule =
+  DEFAULT_VOUCHER_RULE;
 
 export const DEFAULT_PROMO_CARD_VALIDITY_RULE: PromoCardValidityRule = {
   duration: 1,
   unit: "year",
   expiresAt: null,
-};
-
-export const DEFAULT_PROMO_CARD_USAGE_RULE: PromoCardUsageRule = {
-  isOneTimeUse: false,
-  isConsumable: true,
 };
 
 export function calculatePromoCardDiscount(
