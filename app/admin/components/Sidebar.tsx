@@ -41,7 +41,7 @@ const navItems: NavItem[] = [
     permission: "orders.read",
   },
   {
-    name: "Promo Cards",
+    name: "Marketing",
     path: "/promo-cards",
     icon: "BadgePercent",
     permission: "promo-cards.read",
