@@ -12,11 +12,14 @@ import {
 import { apiClient } from "@/lib/apiClient";
 import {
   DEFAULT_PROMO_CARD_DISCOUNT_RULES,
+  DEFAULT_PROMO_CARD_VALIDITY_RULE,
   DEFAULT_PROMO_CARD_VOUCHER_RULE,
   PROMO_CARD,
   PROMO_CARD_DAYS,
   PromoCardDay,
+  PromoCardValidityUnit,
 } from "@/lib/promoCard";
+import { DEFAULT_VOUCHER_USAGE_RULE } from "@/types/voucher.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgePercent, CreditCard, Hourglass, Users } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
@@ -68,6 +71,15 @@ type PromoCardSettings = {
     enabled: boolean;
     voucherAmount: number;
     minimumPurchase: number;
+    usageRule: {
+      isOneTimeUse: boolean;
+      isConsumable: boolean;
+    };
+  };
+  validityRule: {
+    duration: number;
+    unit: PromoCardValidityUnit;
+    expiresAt: string | null;
   };
 };
 
@@ -83,6 +95,12 @@ type PromoCardSettingsForm = {
     voucherAmount: string;
     minimumPurchase: string;
   };
+  validityRule: {
+    duration: string;
+    unit: PromoCardValidityUnit;
+    expiresAt: string;
+  };
+  usageMode: "consumable" | "oneTime";
 };
 
 const statusStyles: Record<PromoCardPurchaseStatus, string> = {
@@ -100,6 +118,15 @@ function formatDate(value?: string) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatDateInputValue(value?: string | null | Date) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toISOString().slice(0, 10);
 }
 
 type PromoCardsPageProps = {
@@ -130,6 +157,14 @@ export default function PromoCardsContent({
       voucherAmount: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.voucherAmount),
       minimumPurchase: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.minimumPurchase),
     },
+    validityRule: {
+      duration: String(DEFAULT_PROMO_CARD_VALIDITY_RULE.duration),
+      unit: DEFAULT_PROMO_CARD_VALIDITY_RULE.unit,
+      expiresAt: "",
+    },
+    usageMode: DEFAULT_VOUCHER_USAGE_RULE.isOneTimeUse
+      ? "oneTime"
+      : "consumable",
   });
 
   useEffect(() => {
@@ -147,6 +182,14 @@ export default function PromoCardsContent({
         voucherAmount: String(response.config.voucherRule.voucherAmount),
         minimumPurchase: String(response.config.voucherRule.minimumPurchase),
       },
+      validityRule: {
+        duration: String(response.config.validityRule.duration),
+        unit: response.config.validityRule.unit,
+        expiresAt: formatDateInputValue(response.config.validityRule.expiresAt),
+      },
+      usageMode: response.config.voucherRule.usageRule.isOneTimeUse
+        ? "oneTime"
+        : "consumable",
     });
   }, [response?.config]);
 
@@ -162,6 +205,15 @@ export default function PromoCardsContent({
         enabled: boolean;
         voucherAmount: number;
         minimumPurchase: number;
+        usageRule: {
+          isOneTimeUse: boolean;
+          isConsumable: boolean;
+        };
+      };
+      validityRule: {
+        duration: number;
+        unit: PromoCardValidityUnit;
+        expiresAt: string | null;
       };
     }) =>
       apiClient.patch<{ config: PromoCardSettings }>(
@@ -196,6 +248,15 @@ export default function PromoCardsContent({
         enabled: settingsForm.voucherRule.enabled,
         voucherAmount: Number(settingsForm.voucherRule.voucherAmount),
         minimumPurchase: Number(settingsForm.voucherRule.minimumPurchase),
+        usageRule: {
+          isOneTimeUse: settingsForm.usageMode === "oneTime",
+          isConsumable: settingsForm.usageMode === "consumable",
+        },
+      },
+      validityRule: {
+        duration: Number(settingsForm.validityRule.duration),
+        unit: settingsForm.validityRule.unit,
+        expiresAt: settingsForm.validityRule.expiresAt || null,
       },
     });
   };
@@ -214,6 +275,7 @@ export default function PromoCardsContent({
     ...PROMO_CARD,
     discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES,
     voucherRule: DEFAULT_PROMO_CARD_VOUCHER_RULE,
+    validityRule: DEFAULT_PROMO_CARD_VALIDITY_RULE,
   };
   const hasSettingsChanges =
     JSON.stringify(settingsForm) !==
@@ -229,6 +291,14 @@ export default function PromoCardsContent({
         voucherAmount: String(activeConfig.voucherRule.voucherAmount),
         minimumPurchase: String(activeConfig.voucherRule.minimumPurchase),
       },
+      validityRule: {
+        duration: String(activeConfig.validityRule.duration),
+        unit: activeConfig.validityRule.unit,
+        expiresAt: formatDateInputValue(activeConfig.validityRule.expiresAt),
+      },
+      usageMode: activeConfig.voucherRule.usageRule.isOneTimeUse
+        ? "oneTime"
+        : "consumable",
     });
 
   const toggleRuleDay = (ruleIndex: number, day: PromoCardDay) => {
@@ -258,7 +328,7 @@ export default function PromoCardsContent({
         </h1>
         <p className="text-stone-500">
           {isSettingsView
-            ? "Manage promo-card purchase amount, discount days, and voucher rules."
+            ? "Manage promo-card purchase amount, validity, usage behavior, discount days, and voucher rules."
             : "View authenticated customer promo-card purchases and payment status."}
         </p>
       </div>
@@ -315,6 +385,90 @@ export default function PromoCardsContent({
               required
             />
           </label>
+        </div>
+
+        <div className="mt-6">
+          <div className="rounded-lg border border-stone-200 p-4">
+            <div>
+              <h3 className="text-sm font-bold text-stone-800">
+                Validity
+              </h3>
+              <p className="text-xs text-stone-500">
+                Set how long new promo cards stay valid.
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_160px]">
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-stone-700">
+                  Valid for
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={settingsForm.validityRule.duration}
+                  onChange={(event) =>
+                    setSettingsForm((current) => ({
+                      ...current,
+                      validityRule: {
+                        ...current.validityRule,
+                        duration: event.target.value,
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
+                  required
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-semibold text-stone-700">
+                  Unit
+                </span>
+                <select
+                  value={settingsForm.validityRule.unit}
+                  onChange={(event) =>
+                    setSettingsForm((current) => ({
+                      ...current,
+                      validityRule: {
+                        ...current.validityRule,
+                        unit: event.target.value as PromoCardValidityUnit,
+                      },
+                    }))
+                  }
+                  className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
+                >
+                  <option value="day">Day(s)</option>
+                  <option value="month">Month(s)</option>
+                  <option value="year">Year(s)</option>
+                </select>
+              </label>
+            </div>
+
+            <label className="mt-4 block space-y-2">
+              <span className="text-sm font-semibold text-stone-700">
+                Fixed expiration date
+              </span>
+              <input
+                type="date"
+                value={settingsForm.validityRule.expiresAt}
+                onChange={(event) =>
+                  setSettingsForm((current) => ({
+                    ...current,
+                    validityRule: {
+                      ...current.validityRule,
+                      expiresAt: event.target.value,
+                    },
+                  }))
+                }
+                className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
+              />
+              <span className="block text-xs text-stone-400">
+                Leave blank to calculate expiration from the purchase date.
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="mt-6 space-y-4">
@@ -492,6 +646,65 @@ export default function PromoCardsContent({
                 className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
               />
             </label>
+          </div>
+
+          <div className="mt-5">
+            <div>
+              <h3 className="text-sm font-bold text-stone-800">
+                Voucher Usage
+              </h3>
+              <p className="text-xs text-stone-500">
+                Choose how earned vouchers can be redeemed by customers.
+              </p>
+            </div>
+
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-stone-200 p-3">
+                <input
+                  type="radio"
+                  name="voucher-usage"
+                  checked={settingsForm.usageMode === "consumable"}
+                  onChange={() =>
+                    setSettingsForm((current) => ({
+                      ...current,
+                      usageMode: "consumable",
+                    }))
+                  }
+                  className="mt-1 h-4 w-4 accent-brand-color-500"
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-stone-800">
+                    Consumable
+                  </span>
+                  <span className="block text-xs text-stone-500">
+                    Vouchers can be spent across multiple eligible orders.
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-stone-200 p-3">
+                <input
+                  type="radio"
+                  name="voucher-usage"
+                  checked={settingsForm.usageMode === "oneTime"}
+                  onChange={() =>
+                    setSettingsForm((current) => ({
+                      ...current,
+                      usageMode: "oneTime",
+                    }))
+                  }
+                  className="mt-1 h-4 w-4 accent-brand-color-500"
+                />
+                <span>
+                  <span className="block text-sm font-semibold text-stone-800">
+                    One-time use
+                  </span>
+                  <span className="block text-xs text-stone-500">
+                    Vouchers should be consumed after one successful redemption.
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
