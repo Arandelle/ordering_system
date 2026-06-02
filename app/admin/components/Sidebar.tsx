@@ -45,10 +45,10 @@ const navItems: NavItem[] = [
     icon: "TicketPercent",
     permission: "promo-cards.read",
     children: [
-      {
-        name: "Product Discount",
-        path: "/product-discount",
-      },
+      // {
+      //   name: "Product Discount",
+      //   path: "/product-discount",
+      // },
       {
         name: "Purchased Cards",
         path: "/promo-cards",
@@ -180,13 +180,17 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
           <ul className="space-y-2">
             {visibleNavItems.map((item) => {
               const hasChildren = Boolean(item.children?.length); // Check if current path matches item or any of its children
+
               const hasActiveChild = item.children?.some(
                 (child) => child.path === pathname,
               ); // Determine if item is active based on current path
               const itemKey = getNavItemKey(item);
 
               const isActive =
-                pathname === item.path || Boolean(hasActiveChild);
+                item.path !== null &&
+                (pathname === item.path ||
+                  pathname.startsWith(`${item.path}/`)) || Boolean(hasActiveChild);
+
               const isExpanded = expandedItemKey === itemKey;
 
               return (
