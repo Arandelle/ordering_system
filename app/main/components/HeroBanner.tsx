@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 
 const images = [
   "/images/slider3.jpg",
-  "/images/Slider1.png",
   "/images/banner_slider.png",
 ];
 

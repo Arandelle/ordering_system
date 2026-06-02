@@ -1,19 +1,11 @@
 "use client";
 
+import { useProducts } from "@/hooks/api/useProducts";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import Link from "next/link";
 
 const MenuSection = () => {
-  const MENU_ITEMS = [
-    { label: "HARRISON SISIG", price: "₱190" },
-    { label: "CHICKEN LEG", price: "₱190" },
-    { label: "CHICKEN PECHO", price: "₱190" },
-    { label: "PORK BBQ COMBO", price: "₱190" },
-    { label: "CHICKEN WINGS COMBO", price: "₱190" },
-    { label: "UBE TURON", price: "₱190" },
-    { label: "LIEMPO", price: "₱190" },
-  ];
-
+  const {data: menuProducts} = useProducts({limit: 10, sort:"price:desc"});
   const menuUrl = useSubdomainPath("/", "food");
 
   return (
@@ -32,9 +24,9 @@ const MenuSection = () => {
 
             {/* Description */}
             <div className="w-full space-y-6 text-white p-4 text-xl">
-              {MENU_ITEMS.map((item) => (
-                <div key={item.label} className="flex items-center gap-4">
-                  <span className="whitespace-nowrap">{item.label}</span>
+              {menuProducts?.data.map((item) => (
+                <div key={item.name} className="flex items-center gap-4">
+                  <span className="whitespace-nowrap">{item.name}</span>
                   <div className="flex-1 border-b border-dotted mx-2"></div>
                   <span className="whitespace-nowrap">{item.price}</span>
                 </div>
