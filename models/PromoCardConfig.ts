@@ -6,7 +6,11 @@ import {
   PROMO_CARD_DAYS,
   PROMO_CARD_VALIDITY_UNITS,
 } from "@/lib/promoCard";
-import { DEFAULT_VOUCHER_USAGE_RULE } from "@/types/voucher.types";
+import {
+  DEFAULT_VOUCHER_USAGE_RULE,
+  DEFAULT_VOUCHER_VALIDITY_RULE,
+  VOUCHER_VALIDITY_UNITS,
+} from "@/types/voucher.types";
 import { model, models, Schema } from "mongoose";
 
 const DiscountRuleSchema = new Schema(
@@ -48,6 +52,20 @@ const VoucherRuleSchema = new Schema(
       isConsumable: {
         type: Boolean,
         default: DEFAULT_VOUCHER_USAGE_RULE.isConsumable,
+      },
+    },
+    validityRule: {
+      duration: {
+        type: Number,
+        required: true,
+        default: DEFAULT_VOUCHER_VALIDITY_RULE.duration,
+        min: 1,
+      },
+      unit: {
+        type: String,
+        enum: VOUCHER_VALIDITY_UNITS,
+        required: true,
+        default: DEFAULT_VOUCHER_VALIDITY_RULE.unit,
       },
     },
   },

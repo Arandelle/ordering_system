@@ -11,7 +11,12 @@ import {
   PromoCardValidityUnit,
   PromoCardVoucherRule,
 } from "@/lib/promoCard";
-import { DEFAULT_VOUCHER_USAGE_RULE } from "@/types/voucher.types";
+import {
+  DEFAULT_VOUCHER_USAGE_RULE,
+  DEFAULT_VOUCHER_VALIDITY_RULE,
+  VOUCHER_VALIDITY_UNITS,
+  VoucherValidityUnit,
+} from "@/types/voucher.types";
 import { getPromoCardConfig } from "@/lib/promoCardConfig";
 import { PromoCardConfigModel } from "@/models/PromoCardConfig";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
@@ -112,6 +117,7 @@ export async function PATCH(request: NextRequest) {
     const voucherRule = body.voucherRule;
     const validityRule = body.validityRule;
     const usageRule = voucherRule?.usageRule;
+    const voucherValidityRule = voucherRule?.validityRule;
 
     if (!name) {
       return NextResponse.json(
@@ -200,6 +206,14 @@ export async function PATCH(request: NextRequest) {
         isOneTimeUse,
         isConsumable,
       },
+      validityRule: {
+        duration: Number(
+          voucherValidityRule?.duration ??
+            DEFAULT_VOUCHER_VALIDITY_RULE.duration,
+        ),
+        unit:
+          voucherValidityRule?.unit ?? DEFAULT_VOUCHER_VALIDITY_RULE.unit,
+      },
     };
 
     if (
@@ -209,6 +223,20 @@ export async function PATCH(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Voucher amount and minimum purchase must be greater than 0." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      normalizedVoucherRule.enabled &&
+      (!Number.isInteger(normalizedVoucherRule.validityRule.duration) ||
+        normalizedVoucherRule.validityRule.duration < 1 ||
+        !VOUCHER_VALIDITY_UNITS.includes(
+          normalizedVoucherRule.validityRule.unit as VoucherValidityUnit,
+        ))
+    ) {
+      return NextResponse.json(
+        { error: "Voucher validity must be a positive duration." },
         { status: 400 },
       );
     }

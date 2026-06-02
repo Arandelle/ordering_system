@@ -27,6 +27,10 @@ export async function getPromoCardConfig(): Promise<PromoCardConfig> {
         ...DEFAULT_PROMO_CARD_VOUCHER_RULE.usageRule,
         ...config?.voucherRule?.usageRule,
       },
+      validityRule: {
+        ...DEFAULT_PROMO_CARD_VOUCHER_RULE.validityRule,
+        ...config?.voucherRule?.validityRule,
+      },
     },
     validityRule: {
       ...DEFAULT_PROMO_CARD_VALIDITY_RULE,

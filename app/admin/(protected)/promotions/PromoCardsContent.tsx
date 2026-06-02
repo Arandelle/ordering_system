@@ -19,7 +19,12 @@ import {
   PromoCardDay,
   PromoCardValidityUnit,
 } from "@/lib/promoCard";
-import { DEFAULT_VOUCHER_USAGE_RULE } from "@/types/voucher.types";
+import {
+  DEFAULT_VOUCHER_VALIDITY_RULE,
+  DEFAULT_VOUCHER_USAGE_RULE,
+  VOUCHER_VALIDITY_UNITS,
+  VoucherValidityUnit,
+} from "@/types/voucher.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgePercent, CreditCard, Hourglass, Users } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
@@ -75,6 +80,10 @@ type PromoCardSettings = {
       isOneTimeUse: boolean;
       isConsumable: boolean;
     };
+    validityRule: {
+      duration: number;
+      unit: VoucherValidityUnit;
+    };
   };
   validityRule: {
     duration: number;
@@ -94,6 +103,10 @@ type PromoCardSettingsForm = {
     enabled: boolean;
     voucherAmount: string;
     minimumPurchase: string;
+    validityRule: {
+      duration: string;
+      unit: VoucherValidityUnit;
+    };
   };
   validityRule: {
     duration: string;
@@ -156,6 +169,10 @@ export default function PromoCardsContent({
       enabled: DEFAULT_PROMO_CARD_VOUCHER_RULE.enabled,
       voucherAmount: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.voucherAmount),
       minimumPurchase: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.minimumPurchase),
+      validityRule: {
+        duration: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.validityRule.duration),
+        unit: DEFAULT_PROMO_CARD_VOUCHER_RULE.validityRule.unit,
+      },
     },
     validityRule: {
       duration: String(DEFAULT_PROMO_CARD_VALIDITY_RULE.duration),
@@ -181,6 +198,15 @@ export default function PromoCardsContent({
         enabled: response.config.voucherRule.enabled,
         voucherAmount: String(response.config.voucherRule.voucherAmount),
         minimumPurchase: String(response.config.voucherRule.minimumPurchase),
+        validityRule: {
+          duration: String(
+            response.config.voucherRule.validityRule?.duration ??
+              DEFAULT_VOUCHER_VALIDITY_RULE.duration,
+          ),
+          unit:
+            response.config.voucherRule.validityRule?.unit ??
+            DEFAULT_VOUCHER_VALIDITY_RULE.unit,
+        },
       },
       validityRule: {
         duration: String(response.config.validityRule.duration),
@@ -208,6 +234,10 @@ export default function PromoCardsContent({
         usageRule: {
           isOneTimeUse: boolean;
           isConsumable: boolean;
+        };
+        validityRule: {
+          duration: number;
+          unit: VoucherValidityUnit;
         };
       };
       validityRule: {
@@ -252,6 +282,10 @@ export default function PromoCardsContent({
           isOneTimeUse: settingsForm.usageMode === "oneTime",
           isConsumable: settingsForm.usageMode === "consumable",
         },
+        validityRule: {
+          duration: Number(settingsForm.voucherRule.validityRule.duration),
+          unit: settingsForm.voucherRule.validityRule.unit,
+        },
       },
       validityRule: {
         duration: Number(settingsForm.validityRule.duration),
@@ -290,6 +324,15 @@ export default function PromoCardsContent({
         enabled: activeConfig.voucherRule.enabled,
         voucherAmount: String(activeConfig.voucherRule.voucherAmount),
         minimumPurchase: String(activeConfig.voucherRule.minimumPurchase),
+        validityRule: {
+          duration: String(
+            activeConfig.voucherRule.validityRule?.duration ??
+              DEFAULT_VOUCHER_VALIDITY_RULE.duration,
+          ),
+          unit:
+            activeConfig.voucherRule.validityRule?.unit ??
+            DEFAULT_VOUCHER_VALIDITY_RULE.unit,
+        },
       },
       validityRule: {
         duration: String(activeConfig.validityRule.duration),
@@ -645,6 +688,61 @@ export default function PromoCardsContent({
                 }
                 className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
               />
+            </label>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-[1fr_160px]">
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-stone-700">
+                Voucher valid for
+              </span>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={settingsForm.voucherRule.validityRule.duration}
+                onChange={(event) =>
+                  setSettingsForm((current) => ({
+                    ...current,
+                    voucherRule: {
+                      ...current.voucherRule,
+                      validityRule: {
+                        ...current.voucherRule.validityRule,
+                        duration: event.target.value,
+                      },
+                    },
+                  }))
+                }
+                className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm font-semibold text-stone-700">
+                Unit
+              </span>
+              <select
+                value={settingsForm.voucherRule.validityRule.unit}
+                onChange={(event) =>
+                  setSettingsForm((current) => ({
+                    ...current,
+                    voucherRule: {
+                      ...current.voucherRule,
+                      validityRule: {
+                        ...current.voucherRule.validityRule,
+                        unit: event.target.value as VoucherValidityUnit,
+                      },
+                    },
+                  }))
+                }
+                className="w-full rounded-lg border border-stone-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
+              >
+                {VOUCHER_VALIDITY_UNITS.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit.charAt(0).toUpperCase() + unit.slice(1)}(s)
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 

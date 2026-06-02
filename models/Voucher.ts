@@ -1,5 +1,7 @@
 import {
+  DEFAULT_VOUCHER_VALIDITY_RULE,
   DEFAULT_VOUCHER_USAGE_RULE,
+  VOUCHER_VALIDITY_UNITS,
   VOUCHER_SOURCE_TYPES,
   VOUCHER_STATUSES,
 } from "@/types/voucher.types";
@@ -14,6 +16,24 @@ const VoucherUsageRuleSchema = new Schema(
     isConsumable: {
       type: Boolean,
       default: DEFAULT_VOUCHER_USAGE_RULE.isConsumable,
+    },
+  },
+  { _id: false },
+);
+
+const VoucherValidityRuleSchema = new Schema(
+  {
+    duration: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: DEFAULT_VOUCHER_VALIDITY_RULE.duration,
+    },
+    unit: {
+      type: String,
+      enum: VOUCHER_VALIDITY_UNITS,
+      required: true,
+      default: DEFAULT_VOUCHER_VALIDITY_RULE.unit,
     },
   },
   { _id: false },
@@ -64,6 +84,10 @@ const VoucherSchema = new Schema(
       type: VoucherUsageRuleSchema,
       default: DEFAULT_VOUCHER_USAGE_RULE,
     },
+    validityRule: {
+      type: VoucherValidityRuleSchema,
+      default: DEFAULT_VOUCHER_VALIDITY_RULE,
+    },
     status: {
       type: String,
       enum: VOUCHER_STATUSES,
@@ -74,14 +98,28 @@ const VoucherSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    validFrom: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
     usedAt: Date,
-    expiresAt: Date,
+    expiresAt: {
+      type: Date,
+      index: true,
+    },
   },
   { timestamps: true },
 );
 
 VoucherSchema.index({ customerId: 1, status: 1, createdAt: -1 });
 VoucherSchema.index({ sourceType: 1, sourceId: 1 });
+VoucherSchema.index(
+  { customerId: 1, sourceType: 1, sourceId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { sourceId: { $exists: true } },
+  },
+);
 
 export const Voucher = models.Voucher || model("Voucher", VoucherSchema);
-
