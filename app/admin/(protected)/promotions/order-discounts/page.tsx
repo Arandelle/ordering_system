@@ -1,6 +1,14 @@
 "use client";
 
+import SectionHeader from "@/app/admin/components/SectionHeader";
 import LoadingPage from "@/components/ui/LoadingPage";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatCurrency } from "@/helper/formatCurrency";
 import { formatDate } from "@/helper/formatDate";
 import { formatDateInputValue } from "@/helper/formatDateInputValue";
@@ -183,10 +191,7 @@ function OrderDiscountPromotionEditor({
   const [form, setForm] = useState<OrderDiscountPromotionForm>(() =>
     buildInitialForm(promotion),
   );
-  const initialForm = useMemo(
-    () => buildInitialForm(promotion),
-    [promotion],
-  );
+  const initialForm = useMemo(() => buildInitialForm(promotion), [promotion]);
   const previewLines = getPreviewLines(form);
   const hasChanges =
     mode === "create" || JSON.stringify(form) !== JSON.stringify(initialForm);
@@ -244,7 +249,9 @@ function OrderDiscountPromotionEditor({
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-stone-800">
-              {mode === "create" ? "Create Order Discount" : "Edit Order Discount"}
+              {mode === "create"
+                ? "Create Order Discount"
+                : "Edit Order Discount"}
             </h2>
             <p className="mt-1 text-sm text-stone-500">
               Configure discount value, eligibility rules, schedule, and
@@ -379,9 +386,7 @@ function OrderDiscountPromotionEditor({
 
       <div className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm">
         <div className="mb-5">
-          <h2 className="text-xl font-bold text-stone-800">
-            Promotion Period
-          </h2>
+          <h2 className="text-xl font-bold text-stone-800">Promotion Period</h2>
           <p className="mt-1 text-sm text-stone-500">
             Set when this discount is visible and eligible.
           </p>
@@ -628,7 +633,10 @@ function getPromotionStatus(
   now = new Date(),
 ): PromotionStatus {
   if (!promo.enabled) return "disabled";
-  if (promo.maximumRedemptions && promo.redemptionCount >= promo.maximumRedemptions) {
+  if (
+    promo.maximumRedemptions &&
+    promo.redemptionCount >= promo.maximumRedemptions
+  ) {
     return "redeemed_out";
   }
   if (promo.endsAt && new Date(promo.endsAt) < now) return "ended";
@@ -638,11 +646,9 @@ function getPromotionStatus(
 
 function PromotionList({
   promotions,
-  onCreate,
   onEdit,
 }: {
   promotions: OrderDiscountPromotion[];
-  onCreate: () => void;
   onEdit: (promotion: OrderDiscountPromotion) => void;
 }) {
   const queryClient = useQueryClient();
@@ -658,7 +664,9 @@ function PromotionList({
       });
     },
     onError: (error: { message?: string }) => {
-      toast.error(error.message ?? "Failed to delete order discount promotion.");
+      toast.error(
+        error.message ?? "Failed to delete order discount promotion.",
+      );
     },
   });
 
@@ -673,24 +681,6 @@ function PromotionList({
 
   return (
     <div className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-stone-800">
-            Created Discounts
-          </h2>
-          <p className="mt-1 text-sm text-stone-500">
-            Manage whole-order discount promotions.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="rounded-lg bg-brand-color-500 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500]"
-        >
-          Create discount
-        </button>
-      </div>
-
       {promotions.length === 0 ? (
         <div className="rounded-lg border border-dashed border-stone-200 px-4 py-10 text-center">
           <p className="text-sm font-semibold text-stone-700">
@@ -702,19 +692,19 @@ function PromotionList({
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-225 text-left text-sm">
-            <thead>
-              <tr className="border-b border-stone-100 text-xs uppercase text-stone-500">
-                <th className="px-3 py-3 font-bold">Name</th>
-                <th className="px-3 py-3 font-bold">Discount</th>
-                <th className="px-3 py-3 font-bold">Minimum</th>
-                <th className="px-3 py-3 font-bold">Schedule</th>
-                <th className="px-3 py-3 font-bold">Redemptions</th>
-                <th className="px-3 py-3 font-bold">Status</th>
-                <th className="px-3 py-3 text-right font-bold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="w-full min-w-225 text-left text-sm">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-bold">Name</TableHead>
+                <TableHead>Discount</TableHead>
+                <TableHead>Minimum</TableHead>
+                <TableHead>Schedule</TableHead>
+                <TableHead>Redemptions</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {promotions.map((promotion) => {
                 const status = getPromotionStatus(promotion);
 
@@ -723,66 +713,66 @@ function PromotionList({
                     key={promotion._id}
                     className="border-b border-stone-100 last:border-0"
                   >
-                  <td className="px-3 py-4">
-                    <p className="font-bold text-stone-800">
-                      {promotion.name}
-                    </p>
-                    <p className="text-xs text-stone-500">
-                      {formatDate(promotion.startsAt)} - {" "}
-                      {formatDate(promotion.endsAt, "No end Date")}
-                    </p>
-                  </td>
-                  <td className="px-3 py-4 font-medium text-stone-700">
-                    {getDiscountLabel(promotion)}
-                  </td>
-                  <td className="px-3 py-4 text-stone-600">
-                    {formatCurrency(promotion.minimumOrderAmount)}
-                  </td>
-                  <td className="px-3 py-4 text-stone-600">
-                    <p>
-                      {promotion.dayMode === "opening_days"
-                        ? "Opening days"
-                        : promotion.days.join(", ")}
-                    </p>
-                    <p className="text-xs text-stone-500">
-                      {promotion.startTime} - {promotion.endTime}
-                    </p>
-                  </td>
-                  <td className="px-3 py-4 text-stone-600">
-                    {promotion.redemptionCount} /{" "}
-                    {promotion.maximumRedemptions ?? "No limit"}
-                  </td>
-                  <td className="px-3 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${promotionStatusStyles[status]}`}
-                    >
-                      {promotionStatusLabels[status]}
-                    </span>
-                  </td>
-                  <td className="px-3 py-4">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onEdit(promotion)}
-                        className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
+                    <td className="px-3 py-4">
+                      <p className="font-bold text-stone-800">
+                        {promotion.name}
+                      </p>
+                      <p className="text-xs text-stone-500">
+                        {formatDate(promotion.startsAt)} -{" "}
+                        {formatDate(promotion.endsAt, "No end Date")}
+                      </p>
+                    </td>
+                    <td className="px-3 py-4 font-medium text-stone-700">
+                      {getDiscountLabel(promotion)}
+                    </td>
+                    <td className="px-3 py-4 text-stone-600">
+                      {formatCurrency(promotion.minimumOrderAmount)}
+                    </td>
+                    <td className="px-3 py-4 text-stone-600">
+                      <p>
+                        {promotion.dayMode === "opening_days"
+                          ? "Opening days"
+                          : promotion.days.join(", ")}
+                      </p>
+                      <p className="text-xs text-stone-500">
+                        {promotion.startTime} - {promotion.endTime}
+                      </p>
+                    </td>
+                    <td className="px-3 py-4 text-stone-600">
+                      {promotion.redemptionCount} /{" "}
+                      {promotion.maximumRedemptions ?? "No limit"}
+                    </td>
+                    <td className="px-3 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${promotionStatusStyles[status]}`}
                       >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        disabled={deletePromotion.isPending}
-                        onClick={() => handleDelete(promotion)}
-                        className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+                        {promotionStatusLabels[status]}
+                      </span>
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onEdit(promotion)}
+                          className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={deletePromotion.isPending}
+                          onClick={() => handleDelete(promotion)}
+                          className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
@@ -806,16 +796,16 @@ export default function OrderDiscountPromotionsPage() {
 
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="mb-2 text-3xl font-bold text-stone-800">
-          Order Discounts
-        </h1>
-        <p className="text-stone-500">
-          Create and manage whole-order discounts with schedule, minimum order,
-          caps, and redemption limits.
-        </p>
-      </div>
-
+      <SectionHeader
+        title="Order Discounts"
+        subTitle="Create and manage whole-order discounts with schedule, minimum order, caps, and redemption limits"
+        onClick={() => {
+          setSelectedPromotion(null);
+          setEditorMode("create");
+        }}
+        btnTxt="+ Create Discount"
+        permission=""
+      />
       {error ? (
         <p className="text-sm font-medium text-red-600">
           Failed to load order discount promotions.
@@ -823,10 +813,6 @@ export default function OrderDiscountPromotionsPage() {
       ) : (
         <PromotionList
           promotions={promotions}
-          onCreate={() => {
-            setSelectedPromotion(null);
-            setEditorMode("create");
-          }}
           onEdit={(promotion) => {
             setSelectedPromotion(promotion);
             setEditorMode("edit");
