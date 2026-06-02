@@ -206,10 +206,13 @@ const CategoryRow = ({
     </span>
     {/* Subcategory count badge */}
     <div className="flex-2 flex items-center gap-1.5">
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-color-50 text-brand-color-600 text-xs font-semibold rounded-full border border-brand-color-100">
+      <Link
+        href={`/categories/${category._id}/subcategories`}
+        className="inline-flex items-center gap-1 px-2 py-0.5 bg-brand-color-50 text-brand-color-600 text-xs font-semibold rounded-full border border-brand-color-100"
+      >
         <DynamicIcon name="Layers" size={11} />
         {category.subCategoryCount ?? 0}
-      </span>
+      </Link>
     </div>
     <div className="flex-2 flex justify-center items-center gap-1">
       {/* View drawer button */}
@@ -404,7 +407,7 @@ const Page = () => {
     onError: () => toast.error("Failed to update category"),
   });
 
-   const deleteMutation = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: categories_api.delete,
     onMutate: (id) => setDeletingId(id),
     onSettled: () => setDeletingId(null),
