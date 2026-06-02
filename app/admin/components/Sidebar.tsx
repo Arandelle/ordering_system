@@ -50,6 +50,10 @@ const navItems: NavItem[] = [
       //   path: "/product-discount",
       // },
       {
+        name: "Order Discounts",
+        path: "/promotions/order-discounts",
+      },
+      {
         name: "Purchased Cards",
         path: "/promotions/purchased-cards",
       },
