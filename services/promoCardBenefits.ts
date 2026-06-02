@@ -4,8 +4,13 @@ import {
   PromoCardDiscountRule,
   PromoCardVoucherRule,
 } from "@/lib/promoCard";
-import { CustomerVoucher } from "@/models/CustomerVoucher";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
+import { Voucher } from "@/models/Voucher";
+import {
+  DEFAULT_VOUCHER_VALIDITY_RULE,
+  DEFAULT_VOUCHER_USAGE_RULE,
+  VoucherValidityRule,
+} from "@/types/voucher.types";
 import mongoose, { ClientSession } from "mongoose";
 
 type PromoCardBenefit = {
@@ -22,6 +27,56 @@ type OrderForVoucherAward = {
     subtotalAmount?: number;
   };
 };
+
+function generateVoucherCode(prefix: string): string {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+  return `${prefix}-${timestamp}-${random}`;
+}
+
+function calculateVoucherExpiresAt(
+  validFrom: Date,
+  validityRule?: VoucherValidityRule,
+): Date {
+  const rule = validityRule ?? DEFAULT_VOUCHER_VALIDITY_RULE;
+  const expiresAt = new Date(validFrom);
+
+  if (rule.unit === "minute") {
+    expiresAt.setMinutes(expiresAt.getMinutes() + rule.duration);
+  } else if (rule.unit === "hour") {
+    expiresAt.setHours(expiresAt.getHours() + rule.duration);
+  } else if (rule.unit === "day") {
+    expiresAt.setDate(expiresAt.getDate() + rule.duration);
+  } else if (rule.unit === "month") {
+    expiresAt.setMonth(expiresAt.getMonth() + rule.duration);
+  } else {
+    expiresAt.setFullYear(expiresAt.getFullYear() + rule.duration);
+  }
+
+  return expiresAt;
+}
+
+function activeVoucherWindowFilter(now = new Date()) {
+  return {
+    $and: [
+      {
+        $or: [
+          { validFrom: { $exists: false } },
+          { validFrom: null },
+          { validFrom: { $lte: now } },
+        ],
+      },
+      {
+        $or: [
+          { expiresAt: { $exists: false } },
+          { expiresAt: null },
+          { expiresAt: { $gt: now } },
+        ],
+      },
+    ],
+  };
+}
 
 export async function getPaidPromoCardBenefit(
   customerId: string | mongoose.Types.ObjectId | null,
@@ -72,15 +127,32 @@ export async function awardPromoCardVoucherForOrder(
   const eligibleAmount = order.total?.totalAmount ?? 0;
   if (eligibleAmount < voucherRule.minimumPurchase) return;
 
-  await CustomerVoucher.updateOne(
-    { sourceOrderId: order._id },
+  const validFrom = new Date();
+  const expiresAt = calculateVoucherExpiresAt(
+    validFrom,
+    voucherRule.validityRule,
+  );
+
+  await Voucher.updateOne(
+    {
+      sourceType: "promo_card",
+      sourceId: order._id,
+      customerId: order.customerId,
+    },
     {
       $setOnInsert: {
         customerId: order.customerId,
-        sourceOrderId: order._id,
+        code: generateVoucherCode("PROMO"),
+        sourceType: "promo_card",
+        sourceId: order._id,
         originalAmount: voucherRule.voucherAmount,
-        balance: voucherRule.voucherAmount,
+        remainingAmount: voucherRule.voucherAmount,
         minimumPurchase: voucherRule.minimumPurchase,
+        usageRule: voucherRule.usageRule ?? DEFAULT_VOUCHER_USAGE_RULE,
+        validityRule: voucherRule.validityRule ?? DEFAULT_VOUCHER_VALIDITY_RULE,
+        issuedAt: validFrom,
+        validFrom,
+        expiresAt,
         status: "active",
       },
     },
@@ -93,9 +165,16 @@ export async function getCustomerVoucherBalance(
 ): Promise<number> {
   if (!customerId) return 0;
 
-  const result = await CustomerVoucher.aggregate<{ balance: number }>([
-    { $match: { customerId: new mongoose.Types.ObjectId(String(customerId)), status: "active" } },
-    { $group: { _id: null, balance: { $sum: "$balance" } } },
+  const result = await Voucher.aggregate<{ balance: number }>([
+    {
+      $match: {
+        customerId: new mongoose.Types.ObjectId(String(customerId)),
+        status: "active",
+        remainingAmount: { $gt: 0 },
+        ...activeVoucherWindowFilter(),
+      },
+    },
+    { $group: { _id: null, balance: { $sum: "$remainingAmount" } } },
   ]);
 
   return result[0]?.balance ?? 0;
@@ -111,20 +190,24 @@ export async function redeemCustomerVoucher(
   let remaining = Number(requestedAmount.toFixed(2));
   let redeemed = 0;
 
-  const vouchers = await CustomerVoucher.find({
+  const vouchers = await Voucher.find({
     customerId,
     status: "active",
-    balance: { $gt: 0 },
+    remainingAmount: { $gt: 0 },
+    ...activeVoucherWindowFilter(),
   })
-    .sort({ createdAt: 1 })
+    .sort({ expiresAt: 1, createdAt: 1 })
     .session(session);
 
   for (const voucher of vouchers) {
     if (remaining <= 0) break;
 
-    const amount = Math.min(voucher.balance, remaining);
-    voucher.balance = Number((voucher.balance - amount).toFixed(2));
-    voucher.status = voucher.balance <= 0 ? "used" : "active";
+    const amount = Math.min(voucher.remainingAmount, remaining);
+    voucher.remainingAmount = voucher.usageRule?.isOneTimeUse
+      ? 0
+      : Number((voucher.remainingAmount - amount).toFixed(2));
+    voucher.status = voucher.remainingAmount <= 0 ? "used" : "active";
+    voucher.usedAt = voucher.status === "used" ? new Date() : voucher.usedAt;
     await voucher.save({ session });
 
     redeemed = Number((redeemed + amount).toFixed(2));
@@ -145,13 +228,26 @@ export async function refundCustomerVoucher(
 ): Promise<void> {
   if (!customerId || amount <= 0) return;
 
-  await CustomerVoucher.create(
+  const validFrom = new Date();
+  const validityRule = DEFAULT_VOUCHER_VALIDITY_RULE;
+
+  await Voucher.create(
     [
       {
         customerId,
+        code: generateVoucherCode("REFUND"),
+        sourceType: "order_refund",
         originalAmount: amount,
-        balance: amount,
+        remainingAmount: amount,
         minimumPurchase: 0,
+        usageRule: {
+          isOneTimeUse: false,
+          isConsumable: true,
+        },
+        validityRule,
+        issuedAt: validFrom,
+        validFrom,
+        expiresAt: calculateVoucherExpiresAt(validFrom, validityRule),
         status: "active",
       },
     ],
