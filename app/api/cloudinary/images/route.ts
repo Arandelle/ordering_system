@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     await requireAdmin(request);
     const result = await cloudinary.api.resources({
       type: "upload",
+      prefix: "products/",
       max_results: 50,
       resource_type: "image",
     });
