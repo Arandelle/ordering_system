@@ -14,13 +14,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-type OrderDiscountPromotionResponse = {
-  config: OrderDiscountPromotionConfig & {
-    _id?: string;
-    startsAt?: string | Date | null;
-    endsAt?: string | Date | null;
-    updatedAt?: string;
-  };
+type OrderDiscountPromotion = OrderDiscountPromotionConfig & {
+  _id: string;
+  startsAt: string | Date;
+  endsAt?: string | Date | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+type OrderDiscountPromotionsResponse = {
+  data: OrderDiscountPromotion[];
+};
+
+type OrderDiscountPromotionMutationResponse = {
+  promotion: OrderDiscountPromotion;
 };
 
 type OrderDiscountPromotionForm = {
@@ -39,11 +46,40 @@ type OrderDiscountPromotionForm = {
   maximumRedemptions: string;
 };
 
+type PromotionPayload = {
+  enabled: boolean;
+  name: string;
+  discountType: OrderDiscountType;
+  discountValue: number;
+  maximumDiscountAmount: number | null;
+  minimumOrderAmount: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  dayMode: OrderDiscountDayMode;
+  days: OrderDiscountDay[];
+  startTime: string;
+  endTime: string;
+  maximumRedemptions: number | null;
+};
+
 function formatCurrency(value: number) {
-  return `₱${value.toLocaleString("en-PH", {
+  return `PHP ${value.toLocaleString("en-PH", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+function formatDate(value?: string | Date | null) {
+  if (!value) return "No end date";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Invalid date";
+
+  return date.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function formatDateInputValue(value?: string | Date | null) {
@@ -55,32 +91,74 @@ function formatDateInputValue(value?: string | Date | null) {
   return date.toISOString().slice(0, 10);
 }
 
+function getCreateDefault(): OrderDiscountPromotionConfig {
+  return {
+    ...DEFAULT_ORDER_DISCOUNT_PROMOTION,
+    startsAt: new Date(),
+  };
+}
+
 function buildInitialForm(
-  config: OrderDiscountPromotionResponse["config"],
+  promotion: OrderDiscountPromotion | OrderDiscountPromotionConfig,
 ): OrderDiscountPromotionForm {
   return {
-    enabled: config.enabled,
-    name: config.name,
-    discountType: config.discountType,
-    discountValue: String(config.discountValue),
+    enabled: promotion.enabled,
+    name: promotion.name,
+    discountType: promotion.discountType,
+    discountValue: String(promotion.discountValue),
     maximumDiscountAmount:
-      config.maximumDiscountAmount === null ||
-      config.maximumDiscountAmount === undefined
+      promotion.maximumDiscountAmount === null ||
+      promotion.maximumDiscountAmount === undefined
         ? ""
-        : String(config.maximumDiscountAmount),
-    minimumOrderAmount: String(config.minimumOrderAmount),
-    startsAt: formatDateInputValue(config.startsAt),
-    endsAt: formatDateInputValue(config.endsAt),
-    dayMode: config.dayMode,
-    days: config.days,
-    startTime: config.startTime,
-    endTime: config.endTime,
+        : String(promotion.maximumDiscountAmount),
+    minimumOrderAmount: String(promotion.minimumOrderAmount),
+    startsAt: formatDateInputValue(promotion.startsAt),
+    endsAt: formatDateInputValue(promotion.endsAt),
+    dayMode: promotion.dayMode,
+    days: promotion.days,
+    startTime: promotion.startTime,
+    endTime: promotion.endTime,
     maximumRedemptions:
-      config.maximumRedemptions === null ||
-      config.maximumRedemptions === undefined
+      promotion.maximumRedemptions === null ||
+      promotion.maximumRedemptions === undefined
         ? ""
-        : String(config.maximumRedemptions),
+        : String(promotion.maximumRedemptions),
   };
+}
+
+function buildPayload(form: OrderDiscountPromotionForm): PromotionPayload {
+  return {
+    enabled: form.enabled,
+    name: form.name,
+    discountType: form.discountType,
+    discountValue: Number(form.discountValue),
+    maximumDiscountAmount:
+      form.discountType === "percentage" && form.maximumDiscountAmount
+        ? Number(form.maximumDiscountAmount)
+        : null,
+    minimumOrderAmount: Number(form.minimumOrderAmount || 0),
+    startsAt: form.startsAt || null,
+    endsAt: form.endsAt || null,
+    dayMode: form.dayMode,
+    days: form.dayMode === "specific_days" ? form.days : [],
+    startTime: form.startTime,
+    endTime: form.endTime,
+    maximumRedemptions: form.maximumRedemptions
+      ? Number(form.maximumRedemptions)
+      : null,
+  };
+}
+
+function getDiscountLabel(promotion: OrderDiscountPromotion) {
+  if (promotion.discountType === "fixed") {
+    return `${formatCurrency(promotion.discountValue)} off`;
+  }
+
+  return `${promotion.discountValue}% off${
+    promotion.maximumDiscountAmount
+      ? ` up to ${formatCurrency(promotion.maximumDiscountAmount)}`
+      : ""
+  }`;
 }
 
 function getPreviewLines(form: OrderDiscountPromotionForm) {
@@ -102,15 +180,14 @@ function getPreviewLines(form: OrderDiscountPromotionForm) {
       : form.days.length
         ? form.days.join(", ")
         : "No specific days selected";
-  const periodLine = `${form.startsAt || "No start date"} to ${
-    form.endsAt || "no end date"
-  }`;
 
   return [
     form.enabled ? "Promotion is active" : "Promotion is disabled",
     discountLine,
     `Minimum order: ${formatCurrency(minimumOrderAmount)}`,
-    `Period: ${periodLine}`,
+    `Period: ${form.startsAt || "No start date"} to ${
+      form.endsAt || "no end date"
+    }`,
     `Days: ${daysLine}`,
     `Time: ${form.startTime} to ${form.endTime}`,
     maxRedemptions > 0
@@ -119,51 +196,53 @@ function getPreviewLines(form: OrderDiscountPromotionForm) {
   ];
 }
 
-function OrderDiscountPromotionForm({
-  initialConfig,
+function OrderDiscountPromotionEditor({
+  promotion,
+  mode,
+  onClose,
 }: {
-  initialConfig: OrderDiscountPromotionResponse["config"];
+  promotion: OrderDiscountPromotion | OrderDiscountPromotionConfig;
+  mode: "create" | "edit";
+  onClose: () => void;
 }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<OrderDiscountPromotionForm>(() =>
-    buildInitialForm(initialConfig),
+    buildInitialForm(promotion),
   );
   const initialForm = useMemo(
-    () => buildInitialForm(initialConfig),
-    [initialConfig],
+    () => buildInitialForm(promotion),
+    [promotion],
   );
   const previewLines = getPreviewLines(form);
-  const hasChanges = JSON.stringify(form) !== JSON.stringify(initialForm);
+  const hasChanges =
+    mode === "create" || JSON.stringify(form) !== JSON.stringify(initialForm);
   const showPercentageCap = form.discountType === "percentage";
+  const promotionId = "_id" in promotion ? promotion._id : null;
 
   const savePromotion = useMutation({
-    mutationFn: (payload: {
-      enabled: boolean;
-      name: string;
-      discountType: OrderDiscountType;
-      discountValue: number;
-      maximumDiscountAmount: number | null;
-      minimumOrderAmount: number;
-      startsAt: string | null;
-      endsAt: string | null;
-      dayMode: OrderDiscountDayMode;
-      days: OrderDiscountDay[];
-      startTime: string;
-      endTime: string;
-      maximumRedemptions: number | null;
-    }) =>
-      apiClient.patch<OrderDiscountPromotionResponse>(
-        "/admin/order-discount-promotions",
-        payload,
-      ),
+    mutationFn: (payload: PromotionPayload) =>
+      mode === "create"
+        ? apiClient.post<OrderDiscountPromotionMutationResponse>(
+            "/admin/order-discount-promotions",
+            payload,
+          )
+        : apiClient.patch<OrderDiscountPromotionMutationResponse>(
+            `/admin/order-discount-promotions/${promotionId}`,
+            payload,
+          ),
     onSuccess: async () => {
-      toast.success("Order discount promotion updated.");
+      toast.success(
+        mode === "create"
+          ? "Order discount promotion created."
+          : "Order discount promotion updated.",
+      );
       await queryClient.invalidateQueries({
         queryKey: ["admin", "order-discount-promotions"],
       });
+      onClose();
     },
     onError: (error: { message?: string }) => {
-      toast.error(error.message ?? "Failed to update order discount promotion.");
+      toast.error(error.message ?? "Failed to save order discount promotion.");
     },
   });
 
@@ -182,27 +261,7 @@ function OrderDiscountPromotionForm({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    savePromotion.mutate({
-      enabled: form.enabled,
-      name: form.name,
-      discountType: form.discountType,
-      discountValue: Number(form.discountValue),
-      maximumDiscountAmount:
-        form.discountType === "percentage" && form.maximumDiscountAmount
-          ? Number(form.maximumDiscountAmount)
-          : null,
-      minimumOrderAmount: Number(form.minimumOrderAmount || 0),
-      startsAt: form.startsAt || null,
-      endsAt: form.endsAt || null,
-      dayMode: form.dayMode,
-      days: form.dayMode === "specific_days" ? form.days : [],
-      startTime: form.startTime,
-      endTime: form.endTime,
-      maximumRedemptions: form.maximumRedemptions
-        ? Number(form.maximumRedemptions)
-        : null,
-    });
+    savePromotion.mutate(buildPayload(form));
   };
 
   return (
@@ -211,11 +270,11 @@ function OrderDiscountPromotionForm({
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-stone-800">
-              Whole Order Discount
+              {mode === "create" ? "Create Order Discount" : "Edit Order Discount"}
             </h2>
             <p className="mt-1 text-sm text-stone-500">
-              Configure one whole-order discount customers can receive during
-              the selected schedule.
+              Configure discount value, eligibility rules, schedule, and
+              redemption limit.
             </p>
           </div>
           <label className="flex items-center gap-3 text-sm font-semibold text-stone-700">
@@ -449,8 +508,7 @@ function OrderDiscountPromotionForm({
                   Every opening day
                 </span>
                 <span className="block text-xs text-stone-500">
-                  Use the store schedule later when checkout eligibility is
-                  connected.
+                  Follows the current store operating schedule.
                 </span>
               </span>
             </label>
@@ -538,20 +596,222 @@ function OrderDiscountPromotionForm({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-xs text-stone-400">
-          This saves the promotion configuration only. Checkout application is a
-          separate backend pricing step.
+          This saves promotion rules only. Checkout application is a separate
+          backend pricing step.
         </p>
-        <button
-          type="submit"
-          disabled={savePromotion.isPending || !hasChanges}
-          className="rounded-lg bg-brand-color-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500] disabled:cursor-not-allowed disabled:bg-stone-300"
-        >
-          {savePromotion.isPending ? "Saving..." : "Save promotion"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-stone-200 px-5 py-2.5 text-sm font-bold text-stone-700 transition-colors hover:border-brand-color-500"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={savePromotion.isPending || !hasChanges}
+            className="rounded-lg bg-brand-color-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500] disabled:cursor-not-allowed disabled:bg-stone-300"
+          >
+            {savePromotion.isPending
+              ? "Saving..."
+              : mode === "create"
+                ? "Create promotion"
+                : "Save changes"}
+          </button>
+        </div>
       </div>
     </form>
+  );
+}
+
+type PromotionStatus =
+  | "active"
+  | "disabled"
+  | "ended"
+  | "redeemed_out"
+  | "scheduled";
+
+const promotionStatusStyles: Record<PromotionStatus, string> = {
+  active: "bg-emerald-100 text-emerald-700",
+  disabled: "bg-stone-100 text-stone-600",
+  ended: "bg-red-100 text-red-700",
+  redeemed_out: "bg-amber-100 text-amber-700",
+  scheduled: "bg-blue-100 text-blue-700",
+};
+
+const promotionStatusLabels: Record<PromotionStatus, string> = {
+  active: "Active",
+  disabled: "Disabled",
+  ended: "Ended",
+  redeemed_out: "Redeemed out",
+  scheduled: "Scheduled",
+};
+
+function getPromotionStatus(
+  promo: OrderDiscountPromotion,
+  now = new Date(),
+): PromotionStatus {
+  if (!promo.enabled) return "disabled";
+  if (promo.maximumRedemptions && promo.redemptionCount >= promo.maximumRedemptions) {
+    return "redeemed_out";
+  }
+  if (promo.endsAt && new Date(promo.endsAt) < now) return "ended";
+  if (new Date(promo.startsAt) > now) return "scheduled";
+  return "active";
+}
+
+function PromotionList({
+  promotions,
+  onCreate,
+  onEdit,
+}: {
+  promotions: OrderDiscountPromotion[];
+  onCreate: () => void;
+  onEdit: (promotion: OrderDiscountPromotion) => void;
+}) {
+  const queryClient = useQueryClient();
+  const deletePromotion = useMutation({
+    mutationFn: (promotionId: string) =>
+      apiClient.delete<{ success: boolean }>(
+        `/admin/order-discount-promotions/${promotionId}`,
+      ),
+    onSuccess: async () => {
+      toast.success("Order discount promotion deleted.");
+      await queryClient.invalidateQueries({
+        queryKey: ["admin", "order-discount-promotions"],
+      });
+    },
+    onError: (error: { message?: string }) => {
+      toast.error(error.message ?? "Failed to delete order discount promotion.");
+    },
+  });
+
+  const handleDelete = (promotion: OrderDiscountPromotion) => {
+    const confirmed = window.confirm(
+      `Delete "${promotion.name}"? This cannot be undone.`,
+    );
+
+    if (!confirmed) return;
+    deletePromotion.mutate(promotion._id);
+  };
+
+  return (
+    <div className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-stone-800">
+            Created Discounts
+          </h2>
+          <p className="mt-1 text-sm text-stone-500">
+            Manage whole-order discount promotions.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onCreate}
+          className="rounded-lg bg-brand-color-500 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500]"
+        >
+          Create discount
+        </button>
+      </div>
+
+      {promotions.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-stone-200 px-4 py-10 text-center">
+          <p className="text-sm font-semibold text-stone-700">
+            No order discount promotions yet.
+          </p>
+          <p className="mt-1 text-sm text-stone-500">
+            Create one to configure a whole-order discount.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-stone-100 text-xs uppercase text-stone-500">
+                <th className="px-3 py-3 font-bold">Name</th>
+                <th className="px-3 py-3 font-bold">Discount</th>
+                <th className="px-3 py-3 font-bold">Minimum</th>
+                <th className="px-3 py-3 font-bold">Schedule</th>
+                <th className="px-3 py-3 font-bold">Redemptions</th>
+                <th className="px-3 py-3 font-bold">Status</th>
+                <th className="px-3 py-3 text-right font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {promotions.map((promotion) => {
+                const status = getPromotionStatus(promotion);
+
+                return (
+                  <tr
+                    key={promotion._id}
+                    className="border-b border-stone-100 last:border-0"
+                  >
+                  <td className="px-3 py-4">
+                    <p className="font-bold text-stone-800">
+                      {promotion.name}
+                    </p>
+                    <p className="text-xs text-stone-500">
+                      {formatDate(promotion.startsAt)} -{" "}
+                      {formatDate(promotion.endsAt)}
+                    </p>
+                  </td>
+                  <td className="px-3 py-4 font-medium text-stone-700">
+                    {getDiscountLabel(promotion)}
+                  </td>
+                  <td className="px-3 py-4 text-stone-600">
+                    {formatCurrency(promotion.minimumOrderAmount)}
+                  </td>
+                  <td className="px-3 py-4 text-stone-600">
+                    <p>
+                      {promotion.dayMode === "opening_days"
+                        ? "Opening days"
+                        : promotion.days.join(", ")}
+                    </p>
+                    <p className="text-xs text-stone-500">
+                      {promotion.startTime} - {promotion.endTime}
+                    </p>
+                  </td>
+                  <td className="px-3 py-4 text-stone-600">
+                    {promotion.redemptionCount} /{" "}
+                    {promotion.maximumRedemptions ?? "No limit"}
+                  </td>
+                  <td className="px-3 py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${promotionStatusStyles[status]}`}
+                    >
+                      {promotionStatusLabels[status]}
+                    </span>
+                  </td>
+                  <td className="px-3 py-4">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onEdit(promotion)}
+                        className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletePromotion.isPending}
+                        onClick={() => handleDelete(promotion)}
+                        className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -559,12 +819,14 @@ export default function OrderDiscountPromotionsPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin", "order-discount-promotions"],
     queryFn: () =>
-      apiClient.get<OrderDiscountPromotionResponse>(
+      apiClient.get<OrderDiscountPromotionsResponse>(
         "/admin/order-discount-promotions",
       ),
   });
-  const initialConfig = data?.config ?? DEFAULT_ORDER_DISCOUNT_PROMOTION;
-  const formKey = JSON.stringify(initialConfig);
+  const [editorMode, setEditorMode] = useState<"create" | "edit" | null>(null);
+  const [selectedPromotion, setSelectedPromotion] =
+    useState<OrderDiscountPromotion | null>(null);
+  const promotions = data?.data ?? [];
 
   if (isLoading) return <LoadingPage />;
 
@@ -575,19 +837,38 @@ export default function OrderDiscountPromotionsPage() {
           Order Discounts
         </h1>
         <p className="text-stone-500">
-          Create a whole-order discount with schedule, minimum order, caps, and
-          redemption limits.
+          Create and manage whole-order discounts with schedule, minimum order,
+          caps, and redemption limits.
         </p>
       </div>
 
       {error ? (
         <p className="text-sm font-medium text-red-600">
-          Failed to load order discount promotion.
+          Failed to load order discount promotions.
         </p>
       ) : (
-        <OrderDiscountPromotionForm
-          key={formKey}
-          initialConfig={initialConfig}
+        <PromotionList
+          promotions={promotions}
+          onCreate={() => {
+            setSelectedPromotion(null);
+            setEditorMode("create");
+          }}
+          onEdit={(promotion) => {
+            setSelectedPromotion(promotion);
+            setEditorMode("edit");
+          }}
+        />
+      )}
+
+      {editorMode && (
+        <OrderDiscountPromotionEditor
+          key={selectedPromotion?._id ?? "create"}
+          mode={editorMode}
+          promotion={selectedPromotion ?? getCreateDefault()}
+          onClose={() => {
+            setEditorMode(null);
+            setSelectedPromotion(null);
+          }}
         />
       )}
     </section>
