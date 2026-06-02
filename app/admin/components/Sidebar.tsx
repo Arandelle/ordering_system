@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
     name: "Promotion",
     path: null,
     icon: "TicketPercent",
-    permission: "promo-cards.read",
+    permission: "promotions.read",
     children: [
       // {
       //   name: "Product Discount",
@@ -51,11 +51,11 @@ const navItems: NavItem[] = [
       // },
       {
         name: "Purchased Cards",
-        path: "/promo-cards",
+        path: "/promotions/purchased-cards",
       },
       {
         name: "Card Settings",
-        path: "/promo-cards/settings",
+        path: "/promotions/promo-card-settings",
       },
     ],
   },
@@ -72,10 +72,20 @@ const navItems: NavItem[] = [
     permission: "inventories.read",
   },
   {
-    name: "Category",
-    path: "/categories",
+    name: "Categories",
+    path: null,
     icon: "Folder",
     permission: "categories.read",
+    children: [
+      {
+        name: "Categories",
+        path: "/categories"
+      },
+      {
+        name: "SubCategories",
+        path: "/subcategories"
+      }
+    ]
   },
   {
     name: "Customers",
@@ -182,8 +192,9 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
               const hasChildren = Boolean(item.children?.length); // Check if current path matches item or any of its children
 
               const hasActiveChild = item.children?.some(
-                (child) => child.path === pathname,
+                (child) => child.path === pathname || pathname.startsWith(`${child.path}/`)
               ); // Determine if item is active based on current path
+
               const itemKey = getNavItemKey(item);
 
               const isActive =
