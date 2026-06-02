@@ -1,4 +1,7 @@
-  export const formatDate = (dateString: string) => {
+  export const formatDate = (dateString: string | Date | null | undefined,  fallback = "No date") => {
+   
+     if (!dateString) return fallback;
+   
     return new Date(dateString).toLocaleString("en-US", {
       month: "short",
       day: "numeric",
