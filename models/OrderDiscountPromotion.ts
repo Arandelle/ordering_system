@@ -3,7 +3,7 @@ import {
   ORDER_DISCOUNT_DAY_MODES,
   ORDER_DISCOUNT_DAYS,
   ORDER_DISCOUNT_TYPES,
-} from "@/lib/orderDiscountPromotion";
+} from "@/types/order-discount.type";
 import { model, models, Schema } from "mongoose";
 
 const OrderDiscountPromotionSchema = new Schema(
