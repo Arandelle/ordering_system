@@ -7,7 +7,7 @@ import {
   OrderDiscountDayMode,
   OrderDiscountPromotionConfig,
   OrderDiscountType,
-} from "@/lib/orderDiscountPromotion";
+} from "@/types/order-discount.type";
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
