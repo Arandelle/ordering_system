@@ -3,7 +3,7 @@ import "@/lib/registerModels";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
 import mongoose from "mongoose";
 import { notFound } from "next/navigation";
-import { OrderDiscountPromotionEditor } from "../../OrderDiscountPromotionEditor";
+import { OrderDiscountPromotionEditor } from "../../components/OrderDiscountPromotionEditor";
 import { OrderDiscountPromotion as OrderDiscountPromotionType } from "../../types";
 
 type EditOrderDiscountPromotionPageProps = {
