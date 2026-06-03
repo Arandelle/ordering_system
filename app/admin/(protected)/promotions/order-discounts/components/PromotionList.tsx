@@ -9,10 +9,8 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/helper/formatCurrency";
 import { formatDate } from "@/helper/formatDate";
-import { apiClient } from "@/lib/apiClient";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useDeleteOrderDiscountPromotion } from "../../hooks/useOrderDiscountPromotions";
 import { getDiscountLabel } from "../helpers/getDiscountLabel";
 import {
   getPromotionStatus,
@@ -27,24 +25,7 @@ type PromotionListProps = {
 
 export function PromotionList({ promotions }: PromotionListProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const deletePromotion = useMutation({
-    mutationFn: (promotionId: string) =>
-      apiClient.delete<{ success: boolean }>(
-        `/admin/order-discount-promotions/${promotionId}`,
-      ),
-    onSuccess: async () => {
-      toast.success("Order discount promotion deleted.");
-      await queryClient.invalidateQueries({
-        queryKey: ["admin", "order-discount-promotions"],
-      });
-    },
-    onError: (error: { message?: string }) => {
-      toast.error(
-        error.message ?? "Failed to delete order discount promotion.",
-      );
-    },
-  });
+  const deletePromotion = useDeleteOrderDiscountPromotion();
 
   const handleDelete = (promotion: OrderDiscountPromotion) => {
     const confirmed = window.confirm(

@@ -10,113 +10,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/helper/formatDate";
-import { formatDateInputValue } from "@/helper/formatDateInputValue";
-import { apiClient } from "@/lib/apiClient";
 import {
-  DEFAULT_PROMO_CARD_DISCOUNT_RULES,
-  DEFAULT_PROMO_CARD_VALIDITY_RULE,
-  DEFAULT_PROMO_CARD_VOUCHER_RULE,
-  PROMO_CARD,
   PROMO_CARD_DAYS,
-  PromoCardDay,
   PromoCardValidityUnit,
 } from "@/lib/promoCard";
 import {
-  DEFAULT_VOUCHER_VALIDITY_RULE,
-  DEFAULT_VOUCHER_USAGE_RULE,
   VOUCHER_VALIDITY_UNITS,
   VoucherValidityUnit,
 } from "@/types/voucher.types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BadgePercent, CreditCard, Hourglass, Users } from "lucide-react";
-import { FormEvent, useEffect, useState } from "react";
-import { toast } from "sonner";
-
-type PromoCardPurchaseStatus =
-  | "pending"
-  | "paid"
-  | "failed"
-  | "expired"
-  | "cancelled";
-
-type PromoCardPurchase = {
-  _id: string;
-  referenceNumber: string;
-  status: PromoCardPurchaseStatus;
-  paymentStatus?: string;
-  firstName: string;
-  lastName: string;
-  customerEmail: string;
-  customerPhone: string;
-  purchasePrice: number;
-  discountRate: number;
-  createdAt: string;
-  paidAt?: string;
-};
-
-type PromoCardResponse = {
-  data: PromoCardPurchase[];
-  config: PromoCardSettings;
-  stats: {
-    total: number;
-    paid: number;
-    pending: number;
-    paidRevenue: number;
-  };
-};
-
-type PromoCardSettings = {
-  name: string;
-  discountRate: number;
-  purchasePrice: number;
-  sku: string;
-  discountRules: {
-    days: PromoCardDay[];
-    discountRate: number;
-  }[];
-  voucherRule: {
-    enabled: boolean;
-    voucherAmount: number;
-    minimumPurchase: number;
-    usageRule: {
-      isOneTimeUse: boolean;
-      isConsumable: boolean;
-    };
-    validityRule: {
-      duration: number;
-      unit: VoucherValidityUnit;
-    };
-  };
-  validityRule: {
-    duration: number;
-    unit: PromoCardValidityUnit;
-    expiresAt: string | null;
-  };
-};
-
-type PromoCardSettingsForm = {
-  name: string;
-  purchasePrice: string;
-  discountRules: {
-    days: PromoCardDay[];
-    discountPercent: string;
-  }[];
-  voucherRule: {
-    enabled: boolean;
-    voucherAmount: string;
-    minimumPurchase: string;
-    validityRule: {
-      duration: string;
-      unit: VoucherValidityUnit;
-    };
-  };
-  validityRule: {
-    duration: string;
-    unit: PromoCardValidityUnit;
-    expiresAt: string;
-  };
-  usageMode: "consumable" | "oneTime";
-};
+import { FormEvent } from "react";
+import { getActivePromoCardSettings } from "./helpers/promoCardSettingsForm";
+import { usePromoCardSettings } from "./hooks/usePromoCardSettings";
+import { usePromoCards } from "./hooks/usePromoCards";
+import type { PromoCardPurchaseStatus } from "./types/promo-card.type";
 
 const statusStyles: Record<PromoCardPurchaseStatus, string> = {
   pending: "bg-amber-100 text-amber-700",
@@ -133,150 +40,25 @@ type PromoCardsPageProps = {
 export default function PromoCardsContent({
   view = "list",
 }: PromoCardsPageProps) {
-  const queryClient = useQueryClient();
   const {
     data: response,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ["admin", "promo-cards"],
-    queryFn: () => apiClient.get<PromoCardResponse>("/admin/promo-cards"),
-  });
-  const [settingsForm, setSettingsForm] = useState<PromoCardSettingsForm>({
-    name: PROMO_CARD.name,
-    purchasePrice: String(PROMO_CARD.purchasePrice),
-    discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES.map((rule) => ({
-      days: rule.days,
-      discountPercent: String(rule.discountRate * 100),
-    })),
-    voucherRule: {
-      enabled: DEFAULT_PROMO_CARD_VOUCHER_RULE.enabled,
-      voucherAmount: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.voucherAmount),
-      minimumPurchase: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.minimumPurchase),
-      validityRule: {
-        duration: String(DEFAULT_PROMO_CARD_VOUCHER_RULE.validityRule.duration),
-        unit: DEFAULT_PROMO_CARD_VOUCHER_RULE.validityRule.unit,
-      },
-    },
-    validityRule: {
-      duration: String(DEFAULT_PROMO_CARD_VALIDITY_RULE.duration),
-      unit: DEFAULT_PROMO_CARD_VALIDITY_RULE.unit,
-      expiresAt: "",
-    },
-    usageMode: DEFAULT_VOUCHER_USAGE_RULE.isOneTimeUse
-      ? "oneTime"
-      : "consumable",
-  });
+  } = usePromoCards();
 
-  useEffect(() => {
-    if (!response?.config) return;
-
-    setSettingsForm({
-      name: response.config.name,
-      purchasePrice: String(response.config.purchasePrice),
-      discountRules: response.config.discountRules.map((rule) => ({
-        days: rule.days,
-        discountPercent: String(rule.discountRate * 100),
-      })),
-      voucherRule: {
-        enabled: response.config.voucherRule.enabled,
-        voucherAmount: String(response.config.voucherRule.voucherAmount),
-        minimumPurchase: String(response.config.voucherRule.minimumPurchase),
-        validityRule: {
-          duration: String(
-            response.config.voucherRule.validityRule?.duration ??
-              DEFAULT_VOUCHER_VALIDITY_RULE.duration,
-          ),
-          unit:
-            response.config.voucherRule.validityRule?.unit ??
-            DEFAULT_VOUCHER_VALIDITY_RULE.unit,
-        },
-      },
-      validityRule: {
-        duration: String(response.config.validityRule.duration),
-        unit: response.config.validityRule.unit,
-        expiresAt: formatDateInputValue(response.config.validityRule.expiresAt),
-      },
-      usageMode: response.config.voucherRule.usageRule.isOneTimeUse
-        ? "oneTime"
-        : "consumable",
-    });
-  }, [response?.config]);
-
-  const saveSettings = useMutation({
-    mutationFn: (payload: {
-      name: string;
-      purchasePrice: number;
-      discountRules: {
-        days: PromoCardDay[];
-        discountPercent: number;
-      }[];
-      voucherRule: {
-        enabled: boolean;
-        voucherAmount: number;
-        minimumPurchase: number;
-        usageRule: {
-          isOneTimeUse: boolean;
-          isConsumable: boolean;
-        };
-        validityRule: {
-          duration: number;
-          unit: VoucherValidityUnit;
-        };
-      };
-      validityRule: {
-        duration: number;
-        unit: PromoCardValidityUnit;
-        expiresAt: string | null;
-      };
-    }) =>
-      apiClient.patch<{ config: PromoCardSettings }>(
-        "/admin/promo-cards",
-        payload,
-      ),
-    onSuccess: async () => {
-      toast.success("Promo card settings updated.");
-      await queryClient.invalidateQueries({
-        queryKey: ["admin", "promo-cards"],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["customer", "promo-card", "status"],
-      });
-    },
-    onError: (error: { message?: string }) => {
-      toast.error(error.message ?? "Failed to update promo card settings.");
-    },
-  });
+  const activeConfig = getActivePromoCardSettings(response?.config);
+  const {
+    settingsForm,
+    setSettingsForm,
+    saveSettings,
+    hasSettingsChanges,
+    toggleRuleDay,
+    submitSettings,
+  } = usePromoCardSettings(response?.config);
 
   const handleSettingsSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    saveSettings.mutate({
-      name: settingsForm.name,
-      purchasePrice: Number(settingsForm.purchasePrice),
-      discountRules: settingsForm.discountRules.map((rule) => ({
-        days: rule.days,
-        discountPercent: Number(rule.discountPercent),
-      })),
-      voucherRule: {
-        enabled: settingsForm.voucherRule.enabled,
-        voucherAmount: Number(settingsForm.voucherRule.voucherAmount),
-        minimumPurchase: Number(settingsForm.voucherRule.minimumPurchase),
-        usageRule: {
-          isOneTimeUse: settingsForm.usageMode === "oneTime",
-          isConsumable: settingsForm.usageMode === "consumable",
-        },
-        validityRule: {
-          duration: Number(settingsForm.voucherRule.validityRule.duration),
-          unit: settingsForm.voucherRule.validityRule.unit,
-        },
-      },
-      validityRule: {
-        duration: Number(settingsForm.validityRule.duration),
-        unit: settingsForm.validityRule.unit,
-        expiresAt: settingsForm.validityRule.expiresAt || null,
-      },
-    });
+    submitSettings();
   };
 
   if (isLoading) return <LoadingPage />;
@@ -289,62 +71,6 @@ export default function PromoCardsContent({
     pending: 0,
     paidRevenue: 0,
   };
-  const activeConfig = response?.config ?? {
-    ...PROMO_CARD,
-    discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES,
-    voucherRule: DEFAULT_PROMO_CARD_VOUCHER_RULE,
-    validityRule: DEFAULT_PROMO_CARD_VALIDITY_RULE,
-  };
-  const hasSettingsChanges =
-    JSON.stringify(settingsForm) !==
-    JSON.stringify({
-      name: activeConfig.name,
-      purchasePrice: String(activeConfig.purchasePrice),
-      discountRules: activeConfig.discountRules.map((rule) => ({
-        days: rule.days,
-        discountPercent: String(rule.discountRate * 100),
-      })),
-      voucherRule: {
-        enabled: activeConfig.voucherRule.enabled,
-        voucherAmount: String(activeConfig.voucherRule.voucherAmount),
-        minimumPurchase: String(activeConfig.voucherRule.minimumPurchase),
-        validityRule: {
-          duration: String(
-            activeConfig.voucherRule.validityRule?.duration ??
-              DEFAULT_VOUCHER_VALIDITY_RULE.duration,
-          ),
-          unit:
-            activeConfig.voucherRule.validityRule?.unit ??
-            DEFAULT_VOUCHER_VALIDITY_RULE.unit,
-        },
-      },
-      validityRule: {
-        duration: String(activeConfig.validityRule.duration),
-        unit: activeConfig.validityRule.unit,
-        expiresAt: formatDateInputValue(activeConfig.validityRule.expiresAt),
-      },
-      usageMode: activeConfig.voucherRule.usageRule.isOneTimeUse
-        ? "oneTime"
-        : "consumable",
-    });
-
-  const toggleRuleDay = (ruleIndex: number, day: PromoCardDay) => {
-    setSettingsForm((current) => ({
-      ...current,
-      discountRules: current.discountRules.map((rule, index) => {
-        if (index !== ruleIndex) return rule;
-
-        const hasDay = rule.days.includes(day);
-        return {
-          ...rule,
-          days: hasDay
-            ? rule.days.filter((value) => value !== day)
-            : [...rule.days, day],
-        };
-      }),
-    }));
-  };
-
   const isSettingsView = view === "settings";
 
   return (

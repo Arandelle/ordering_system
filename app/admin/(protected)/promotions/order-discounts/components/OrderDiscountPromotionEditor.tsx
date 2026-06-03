@@ -2,7 +2,6 @@
 
 import { InputField } from "@/components/ui/InputField";
 import { SelectField } from "@/components/ui/SelectField";
-import { apiClient } from "@/lib/apiClient";
 import {
   DEFAULT_ORDER_DISCOUNT_PROMOTION,
   ORDER_DISCOUNT_DAYS,
@@ -10,18 +9,15 @@ import {
   OrderDiscountPromotionConfig,
   OrderDiscountType,
 } from "@/types/order-discount.type";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useSaveOrderDiscountPromotion } from "../../hooks/useOrderDiscountPromotions";
 import { buildInitialPromotionForm } from "../helpers/buildInitialPromotionForm";
 import { buildPromotionPayload } from "../helpers/buildPromotionPayload";
 import { getPromotionPreview } from "../helpers/getPromotionPreview";
 import {
   OrderDiscountPromotion,
   OrderDiscountPromotionForm,
-  OrderDiscountPromotionMutationResponse,
-  OrderDiscountPromotionSavePayload,
 } from "../types";
 
 type OrderDiscountPromotionEditorProps = {
@@ -34,7 +30,6 @@ export function OrderDiscountPromotionEditor({
   mode,
 }: OrderDiscountPromotionEditorProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [form, setForm] = useState<OrderDiscountPromotionForm>(() =>
     buildInitialPromotionForm(promotion),
   );
@@ -49,32 +44,10 @@ export function OrderDiscountPromotionEditor({
   const promotionId = "_id" in promotion ? promotion._id : null;
 
   const goBackToList = () => router.push("/promotions/order-discounts");
-
-  const savePromotion = useMutation({
-    mutationFn: (payload: OrderDiscountPromotionSavePayload) =>
-      mode === "create"
-        ? apiClient.post<OrderDiscountPromotionMutationResponse>(
-            "/admin/order-discount-promotions",
-            payload,
-          )
-        : apiClient.patch<OrderDiscountPromotionMutationResponse>(
-            `/admin/order-discount-promotions/${promotionId}`,
-            payload,
-          ),
-    onSuccess: async () => {
-      toast.success(
-        mode === "create"
-          ? "Order discount promotion created."
-          : "Order discount promotion updated.",
-      );
-      await queryClient.invalidateQueries({
-        queryKey: ["admin", "order-discount-promotions"],
-      });
-      goBackToList();
-    },
-    onError: (error: { message?: string }) => {
-      toast.error(error.message ?? "Failed to save order discount promotion.");
-    },
+  const savePromotion = useSaveOrderDiscountPromotion({
+    mode,
+    promotionId,
+    onSuccess: goBackToList,
   });
 
   const toggleDay = (day: OrderDiscountDay) => {
