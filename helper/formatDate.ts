@@ -10,3 +10,14 @@
       minute: "2-digit",
     });
   };
+
+    export const formatDateOnly = (dateString: string | Date | null | undefined,  fallback = "No date") => {
+   
+     if (!dateString) return fallback;
+   
+    return new Date(dateString).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
