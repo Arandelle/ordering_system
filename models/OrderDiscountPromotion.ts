@@ -8,6 +8,12 @@ import { model, models, Schema } from "mongoose";
 
 const OrderDiscountPromotionSchema = new Schema(
   {
+    promotionType: {
+      type: String,
+      enum: ["order_discount"],
+      default: "order_discount",
+      required: true,
+    },
     enabled: {
       type: Boolean,
       default: DEFAULT_ORDER_DISCOUNT_PROMOTION.enabled,
