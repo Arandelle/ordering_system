@@ -15,6 +15,7 @@ import PromoBanner from "./PromoBanner";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { Product } from "@/types/products";
 import { useProductsInfinite } from "@/hooks/api/useInfiniteProducts";
+import ActivePromotionsFloatingNotice from "./ActivePromotionsFloatingNotice";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -385,7 +386,7 @@ const MenuSection = () => {
   return (
     <section id="menu-section" className="bg-white scroll-mt-24">
       <PromoBanner type="single" />
-
+      <ActivePromotionsFloatingNotice />
       {/* ══════════════════════════════════════════════
           MOBILE — horizontal pill bar + content
       ══════════════════════════════════════════════ */}
