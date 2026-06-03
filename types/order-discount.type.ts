@@ -1,3 +1,5 @@
+export type OrderDiscountPromotionKind = "order_discount";
+
 export type OrderDiscountType = "percentage" | "fixed";
 
 export type OrderDiscountDay =
@@ -12,6 +14,7 @@ export type OrderDiscountDay =
 export type OrderDiscountDayMode = "opening_days" | "specific_days";
 
 export type OrderDiscountPromotionConfig = {
+  promotionType: OrderDiscountPromotionKind;
   enabled: boolean;
   name: string;
   discountType: OrderDiscountType;
@@ -49,6 +52,7 @@ export const ORDER_DISCOUNT_DAY_MODES: OrderDiscountDayMode[] = [
 ];
 
 export const DEFAULT_ORDER_DISCOUNT_PROMOTION: OrderDiscountPromotionConfig = {
+  promotionType: "order_discount",
   enabled: false,
   name: "Whole Order Discount",
   discountType: "percentage",
