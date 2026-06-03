@@ -48,6 +48,19 @@ export default function ActivePromotionsFloatingNotice() {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-20 z-50 px-3">
       <div className="pointer-events-auto mx-auto flex max-w-md flex-col gap-2 sm:ml-auto sm:mr-5">
+        <div className="flex items-center justify-end gap-2 px-1">
+          <p className="rounded-full bg-white px-3 py-1 text-xs font-bold text-brand-color-500 shadow-sm ring-1 ring-brand-color-500/15">
+            Enjoy our {promotions.length > 1 ? "Promos" : "Promo"}!
+          </p>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="rounded-full bg-white p-1.5 text-stone-500 shadow-sm ring-1 ring-black/10 transition hover:text-stone-900"
+            aria-label="Close promotions"
+          >
+            <DynamicIcon name="X" size={15} />
+          </button>
+        </div>
         {promotions.map((promotion) => (
           <article
             key={promotion.id}
@@ -63,14 +76,6 @@ export default function ActivePromotionsFloatingNotice() {
                     {getDiscountLabel(promotion)}
                   </h2>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="rounded-full p-1 text-white/80 transition hover:bg-white/15 hover:text-white"
-                  aria-label="Close promotions"
-                >
-                  <DynamicIcon name="X" size={15} />
-                </button>
               </div>
 
               <div className="mt-1 flex items-end justify-between gap-3">
