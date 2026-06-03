@@ -31,6 +31,7 @@ The project uses:
 * Never hardcode secrets, API keys, database URIs, or payment credentials.
 * Prefer environment variables for config.
 * Keep code readable and maintainable.
+* Check some components if there is needed to be used
 
 ## Development Priorities
 
