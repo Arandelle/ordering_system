@@ -10,6 +10,7 @@ import { useProducts } from "@/hooks/api/useProducts";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import Link from "next/link";
 import { useState } from "react";
+import { OrderItemImage } from "@/app/customer/components/OrderItemImage";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const SIGNATURE_LIMIT = 4;
@@ -57,10 +58,9 @@ const ProductsError = ({ onRetry }: { onRetry: () => void }) => (
 const ProductMain = () => {
   const { data: menuData, isLoading, isError, refetch } = useProducts();
   const { isMobile, isTablet } = useBreakpoint();
-  const orderUrl = useSubdomainPath("/menu", "food");
+  const orderUrl = useSubdomainPath("/", "food");
 
   const menuList = menuData?.data
-    .filter((item) => item.isSignature)
     .slice(0, SIGNATURE_LIMIT) || [];
 
   const isCarousel = isMobile || isTablet;
@@ -124,7 +124,7 @@ const ProductMain = () => {
       }
     >
       <div className="aspect-square overflow-hidden bg-white flex items-center justify-center">
-        <img src={product.image.url} alt={product.name} className="w-full h-full object-cover" />
+        <OrderItemImage image={product.image.url} name={product.name}/>
       </div>
       <div className="px-4 pt-3 pb-4 flex flex-col gap-2 flex-1">
         <h3 className="font-semibold text-gray-900 leading-snug text-sm md:text-base">
@@ -156,7 +156,7 @@ const ProductMain = () => {
           ref={headerRef}
           className={`flex items-center justify-between mb-6 ${animationStyle(isHeaderVisible).className}`}
         >
-          <h2 className="text-2xl font-bold text-gray-900">Bestsellers</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Our Products</h2>
           <a href={orderUrl} className="text-sm font-semibold text-brand-color-500 hover:underline">
             View All
           </a>
