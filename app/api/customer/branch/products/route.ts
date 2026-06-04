@@ -218,8 +218,18 @@ export async function GET(req: NextRequest) {
       productType: product.productType || "solo",
       includedItems:
         product.includedItems?.map((item: any) => ({
-          _id: item.product?._id?.toString() || "",
-          productName: item.product?.name || "",
+          product: item.product
+            ? {
+                _id: item.product._id?.toString() || "",
+                name: item.product.name || "",
+                price: item.product.price ?? null,
+                image: {
+                  url: item.product.image?.url || "",
+                  public_id: item.product.image?.public_id || "",
+                },
+                productType: item.product.productType || "solo",
+              }
+            : "",
           quantity: item.quantity,
           label: item.label,
         })) || [],
