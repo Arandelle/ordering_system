@@ -1,5 +1,10 @@
 import { connectDB } from "@/lib/mongodb";
+import {
+  isOrderPromotionScheduleActive,
+} from "@/lib/order-promotions/order-promotion.schedule";
+import { getStoreStatus } from "@/lib/storeStatus";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
+import { Settings } from "@/models/Setting";
 import type {
   OrderDiscountDay,
   OrderDiscountDayMode,
@@ -32,25 +37,10 @@ type OrderDiscountPromotionRecord = {
   redemptionCount: number;
 };
 
-function getCurrentPromoDay(date: Date): OrderDiscountDay {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    timeZone: "Asia/Manila",
-  }).format(date) as OrderDiscountDay;
-}
-
-function getCurrentPromoTime(date: Date) {
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Manila",
-  }).format(date);
-}
-
 function isPromotionCurrentlyValid(
   promotion: OrderDiscountPromotionRecord,
   now: Date,
+  operatingHours: Parameters<typeof getStoreStatus>[0] | null,
 ) {
   if (
     promotion.maximumRedemptions &&
@@ -59,17 +49,7 @@ function isPromotionCurrentlyValid(
     return false;
   }
 
-  const currentDay = getCurrentPromoDay(now);
-  const currentTime = getCurrentPromoTime(now);
-
-  if (
-    promotion.dayMode === "specific_days" &&
-    !promotion.days.includes(currentDay)
-  ) {
-    return false;
-  }
-
-  return currentTime >= promotion.startTime && currentTime <= promotion.endTime;
+  return isOrderPromotionScheduleActive(promotion, operatingHours, now);
 }
 
 function toActiveOrderDiscountPromotion(
@@ -100,6 +80,8 @@ export async function GET() {
     await connectDB();
 
     const now = new Date();
+    const settings = await Settings.findOne().select({ operatingHours: 1 });
+    const operatingHours = settings?.operatingHours ?? null;
     const promotions = await OrderDiscountPromotion.find({
       enabled: true,
       startsAt: { $lte: now },
@@ -126,7 +108,9 @@ export async function GET() {
       .lean<OrderDiscountPromotionRecord[]>();
 
     const activePromotions = promotions
-      .filter((promotion) => isPromotionCurrentlyValid(promotion, now))
+      .filter((promotion) =>
+        isPromotionCurrentlyValid(promotion, now, operatingHours),
+      )
       .map(toActiveOrderDiscountPromotion);
 
     return NextResponse.json(
