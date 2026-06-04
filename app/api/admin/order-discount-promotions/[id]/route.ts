@@ -4,7 +4,7 @@ import {
   normalizeOrderDiscountPromotionPayload,
   OrderDiscountPromotionPayload,
   validateOrderDiscountPromotionConfig,
-} from "@/lib/orderDiscountPromotionValidation";
+} from "@/lib/order-promotions/order-promotion.validation";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
