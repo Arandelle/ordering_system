@@ -9,6 +9,7 @@ import type {
   OrderDiscountType,
 } from "@/types/order-discount.type";
 import { isOrderPromotionScheduleActive } from "./order-promotion.schedule";
+import { calculateOrderDiscountAmount } from "./order-promotion.calculation";
 
 type OperatingHours = Parameters<typeof getStoreStatus>[0];
 
@@ -35,31 +36,6 @@ export type AppliedOrderDiscountPromotion = {
   discountAmount: number;
 };
 
-function roundMoney(value: number) {
-  return Number(value.toFixed(2));
-}
-
-export function calculateOrderDiscountAmount(
-  promotion: Pick<
-    OrderDiscountPromotionRecord,
-    "discountType" | "discountValue" | "maximumDiscountAmount"
-  >,
-  discountableAmount: number,
-) {
-  if (discountableAmount <= 0) return 0;
-
-  if (promotion.discountType === "fixed") {
-    return roundMoney(Math.min(promotion.discountValue, discountableAmount));
-  }
-
-  const percentageDiscount = roundMoney(
-    discountableAmount * (promotion.discountValue / 100),
-  );
-
-  return promotion.maximumDiscountAmount
-    ? Math.min(percentageDiscount, promotion.maximumDiscountAmount)
-    : percentageDiscount;
-}
 
 export async function resolveOrderDiscountPromotion(
   subtotalAmount: number,
