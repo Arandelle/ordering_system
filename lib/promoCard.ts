@@ -1,3 +1,4 @@
+import { getPromotionDay } from "@/lib/order-promotions/order-promotion.schedule";
 import { DEFAULT_VOUCHER_RULE } from "@/types/voucher.types";
 import type { VoucherRule } from "@/types/voucher.types";
 
@@ -88,10 +89,7 @@ export function calculatePromoCardTotal(
 }
 
 export function getPromoCardDay(date = new Date()): PromoCardDay {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    timeZone: "Asia/Manila",
-  }).format(date) as PromoCardDay;
+  return getPromotionDay(date) as PromoCardDay;
 }
 
 export function getPromoCardDiscountRateForDay(
