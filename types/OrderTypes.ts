@@ -82,6 +82,9 @@ export interface OrderType {
     subtotalAmount?: number;
     discountAmount?: number;
     discountCode?: string;
+    orderDiscountAmount?: number;
+    orderDiscountPromotionId?: string;
+    orderDiscountPromotionName?: string;
     voucherDiscountAmount?: number;
   };
   estimatedTime: string;
