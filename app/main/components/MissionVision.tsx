@@ -44,7 +44,7 @@ export default function MissionVision() {
   const fade = animationStyle; // alias for brevity
 
   return (
-    <div className="max-w-7xl bg-white px-4 sm:px-6 lg:px-8 mx-auto font-sans mt-0 lg:mt-10">
+    <div className="max-w-7xl bg-white px-4 sm:px-6 lg:px-8 mx-auto font-sans mt-0 lg:mt-10 lg:mb-14">
       <div className="mx-auto space-y-12">
         <section
           ref={missionvisionRef}
@@ -90,67 +90,6 @@ export default function MissionVision() {
                 priority
               />
             </div>
-          </div>
-        </section>
-
-        {/* About the company */}
-        <About />
-
-        {/* ── WHAT WE BRING TO THE TABLE ───────────────────────────────────── */}
-        <section className="space-y-12">
-          {/* Header with image */}
-          <div
-            ref={bringHeaderRef}
-            className={`relative overflow-hidden rounded-3xl h-64 lg:h-72 ${fade(isBringHeaderVisible).className}`}
-            style={fade(isBringHeaderVisible).style}
-          >
-            <img
-              src="/images/grilled.jpg"
-              alt="Harrison's table spread"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-linear-to-r from-stone-900/80 via-stone-900/50 to-transparent" />
-            <div className="absolute inset-0 flex flex-col justify-center px-10 lg:px-16 space-y-2">
-              <p className="text-brand-color-500 font-bold tracking-[0.2em] uppercase text-sm">
-                For Everyone
-              </p>
-              <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight">
-                What We Bring
-                <br />
-                to the Table
-              </h2>
-            </div>
-          </div>
-
-          {/* Pillars */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            {tablePillars.map((p, i) => (
-              <div
-                key={i}
-                ref={(el) => {
-                  pillarRefs.current[i] = el;
-                }}
-                className={`group relative overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${fade(visiblePillars[i], i * 120).className}`}
-                style={fade(visiblePillars[i], i * 120).style}
-              >
-                <div className="p-8 space-y-4">
-                  <p className="text-5xl font-black text-brand-brown-100">
-                    {p.number}
-                  </p>
-                  <div>
-                    <p className="text-xs font-bold tracking-widest uppercase mb-1 text-brand-color-500">
-                      {p.audience}
-                    </p>
-                    <h3 className="text-brand-brown-800 font-black text-xl leading-tight">
-                      {p.headline}
-                    </h3>
-                  </div>
-                  <p className="text-brand-brown-600 text-base leading-relaxed">
-                    {p.body}
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
         </section>
       </div>
