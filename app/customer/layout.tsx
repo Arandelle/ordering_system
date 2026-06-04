@@ -7,6 +7,7 @@ import { Metadata } from "next";
 import { BranchProvider } from "@/contexts/BranchContext";
 import HeaderSkeleton from "@/app/customer/components/HeaderSkeleton";
 import IndexHeader from "./components/header/IndexHeader";
+import ActivePromotionsFloatingNotice from "./components/ActivePromotionsFloatingNotice";
 
 export const metadata: Metadata = {
   title: "Customer | House of Inasal & BBQ",
@@ -22,6 +23,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
               <IndexHeader />
             </Suspense>
             <CartDrawer />
+            <ActivePromotionsFloatingNotice />
             {children}
             <PWAInstallPrompt />
             <Footer />
