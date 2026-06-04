@@ -14,6 +14,11 @@ import {
   PROMO_CARD,
   PromoCardDay,
 } from "@/lib/promoCard";
+import {
+  getBestOrderDiscountEstimate,
+  getNextOrderDiscountEligibilityHint,
+} from "@/lib/order-promotions/order-promotion.estimate";
+import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
 
 const CartDrawer = () => {
@@ -39,17 +44,23 @@ const CartDrawer = () => {
     enabled: Boolean(session?.user),
     staleTime: 60_000,
   });
-  const canUsePromoCardDiscount =
-    promoCardStatus?.hasPaidPromoCard === true;
+  const canUsePromoCardDiscount = promoCardStatus?.hasPaidPromoCard === true;
   const promoCardConfig = promoCardStatus?.config ?? {
     ...PROMO_CARD,
     discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES,
   };
+  const availableVoucherBalance = promoCardStatus?.voucherBalance ?? 0;
   const activeDiscountRate = getPromoCardDiscountRateForDay(
     promoCardConfig.discountRules,
     getPromoCardDay(),
     promoCardConfig.discountRate,
   );
+  const { data: activePromotions } = useQuery({
+    queryKey: ["promotions", "active"],
+    queryFn: () =>
+      apiClient.get<ActivePromotionsResponse>("/promotions/active"),
+    staleTime: 60_000,
+  });
   const {
     cartItems,
     isCartOpen,
@@ -58,8 +69,6 @@ const CartDrawer = () => {
     removeFromCart,
     totalProducts,
     totalItems,
-    vatableSales,
-    vatAmount,
     subtotalPrice,
     promoCardDiscount,
     totalPrice,
@@ -68,6 +77,21 @@ const CartDrawer = () => {
     setPromoCardDiscountRate,
     clearCart,
   } = useCart();
+  const orderDiscountPromotion = getBestOrderDiscountEstimate(
+    activePromotions?.data,
+    subtotalPrice,
+    totalPrice,
+  );
+  const nextOrderDiscountHint = getNextOrderDiscountEligibilityHint(
+    activePromotions?.data,
+    subtotalPrice,
+  );
+  const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
+  const displayTotalPrice = Number(
+    Math.max(totalPrice - orderDiscountAmount, 0).toFixed(2),
+  );
+  const displayVatableSales = displayTotalPrice / 1.12;
+  const displayVatAmount = displayTotalPrice - displayVatableSales;
 
   React.useEffect(() => {
     if (!canUsePromoCardDiscount && applyPromoCardDiscount) {
@@ -101,7 +125,11 @@ const CartDrawer = () => {
         {/** Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <DynamicIcon name="ShoppingCart" className="text-brand-color-500" size={20} />
+            <DynamicIcon
+              name="ShoppingCart"
+              className="text-brand-color-500"
+              size={20}
+            />
             <h2 className="text-xl font-bold text-gray-900">My order</h2>
           </div>
           <div className="flex items-center gap-2">
@@ -129,7 +157,11 @@ const CartDrawer = () => {
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
               <div className="p-2 bg-gray-100 rounded-full items-center">
-                <DynamicIcon name="ShoppingCart" size={24} className="text-slate-600" />
+                <DynamicIcon
+                  name="ShoppingCart"
+                  size={24}
+                  className="text-slate-600"
+                />
               </div>
               <h3 className="text-lg font-semibold text-gray-400">
                 Your cart is empty
@@ -231,20 +263,44 @@ const CartDrawer = () => {
                   <span>-₱{promoCardDiscount.toFixed(2)}</span>
                 </div>
               )}
+              {orderDiscountAmount > 0 && (
+                <div className="flex items-center justify-between gap-3 text-sm font-semibold text-green-600">
+                  <span className="min-w-0 truncate">
+                    {orderDiscountPromotion?.name}
+                  </span>
+                  <span>-₱{orderDiscountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {orderDiscountAmount === 0 && nextOrderDiscountHint && (
+                <p className="block font-extralight text-brand-color-500 text-sm">
+                  Spend <span className="font-bold">₱{nextOrderDiscountHint.amountUntilEligible.toFixed(2)}</span>{" "}
+                  more to use {nextOrderDiscountHint.name}.
+                </p>
+              )}
+              {availableVoucherBalance > 0 && (
+                <div className="rounded-xl border border-green-200 bg-white p-3 text-sm">
+                  <span className="block font-semibold text-gray-800">
+                    Voucher balance available
+                  </span>
+                  <span className="mt-1 block text-xs text-gray-500">
+                    Use up to ₱{availableVoucherBalance.toFixed(2)} at checkout.
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>VATable Sales</span>
-                <span>₱{vatableSales.toFixed(2)}</span>
+                <span>₱{displayVatableSales.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>VAT (12%)</span>
-                <span>₱{vatAmount.toFixed(2)}</span>
+                <span>₱{displayVatAmount.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <span className="font-semibold text-gray-900">
                   Total (VAT Inc)
                 </span>
                 <span className="font-bold text-xl text-brand-color-500">
-                  ₱{totalPrice.toFixed(2)}
+                  ₱{displayTotalPrice.toFixed(2)}
                 </span>
               </div>
             </div>

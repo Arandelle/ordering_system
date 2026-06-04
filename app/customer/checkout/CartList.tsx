@@ -21,6 +21,10 @@ import {
   DEFAULT_PROMO_CARD_DISCOUNT_RULES,
   PromoCardDay,
 } from "@/lib/promoCard";
+import {
+  getBestOrderDiscountEstimate,
+  getNextOrderDiscountEligibilityHint,
+} from "@/lib/order-promotions/order-promotion.estimate";
 import { CartItem } from "@/types/MenuTypes";
 import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
@@ -209,8 +213,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     enabled: Boolean(session?.user),
     staleTime: 60_000,
   });
-  const canUsePromoCardDiscount =
-    promoCardStatus?.hasPaidPromoCard === true;
+  const canUsePromoCardDiscount = promoCardStatus?.hasPaidPromoCard === true;
   const promoCardConfig = promoCardStatus?.config ?? {
     ...PROMO_CARD,
     discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES,
@@ -223,7 +226,8 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   );
   const { data: activePromotions } = useQuery({
     queryKey: ["promotions", "active"],
-    queryFn: () => apiClient.get<ActivePromotionsResponse>("/promotions/active"),
+    queryFn: () =>
+      apiClient.get<ActivePromotionsResponse>("/promotions/active"),
     staleTime: 60_000,
   });
 
@@ -248,26 +252,15 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     setPromoCardDiscountRate,
     clearCart,
   } = useCart();
-  const orderDiscountPromotion = activePromotions?.data
-    ?.filter((promotion) => subtotalPrice >= promotion.minimumOrderAmount)
-    .map((promotion) => {
-      const discountAmount =
-        promotion.discountType === "fixed"
-          ? Math.min(promotion.discountValue, totalPrice)
-          : Math.min(
-              Number(
-                (totalPrice * (promotion.discountValue / 100)).toFixed(2),
-              ),
-              promotion.maximumDiscountAmount ?? Number.POSITIVE_INFINITY,
-            );
-
-      return {
-        name: promotion.name,
-        discountAmount,
-      };
-    })
-    .filter((promotion) => promotion.discountAmount > 0)
-    .sort((a, b) => b.discountAmount - a.discountAmount)[0];
+  const orderDiscountPromotion = getBestOrderDiscountEstimate(
+    activePromotions?.data,
+    subtotalPrice,
+    totalPrice,
+  );
+  const nextOrderDiscountHint = getNextOrderDiscountEligibilityHint(
+    activePromotions?.data,
+    subtotalPrice,
+  );
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
   const discountAdjustedTotal = Number(
     Math.max(totalPrice - orderDiscountAmount, 0).toFixed(2),
@@ -510,6 +503,15 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
               </span>
               <span>-₱{orderDiscountAmount.toFixed(2)}</span>
             </div>
+          )}
+          {orderDiscountAmount === 0 && nextOrderDiscountHint && (
+            <p className="block font-extralight text-brand-color-500 text-sm">
+              Spend{" "}
+              <span className="font-bold">
+                ₱{nextOrderDiscountHint.amountUntilEligible.toFixed(2)}
+              </span>{" "}
+              more to use {nextOrderDiscountHint.name}.
+            </p>
           )}
           {availableVoucherBalance > 0 && (
             <label className="block rounded-xl border border-green-200 bg-white p-3 text-sm">
