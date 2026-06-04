@@ -10,6 +10,7 @@ import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { ITEM_TYPES } from "@/types/products";
 import { getStoreStatus } from "@/lib/storeStatus";
 import { useSettings } from "@/hooks/api/useSettings";
+import { OrderItemImage } from "./OrderItemImage";
 
 interface ProductCardProps {
   item: BranchProduct;
@@ -48,11 +49,8 @@ const StoreClosedOverlay = ({ message }: { message: string }) => {
       {/* Content */}
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4">
         <div className="bg-white/95 rounded-xl shadow-lg px-4 py-3 max-w-[90%]">
-          
           {/* Headline */}
-          <p className="text-sm font-bold text-red-600">
-            {headline}
-          </p>
+          <p className="text-sm font-bold text-red-600">{headline}</p>
 
           {/* Optional detail */}
           {detail && (
@@ -100,20 +98,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div>
       <div
-        className={`group h-full bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1 ${
+        className={`bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col cursor-pointer hover:border-brand-color-500 transition-shadow  ${
           isOutOfStock ? "opacity-70" : ""
         }`}
       >
         {/* Image */}
-        <div className="relative overflow-hidden aspect-square">
-          <Image
-            src={item.image.url}
-            alt={item.name}
-            height={200}
-            width={200}
-            quality={92}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
+        <div className="aspect-square overflow-hidden bg-white relative flex items-center justify-center">
+          <OrderItemImage image={item.image.url} name={item.name} />
 
           {/* */}
           {storeStatus && !storeStatus.isOpen && (
@@ -156,33 +147,33 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
           )}
         </div>
-        {/* Content */}
-        <div className="flex flex-col p-4">
-          <div className="mb-2 space-y-1">
-            <h3 className="font-bold text-gray-900 text-lg leading-tight">
-              {item.name}
-            </h3>
-            {hasIncludedItems && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {includedItemsText.map((text, index) => (
-                  <span
-                    key={index}
-                    className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
-                  >
-                    {text}
-                  </span>
-                ))}
-              </div>
-            )}
-            {isSet && item.paxCount && (
-              <p className="text-[11px] font-semibold text-emerald-600">
-                Good for {item.paxCount} pax
-              </p>
-            )}
-          </div>
+
+        {/** Content */}
+        <div className="px-4 pt-3 pb-4 flex flex-col gap-2 flex-1">
+          <h3 className="font-semibold text-gray-900 leading-snug text-sm md:text-base">
+            {item.name}
+          </h3>
+          {hasIncludedItems && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {includedItemsText.map((text, index) => (
+                <span
+                  key={index}
+                  className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
+                >
+                  {text}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {isSet && item.paxCount && (
+            <p className="text-[11px] font-semibold text-emerald-600">
+              Good for {item.paxCount} pax
+            </p>
+          )}
           <div className="flex items-center justify-between mt-auto pt-2">
-            <span className="text-brand-color-500 font-bold text-xl">
-              {item.price != null ? `₱${item.price}` : "—"}
+            <span className="font-semibold text-gray-900 text-xs md:text-sm">
+              ₱{item.price?.toFixed(2) ?? "—"}
             </span>
             <button
               onClick={() => {
@@ -191,17 +182,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   : setShowDetail(true);
               }}
               disabled={isOutOfStock || !storeStatus?.isOpen}
-              className={`text-white p-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg ${
-                isOutOfStock || !storeStatus?.isOpen
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-[#1a1a1a] hover:bg-brand-color-500"
-              }`}
+              className="w-8 h-8 rounded-full bg-brand-color-500 hover:bg-brand-color-600 flex items-center justify-center text-white transition-colors shrink-0"
+              aria-label={`Add ${item.name} to cart`}
             >
-              {isOutOfStock || !storeStatus?.isOpen ? (
-                <AlertTriangle size={18} />
-              ) : (
-                <ShoppingBag size={18} />
-              )}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M12 5v14M5 12h14"
+                />
+              </svg>
             </button>
           </div>
         </div>
