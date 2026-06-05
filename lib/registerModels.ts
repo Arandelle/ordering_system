@@ -4,6 +4,7 @@ import "@/models/Category"
 import "@/models/CheckoutSession"
 import "@/models/Inventory"
 import "@/models/OrderDiscountPromotion";
+import "@/models/ProductDiscountPromotion";
 import "@/models/Orders"
 import "@/models/Product"
 import "@/models/PromoCardConfig";
