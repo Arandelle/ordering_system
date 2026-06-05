@@ -6,18 +6,25 @@ export const PROMOTION_TYPES = {
 export type PromotionTypes =
   (typeof PROMOTION_TYPES)[keyof typeof PROMOTION_TYPES];
 
-export type PromotionDiscountType = "percentage" | "fixed";
+export const PROMOTION_DISCOUNT_TYPE = ["percentage", "fixed"] as const;
 
-export type PromotionDiscountDay =
-  | "Mon"
-  | "Tue"
-  | "Wed"
-  | "Thu"
-  | "Fri"
-  | "Sat"
-  | "Sun";
+export const PROMOTION_DISCOUNT_DAYS = [
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+  "Sun",
+] as const;
 
-export type PromotionDiscountDayMode = "opening_days" | "specific_days";
+export const PROMOTION_DAY_MODE = ["opening_days", "specific_days"] as const;
+
+export type PromotionDiscountType = (typeof PROMOTION_DISCOUNT_TYPE)[number];
+
+export type PromotionDiscountDay = (typeof PROMOTION_DISCOUNT_DAYS)[number];
+
+export type PromotionDiscountDayMode = (typeof PROMOTION_DAY_MODE)[number];
 
 export type PromotionRules = {
   enabled: boolean;
@@ -29,36 +36,39 @@ export type PromotionRules = {
   endTime: string;
   maximumRedemptions: number | null;
   redemptionCount: number;
+};
+
+export type PromotionDiscountConfig = {
   discountType: PromotionDiscountType;
   discountValue: number;
 };
 
-export type PromotionConfig = PromotionRules & {
-  promotionType: PromotionTypes;
-  name: string;
+export type PromotionConfig = PromotionRules &
+  PromotionDiscountConfig & {
+    promotionType: PromotionTypes;
+    name: string;
+  };
+
+export type PromotionPayload = Partial<
+  Omit<PromotionConfig, "promotionType" | "startsAt" | "endsAt">
+> & {
+  startsAt?: string | Date | null;
+  endsAt?: string | Date | null;
 };
 
-export const PROMOTION_DAYS = [
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-  "Sun",
-] as const;
+export type PromotionScheduleConfig = {
+  dayMode: PromotionDiscountDayMode;
+  days: PromotionDiscountDay[];
+  startTime: string;
+  endTime: string;
+};
 
-export type PromotionDiscountDays = (typeof PROMOTION_DAYS)[number];
-
-export const PROMOTION_DAY_MODE: PromotionDiscountDayMode[] = [
-  "opening_days",
-  "specific_days",
-] as const;
-
-export const PROMOTION_DISCOUNT_TYPE: PromotionDiscountType[] = [
-  "percentage",
-  "fixed",
-] as const;
+export type PromotionStatus =
+  | "active"
+  | "disabled"
+  | "ended"
+  | "redeemed_out"
+  | "scheduled";
 
 export const DEFAULT_PROMOTION_RULES: PromotionRules = {
   enabled: false,
@@ -70,6 +80,9 @@ export const DEFAULT_PROMOTION_RULES: PromotionRules = {
   endTime: "23:59",
   maximumRedemptions: null,
   redemptionCount: 0,
+};
+
+export const DEFAULT_PROMOTION_DISCOUNT: PromotionDiscountConfig = {
   discountType: "percentage",
   discountValue: 10,
 };
