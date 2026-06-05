@@ -4,6 +4,7 @@ export interface IncludedItem {
   product: string | Product; // string when sending, populated Product when receiving
   quantity: number;
   label: string | null;
+  snapshotName?: string | null;
   _price?: number;
 }
 
@@ -12,6 +13,7 @@ export interface IncludedItemUI {
   product: string; // always ObjectId string in the form
   quantity: number;
   label: string | null;
+  snapshotName?: string | null;
   _name: string; // display only
   _price: number | null; // display only
 }
