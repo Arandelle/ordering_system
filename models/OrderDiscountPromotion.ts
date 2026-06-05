@@ -1,17 +1,18 @@
+import { DEFAULT_ORDER_DISCOUNT_PROMOTION } from "@/types/promotions/order-discount.type";
 import {
-  DEFAULT_ORDER_DISCOUNT_PROMOTION,
-  ORDER_DISCOUNT_DAY_MODES,
-  ORDER_DISCOUNT_DAYS,
-  ORDER_DISCOUNT_TYPES,
-} from "@/types/order-discount.type";
+  PROMOTION_DAY_MODE,
+  PROMOTION_DISCOUNT_DAYS,
+  PROMOTION_DISCOUNT_TYPE,
+  PROMOTION_TYPES,
+} from "@/types/promotions/promotion-constant";
 import { model, models, Schema } from "mongoose";
 
 const OrderDiscountPromotionSchema = new Schema(
   {
     promotionType: {
       type: String,
-      enum: ["order_discount"],
-      default: "order_discount",
+      enum: [PROMOTION_TYPES.ORDER_DISCOUNT],
+      default: PROMOTION_TYPES.ORDER_DISCOUNT,
       required: true,
     },
     enabled: {
@@ -28,7 +29,7 @@ const OrderDiscountPromotionSchema = new Schema(
     },
     discountType: {
       type: String,
-      enum: ORDER_DISCOUNT_TYPES,
+      enum: PROMOTION_DISCOUNT_TYPE,
       required: true,
       default: DEFAULT_ORDER_DISCOUNT_PROMOTION.discountType,
     },
@@ -62,13 +63,13 @@ const OrderDiscountPromotionSchema = new Schema(
     },
     dayMode: {
       type: String,
-      enum: ORDER_DISCOUNT_DAY_MODES,
+      enum: PROMOTION_DAY_MODE,
       required: true,
       default: DEFAULT_ORDER_DISCOUNT_PROMOTION.dayMode,
     },
     days: {
       type: [String],
-      enum: ORDER_DISCOUNT_DAYS,
+      enum: PROMOTION_DISCOUNT_DAYS,
       default: DEFAULT_ORDER_DISCOUNT_PROMOTION.days,
     },
     startTime: {
