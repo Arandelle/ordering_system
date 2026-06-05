@@ -44,6 +44,7 @@ interface IncludedItem {
   product: string;
   quantity: number;
   label: string | null;
+  snapshotName?: string | null;
   _name?: string;
   _price?: number;
 }
@@ -299,6 +300,44 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   useEffect(() => {
     if (editProduct) {
       const imageUrl = editProduct.image.url || "";
+      const includedItems =
+        editProduct.includedItems?.flatMap((item) => {
+          const includedProduct =
+            item.product && typeof item.product === "object"
+              ? item.product
+              : null;
+          const productId =
+            typeof item.product === "string"
+              ? item.product
+              : (includedProduct?._id ?? "");
+
+          if (!productId) return [];
+
+          return {
+            product: productId,
+            quantity: item.quantity,
+            label: item.label,
+            snapshotName:
+              item.snapshotName || item.label || includedProduct?.name || null,
+            _name:
+              includedProduct?.name ||
+              item.snapshotName ||
+              item.label ||
+              "Unavailable item",
+            _price: includedProduct?.price ?? null,
+          };
+        }) || [];
+      const removedIncludedItemCount =
+        (editProduct.includedItems?.length ?? 0) - includedItems.length;
+
+      if (removedIncludedItemCount > 0) {
+        toast.warning(
+          `${removedIncludedItemCount} included item${
+            removedIncludedItemCount === 1 ? "" : "s"
+          } no longer exists and was removed.`,
+        );
+      }
+
       setFormData({
         name: editProduct.name || "",
         price: editProduct.price?.toString() || "",
@@ -317,23 +356,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         isPopular: editProduct.isPopular || false,
         productType: editProduct.productType || ITEM_TYPES.SOLO,
         paxCount: editProduct.paxCount?.toString() || "",
-        includedItems:
-          editProduct.includedItems?.map((item) => {
-            const includedProduct =
-              typeof item.product === "object" ? item.product : null;
-            const productId =
-              typeof item.product === "string"
-                ? item.product
-                : item.product._id;
-
-            return {
-              product: productId,
-              quantity: item.quantity,
-              label: item.label,
-              _name: includedProduct?.name ?? "",
-              _price: includedProduct?.price ?? null,
-            };
-          }) || [],
+        includedItems,
       });
       if (imageUrl.includes("cloudinary.com")) {
         setSelectedGalleryUrl(imageUrl);
@@ -550,6 +573,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
           product: product._id,
           quantity: 1,
           label: null,
+          snapshotName: product.name,
           _name: product.name,
           _price: product.price,
         },
@@ -627,10 +651,11 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         productType: formData.productType,
         paxCount: formData.paxCount ? parseInt(formData.paxCount) : null,
         includedItems: isComboOrSet
-          ? formData.includedItems.map(({ product, quantity, label }) => ({
+          ? formData.includedItems.map(({ product, quantity, label, _name }) => ({
               product,
               quantity,
               label,
+              snapshotName: _name || label || null,
             }))
           : [],
       };
