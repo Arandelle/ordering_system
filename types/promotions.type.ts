@@ -1,4 +1,4 @@
-import type { OrderDiscountPromotionConfig } from "@/types/order-discount.type";
+import type { OrderDiscountPromotionConfig } from "@/types/promotions/order-discount.type";
 
 export type ActiveOrderDiscountPromotion = Omit<
   OrderDiscountPromotionConfig,
