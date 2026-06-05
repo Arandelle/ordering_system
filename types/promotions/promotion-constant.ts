@@ -29,13 +29,13 @@ export type PromotionRules = {
   endTime: string;
   maximumRedemptions: number | null;
   redemptionCount: number;
+  discountType: PromotionDiscountType;
+  discountValue: number;
 };
 
 export type PromotionConfig = PromotionRules & {
   promotionType: PromotionTypes;
   name: string;
-  discountType: PromotionDiscountType;
-  discountValue: number;
 };
 
 export const PROMOTION_DAYS = [
@@ -60,7 +60,7 @@ export const PROMOTION_DISCOUNT_TYPE: PromotionDiscountType[] = [
   "fixed",
 ] as const;
 
-export const DEFAULT_PROMOTION_SCHEDULE: PromotionRules = {
+export const DEFAULT_PROMOTION_RULES: PromotionRules = {
   enabled: false,
   startsAt: null,
   endsAt: null,
@@ -70,6 +70,6 @@ export const DEFAULT_PROMOTION_SCHEDULE: PromotionRules = {
   endTime: "23:59",
   maximumRedemptions: null,
   redemptionCount: 0,
+  discountType: "percentage",
+  discountValue: 10,
 };
-
-
