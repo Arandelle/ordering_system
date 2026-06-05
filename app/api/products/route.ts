@@ -15,6 +15,7 @@ const includedItemSchema = z.object({
   product: z.string().min(1, "Included item must reference a product"),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
   label: z.string().nullable().optional(),
+  snapshotName: z.string().nullable().optional(),
 });
 
 const productBaseSchema = z.object({
@@ -64,6 +65,24 @@ const productCreateSchema = productBaseSchema
       path: ["includedItems"],
     },
   );
+
+type IncludedProductAggregate = {
+  _id?: { toString: () => string };
+  name?: string;
+  price?: number | null;
+  image?: {
+    url?: string;
+    public_id?: string;
+  };
+  productType?: string;
+};
+
+type IncludedItemAggregate = {
+  product?: IncludedProductAggregate | null;
+  quantity: number;
+  label?: string | null;
+  snapshotName?: string | null;
+};
 
 // ─── GET ──────────────────────────────────────────────────────────────────────
 
@@ -128,7 +147,7 @@ export async function GET(request: NextRequest) {
         $addFields: {
           includedItems: {
             $map: {
-              input: "$includedItems",
+              input: { $ifNull: ["$includedItems", []] },
               as: "item",
               in: {
                 product: {
@@ -145,6 +164,7 @@ export async function GET(request: NextRequest) {
                 },
                 quantity: "$$item.quantity",
                 label: "$$item.label",
+                snapshotName: "$$item.snapshotName",
               },
             },
           },
@@ -164,11 +184,45 @@ export async function GET(request: NextRequest) {
     ]);
 
     const total = countResult[0]?.total ?? 0;
+    const normalizedProducts = products.map((product) => ({
+      ...product,
+      _id: product._id?.toString(),
+      category: product.category
+        ? {
+            ...product.category,
+            _id: product.category._id?.toString(),
+          }
+        : null,
+      subcategory: product.subcategory?._id
+        ? {
+            ...product.subcategory,
+            _id: product.subcategory._id?.toString(),
+          }
+        : null,
+      includedItems:
+        product.includedItems?.map((item: IncludedItemAggregate) => ({
+          product: item.product
+            ? {
+                _id: item.product._id?.toString() || "",
+                name: item.product.name || "",
+                price: item.product.price ?? null,
+                image: {
+                  url: item.product.image?.url || "",
+                  public_id: item.product.image?.public_id || "",
+                },
+                productType: item.product.productType || "solo",
+              }
+            : "",
+          quantity: item.quantity,
+          label: item.label,
+          snapshotName: item.snapshotName,
+        })) || [],
+    }));
 
     // Return paginated envelope instead of bare array
     return NextResponse.json(
       {
-        data: products,
+        data: normalizedProducts,
         pagination: buildPaginationMeta(total, page, limit),
       },
       { status: 200 },
@@ -257,6 +311,7 @@ export async function POST(request: NextRequest) {
               product: item.product,
               quantity: item.quantity,
               label: item.label ?? null,
+              snapshotName: item.snapshotName ?? item.label ?? null,
             }))
           : [],
     });
