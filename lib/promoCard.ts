@@ -1,6 +1,11 @@
-import { getPromotionDay } from "@/lib/order-promotions/order-promotion.schedule";
 import { DEFAULT_VOUCHER_RULE } from "@/types/voucher.types";
 import type { VoucherRule } from "@/types/voucher.types";
+import { getPromotionDay } from "./promotions/promotions.service";
+import {
+  PROMOTION_DISCOUNT_DAYS,
+  PromotionDiscountDay,
+} from "@/types/promotions/promotion-constant";
+import { roundMoney } from "./promotions/promotion.calculation";
 
 export const PROMO_CARD = {
   name: "Harrison Promo Card",
@@ -19,17 +24,9 @@ export type PromoCardConfig = {
   validityRule: PromoCardValidityRule;
 };
 
-export type PromoCardDay =
-  | "Mon"
-  | "Tue"
-  | "Wed"
-  | "Thu"
-  | "Fri"
-  | "Sat"
-  | "Sun";
 
 export type PromoCardDiscountRule = {
-  days: PromoCardDay[];
+  days: PromotionDiscountDay[];
   discountRate: number;
 };
 
@@ -43,14 +40,8 @@ export type PromoCardValidityRule = {
   expiresAt: Date | null;
 };
 
-export const PROMO_CARD_DAYS: PromoCardDay[] = [
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-  "Sun",
+export const PROMO_CARD_DAYS: PromotionDiscountDay[] = [
+  ...PROMOTION_DISCOUNT_DAYS,
 ];
 
 export const PROMO_CARD_VALIDITY_UNITS: PromoCardValidityUnit[] = [
@@ -77,7 +68,7 @@ export function calculatePromoCardDiscount(
   discountRate: number = PROMO_CARD.discountRate,
 ): number {
   if (subtotal <= 0) return 0;
-  return Number((subtotal * discountRate).toFixed(2));
+  return roundMoney(subtotal * discountRate);
 }
 
 export function calculatePromoCardTotal(
@@ -85,11 +76,11 @@ export function calculatePromoCardTotal(
   discountRate: number = PROMO_CARD.discountRate,
 ): number {
   const discount = calculatePromoCardDiscount(subtotal, discountRate);
-  return Number(Math.max(subtotal - discount, 0).toFixed(2));
+  return roundMoney(Math.max(subtotal - discount, 0));
 }
 
-export function getPromoCardDay(date = new Date()): PromoCardDay {
-  return getPromotionDay(date) as PromoCardDay;
+export function getPromoCardDay(date = new Date()): PromotionDiscountDay {
+  return getPromotionDay(date);
 }
 
 export function getPromoCardDiscountRateForDay(
