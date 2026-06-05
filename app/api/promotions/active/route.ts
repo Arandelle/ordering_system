@@ -1,20 +1,18 @@
 import { connectDB } from "@/lib/mongodb";
-import {
-  isOrderPromotionScheduleActive,
-} from "@/lib/order-promotions/order-promotion.schedule";
+import { isPromotionScheduleActive } from "@/lib/promotions/promotions.service";
 import { getStoreStatus } from "@/lib/storeStatus";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
 import { Settings } from "@/models/Setting";
 import type {
-  OrderDiscountDay,
-  OrderDiscountDayMode,
-  OrderDiscountPromotionKind,
-  OrderDiscountType,
-} from "@/types/order-discount.type";
-import type {
   ActivePromotion,
   ActivePromotionsResponse,
 } from "@/types/promotions.type";
+import type {
+  PromotionDiscountDay,
+  PromotionDiscountDayMode,
+  PromotionDiscountType,
+  PromotionTypes,
+} from "@/types/promotions/promotion-constant";
 import { NextResponse } from "next/server";
 
 type OrderDiscountPromotionRecord = {
@@ -23,14 +21,14 @@ type OrderDiscountPromotionRecord = {
   };
   enabled: boolean;
   name: string;
-  discountType: OrderDiscountType;
+  discountType: PromotionDiscountType;
   discountValue: number;
   maximumDiscountAmount?: number | null;
   minimumOrderAmount: number;
   startsAt: Date;
   endsAt?: Date | null;
-  dayMode: OrderDiscountDayMode;
-  days: OrderDiscountDay[];
+  dayMode: PromotionDiscountDayMode;
+  days: PromotionDiscountDay[];
   startTime: string;
   endTime: string;
   maximumRedemptions?: number | null;
@@ -49,7 +47,7 @@ function isPromotionCurrentlyValid(
     return false;
   }
 
-  return isOrderPromotionScheduleActive(promotion, operatingHours, now);
+  return isPromotionScheduleActive(promotion, operatingHours, now);
 }
 
 function toActiveOrderDiscountPromotion(
@@ -57,7 +55,7 @@ function toActiveOrderDiscountPromotion(
 ): ActivePromotion {
   return {
     id: promotion._id.toString(),
-    promotionType: "order_discount" satisfies OrderDiscountPromotionKind,
+    promotionType: "order_discount" satisfies PromotionTypes,
     enabled: promotion.enabled,
     name: promotion.name,
     discountType: promotion.discountType,

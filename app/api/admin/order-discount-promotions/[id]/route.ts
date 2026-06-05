@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import {
   normalizeOrderDiscountPromotionPayload,
-  OrderDiscountPromotionPayload,
+  type OrderDiscountPromotionPayload,
   validateOrderDiscountPromotionConfig,
 } from "@/lib/order-promotions/order-promotion.validation";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
