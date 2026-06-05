@@ -71,13 +71,14 @@ export async function GET(
 
               quantity: "$$item.quantity",
               label: "$$item.label",
+              snapshotName: "$$item.snapshotName",
             },
           },
         },
       },
     },
     {
-      $unset: "_includedProducts",
+      $unset: "_includedItems",
     },
 
     ...(branchId && mongoose.Types.ObjectId.isValid(branchId)
@@ -269,6 +270,7 @@ export async function PUT(
                 product: item.product,
                 quantity: item.quantity,
                 label: item.label ?? null,
+                snapshotName: item.snapshotName ?? item.label ?? null,
               }))
             : [],
       },
