@@ -1,9 +1,11 @@
+import type { OrderDiscountPromotionConfig } from "@/types/promotions/order-discount.type";
 import type {
-  OrderDiscountDay,
-  OrderDiscountDayMode,
-  OrderDiscountPromotionConfig,
-  OrderDiscountType,
-} from "@/types/order-discount.type";
+  PromotionDiscountDay,
+  PromotionDiscountDayMode,
+  PromotionDiscountType,
+} from "@/types/promotions/promotion-constant";
+
+export type { PromotionStatus } from "@/types/promotions/promotion-constant";
 
 export type OrderDiscountPromotion = Omit<
   OrderDiscountPromotionConfig,
@@ -27,14 +29,14 @@ export type OrderDiscountPromotionMutationResponse = {
 export type OrderDiscountPromotionSavePayload = {
   enabled: boolean;
   name: string;
-  discountType: OrderDiscountType;
+  discountType: PromotionDiscountType;
   discountValue: number;
   maximumDiscountAmount: number | null;
   minimumOrderAmount: number;
   startsAt: string | null;
   endsAt: string | null;
-  dayMode: OrderDiscountDayMode;
-  days: OrderDiscountDay[];
+  dayMode: PromotionDiscountDayMode;
+  days: PromotionDiscountDay[];
   startTime: string;
   endTime: string;
   maximumRedemptions: number | null;
@@ -43,25 +45,18 @@ export type OrderDiscountPromotionSavePayload = {
 export type OrderDiscountPromotionForm = {
   enabled: boolean;
   name: string;
-  discountType: OrderDiscountType;
+  discountType: PromotionDiscountType;
   discountValue: string;
   maximumDiscountAmount: string;
   minimumOrderAmount: string;
   startsAt: string;
   endsAt: string;
-  dayMode: OrderDiscountDayMode;
-  days: OrderDiscountDay[];
+  dayMode: PromotionDiscountDayMode;
+  days: PromotionDiscountDay[];
   startTime: string;
   endTime: string;
   maximumRedemptions: string;
 };
-
-export type PromotionStatus =
-  | "active"
-  | "disabled"
-  | "ended"
-  | "redeemed_out"
-  | "scheduled";
 
 export type PromotionPreviewCondition = {
   value: string;
