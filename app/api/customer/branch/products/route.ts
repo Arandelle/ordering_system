@@ -6,6 +6,24 @@ import { STOCK_STATUSES } from "@/types/inventory_types";
 import "@/lib/registerModels";
 import { buildPaginationMeta } from "@/utils/query-helpers";
 
+type IncludedProductAggregate = {
+  _id?: { toString: () => string };
+  name?: string;
+  price?: number | null;
+  image?: {
+    url?: string;
+    public_id?: string;
+  };
+  productType?: string;
+};
+
+type IncludedItemAggregate = {
+  product?: IncludedProductAggregate | null;
+  quantity: number;
+  label?: string | null;
+  snapshotName?: string | null;
+};
+
 /**
  * GET /api/branch/products
  *
@@ -94,6 +112,7 @@ export async function GET(req: NextRequest) {
                 },
                 quantity: "$$item.quantity",
                 label: "$$item.label",
+                snapshotName: "$$item.snapshotName",
               },
             },
           },
@@ -217,7 +236,7 @@ export async function GET(req: NextRequest) {
         : null,
       productType: product.productType || "solo",
       includedItems:
-        product.includedItems?.map((item: any) => ({
+        product.includedItems?.map((item: IncludedItemAggregate) => ({
           product: item.product
             ? {
                 _id: item.product._id?.toString() || "",
@@ -232,6 +251,7 @@ export async function GET(req: NextRequest) {
             : "",
           quantity: item.quantity,
           label: item.label,
+          snapshotName: item.snapshotName,
         })) || [],
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
