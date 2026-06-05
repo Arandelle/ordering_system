@@ -1,7 +1,8 @@
 import {
+  DEFAULT_PROMOTION_DISCOUNT,
   DEFAULT_PROMOTION_RULES,
   PROMOTION_TYPES,
-  PromotionConfig,
+  type PromotionConfig,
 } from "./promotion-constant";
 
 export type ProductDiscountProductSnapshot = {
@@ -23,6 +24,7 @@ export const DEFAULT_PRODUCT_DISCOUNT_DURATION_DAYS = 180;
 export const DEFAULT_PRODUCT_DISCOUNT_PROMOTION: ProductDiscountPromotionConfig =
   {
     ...DEFAULT_PROMOTION_RULES,
+    ...DEFAULT_PROMOTION_DISCOUNT,
     promotionType: PROMOTION_TYPES.PRODUCT_DISCOUNT,
     name: "Product Discount",
     products: [],
