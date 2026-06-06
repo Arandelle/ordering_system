@@ -88,6 +88,25 @@ const ShippingAddressSchema = new Schema(
   { _id: false },
 );
 
+const ProductDiscountPromotionSnapshotSchema = new Schema(
+  {
+    promotionId: {
+      type: Schema.Types.ObjectId,
+      ref: "ProductDiscountPromotion",
+      required: true,
+    },
+    name: { type: String, required: true },
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    productName: { type: String, required: true },
+    discountAmount: { type: Number, required: true, min: 0 },
+  },
+  { _id: false },
+);
+
 // ============================================
 // MAIN ORDER SCHEMA
 // ============================================
@@ -174,6 +193,11 @@ const OrderSchema = new Schema(
       subtotalAmount: { type: Number },
       discountAmount: { type: Number, default: 0 },
       discountCode: { type: String },
+      productDiscountAmount: { type: Number, default: 0 },
+      productDiscountPromotions: {
+        type: [ProductDiscountPromotionSnapshotSchema],
+        default: [],
+      },
       orderDiscountAmount: { type: Number, default: 0 },
       orderDiscountPromotionId: {
         type: Schema.Types.ObjectId,

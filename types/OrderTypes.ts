@@ -82,6 +82,14 @@ export interface OrderType {
     subtotalAmount?: number;
     discountAmount?: number;
     discountCode?: string;
+    productDiscountAmount?: number;
+    productDiscountPromotions?: {
+      promotionId: string;
+      name: string;
+      productId: string;
+      productName: string;
+      discountAmount: number;
+    }[];
     orderDiscountAmount?: number;
     orderDiscountPromotionId?: string;
     orderDiscountPromotionName?: string;
