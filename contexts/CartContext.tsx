@@ -29,6 +29,8 @@ interface CartContextType {
   vatableSales: number;
   vatAmount: number;
   subtotalPrice: number;
+  productDiscountAmount: number;
+  productDiscountedSubtotal: number;
   promoCardDiscount: number;
   totalPrice: number;
   applyPromoCardDiscount: boolean;
@@ -179,7 +181,13 @@ export const CartProvider: React.FC<{
       const existing = prev.find((c) => c._id === item._id);
       if (existing) {
         return prev.map((c) =>
-          c._id === item._id ? { ...c, quantity: c.quantity + 1 } : c,
+          c._id === item._id
+            ? {
+                ...c,
+                activeProductDiscount: item.activeProductDiscount ?? null,
+                quantity: c.quantity + item.quantity,
+              }
+            : c,
         );
       }
       return [...prev, { ...item }];
@@ -225,12 +233,24 @@ export const CartProvider: React.FC<{
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+  const productDiscountAmount = Number(
+    cartItems
+      .reduce((sum, item) => {
+        const unitDiscount = item.activeProductDiscount?.discountAmount ?? 0;
+        const lineSubtotal = item.price * item.quantity;
+        return sum + Math.min(unitDiscount * item.quantity, lineSubtotal);
+      }, 0)
+      .toFixed(2),
+  );
+  const productDiscountedSubtotal = Number(
+    Math.max(subtotalPrice - productDiscountAmount, 0).toFixed(2),
+  );
   const promoCardDiscount = applyPromoCardDiscount
-    ? calculatePromoCardDiscount(subtotalPrice, promoCardDiscountRate)
+    ? calculatePromoCardDiscount(productDiscountedSubtotal, promoCardDiscountRate)
     : 0;
   const totalPrice = applyPromoCardDiscount
-    ? calculatePromoCardTotal(subtotalPrice, promoCardDiscountRate)
-    : subtotalPrice;
+    ? calculatePromoCardTotal(productDiscountedSubtotal, promoCardDiscountRate)
+    : productDiscountedSubtotal;
   const vatableSales = totalPrice / 1.12;
   const vatAmount = totalPrice - vatableSales;
 
@@ -249,6 +269,8 @@ export const CartProvider: React.FC<{
         vatableSales,
         vatAmount,
         subtotalPrice,
+        productDiscountAmount,
+        productDiscountedSubtotal,
         promoCardDiscount,
         totalPrice,
         applyPromoCardDiscount,
