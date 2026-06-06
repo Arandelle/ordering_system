@@ -5,6 +5,7 @@ import { Inventory } from "@/models/Inventory";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import "@/lib/registerModels";
 import { buildPaginationMeta } from "@/utils/query-helpers";
+import { getActiveProductDiscountPreviews } from "@/lib/product-promotions/product-promotion.application";
 
 type IncludedProductAggregate = {
   _id?: { toString: () => string };
@@ -211,6 +212,21 @@ export async function GET(req: NextRequest) {
     ]);
 
     const total = countResult[0]?.total ?? 0;
+    const discountPreviews = await getActiveProductDiscountPreviews(
+      products
+        .filter(
+          (product) =>
+            product._id &&
+            Number.isFinite(product.price) &&
+            product.price > 0,
+        )
+        .map((product) => ({
+          productId: product._id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+        })),
+    );
 
     // Merge inventory data into each product (preserving category.position sort order)
     const result = products.map((product) => ({
@@ -256,6 +272,8 @@ export async function GET(req: NextRequest) {
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
+      activeProductDiscount:
+        discountPreviews.get(product._id.toString()) ?? null,
       quantity: product.quantity,
       status: product.status,
     }));

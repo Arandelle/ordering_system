@@ -41,6 +41,8 @@ export async function POST(req: Request) {
       // Sum quantities for items that exist in both
       merged[idx] = {
         ...merged[idx],
+        activeProductDiscount:
+          guestItem.activeProductDiscount ?? merged[idx].activeProductDiscount,
         quantity: merged[idx].quantity + guestItem.quantity,
       };
     } else {
