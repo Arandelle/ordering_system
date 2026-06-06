@@ -1,4 +1,16 @@
 import { Category, SubCategory } from "./category";
+import type { PromotionDiscountType } from "./promotions/promotion-constant";
+
+export interface ActiveProductDiscountPreview {
+  promotionId: string;
+  name: string;
+  discountType: PromotionDiscountType;
+  discountValue: number;
+  originalPrice: number;
+  discountedPrice: number;
+  discountAmount: number;
+  label: string;
+}
 
 export interface IncludedItem {
   product: string | Product; // string when sending, populated Product when receiving
@@ -43,6 +55,7 @@ export interface Product {
   paxCount?: number | null;
   isPopular?: boolean;
   isSignature?: boolean;
+  activeProductDiscount?: ActiveProductDiscountPreview | null;
   createdAt?: Date;
   updatedAt?: Date;
 }

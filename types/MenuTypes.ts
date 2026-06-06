@@ -1,6 +1,7 @@
 // types.ts - TypeScript interfaces for Harrison House Menu
 
 import { Category } from "./category";
+import type { ActiveProductDiscountPreview } from "./products";
 
 /**
  * Base menu item interface
@@ -17,6 +18,7 @@ export interface MenuItem {
   note?: string;
   isBestSeller?: boolean;
   image: string;
+  activeProductDiscount?: ActiveProductDiscountPreview | null;
 }
 
 /**
