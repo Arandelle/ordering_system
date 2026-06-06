@@ -11,6 +11,16 @@ export const CartItemSchema = new Schema(
       _id: { type: String },
       name: { type: String },
     },
+    activeProductDiscount: {
+      promotionId: { type: String },
+      name: { type: String },
+      discountType: { type: String, enum: ["percentage", "fixed"] },
+      discountValue: { type: Number },
+      originalPrice: { type: Number },
+      discountedPrice: { type: Number },
+      discountAmount: { type: Number },
+      label: { type: String },
+    },
     quantity: { type: Number, required: true, min: 1 },
   },
   { _id: false }, // prevent Mongoose from overriding your string _id
