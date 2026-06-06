@@ -15,12 +15,15 @@ import PromoBanner from "./PromoBanner";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { Product } from "@/types/products";
 import { useProductsInfinite } from "@/hooks/api/useInfiniteProducts";
+import { useDiscountedProducts } from "@/hooks/api/useDiscountedProducts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type MenuProduct = BranchProduct | Product;
+
 interface SubcategoryGroup {
   subcategoryName: string | null;
-  items: BranchProduct[];
+  items: MenuProduct[];
 }
 
 interface CategoryGroup {
@@ -30,11 +33,25 @@ interface CategoryGroup {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function groupProducts(products: (BranchProduct | Product)[]): CategoryGroup[] {
-  const categoryMap = new Map<
-    string,
-    Map<string | null, (BranchProduct | Product)[]>
-  >();
+function hasActiveProductDiscount(product: MenuProduct) {
+  return Boolean(
+    product.activeProductDiscount &&
+    product.activeProductDiscount.discountAmount > 0,
+  );
+}
+
+function sortDiscountedProductsFirst(products: MenuProduct[]) {
+  return [...products].sort((left, right) => {
+    const leftHasDiscount = hasActiveProductDiscount(left);
+    const rightHasDiscount = hasActiveProductDiscount(right);
+
+    if (leftHasDiscount === rightHasDiscount) return 0;
+    return leftHasDiscount ? -1 : 1;
+  });
+}
+
+function groupProducts(products: MenuProduct[]): CategoryGroup[] {
+  const categoryMap = new Map<string, Map<string | null, MenuProduct[]>>();
 
   for (const product of products) {
     const catName = product.category?.name ?? "Uncategorized";
@@ -49,7 +66,10 @@ function groupProducts(products: (BranchProduct | Product)[]): CategoryGroup[] {
   return Array.from(categoryMap.entries()).map(([categoryName, subMap]) => ({
     categoryName,
     subcategoryGroups: Array.from(subMap.entries()).map(
-      ([subcategoryName, items]) => ({ subcategoryName, items }),
+      ([subcategoryName, items]) => ({
+        subcategoryName,
+        items: sortDiscountedProductsFirst(items),
+      }),
     ),
   }));
 }
@@ -106,6 +126,18 @@ const MenuSection = () => {
   });
 
   const branchProducts = branchInfiniteData?.pages.flatMap((p) => p.data) ?? [];
+  const {
+    data: discountedProductsData,
+    fetchNextPage: fetchNextDiscountedPage,
+    hasNextPage: hasMoreDiscountedProducts,
+    isFetchingNextPage: isFetchingNextDiscountedPage,
+  } = useDiscountedProducts({
+    branchId,
+    limit: 8,
+    enabled: true,
+  });
+  const discountedProducts =
+    discountedProductsData?.pages.flatMap((page) => page.data) ?? [];
 
   // Use branch products if available, otherwise fall back to all products
   const dynamicProducts = branchId ? (branchProducts ?? []) : allProducts;
@@ -217,7 +249,7 @@ const MenuSection = () => {
 
   let globalIndex = 0;
 
-  const ProductGrid = ({ items }: { items: (BranchProduct | Product)[] }) => (
+  const ProductGrid = ({ items }: { items: MenuProduct[] }) => (
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-4 md:gap-5">
       {items.map((item, indexItem) => {
         const index = globalIndex++;
@@ -240,10 +272,41 @@ const MenuSection = () => {
     </div>
   );
 
+  const DiscountedProductsShelf = () => {
+    if (discountedProducts.length === 0) return null;
+
+    return (
+      <section className="">
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-green-600">
+              Limited-time offers
+            </p>
+            <h2 className="mt-1 text-xl font-bold text-gray-900">
+              Discounted Items
+            </h2>
+          </div>
+        </div>
+        <ProductGrid items={discountedProducts} />
+        {hasMoreDiscountedProducts && (
+          <button
+            type="button"
+            onClick={() => fetchNextDiscountedPage()}
+            disabled={isFetchingNextDiscountedPage}
+            className="shrink-0 rounded-full border border-brand-color-200 bg-white px-4 py-2 text-xs font-bold text-brand-color-700 transition-colors hover:bg-brand-color-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isFetchingNextDiscountedPage ? "Loading..." : "See more"}
+          </button>
+        )}
+      </section>
+    );
+  };
+
   const GroupedContent = () => (
     <>
-      {groupedItems.length > 0 ? (
+      {groupedItems.length > 0 || discountedProducts.length > 0 ? (
         <div className="space-y-12">
+          <DiscountedProductsShelf />
           {groupedItems.map(({ categoryName, subcategoryGroups }) => (
             <div key={categoryName}>
               {activeCategory === "All" && (
