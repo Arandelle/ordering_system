@@ -1,181 +1,153 @@
-# Ordering System
+# Harrison Ordering System
 
-A full-stack ordering system designed to handle product browsing, branch-based availability, and checkout workflows with real-time inventory updates.
+A full-stack ordering and admin system for branch-based food ordering. The system supports product browsing, branch inventory, customer checkout, admin management, promotions, vouchers, and Maya/COD payment flows.
 
-This project focuses on real-world system design, clean architecture, and production-ready backend logic.
-
----
-
-## Features
-
-### Customer Side
-
-* Browse products with category and subcategory
-* View product availability per branch
-* Dynamic product selection using modal system
-* Checkout with customer details:
-
-  * Name
-  * Email
-  * Phone
-
-### Branch System
-
-* Multi-branch support
-* Branch-specific inventory tracking
-* Stock deduction happens during checkout
-
-### System Features
-
-* URL-based modal state management
-* Structured API routes with validation
-* Error handling for failed requests
-* Scalable database structure
-
----
+For design decisions and engineering rules, read [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Tech Stack
 
-### Frontend
+- Next.js App Router
+- React
+- TypeScript
+- Tailwind CSS
+- Next.js API routes
+- MongoDB with Mongoose
+- Better Auth
+- Maya payment integration
+- Inngest
 
-* Next.js (App Router)
-* TypeScript
-* Tailwind CSS
+## Core Capabilities
 
-### Backend
-
-* Next.js API Routes
-* MongoDB with Mongoose
-
-### Other
-
-* JWT Authentication (cookies)
-* REST API design
-
----
+- Customer product browsing by category and branch availability
+- Branch-specific inventory validation and reservation
+- Customer checkout for COD and Maya
+- Promo-card benefits and voucher redemption
+- Product-level and order-level promotions
+- Admin management screens for products, branches, categories, inventory, orders, and promotions
+- Order snapshots for historical product, branch, payment, and discount details
 
 ## Project Structure
 
-```
-/app
-  /api
-    /checkout
-    /auth
-  /components
-  /hooks
-  /lib
-  /models
-```
+```txt
+app/
+  Next.js routes, API routes, admin/customer UI
 
----
+components/
+  Shared UI components
 
-## Key Concepts
+contexts/
+  React context providers
 
-### URL-Based Modal System
+hooks/
+  Shared React hooks
 
-Modals are controlled via query parameters instead of local state.
+inngest/
+  Background event/workflow integration
 
-```
-?modal=login
-?modal=signup
-?modal=map
-```
+lib/
+  Runtime domain logic, auth helpers, database helpers, promotion logic
 
-Benefits:
+models/
+  Mongoose schemas
 
-* Shareable UI state
-* Cleaner component logic
-* Better user experience
+services/
+  Cross-feature services and customer benefit helpers
 
----
-
-### Inventory Deduction Strategy
-
-Stock is deducted at checkout level.
-
-```
-inventory.stock -= orderedQuantity
+types/
+  Shared TypeScript types and constants
 ```
 
-Reason:
+## Important Architecture Rules
 
-* Prevents inconsistencies across branches
-* Matches real-world ordering systems
+Backend routes are the source of truth for production-sensitive behavior.
 
----
+Do not trust the frontend for:
 
-### Database Relationships
+- Product prices
+- Inventory availability
+- Discount eligibility
+- Voucher redemption amount
+- Tax and final order totals
+- Payment status
+- Order status transitions
+- Admin permissions
 
-* Product → Category
-* Product → Subcategory
-* Inventory → Branch
-* Order → Customer
+Checkout pricing follows this order:
 
----
-
-## Common Issue (Production)
-
-### Mongoose Model Not Registered
-
-Error:
-
-```
-Schema hasn't been registered for model "Category"
-```
-
-Cause:
-Using `.populate("category")` without importing the model.
-
-Fix:
-
-```
-import "@/models/Category"
-import "@/models/Subcategory"
+```txt
+cart items from database
+-> original subtotal
+-> product discount promotions
+-> promo-card discount
+-> order discount promotions
+-> voucher redemption
+-> tax and final total
+-> order snapshot
 ```
 
-Always ensure models are imported before usage in API routes.
+Promotion configuration and promotion application are separate:
 
----
+- Admin validation/configuration lives near admin/API validation code.
+- Runtime checkout application lives under `lib/*-promotions/`.
 
-## Environment Variables
+## Local Development
 
-Create a `.env.local` file:
+Install dependencies:
 
-```
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_secret_key
-```
-
----
-
-## Running Locally
-
-```
+```bash
 npm install
+```
+
+Run the development server:
+
+```bash
 npm run dev
 ```
 
----
+Run lint:
 
-## Deployment Notes
+```bash
+npm run lint
+```
 
-* Ensure all models are registered before API usage
-* Validate environment variables in production
-* Do not rely on local caching behavior
+Run TypeScript check:
 
----
+```bash
+npx tsc --noEmit
+```
 
-## Future Improvements
+On this Windows workspace, full lint/typecheck may fail with:
 
-* Payment integration
-* Order tracking system
-* Admin dashboard
-* Rate limiting
-* Caching (Redis)
-* Queue system for high traffic
+```txt
+EPERM: operation not permitted, lstat 'C:\Test'
+```
 
----
+When that happens, use targeted code inspection and `git diff --check`, then verify in a less restricted environment before shipping.
 
-## License
+## Environment
 
-MIT License
+Use `.env.local` for local configuration. Do not commit secrets.
+
+Common configuration includes:
+
+- MongoDB connection string
+- Better Auth configuration
+- Maya payment keys
+- Email provider settings
+- Public application URL
+
+Check `.env.example` for the expected shape.
+
+## Production-Sensitive Areas
+
+Be extra careful when changing:
+
+- Checkout routes
+- Payment callback/webhook routes
+- Inventory reservation logic
+- Promotion and voucher application
+- Order status transitions
+- Authentication and admin authorization
+- Mongoose model fields used by existing orders
+
+Before merging changes in these areas, review [ARCHITECTURE.md](./ARCHITECTURE.md#before-changing-code).
