@@ -25,7 +25,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
             <CartDrawer />
             <ActivePromotionsFloatingNotice />
             {children}
-            <PWAInstallPrompt />
+            {/* <PWAInstallPrompt /> */}
             <Footer />
           </CartProvider>
         </BranchProvider>
