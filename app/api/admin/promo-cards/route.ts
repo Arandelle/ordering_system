@@ -5,7 +5,6 @@ import {
   PROMO_CARD,
   PROMO_CARD_DAYS,
   PROMO_CARD_VALIDITY_UNITS,
-  PromoCardDay,
   PromoCardDiscountRule,
   PromoCardValidityRule,
   PromoCardValidityUnit,
@@ -22,6 +21,7 @@ import { PromoCardConfigModel } from "@/models/PromoCardConfig";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
+import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
 
 export async function GET(request: NextRequest) {
   try {
@@ -98,7 +98,7 @@ export async function PATCH(request: NextRequest) {
       name?: string;
       purchasePrice?: number;
       discountRules?: {
-        days?: PromoCardDay[];
+        days?: PromotionDiscountDay[];
         discountPercent?: number;
       }[];
       voucherRule?: PromoCardVoucherRule;
