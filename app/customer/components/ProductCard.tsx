@@ -94,6 +94,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     item.productType !== ITEM_TYPES.SOLO && item.productType != null;
   const includedItemsText = getIncludedItemsText(item.includedItems);
   const hasIncludedItems = isNonSolo && includedItemsText.length > 0;
+  const activeProductDiscount = item.activeProductDiscount;
+  const hasProductDiscount =
+    Boolean(activeProductDiscount) && activeProductDiscount!.discountAmount > 0;
+  const displayPrice = hasProductDiscount
+    ? activeProductDiscount!.discountedPrice
+    : item.price;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -147,6 +153,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             </div>
           )}
+          {hasProductDiscount && (
+            <div className="absolute left-3 bottom-3 z-10 rounded-full bg-green-600 px-3 py-1 text-[10px] font-bold text-white shadow-lg">
+              {activeProductDiscount!.label}
+            </div>
+          )}
         </div>
 
         {/** Content */}
@@ -173,7 +184,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </p>
           )}
           <div className="flex items-center justify-between mt-auto pt-2">
-            <span className="font-semibold text-gray-900 text-xs md:text-sm">
+            <div className="flex flex-col">
+              <span className="font-semibold text-gray-900 text-xs md:text-sm">
+                PHP {displayPrice?.toFixed(2) ?? "--"}
+              </span>
+              {hasProductDiscount && item.price != null && (
+                <span className="text-[11px] text-gray-400 line-through">
+                  PHP {item.price.toFixed(2)}
+                </span>
+              )}
+            </div>
+            <span className="hidden">
               ₱{item.price?.toFixed(2) ?? "—"}
             </span>
             <button

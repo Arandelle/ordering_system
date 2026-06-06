@@ -103,7 +103,13 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   // ── Computed ──────────────────────────────────────────────────────────────
 
   const basePrice = item.price ?? 0;
-  const total = basePrice * mainQty;
+  const activeProductDiscount = item.activeProductDiscount;
+  const hasProductDiscount =
+    Boolean(activeProductDiscount) && activeProductDiscount!.discountAmount > 0;
+  const displayUnitPrice = hasProductDiscount
+    ? activeProductDiscount!.discountedPrice
+    : basePrice;
+  const total = displayUnitPrice * mainQty;
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -127,6 +133,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       name: item.name,
       price: basePrice,
       image: item.image.url,
+      activeProductDiscount,
       category: {
         _id: item.category._id,
         name: item.category.name,
@@ -190,6 +197,19 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {/* Price */}
                 <div className="flex items-baseline gap-2 mt-3">
                   <span className="text-2xl font-bold text-brand-color-500">
+                    PHP {displayUnitPrice.toFixed(2)}
+                  </span>
+                  {hasProductDiscount && (
+                    <>
+                      <span className="text-sm text-gray-400 line-through">
+                        PHP {basePrice.toFixed(2)}
+                      </span>
+                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-bold text-green-700">
+                        {activeProductDiscount!.label}
+                      </span>
+                    </>
+                  )}
+                  <span className="hidden">
                     ₱{basePrice}
                   </span>
                 </div>

@@ -58,8 +58,15 @@ const CartRow = ({
   item: CartItem;
   onRemove: (id: string) => void;
   onUpdate: (id: string, qty: number) => void;
-}) => (
-  <div className="flex gap-3 py-3 first:pt-0">
+}) => {
+  const unitDiscount = item.activeProductDiscount?.discountAmount ?? 0;
+  const lineSubtotal = item.price * item.quantity;
+  const lineDiscount = Math.min(unitDiscount * item.quantity, lineSubtotal);
+  const discountedLineTotal = Math.max(lineSubtotal - lineDiscount, 0);
+  const hasProductDiscount = lineDiscount > 0;
+
+  return (
+    <div className="flex gap-3 py-3 first:pt-0">
     <img
       src={item.image}
       alt={item.name || "Product"}
@@ -74,6 +81,11 @@ const CartRow = ({
           {item.category?.name && (
             <p className="text-xs text-slate-400 mt-0.5">
               {item.category.name}
+            </p>
+          )}
+          {hasProductDiscount && (
+            <p className="mt-1 text-[11px] font-semibold text-green-600">
+              {item.activeProductDiscount?.label}
             </p>
           )}
         </div>
@@ -106,13 +118,24 @@ const CartRow = ({
           </button>
         </div>
 
-        <span className="text-sm font-bold text-brand-color-500">
+        <div className="flex flex-col items-end">
+          <span className="text-sm font-bold text-brand-color-500">
+            PHP {discountedLineTotal.toFixed(2)}
+          </span>
+          {hasProductDiscount && (
+            <span className="text-[11px] text-slate-400 line-through">
+              PHP {lineSubtotal.toFixed(2)}
+            </span>
+          )}
+        </div>
+        <span className="hidden">
           ₱{(item.price * item.quantity).toFixed(2)}
         </span>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 type CartListProps = {
   selectedBranch: Branch | null;
@@ -245,6 +268,8 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     removeFromCart,
     updateQuantity,
     subtotalPrice,
+    productDiscountAmount,
+    productDiscountedSubtotal,
     promoCardDiscount,
     totalPrice,
     applyPromoCardDiscount,
@@ -254,12 +279,12 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   } = useCart();
   const orderDiscountPromotion = getBestOrderDiscountEstimate(
     activePromotions?.data,
-    subtotalPrice,
+    productDiscountedSubtotal,
     totalPrice,
   );
   const nextOrderDiscountHint = getNextOrderDiscountEligibilityHint(
     activePromotions?.data,
-    subtotalPrice,
+    productDiscountedSubtotal,
   );
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
   const discountAdjustedTotal = Number(
@@ -490,6 +515,12 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
             <span>Subtotal</span>
             <span>₱{subtotalPrice.toFixed(2)}</span>
           </div>
+          {productDiscountAmount > 0 && (
+            <div className="flex justify-between text-sm font-semibold text-green-600">
+              <span>Product discounts</span>
+              <span>-PHP {productDiscountAmount.toFixed(2)}</span>
+            </div>
+          )}
           {promoCardDiscount > 0 && (
             <div className="flex justify-between text-sm font-semibold text-green-600">
               <span>Promo card discount</span>

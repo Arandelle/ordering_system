@@ -70,6 +70,8 @@ const CartDrawer = () => {
     totalProducts,
     totalItems,
     subtotalPrice,
+    productDiscountAmount,
+    productDiscountedSubtotal,
     promoCardDiscount,
     totalPrice,
     applyPromoCardDiscount,
@@ -79,12 +81,12 @@ const CartDrawer = () => {
   } = useCart();
   const orderDiscountPromotion = getBestOrderDiscountEstimate(
     activePromotions?.data,
-    subtotalPrice,
+    productDiscountedSubtotal,
     totalPrice,
   );
   const nextOrderDiscountHint = getNextOrderDiscountEligibilityHint(
     activePromotions?.data,
-    subtotalPrice,
+    productDiscountedSubtotal,
   );
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
   const displayTotalPrice = Number(
@@ -187,7 +189,24 @@ const CartDrawer = () => {
                     <h4 className="font-semibold text-gray-900 mb-1">
                       {item.name}
                     </h4>
+                    {item.activeProductDiscount && (
+                      <p className="mb-1 text-xs font-semibold text-green-600">
+                        {item.activeProductDiscount.label}
+                      </p>
+                    )}
                     <p className="text-brand-color-500 font-bold">
+                      PHP{" "}
+                      {(
+                        item.activeProductDiscount?.discountedPrice ??
+                        item.price
+                      ).toFixed(2)}
+                    </p>
+                    {item.activeProductDiscount && (
+                      <p className="text-xs text-gray-400 line-through">
+                        PHP {item.price.toFixed(2)}
+                      </p>
+                    )}
+                    <p className="hidden">
                       ₱{item.price}
                     </p>
 
@@ -257,6 +276,12 @@ const CartDrawer = () => {
                 <span>Subtotal</span>
                 <span>₱{subtotalPrice.toFixed(2)}</span>
               </div>
+              {productDiscountAmount > 0 && (
+                <div className="flex items-center justify-between text-sm font-semibold text-green-600">
+                  <span>Product discounts</span>
+                  <span>-PHP {productDiscountAmount.toFixed(2)}</span>
+                </div>
+              )}
               {promoCardDiscount > 0 && (
                 <div className="flex items-center justify-between text-sm font-semibold text-green-600">
                   <span>Promo card discount</span>
