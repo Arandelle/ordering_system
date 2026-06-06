@@ -31,6 +31,12 @@ import {
 import type {
   AppliedOrderDiscountPromotion,
 } from "@/lib/order-promotions/order-promotion.application";
+import {
+  incrementProductDiscountRedemptions,
+  resolveProductDiscountPromotions,
+  type AppliedProductDiscountPromotion,
+  type ProductDiscountResolution,
+} from "@/lib/product-promotions/product-promotion.application";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -73,6 +79,8 @@ interface TaxBreakdown {
   totalAmount: number;
   subtotalAmount: number;
   discountAmount: number;
+  productDiscountAmount: number;
+  productDiscountPromotions: AppliedProductDiscountPromotion[];
   orderDiscountAmount: number;
   orderDiscountPromotionId?: string;
   orderDiscountPromotionName?: string;
@@ -234,21 +242,30 @@ export async function reserveInventory(
 
 export function computeTax(
   subtotalAmount: number,
+  productDiscountResolution: ProductDiscountResolution,
   applyPromoCardDiscount = false,
   discountRate: number = PROMO_CARD.discountRate,
   discountCode: string = PROMO_CARD.sku,
   voucherDiscountAmount = 0,
   orderDiscountPromotion: AppliedOrderDiscountPromotion | null = null,
 ): TaxBreakdown {
+  const productDiscountAmount =
+    productDiscountResolution.productDiscountAmount;
+  const productDiscountedSubtotal =
+    productDiscountResolution.discountedSubtotalAmount;
   const promoCardDiscountAmount = applyPromoCardDiscount
-    ? calculatePromoCardDiscount(subtotalAmount, discountRate)
+    ? calculatePromoCardDiscount(productDiscountedSubtotal, discountRate)
     : 0;
   const promoTotalAmount = applyPromoCardDiscount
-    ? calculatePromoCardTotal(subtotalAmount, discountRate)
-    : subtotalAmount;
+    ? calculatePromoCardTotal(productDiscountedSubtotal, discountRate)
+    : productDiscountedSubtotal;
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
   const discountAmount = Number(
-    (promoCardDiscountAmount + orderDiscountAmount).toFixed(2),
+    (
+      productDiscountAmount +
+      promoCardDiscountAmount +
+      orderDiscountAmount
+    ).toFixed(2),
   );
   const totalAmount = Number(
     Math.max(
@@ -265,6 +282,8 @@ export function computeTax(
     totalAmount,
     subtotalAmount,
     discountAmount,
+    productDiscountAmount,
+    productDiscountPromotions: productDiscountResolution.appliedPromotions,
     orderDiscountAmount,
     ...(orderDiscountPromotion && {
       orderDiscountPromotionId: orderDiscountPromotion.promotionId.toString(),
@@ -405,6 +424,8 @@ export async function persistOrder(
     totalAmount,
     subtotalAmount,
     discountAmount,
+    productDiscountAmount,
+    productDiscountPromotions,
     orderDiscountAmount,
     orderDiscountPromotionId,
     orderDiscountPromotionName,
@@ -444,6 +465,16 @@ export async function persistOrder(
           totalAmount,
           subtotalAmount,
           discountAmount,
+          productDiscountAmount,
+          productDiscountPromotions: productDiscountPromotions.map(
+            (promotion) => ({
+              promotionId: promotion.promotionId,
+              name: promotion.name,
+              productId: promotion.productId,
+              productName: promotion.productName,
+              discountAmount: promotion.discountAmount,
+            }),
+          ),
           orderDiscountAmount,
           orderDiscountPromotionId,
           orderDiscountPromotionName,
@@ -529,14 +560,20 @@ export async function POST(request: NextRequest) {
     );
 
     // 6. Tax breakdown
+    const productDiscountResolution = await resolveProductDiscountPromotions(
+      orderItems,
+      session,
+    );
+    const productDiscountedTotal =
+      productDiscountResolution.discountedSubtotalAmount;
     const promoAdjustedTotal = body.applyPromoCardDiscount
       ? calculatePromoCardTotal(
-          totalPrice,
+          productDiscountedTotal,
           promoCardDiscount?.discountRate,
         )
-      : totalPrice;
+      : productDiscountedTotal;
     const orderDiscountPromotion = await resolveOrderDiscountPromotion(
-      totalPrice,
+      productDiscountedTotal,
       promoAdjustedTotal,
       session,
     );
@@ -553,6 +590,7 @@ export async function POST(request: NextRequest) {
     );
     const tax = computeTax(
       totalPrice,
+      productDiscountResolution,
       body.applyPromoCardDiscount === true,
       promoCardDiscount?.discountRate,
       promoCardDiscount?.discountCode,
@@ -564,6 +602,10 @@ export async function POST(request: NextRequest) {
       throw new Error(`Minimum order amount is ₱${MINIMUM_AMOUNT}`);
 
     await incrementOrderDiscountRedemption(orderDiscountPromotion, session);
+    await incrementProductDiscountRedemptions(
+      productDiscountResolution.appliedPromotions,
+      session,
+    );
 
     // 7. Maya checkout
     const referenceNumber = `ORDER-${Date.now()}`;

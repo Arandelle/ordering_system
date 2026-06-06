@@ -22,6 +22,10 @@ import {
   incrementOrderDiscountRedemption,
   resolveOrderDiscountPromotion,
 } from "@/lib/order-promotions/order-promotion.application";
+import {
+  incrementProductDiscountRedemptions,
+  resolveProductDiscountPromotions,
+} from "@/lib/product-promotions/product-promotion.application";
 
 const MINIMUM_AMOUNT = 100;
 
@@ -61,14 +65,20 @@ export async function POST(request: NextRequest) {
     );
 
     // 6. Tax breakdown
+    const productDiscountResolution = await resolveProductDiscountPromotions(
+      orderItems,
+      session,
+    );
+    const productDiscountedTotal =
+      productDiscountResolution.discountedSubtotalAmount;
     const promoAdjustedTotal = body.applyPromoCardDiscount
       ? calculatePromoCardTotal(
-          totalPrice,
+          productDiscountedTotal,
           promoCardDiscount?.discountRate,
         )
-      : totalPrice;
+      : productDiscountedTotal;
     const orderDiscountPromotion = await resolveOrderDiscountPromotion(
-      totalPrice,
+      productDiscountedTotal,
       promoAdjustedTotal,
       session,
     );
@@ -85,6 +95,7 @@ export async function POST(request: NextRequest) {
     );
     const tax = computeTax(
       totalPrice,
+      productDiscountResolution,
       body.applyPromoCardDiscount === true,
       promoCardDiscount?.discountRate,
       promoCardDiscount?.discountCode,
@@ -97,6 +108,10 @@ export async function POST(request: NextRequest) {
     }
 
     await incrementOrderDiscountRedemption(orderDiscountPromotion, session);
+    await incrementProductDiscountRedemptions(
+      productDiscountResolution.appliedPromotions,
+      session,
+    );
 
     const referenceNumber = `ORDER-${Date.now()}`;
 
