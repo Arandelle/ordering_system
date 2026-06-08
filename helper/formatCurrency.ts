@@ -1,4 +1,4 @@
-export function formatCurrency(value: number) {
+export function formatCurrency(value: number | null) {
 
   if(!value) return '--'
 
@@ -6,4 +6,4 @@ export function formatCurrency(value: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
-}
+} 
