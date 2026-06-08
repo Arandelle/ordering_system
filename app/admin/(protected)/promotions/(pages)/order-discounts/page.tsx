@@ -3,7 +3,7 @@
 import SectionHeader from "@/app/admin/components/SectionHeader";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { useRouter } from "next/navigation";
-import { useOrderDiscountPromotions } from "../hooks/useOrderDiscountPromotions";
+import { useOrderDiscountPromotions } from "../../hooks/useOrderDiscountPromotions";
 import { PromotionList } from "./components/PromotionList";
 
 export default function OrderDiscountPromotionsPage() {

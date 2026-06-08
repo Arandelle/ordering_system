@@ -2,51 +2,72 @@
 
 import { InputField } from "@/components/ui/InputField";
 import { SelectField } from "@/components/ui/SelectField";
-import {
-  DEFAULT_ORDER_DISCOUNT_PROMOTION,
-  type OrderDiscountPromotionConfig,
-} from "@/types/promotions/order-discount.type";
+import { formatCurrency } from "@/helper/formatCurrency";
+import { DEFAULT_PRODUCT_DISCOUNT_PROMOTION } from "@/types/promotions/product-discount.type";
 import {
   PROMOTION_DISCOUNT_DAYS,
   type PromotionDiscountDay,
   type PromotionDiscountType,
 } from "@/types/promotions/promotion-constant";
+import type { ProductDiscountPromotionConfig } from "@/types/promotions/product-discount.type";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import { useSaveOrderDiscountPromotion } from "../../hooks/useOrderDiscountPromotions";
+import {
+  useProductDiscountOptions,
+  useSaveProductDiscountPromotion,
+} from "../../../hooks/useProductDiscountPromotions";
 import { buildInitialPromotionForm } from "../helpers/buildInitialPromotionForm";
 import { buildPromotionPayload } from "../helpers/buildPromotionPayload";
-import { getPromotionPreview } from "../helpers/getPromotionPreview";
 import {
-  OrderDiscountPromotion,
-  OrderDiscountPromotionForm,
+  ProductDiscountCategoryOption,
+  ProductDiscountPromotion,
+  ProductDiscountPromotionForm,
+  ProductDiscountProductOption,
 } from "../types";
 
-type OrderDiscountPromotionEditorProps = {
-  promotion: OrderDiscountPromotion | OrderDiscountPromotionConfig;
+type ProductDiscountPromotionEditorProps = {
+  promotion: ProductDiscountPromotion | ProductDiscountPromotionConfig;
   mode: "create" | "edit";
 };
 
-export function OrderDiscountPromotionEditor({
+const PERCENTAGE_PRESETS = [10, 15, 20, 25, 30, 50];
+
+function getProductPriceLabel(product: ProductDiscountProductOption) {
+  return product.price === null ? "Range priced" : formatCurrency(product.price);
+}
+
+function getSelectedProducts(
+  categories: ProductDiscountCategoryOption[],
+  productIds: string[],
+) {
+  const selectedIds = new Set(productIds);
+
+  return categories
+    .flatMap((category) => category.products)
+    .filter((product) => selectedIds.has(product._id));
+}
+
+export function ProductDiscountPromotionEditor({
   promotion,
   mode,
-}: OrderDiscountPromotionEditorProps) {
+}: ProductDiscountPromotionEditorProps) {
   const router = useRouter();
-  const [form, setForm] = useState<OrderDiscountPromotionForm>(() =>
+  const options = useProductDiscountOptions();
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>([]);
+  const [form, setForm] = useState<ProductDiscountPromotionForm>(() =>
     buildInitialPromotionForm(promotion),
   );
   const initialForm = useMemo(
     () => buildInitialPromotionForm(promotion),
     [promotion],
   );
-  const preview = getPromotionPreview(form);
+  const categories = options.data?.data ?? [];
+  const selectedProducts = getSelectedProducts(categories, form.productIds);
   const hasChanges =
     mode === "create" || JSON.stringify(form) !== JSON.stringify(initialForm);
-  const showPercentageCap = form.discountType === "percentage";
   const promotionId = "_id" in promotion ? promotion._id : null;
-
-  const goBackToList = () => router.push("/promotions/order-discounts");
-  const savePromotion = useSaveOrderDiscountPromotion({
+  const goBackToList = () => router.push("/promotions/product-discounts");
+  const savePromotion = useSaveProductDiscountPromotion({
     mode,
     promotionId,
     onSuccess: goBackToList,
@@ -65,6 +86,47 @@ export function OrderDiscountPromotionEditor({
     });
   };
 
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategoryIds((current) =>
+      current.includes(categoryId)
+        ? current.filter((id) => id !== categoryId)
+        : [...current, categoryId],
+    );
+  };
+
+  const toggleProduct = (productId: string) => {
+    setForm((current) => {
+      const hasProduct = current.productIds.includes(productId);
+
+      return {
+        ...current,
+        productIds: hasProduct
+          ? current.productIds.filter((id) => id !== productId)
+          : [...current.productIds, productId],
+      };
+    });
+  };
+
+  const toggleCategoryProducts = (
+    category: ProductDiscountCategoryOption,
+    checked: boolean,
+  ) => {
+    const categoryProductIds = category.products.map((product) => product._id);
+
+    setForm((current) => ({
+      ...current,
+      productIds: checked
+        ? [...new Set([...current.productIds, ...categoryProductIds])]
+        : current.productIds.filter((id) => !categoryProductIds.includes(id)),
+      categoryIds:
+        category._id === "uncategorized"
+          ? current.categoryIds
+          : checked
+            ? [...new Set([...current.categoryIds, category._id])]
+            : current.categoryIds.filter((id) => id !== category._id),
+    }));
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     savePromotion.mutate(buildPromotionPayload(form));
@@ -77,11 +139,11 @@ export function OrderDiscountPromotionEditor({
           <div>
             <h2 className="text-xl font-bold text-stone-800">
               {mode === "create"
-                ? "Create Order Discount"
-                : "Edit Order Discount"}
+                ? "Create Product Discount"
+                : "Edit Product Discount"}
             </h2>
             <p className="mt-1 text-sm text-stone-500">
-              Configure discount value, eligibility rules, schedule, and
+              Configure the target products, discount value, schedule, and
               redemption limit.
             </p>
           </div>
@@ -125,21 +187,17 @@ export function OrderDiscountPromotionEditor({
               setForm((current) => ({
                 ...current,
                 discountType: event.target.value as PromotionDiscountType,
-                maximumDiscountAmount:
-                  event.target.value === "percentage"
-                    ? current.maximumDiscountAmount
-                    : "",
               }))
             }
           />
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
           <InputField
             label={
               form.discountType === "percentage"
                 ? "Discount percentage"
-                : "Discount Amount"
+                : "Discount amount"
             }
             type="number"
             min={0.01}
@@ -155,45 +213,146 @@ export function OrderDiscountPromotionEditor({
             required
           />
 
-          {showPercentageCap && (
-            <InputField
-              label="Maximum discount amount"
-              type="number"
-              min={0}
-              step={0.01}
-              value={form.maximumDiscountAmount}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  maximumDiscountAmount: event.target.value,
-                }))
-              }
-              placeholder="No limit"
-            />
+          {form.discountType === "percentage" && (
+            <div>
+              <p className="mb-2 text-sm font-semibold text-gray-700">
+                Percentage presets
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {PERCENTAGE_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        discountValue: String(preset),
+                      }))
+                    }
+                    className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
+                      form.discountValue === String(preset)
+                        ? "border-brand-color-500 bg-brand-color-500 text-white"
+                        : "border-stone-200 text-stone-600 hover:border-brand-color-500"
+                    }`}
+                  >
+                    {preset}%
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
-
-          <InputField
-            label="Minimum order amount"
-            type="number"
-            min={DEFAULT_ORDER_DISCOUNT_PROMOTION.minimumOrderAmount}
-            step={0.01}
-            value={form.minimumOrderAmount}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                minimumOrderAmount: event.target.value,
-              }))
-            }
-            required
-          />
         </div>
+      </div>
+
+      <div className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm">
+        <div className="mb-5">
+          <h2 className="text-xl font-bold text-stone-800">Products</h2>
+          <p className="mt-1 text-sm text-stone-500">
+            Select whole categories or individual products. The promotion saves
+            exact product IDs.
+          </p>
+        </div>
+
+        {options.isLoading ? (
+          <p className="text-sm text-stone-500">Loading products...</p>
+        ) : options.isError ? (
+          <p className="text-sm font-semibold text-red-600">
+            Failed to load products.
+          </p>
+        ) : categories.length === 0 ? (
+          <p className="text-sm text-stone-500">No products available.</p>
+        ) : (
+          <div className="space-y-3">
+            {categories.map((category) => {
+              const categoryProductIds = category.products.map(
+                (product) => product._id,
+              );
+              const selectedCount = categoryProductIds.filter((id) =>
+                form.productIds.includes(id),
+              ).length;
+              const allSelected = selectedCount === category.products.length;
+              const isExpanded = expandedCategoryIds.includes(category._id);
+
+              return (
+                <div
+                  key={category._id}
+                  className="rounded-lg border border-stone-200"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-3">
+                    <label className="flex cursor-pointer items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={(event) =>
+                          toggleCategoryProducts(category, event.target.checked)
+                        }
+                        className="h-4 w-4 accent-brand-color-500"
+                      />
+                      <span>
+                        <span className="block text-sm font-bold text-stone-800">
+                          {category.name}
+                        </span>
+                        <span className="block text-xs text-stone-500">
+                          {selectedCount} / {category.products.length} selected
+                        </span>
+                      </span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => toggleCategoryExpansion(category._id)}
+                      className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
+                    >
+                      {isExpanded ? "Hide items" : "Show items"}
+                    </button>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="grid gap-3 border-t border-stone-100 p-3 md:grid-cols-2 xl:grid-cols-3">
+                      {category.products.map((product) => (
+                        <label
+                          key={product._id}
+                          className="flex cursor-pointer items-center gap-3 rounded-lg border border-stone-100 p-3 hover:border-brand-color-500"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={form.productIds.includes(product._id)}
+                            onChange={() => toggleProduct(product._id)}
+                            className="h-4 w-4 accent-brand-color-500"
+                          />
+                          {product.imageUrl ? (
+                            <img
+                              src={product.imageUrl}
+                              alt={product.name}
+                              className="h-12 w-12 rounded-md object-cover"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-md bg-stone-100" />
+                          )}
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-bold text-stone-800">
+                              {product.name}
+                            </span>
+                            <span className="block text-xs text-stone-500">
+                              {getProductPriceLabel(product)}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm">
         <div className="mb-5">
           <h2 className="text-xl font-bold text-stone-800">Promotion Period</h2>
           <p className="mt-1 text-sm text-stone-500">
-            Set when this discount is visible and eligible.
+            If no end date is saved, the API defaults it to 180 days after the
+            start date.
           </p>
         </div>
 
@@ -348,74 +507,76 @@ export function OrderDiscountPromotionEditor({
         <div className="mt-4 space-y-5 rounded-lg border border-stone-200 bg-stone-50 p-5">
           <div>
             <p className="text-lg font-bold text-stone-900">
-              {preview.headline}
+              {form.name || DEFAULT_PRODUCT_DISCOUNT_PROMOTION.name}
             </p>
             <p className="mt-1 text-sm font-medium text-stone-600">
-              {preview.description}
+              {form.discountType === "percentage"
+                ? `${form.discountValue || 0}% off selected products`
+                : `${formatCurrency(Number(form.discountValue) || 0)} off selected products`}
             </p>
             <p className="mt-2 text-xs font-semibold uppercase text-stone-400">
-              {form.enabled ? "Promotion is active" : "Promotion is disabled"}
-            </p>
-          </div>
-
-          <div className="border-t border-stone-200 pt-4">
-            <p className="text-xs font-bold uppercase text-stone-400">
-              Discount target
-            </p>
-            <p className="mt-1 text-sm font-semibold text-stone-800">
-              {preview.discountTarget}
+              {form.enabled ? "Promotion is enabled" : "Promotion is disabled"}
             </p>
           </div>
 
           <div className="grid gap-4 border-t border-stone-200 pt-4 md:grid-cols-3">
             <div>
               <p className="text-xs font-bold uppercase text-stone-400">
-                Discount value
+                Products
               </p>
               <p className="mt-1 text-sm font-semibold text-stone-800">
-                {preview.discountValue}
+                {selectedProducts.length} selected
               </p>
             </div>
             <div>
               <p className="text-xs font-bold uppercase text-stone-400">
-                Maximum discount amount
+                Schedule
               </p>
               <p className="mt-1 text-sm font-semibold text-stone-800">
-                {preview.maximumDiscountAmount}
+                {form.dayMode === "opening_days"
+                  ? "Opening days"
+                  : form.days.join(", ") || "No days selected"}
               </p>
             </div>
             <div>
               <p className="text-xs font-bold uppercase text-stone-400">
-                Minimum order required
+                Redemptions
               </p>
               <p className="mt-1 text-sm font-semibold text-stone-800">
-                {preview.minimumOrderAmount}
+                {form.maximumRedemptions || "No limit"}
               </p>
             </div>
           </div>
 
-          <div className="border-t border-stone-200 pt-4">
-            <p className="text-xs font-bold uppercase text-stone-400">
-              Discount conditions
-            </p>
-            <div className="mt-3 space-y-3">
-              {preview.conditions.map((condition) => (
-                <div key={condition.label}>
-                  <p className="text-sm font-semibold text-stone-800">
-                    {condition.value}
-                  </p>
-                  <p className="text-xs text-stone-500">{condition.label}</p>
-                </div>
-              ))}
+          {selectedProducts.length > 0 && (
+            <div className="border-t border-stone-200 pt-4">
+              <p className="text-xs font-bold uppercase text-stone-400">
+                Selected products
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedProducts.slice(0, 12).map((product) => (
+                  <span
+                    key={product._id}
+                    className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-700"
+                  >
+                    {product.name}
+                  </span>
+                ))}
+                {selectedProducts.length > 12 && (
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-stone-700">
+                    +{selectedProducts.length - 12} more
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-xs text-stone-400">
-          This saves promotion rules only. Checkout application is a separate
-          backend pricing step.
+          This saves promotion rules only. Checkout application must be wired in
+          the backend pricing flow before customers receive this discount.
         </p>
         <div className="flex gap-2">
           <button
@@ -427,7 +588,11 @@ export function OrderDiscountPromotionEditor({
           </button>
           <button
             type="submit"
-            disabled={savePromotion.isPending || !hasChanges}
+            disabled={
+              savePromotion.isPending ||
+              !hasChanges ||
+              form.productIds.length === 0
+            }
             className="rounded-lg bg-brand-color-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500] disabled:cursor-not-allowed disabled:bg-stone-300"
           >
             {savePromotion.isPending

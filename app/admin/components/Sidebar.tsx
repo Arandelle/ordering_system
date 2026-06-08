@@ -56,6 +56,10 @@ const navItems: NavItem[] = [
         path: `${PromotionBaseUrl}/order-discounts`,
       },
       {
+        name: "Bundle Discounts",
+        path: `${PromotionBaseUrl}/bundle-discounts`
+      },
+      {
         name: "Purchased Cards",
         path: `${PromotionBaseUrl}/purchased-cards`,
       },

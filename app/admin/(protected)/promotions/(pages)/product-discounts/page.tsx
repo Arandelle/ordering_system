@@ -2,7 +2,7 @@
 
 import SectionHeader from "@/app/admin/components/SectionHeader";
 import { useRouter } from "next/navigation";
-import { useProductDiscountPromotions } from "../hooks/useProductDiscountPromotions";
+import { useProductDiscountPromotions } from "../../hooks/useProductDiscountPromotions";
 import { ProductDiscountPromotionList } from "./components/ProductDiscountPromotionList";
 
 export default function ProductDiscountPromotionsPage() {

@@ -10,7 +10,7 @@ import {
 import { formatCurrency } from "@/helper/formatCurrency";
 import { formatDate, formatDateOnly } from "@/helper/formatDate";
 import { useRouter } from "next/navigation";
-import { useDeleteOrderDiscountPromotion } from "../../hooks/useOrderDiscountPromotions";
+import { useDeleteOrderDiscountPromotion } from "../../../hooks/useOrderDiscountPromotions";
 import { getDiscountLabel } from "../helpers/getDiscountLabel";
 import {
   getPromotionStatus,

@@ -1,13 +1,9 @@
 import { apiClient } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type {
-  ProductDiscountOptionsResponse,
-  ProductDiscountPromotionMutationResponse,
+import { ProductDiscountOptionsResponse,   ProductDiscountPromotionMutationResponse,
   ProductDiscountPromotionsResponse,
-  ProductDiscountPromotionSavePayload,
-} from "../product-discounts/types";
-
+  ProductDiscountPromotionSavePayload, } from "../(pages)/product-discounts/types";
 export const PRODUCT_DISCOUNT_PROMOTIONS_QUERY_KEY = [
   "admin",
   "product-discount-promotions",

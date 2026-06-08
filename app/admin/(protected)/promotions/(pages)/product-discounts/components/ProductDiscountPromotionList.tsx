@@ -11,7 +11,7 @@ import { formatDate, formatDateOnly } from "@/helper/formatDate";
 import { formatTime } from "@/helper/formatTime";
 import { useRouter } from "next/navigation";
 import { Fragment, useState } from "react";
-import { useDeleteProductDiscountPromotion } from "../../hooks/useProductDiscountPromotions";
+import { useDeleteProductDiscountPromotion } from "../../../hooks/useProductDiscountPromotions";
 import { getDiscountLabel } from "../helpers/getDiscountLabel";
 import {
   getPromotionStatus,
