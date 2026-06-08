@@ -8,7 +8,7 @@ import LoadingPage from "@/components/ui/LoadingPage";
 import { useOrderActions } from "@/hooks/useOrderActions";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { authClient } from "@/lib/auth-client";
-import { ItemMosaic } from "../../components/ItemMosaic";
+import { ItemMosaic } from "../../menu/components/ItemMosaic";
 import {
   OrderSummary,
   useCustomerOrders,

@@ -306,7 +306,9 @@ const MenuSection = () => {
     <>
       {groupedItems.length > 0 || discountedProducts.length > 0 ? (
         <div className="space-y-12">
-          <DiscountedProductsShelf />
+          
+          {activeCategory === "All" && <DiscountedProductsShelf />}
+
           {groupedItems.map(({ categoryName, subcategoryGroups }) => (
             <div key={categoryName}>
               {activeCategory === "All" && (

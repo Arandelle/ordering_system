@@ -9,7 +9,7 @@ import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { ITEM_TYPES } from "@/types/products";
 import { getStoreStatus } from "@/lib/storeStatus";
 import { useSettings } from "@/hooks/api/useSettings";
-import { OrderItemImage } from "./OrderItemImage";
+import { OrderItemImage } from "../../components/OrderItemImage";
 import { formatCurrency } from "@/helper/formatCurrency";
 
 interface ProductCardProps {

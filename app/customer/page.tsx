@@ -1,11 +1,11 @@
-import PromoBannerV2 from "@/app/customer/components/PromoBannerV2";
+import PromoBannerV2 from "@/app/customer/menu/components/PromoBannerV2";
 import LocationsSection from "@/components/Location";
-import MenuSection from "@/app/customer/components/MenuSection";
-import StickyScrollProducts from "@/app/customer/components/StickyScrollProducts";
+import MenuSection from "@/app/customer/menu/components/MenuSection";
+import StickyScrollProducts from "@/app/customer/menu/components/StickyScrollProducts";
 import MenuSectionSkeleton from "@/components/ui/MenuSectionSkeleton";
 import { Suspense } from "react";
 import EventsCTA from "@/components/EventsCTA";
-import PromoBanner from "@/app/customer/components/PromoBanner";
+import PromoBanner from "@/app/customer/menu/components/PromoBanner";
 
 export default function Home() {
   return (

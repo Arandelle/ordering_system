@@ -1,5 +1,5 @@
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
-import { OrderItemImage } from "./OrderItemImage";
+import { OrderItemImage } from "../../components/OrderItemImage";
 
 /* ─── Image mosaic ───────────────────────────────────────────────────── */
 export function ItemMosaic({
