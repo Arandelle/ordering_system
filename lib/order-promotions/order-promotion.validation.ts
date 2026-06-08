@@ -12,6 +12,7 @@ import {
   PROMOTION_TYPES,
   type PromotionPayload,
 } from "@/types/promotions/promotion-constant";
+import { getDefaultPromotionEndDate } from "../promotions/promotions.service";
 
 export type OrderDiscountPromotionPayload = PromotionPayload & {
   maximumDiscountAmount?: number | null;
@@ -39,7 +40,10 @@ export function normalizeOrderDiscountPromotionPayload(
       DEFAULT_ORDER_DISCOUNT_PROMOTION.minimumOrderAmount,
   );
   const startsAt = parseOptionalPromotionDate(body.startsAt);
-  const endsAt = parseOptionalPromotionDate(body.endsAt);
+  const endsAt =
+    parseOptionalPromotionDate(body.endsAt) ??
+    getDefaultPromotionEndDate(startsAt);
+    
   const dayMode = body.dayMode ?? DEFAULT_ORDER_DISCOUNT_PROMOTION.dayMode;
   const days = Array.isArray(body.days) ? body.days : [];
   const startTime =
