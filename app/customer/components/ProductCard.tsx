@@ -3,26 +3,37 @@
 import React, { useState } from "react";
 import { BranchProduct } from "@/hooks/api/useBranchProductInfinite";
 import { STOCK_STATUSES } from "@/types/inventory_types";
-import { ShoppingBag, AlertTriangle } from "lucide-react";
-import Image from "next/image";
+import { ShoppingBag } from "lucide-react";
 import ProductDetailModal from "./ProductDetailsModal";
 import { MODAL_TYPES, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { ITEM_TYPES } from "@/types/products";
 import { getStoreStatus } from "@/lib/storeStatus";
 import { useSettings } from "@/hooks/api/useSettings";
 import { OrderItemImage } from "./OrderItemImage";
+import { formatCurrency } from "@/helper/formatCurrency";
 
 interface ProductCardProps {
   item: BranchProduct;
   hasBranch?: boolean;
   selectedBranch?: string;
 }
-
 // ── Helpers (pure, no need to live inside component) ──────────────────────────
 const getStockLabel = (status: string, quantity: number | null): string => {
   if (status === STOCK_STATUSES.OUT_OF_STOCK) return "Out of stock";
   if (status === STOCK_STATUSES.LOW_STOCK) return `Only ${quantity} left!`;
   return `${quantity} available`;
+};
+
+const getProductDiscountLabel = (
+  discount: BranchProduct["activeProductDiscount"],
+): string | null => {
+  if (!discount || discount.discountAmount <= 0) return null;
+
+  if (discount.discountType === "percentage") {
+    return `${discount.discountValue}% OFF`;
+  }
+
+  return `${formatCurrency(discount.discountAmount)} OFF`;
 };
 
 const getIncludedItemsText = (
@@ -100,12 +111,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const displayPrice = hasProductDiscount
     ? activeProductDiscount!.discountedPrice
     : item.price;
+  const productDiscountLabel = getProductDiscountLabel(activeProductDiscount);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div>
+    <div className="relative">
       <div
-        className={`bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col cursor-pointer hover:border-brand-color-500 transition-shadow  ${
+        className={`group flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-color-500 hover:shadow-md ${
           isOutOfStock ? "opacity-70" : ""
         }`}
       >
@@ -113,35 +125,43 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="aspect-square overflow-hidden bg-white relative flex items-center justify-center">
           <OrderItemImage image={item.image.url} name={item.name} />
 
-          {/* */}
           {storeStatus && !storeStatus.isOpen && (
             <StoreClosedOverlay message={storeStatus.message} />
           )}
 
-          {/* Stock badges */}
-          {isOutOfStock ? (
-            <>
-              <div className="absolute inset-0 bg-black/10 z-10" />
-              <div className="absolute left-3 top-3 z-20 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/10 z-10" />
+          )}
+
+          <div className="absolute left-3 top-3 z-20 flex max-w-[70%] flex-col items-start gap-1.5">
+            {isOutOfStock ? (
+              <div className="rounded-full bg-red-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
                 {getStockLabel(status, quantity)}
               </div>
-            </>
-          ) : isLowStock ? (
-            <div className="absolute left-3 top-3 z-10 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
-              {getStockLabel(status, quantity)}
-            </div>
-          ) : null}
-          {/* Best Seller badge */}
-          {item.isPopular && (
-            <div className="absolute left-3 top-3 z-10 bg-brand-color-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-              Best Seller
+            ) : isLowStock ? (
+              <div className="rounded-full bg-yellow-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                {getStockLabel(status, quantity)}
+              </div>
+            ) : item.isPopular ? (
+              <div className="rounded-full bg-brand-color-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                Best Seller
+              </div>
+            ) : null}
+          </div>
+
+          {hasProductDiscount && productDiscountLabel && (
+            <div className="absolute bottom-3 left-3 z-10 flex flex-col items-start gap-1">
+              <span className="rounded-full bg-green-600 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                {productDiscountLabel}
+              </span>
             </div>
           )}
+
           {/* Combo / Set badge */}
           {isNonSolo && (
             <div className="absolute top-3 right-3 z-10">
               <span
-                className={`text-[10px] font-bold px-2 py-1 rounded-full shadow-sm ${
+                className={`rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm ${
                   isCombo
                     ? "bg-amber-500 text-white"
                     : "bg-emerald-500 text-white"
@@ -149,20 +169,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
               >
                 {isCombo
                   ? "COMBO"
-                  : `SET${item.paxCount ? ` · ${item.paxCount}pax` : ""}`}
+                  : `SET${item.paxCount ? ` - ${item.paxCount}pax` : ""}`}
               </span>
-            </div>
-          )}
-          {hasProductDiscount && (
-            <div className="absolute left-3 bottom-3 z-10 rounded-full bg-green-600 px-3 py-1 text-[10px] font-bold text-white shadow-lg">
-              {activeProductDiscount!.label}
             </div>
           )}
         </div>
 
         {/** Content */}
-        <div className="px-4 pt-3 pb-4 flex flex-col gap-2 flex-1">
-          <h3 className="font-semibold text-gray-900 leading-snug text-sm md:text-base">
+        <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-3">
+          <h3 className="line-clamp-2 min-h-10 text-sm font-semibold leading-snug text-gray-900 md:text-base">
             {item.name}
           </h3>
           {hasIncludedItems && (
@@ -170,7 +185,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {includedItemsText.map((text, index) => (
                 <span
                   key={index}
-                  className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
+                  className="rounded-full bg-gray-100 px-2 py-1 text-[10px] text-gray-600"
                 >
                   {text}
                 </span>
@@ -183,43 +198,39 @@ const ProductCard: React.FC<ProductCardProps> = ({
               Good for {item.paxCount} pax
             </p>
           )}
-          <div className="flex items-center justify-between mt-auto pt-2">
-            <div className="flex flex-col">
-              <span className="font-semibold text-gray-900 text-xs md:text-sm">
-                PHP {displayPrice?.toFixed(2) ?? "--"}
+          <div className="mt-auto flex items-end justify-between gap-3 pt-2">
+            <div className="min-w-0">
+              <span className="block text-base font-bold leading-none text-gray-950 md:text-lg">
+                {formatCurrency(displayPrice)}
               </span>
-              {hasProductDiscount && item.price != null && (
-                <span className="text-[11px] text-gray-400 line-through">
-                  PHP {item.price.toFixed(2)}
-                </span>
-              )}
+
+              {hasProductDiscount &&
+                item.price != null &&
+                activeProductDiscount && (
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span className="text-[11px] text-gray-400 line-through">
+                      {formatCurrency(item.price)}
+                    </span>
+                    <span className="text-[11px] font-semibold text-green-600">
+                      Save{" "}
+                      {formatCurrency(activeProductDiscount.discountAmount)}
+                    </span>
+                  </div>
+                )}
             </div>
-            <span className="hidden">
-              ₱{item.price?.toFixed(2) ?? "—"}
-            </span>
+            <span className="hidden">PHP {item.price?.toFixed(2) ?? "--"}</span>
             <button
+              type="button"
               onClick={() => {
                 !selectedBranch
                   ? openModal(MODAL_TYPES.MAP)
                   : setShowDetail(true);
               }}
               disabled={isOutOfStock || !storeStatus?.isOpen}
-              className="w-8 h-8 rounded-full bg-brand-color-500 hover:bg-brand-color-600 flex items-center justify-center text-white transition-colors shrink-0"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-color-500 text-white transition-colors hover:bg-brand-color-600 disabled:cursor-not-allowed disabled:bg-gray-300"
               aria-label={`Add ${item.name} to cart`}
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M12 5v14M5 12h14"
-                />
-              </svg>
+              <ShoppingBag size={16} strokeWidth={2.5} />
             </button>
           </div>
         </div>
