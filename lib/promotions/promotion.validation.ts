@@ -2,10 +2,13 @@ import {
   PROMOTION_DAY_MODE,
   PROMOTION_DISCOUNT_DAYS,
   PROMOTION_DISCOUNT_TYPE,
+  type PromotionPayload,
   type PromotionConfig,
 } from "@/types/promotions/promotion-constant";
+import { getDefaultPromotionEndDate } from "./promotions.service";
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+type PromotionBaseConfig = Omit<PromotionConfig, "promotionType">;
 
 export function parseOptionalPromotionDate(
   value: string | Date | null | undefined,
@@ -85,4 +88,42 @@ export function validatePromotionBaseConfig(config: PromotionConfig) {
   }
 
   return null;
+}
+
+export function normalizedPromotionBasePayload(
+  body: PromotionPayload,
+  defaults: PromotionConfig,
+): PromotionBaseConfig {
+  const enabled = body.enabled ?? defaults.enabled;
+  const name = body.name?.trim() || defaults.name;
+  const discountType = body.discountType ?? defaults.discountType;
+  const discountValue = normalizePromotionAmount(
+    body.discountValue ?? defaults.discountValue,
+  );
+  const startsAt = parseOptionalPromotionDate(body.startsAt);
+  const endsAt =
+    parseOptionalPromotionDate(body.endsAt) ??
+    getDefaultPromotionEndDate(startsAt);
+  const dayMode = body.dayMode ?? defaults.dayMode;
+  const days = Array.isArray(body.days) ? body.days : [];
+  const startTime = body.startTime ?? defaults.startTime;
+  const endTime = body.endTime ?? defaults.endTime;
+  const maximumRedemptions = normalizeMaximumRedemptions(
+    body.maximumRedemptions,
+  );
+
+  return {
+    enabled,
+    name,
+    discountType,
+    discountValue,
+    startsAt,
+    endsAt,
+    dayMode,
+    days: dayMode === "opening_days" ? [] : days,
+    startTime,
+    endTime,
+    maximumRedemptions,
+    redemptionCount: defaults.redemptionCount,
+  };
 }

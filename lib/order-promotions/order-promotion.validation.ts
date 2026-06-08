@@ -3,16 +3,14 @@ import {
   type OrderDiscountPromotionConfig,
 } from "@/types/promotions/order-discount.type";
 import {
-  normalizeMaximumRedemptions,
+  normalizedPromotionBasePayload,
   normalizePromotionAmount,
-  parseOptionalPromotionDate,
   validatePromotionBaseConfig,
 } from "@/lib/promotions/promotion.validation";
 import {
   PROMOTION_TYPES,
   type PromotionPayload,
 } from "@/types/promotions/promotion-constant";
-import { getDefaultPromotionEndDate } from "../promotions/promotions.service";
 
 export type OrderDiscountPromotionPayload = PromotionPayload & {
   maximumDiscountAmount?: number | null;
@@ -23,11 +21,9 @@ export function normalizeOrderDiscountPromotionPayload(
   body: OrderDiscountPromotionPayload,
   redemptionCount = 0,
 ): OrderDiscountPromotionConfig {
-  const name = body.name?.trim() || DEFAULT_ORDER_DISCOUNT_PROMOTION.name;
-  const discountType =
-    body.discountType ?? DEFAULT_ORDER_DISCOUNT_PROMOTION.discountType;
-  const discountValue = normalizePromotionAmount(
-    body.discountValue ?? DEFAULT_ORDER_DISCOUNT_PROMOTION.discountValue,
+  const centralizedPromotionPayload = normalizedPromotionBasePayload(
+    body,
+    DEFAULT_ORDER_DISCOUNT_PROMOTION,
   );
   const maximumDiscountAmount =
     body.maximumDiscountAmount === null ||
@@ -39,36 +35,15 @@ export function normalizeOrderDiscountPromotionPayload(
     body.minimumOrderAmount ??
       DEFAULT_ORDER_DISCOUNT_PROMOTION.minimumOrderAmount,
   );
-  const startsAt = parseOptionalPromotionDate(body.startsAt);
-  const endsAt =
-    parseOptionalPromotionDate(body.endsAt) ??
-    getDefaultPromotionEndDate(startsAt);
-    
-  const dayMode = body.dayMode ?? DEFAULT_ORDER_DISCOUNT_PROMOTION.dayMode;
-  const days = Array.isArray(body.days) ? body.days : [];
-  const startTime =
-    body.startTime ?? DEFAULT_ORDER_DISCOUNT_PROMOTION.startTime;
-  const endTime = body.endTime ?? DEFAULT_ORDER_DISCOUNT_PROMOTION.endTime;
-  const maximumRedemptions = normalizeMaximumRedemptions(
-    body.maximumRedemptions,
-  );
 
   return {
+    ...centralizedPromotionPayload,
     promotionType: PROMOTION_TYPES.ORDER_DISCOUNT,
-    enabled: Boolean(body.enabled),
-    name,
-    discountType,
-    discountValue,
     maximumDiscountAmount:
-      discountType === "percentage" ? maximumDiscountAmount : null,
+      centralizedPromotionPayload.discountType === "percentage"
+        ? maximumDiscountAmount
+        : null,
     minimumOrderAmount,
-    startsAt,
-    endsAt,
-    dayMode,
-    days: dayMode === "opening_days" ? [] : days,
-    startTime,
-    endTime,
-    maximumRedemptions,
     redemptionCount,
   };
 }
