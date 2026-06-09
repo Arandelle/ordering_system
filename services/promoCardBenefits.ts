@@ -4,6 +4,7 @@ import {
   PromoCardDiscountRule,
   PromoCardVoucherRule,
 } from "@/lib/promoCard";
+import { getPromoCardConfig } from "@/lib/promoCardConfig";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
 import { Voucher } from "@/models/Voucher";
 import {
@@ -83,6 +84,9 @@ export async function getPaidPromoCardBenefit(
   session?: ClientSession,
 ): Promise<PromoCardBenefit | null> {
   if (!customerId) return null;
+
+  const config = await getPromoCardConfig();
+  if (!config.enabled) return null;
 
   const query = PromoCardPurchase.findOne({
     customerId,

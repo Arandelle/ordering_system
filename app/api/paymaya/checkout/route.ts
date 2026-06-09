@@ -20,6 +20,7 @@ import {
   calculatePromoCardTotal,
   PROMO_CARD,
 } from "@/lib/promoCard";
+import { getPromoCardConfig } from "@/lib/promoCardConfig";
 import {
   getPaidPromoCardBenefit,
   redeemCustomerVoucher,
@@ -298,6 +299,13 @@ export async function assertCanUsePromoCardDiscount(
   customerId: string | null,
   session: ClientSession,
 ): Promise<{ discountRate: number; discountCode: string }> {
+  const promoCardConfig = await getPromoCardConfig();
+  if (!promoCardConfig.enabled) {
+    throw new Error(
+      "Promo card is currently unavailable pending final marketing review.",
+    );
+  }
+
   if (!customerId) {
     throw new Error("Login is required to use the promo card discount.");
   }

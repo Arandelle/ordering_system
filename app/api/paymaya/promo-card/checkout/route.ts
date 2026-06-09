@@ -68,6 +68,16 @@ export async function POST(request: NextRequest) {
     }
 
     const promoCardConfig = await getPromoCardConfig();
+    if (!promoCardConfig.enabled) {
+      return NextResponse.json(
+        {
+          error:
+            "Promo card is currently unavailable. Please contact marketing for final review.",
+        },
+        { status: 409 },
+      );
+    }
+
     const baseUrl = process.env.NEXT_PUBLIC_URL ?? request.nextUrl.origin;
     const referenceNumber = `PROMO-CARD-${Date.now()}`;
     const promoCardPurchase = await PromoCardPurchase.create({

@@ -83,8 +83,11 @@ export async function GET(request: NextRequest) {
         hasPaidPromoCard: latestPromoCard?.status === "paid",
         hasPendingPromoCard: latestPromoCard?.status === "pending",
         canRequestPromoCard:
-          !latestPromoCard ||
-          ["failed", "expired", "cancelled"].includes(latestPromoCard.status),
+          config.enabled &&
+          (!latestPromoCard ||
+            ["failed", "expired", "cancelled"].includes(
+              latestPromoCard.status,
+            )),
         promoCard: latestPromoCard
           ? {
               referenceNumber: latestPromoCard.referenceNumber,
