@@ -12,6 +12,7 @@ export async function getPromoCardConfig(): Promise<PromoCardConfig> {
     await PromoCardConfigModel.findOne().lean<PromoCardConfig>();
 
   return {
+    enabled: config?.enabled ?? PROMO_CARD.enabled,
     name: config?.name ?? PROMO_CARD.name,
     discountRate: config?.discountRate ?? PROMO_CARD.discountRate,
     purchasePrice: config?.purchasePrice ?? PROMO_CARD.purchasePrice,

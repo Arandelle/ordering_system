@@ -18,6 +18,7 @@ import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
 
 export function getDefaultPromoCardSettingsForm(): PromoCardSettingsForm {
   return {
+    enabled: PROMO_CARD.enabled,
     name: PROMO_CARD.name,
     purchasePrice: String(PROMO_CARD.purchasePrice),
     discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES.map((rule) => ({
@@ -48,6 +49,7 @@ export function getPromoCardSettingsForm(
   config: PromoCardSettings,
 ): PromoCardSettingsForm {
   return {
+    enabled: config.enabled,
     name: config.name,
     purchasePrice: String(config.purchasePrice),
     discountRules: config.discountRules.map((rule) => ({
@@ -96,6 +98,7 @@ export function buildPromoCardSettingsPayload(
   form: PromoCardSettingsForm,
 ): PromoCardSettingsPayload {
   return {
+    enabled: form.enabled,
     name: form.name,
     purchasePrice: Number(form.purchasePrice),
     discountRules: form.discountRules.map((rule) => ({

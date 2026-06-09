@@ -96,6 +96,12 @@ const ValidityRuleSchema = new Schema(
 
 const PromoCardConfigSchema = new Schema(
   {
+    enabled: {
+      type: Boolean,
+      required: true,
+      default: PROMO_CARD.enabled,
+      index: true,
+    },
     name: {
       type: String,
       required: true,

@@ -8,6 +8,7 @@ import {
 import { roundMoney } from "./promotions/promotion.calculation";
 
 export const PROMO_CARD = {
+  enabled: false,
   name: "Harrison Promo Card",
   discountRate: 0.3,
   purchasePrice: 2500,
@@ -15,6 +16,7 @@ export const PROMO_CARD = {
 } as const;
 
 export type PromoCardConfig = {
+  enabled: boolean;
   name: string;
   discountRate: number;
   purchasePrice: number;

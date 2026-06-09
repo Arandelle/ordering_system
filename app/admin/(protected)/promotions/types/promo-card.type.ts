@@ -27,6 +27,7 @@ export type PromoCardPurchase = {
 };
 
 export type PromoCardSettings = {
+  enabled: boolean;
   name: string;
   discountRate: number;
   purchasePrice: number;
@@ -67,6 +68,7 @@ export type PromoCardResponse = {
 };
 
 export type PromoCardSettingsForm = {
+  enabled: boolean;
   name: string;
   purchasePrice: string;
   discountRules: {
@@ -91,6 +93,7 @@ export type PromoCardSettingsForm = {
 };
 
 export type PromoCardSettingsPayload = {
+  enabled: boolean;
   name: string;
   purchasePrice: number;
   discountRules: {

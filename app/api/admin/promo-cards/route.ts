@@ -95,6 +95,7 @@ export async function PATCH(request: NextRequest) {
     await requireAdmin(request);
 
     const body = (await request.json()) as {
+      enabled?: boolean;
       name?: string;
       purchasePrice?: number;
       discountRules?: {
@@ -110,6 +111,7 @@ export async function PATCH(request: NextRequest) {
     };
 
     const name = body.name?.trim();
+    const enabled = Boolean(body.enabled);
     const purchasePrice = Number(body.purchasePrice);
     const rawDiscountRules = Array.isArray(body.discountRules)
       ? body.discountRules
@@ -283,6 +285,7 @@ export async function PATCH(request: NextRequest) {
       {},
       {
         $set: {
+          enabled,
           name,
           discountRate: discountRules[0].discountRate,
           discountRules,
