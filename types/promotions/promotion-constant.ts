@@ -1,6 +1,9 @@
 export const PROMOTION_TYPES = {
   ORDER_DISCOUNT: "order_discount",
   PRODUCT_DISCOUNT: "product_discount",
+  BUNDLE_DISCOUNT: "bundle_discount",
+  CARD_DISCOUNT: "card_discount",
+  VOUCHER: "voucher_discount",
 } as const;
 
 export type PromotionTypes =
