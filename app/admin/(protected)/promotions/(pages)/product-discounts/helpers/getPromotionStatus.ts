@@ -1,4 +1,12 @@
-import { ProductDiscountPromotion, PromotionStatus } from "../types";
+import { PromotionStatus } from "../types";
+
+type PromotionStatusSummary = {
+  enabled: boolean;
+  startsAt: string | Date;
+  endsAt?: string | Date | null;
+  maximumRedemptions: number | null;
+  redemptionCount: number;
+};
 
 export const promotionStatusStyles: Record<PromotionStatus, string> = {
   active: "bg-green-100 text-green-700",
@@ -17,7 +25,7 @@ export const promotionStatusLabels: Record<PromotionStatus, string> = {
 };
 
 export function getPromotionStatus(
-  promotion: ProductDiscountPromotion,
+  promotion: PromotionStatusSummary,
 ): PromotionStatus {
   const now = new Date();
 

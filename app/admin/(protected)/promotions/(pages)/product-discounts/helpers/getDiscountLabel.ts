@@ -1,7 +1,11 @@
 import { formatCurrency } from "@/helper/formatCurrency";
-import { ProductDiscountPromotion } from "../types";
 
-export function getDiscountLabel(promotion: ProductDiscountPromotion) {
+type PromotionDiscountSummary = {
+  discountType: "fixed" | "percentage";
+  discountValue: number;
+};
+
+export function getDiscountLabel(promotion: PromotionDiscountSummary) {
   if (promotion.discountType === "fixed") {
     return `${formatCurrency(promotion.discountValue)} off`;
   }
