@@ -44,6 +44,21 @@ const PromoCardSettings = () => {
         onSubmit={handleSettingsSubmit}
         className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm"
       >
+        {!settingsForm.enabled && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-red-900">
+                  Not Ready for Publishing
+                </h3>
+                <p className="mt-1 text-xs leading-5 text-red-800">
+                  Do not enable this promotion until marketing has completed their review.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <InputField
             label="Promo name"
@@ -70,6 +85,24 @@ const PromoCardSettings = () => {
             }
             required
           />
+          <div className="place-content-center">
+            <label className="flex cursor-pointer items-center place-self-start gap-3 px-3 py-2">
+              <input
+                type="checkbox"
+                checked={settingsForm.enabled}
+                onChange={(event) =>
+                  setSettingsForm((current) => ({
+                    ...current,
+                    enabled: event.target.checked,
+                  }))
+                }
+                className="h-4 w-4 accent-brand-color-500"
+              />
+              <span className="text-xs font-bold text-stone-800">
+                {settingsForm.enabled ? "Available" : "Unavailable"}
+              </span>
+            </label>
+          </div>
         </div>
         <div className="mt-6">
           <div className="rounded-lg border border-stone-200 p-4">

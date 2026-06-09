@@ -42,6 +42,9 @@ export function usePromoCardSettings(config?: PromoCardSettings) {
       await queryClient.invalidateQueries({
         queryKey: ["customer", "promo-card", "status"],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["customer", "promo-card", "config"],
+      });
     },
     onError: (error: { message?: string }) => {
       toast.error(error.message ?? "Failed to update promo card settings.");

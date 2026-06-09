@@ -223,6 +223,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         hasPaidPromoCard: boolean;
         voucherBalance: number;
         config: {
+          enabled: boolean;
           name: string;
           discountRate: number;
           purchasePrice: number;
@@ -236,17 +237,21 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     enabled: Boolean(session?.user),
     staleTime: 60_000,
   });
-  const canUsePromoCardDiscount = promoCardStatus?.hasPaidPromoCard === true;
+  const isPromoCardEnabled = promoCardStatus?.config?.enabled === true;
+  const canUsePromoCardDiscount =
+    isPromoCardEnabled && promoCardStatus?.hasPaidPromoCard === true;
   const promoCardConfig = promoCardStatus?.config ?? {
     ...PROMO_CARD,
     discountRules: DEFAULT_PROMO_CARD_DISCOUNT_RULES,
   };
   const availableVoucherBalance = promoCardStatus?.voucherBalance ?? 0;
-  const activeDiscountRate = getPromoCardDiscountRateForDay(
-    promoCardConfig.discountRules,
-    getPromoCardDay(),
-    promoCardConfig.discountRate,
-  );
+  const activeDiscountRate = isPromoCardEnabled
+    ? getPromoCardDiscountRateForDay(
+        promoCardConfig.discountRules,
+        getPromoCardDay(),
+        promoCardConfig.discountRate,
+      )
+    : 0;
   const { data: activePromotions } = useQuery({
     queryKey: ["promotions", "active"],
     queryFn: () =>
@@ -490,27 +495,29 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
 
         {/* Order Totals */}
         <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 space-y-2">
-          <label className="flex items-start gap-3 rounded-xl border border-brand-color-500/20 bg-white p-3 text-sm">
-            <input
-              type="checkbox"
-              checked={applyPromoCardDiscount}
-              onChange={(event) =>
-                setApplyPromoCardDiscount(event.target.checked)
-              }
-              disabled={!canUsePromoCardDiscount}
-              className="mt-1 h-4 w-4 accent-brand-color-500"
-            />
-            <span className="flex-1">
-              <span className="block font-semibold text-slate-800">
-                Apply {promoCardConfig.name}
+          {isPromoCardEnabled && (
+            <label className="flex items-start gap-3 rounded-xl border border-brand-color-500/20 bg-white p-3 text-sm">
+              <input
+                type="checkbox"
+                checked={applyPromoCardDiscount}
+                onChange={(event) =>
+                  setApplyPromoCardDiscount(event.target.checked)
+                }
+                disabled={!canUsePromoCardDiscount}
+                className="mt-1 h-4 w-4 accent-brand-color-500"
+              />
+              <span className="flex-1">
+                <span className="block font-semibold text-slate-800">
+                  Apply {promoCardConfig.name}
+                </span>
+                <span className="block text-xs text-slate-500">
+                  {canUsePromoCardDiscount
+                    ? `Enjoy ${(activeDiscountRate * 100).toFixed(0)}% off this order today.`
+                    : "Purchase and pay for a promo card to unlock this discount."}
+                </span>
               </span>
-              <span className="block text-xs text-slate-500">
-                {canUsePromoCardDiscount
-                  ? `Enjoy ${(activeDiscountRate * 100).toFixed(0)}% off this order today.`
-                  : "Purchase and pay for a promo card to unlock this discount."}
-              </span>
-            </span>
-          </label>
+            </label>
+          )}
           <div className="flex justify-between text-sm text-slate-500">
             <span>Subtotal</span>
             <span>₱{subtotalPrice.toFixed(2)}</span>

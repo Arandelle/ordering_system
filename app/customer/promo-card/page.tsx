@@ -1,6 +1,7 @@
 "use client";
 
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { formatCurrency } from "@/helper/formatCurrency";
 import { formatDate } from "@/helper/formatDate";
 import { apiClient } from "@/lib/apiClient";
 import { authClient } from "@/lib/auth-client";
@@ -56,6 +57,7 @@ type PromoCardStatus = {
     paidAt?: string;
   } | null;
   config: {
+    enabled: boolean;
     name: string;
     discountRate: number;
     purchasePrice: number;
@@ -92,12 +94,6 @@ const statusStyles: Record<
   cancelled: "bg-slate-100 text-slate-600",
 };
 
-function formatCurrency(value: number) {
-  return `₱${value.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 function formatCardNumber(referenceNumber?: string) {
   const source = referenceNumber?.replace(/[^a-zA-Z0-9]/g, "") || "PENDINGCARD";
@@ -166,11 +162,14 @@ export default function PromoCardPage() {
     ? currentConfig.discountRules
     : DEFAULT_PROMO_CARD_DISCOUNT_RULES;
   const usageHistory = promoCardStatus?.usageHistory ?? [];
+  const isPromoCardEnabled = currentConfig.enabled === true;
   const hasActivePromoCard =
     currentPromoCard?.status === "paid" ||
     currentPromoCard?.status === "pending";
   const canRequestPromoCard =
-    isAuthenticated && promoCardStatus?.canRequestPromoCard === true;
+    isPromoCardEnabled &&
+    isAuthenticated &&
+    promoCardStatus?.canRequestPromoCard === true;
   const primaryDiscountPercent = useMemo(
     () => (currentConfig.discountRate * 100).toFixed(0),
     [currentConfig.discountRate],
@@ -182,12 +181,16 @@ export default function PromoCardPage() {
       "Card Holder";
   const statusCopy =
     currentPromoCard?.status === "paid"
-      ? "Active for eligible checkout discounts and voucher redemptions."
+      ? isPromoCardEnabled
+        ? "Active for eligible checkout discounts and voucher redemptions."
+        : "Promo card benefits are currently unavailable."
       : currentPromoCard?.status === "pending"
         ? "Payment is pending. Maya confirmation will activate the card."
         : currentPromoCard
           ? "Previous request was not completed. You can purchase again."
-          : "Purchase once to unlock configured day discounts and voucher benefits.";
+          : isPromoCardEnabled
+            ? "Purchase once to unlock configured day discounts and voucher benefits."
+            : "Promo card is currently unavailable.";
 
   const updateField = (field: keyof PromoCardForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -248,6 +251,12 @@ export default function PromoCardPage() {
               {statusCopy}
             </p>
           </div>
+
+          {!isPromoCardEnabled && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-900">
+              Promo card is currently unavailable
+            </div>
+          )}
 
           <div className="overflow-hidden rounded-2xl bg-slate-950 p-6 text-white shadow-xl">
             <div className="flex items-start justify-between gap-4">
@@ -352,11 +361,13 @@ export default function PromoCardPage() {
             <p className="mt-1 text-sm text-slate-500">
               {hasActivePromoCard
                 ? `Card number ${currentPromoCard?.referenceNumber}`
-                : `Unlock up to ${primaryDiscountPercent}% off on eligible days.`}
+                : !isPromoCardEnabled
+                  ? "Promo card purchasing is currently unavailable."
+                  : `Unlock up to ${primaryDiscountPercent}% off on eligible days.`}
             </p>
           </div>
 
-          {isAuthenticated && !hasActivePromoCard && (
+          {isAuthenticated && !hasActivePromoCard && isPromoCardEnabled && (
             <form onSubmit={handleSubmit} className="grid gap-3">
               <input
                 value={form.firstName}
@@ -422,7 +433,13 @@ export default function PromoCardPage() {
             </form>
           )}
 
-          {!isAuthenticated && (
+          {isAuthenticated && !hasActivePromoCard && !isPromoCardEnabled && (
+            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm font-semibold text-red-900">
+              Promo card purchase is currently unavailable.
+            </div>
+          )}
+
+          {!isAuthenticated && isPromoCardEnabled && (
             <Link
               href="/promo-card?modal=login"
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"

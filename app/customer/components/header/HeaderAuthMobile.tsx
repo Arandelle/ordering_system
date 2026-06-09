@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useCart } from "@/contexts/CartContext";
+import { apiClient } from "@/lib/apiClient";
 import { authClient } from "@/lib/auth-client";
 import { MODAL_TYPES, ModalType } from "@/hooks/utils/useModalQuery";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   session: ReturnType<typeof authClient.useSession>["data"];
@@ -20,6 +22,12 @@ export const HeaderMobileMenu = ({
   onOpenModal,
 }: Props) => {
   const { setIsCartOpen } = useCart();
+  const { data: promoCardConfig } = useQuery({
+    queryKey: ["customer", "promo-card", "config"],
+    queryFn: () =>
+      apiClient.get<{ enabled: boolean }>("/customer/promo-card/config"),
+    staleTime: 60_000,
+  });
 
   return (
     <>
@@ -47,13 +55,15 @@ export const HeaderMobileMenu = ({
             >
               Cart
             </button>
-            <Link
-              href="/promo-card"
-              onClick={onClose}
-              className="text-white hover:bg-brand-color-500 p-2 rounded transition-colors"
-            >
-              Promo Card
-            </Link>
+            {promoCardConfig?.enabled && (
+              <Link
+                href="/promo-card"
+                onClick={onClose}
+                className="text-white hover:bg-brand-color-500 p-2 rounded transition-colors"
+              >
+                Promo Card
+              </Link>
+            )}
             <Link
               href="/catering"
               onClick={onClose}
