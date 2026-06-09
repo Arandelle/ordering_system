@@ -2,12 +2,12 @@ import { formatDateInputValue } from "@/helper/formatDateInputValue";
 import type { ProductDiscountPromotionConfig } from "@/types/promotions/product-discount.type";
 import {
   ProductDiscountPromotion,
-  ProductDiscountPromotionForm,
 } from "../types";
+import { AdminPromotionForm } from "../../../types/discount-promotion.type";
 
 export function buildInitialPromotionForm(
   promotion: ProductDiscountPromotion | ProductDiscountPromotionConfig,
-): ProductDiscountPromotionForm {
+): AdminPromotionForm {
   return {
     enabled: promotion.enabled,
     name: promotion.name,

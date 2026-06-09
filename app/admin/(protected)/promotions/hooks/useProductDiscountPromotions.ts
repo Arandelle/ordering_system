@@ -1,9 +1,11 @@
 import { apiClient } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ProductDiscountOptionsResponse,   ProductDiscountPromotionMutationResponse,
+import {
+  ProductDiscountPromotionMutationResponse,
   ProductDiscountPromotionsResponse,
-  ProductDiscountPromotionSavePayload, } from "../(pages)/product-discounts/types";
+} from "../(pages)/product-discounts/types";
+import { AdminPromotionSavePayload, DiscountOptionsResponse } from "../types/discount-promotion.type";
 export const PRODUCT_DISCOUNT_PROMOTIONS_QUERY_KEY = [
   "admin",
   "product-discount-promotions",
@@ -28,7 +30,7 @@ export function useProductDiscountOptions() {
   return useQuery({
     queryKey: PRODUCT_DISCOUNT_OPTIONS_QUERY_KEY,
     queryFn: () =>
-      apiClient.get<ProductDiscountOptionsResponse>(
+      apiClient.get<DiscountOptionsResponse>(
         "/admin/product-discount-promotions/options",
       ),
   });
@@ -68,7 +70,7 @@ export function useSaveProductDiscountPromotion({
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ProductDiscountPromotionSavePayload) =>
+    mutationFn: (payload: AdminPromotionSavePayload) =>
       mode === "create"
         ? apiClient.post<ProductDiscountPromotionMutationResponse>(
             "/admin/product-discount-promotions",
@@ -90,7 +92,9 @@ export function useSaveProductDiscountPromotion({
       onSuccess();
     },
     onError: (error: { message?: string }) => {
-      toast.error(error.message ?? "Failed to save product discount promotion.");
+      toast.error(
+        error.message ?? "Failed to save product discount promotion.",
+      );
     },
   });
 }

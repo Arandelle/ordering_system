@@ -18,12 +18,8 @@ import {
 } from "../../../hooks/useProductDiscountPromotions";
 import { buildInitialPromotionForm } from "../helpers/buildInitialPromotionForm";
 import { buildPromotionPayload } from "../helpers/buildPromotionPayload";
-import {
-  ProductDiscountCategoryOption,
-  ProductDiscountPromotion,
-  ProductDiscountPromotionForm,
-  ProductDiscountProductOption,
-} from "../types";
+import { ProductDiscountPromotion } from "../types";
+import { AdminPromotionForm, CategoryOption, ProductOption } from "../../../types/discount-promotion.type";
 
 type ProductDiscountPromotionEditorProps = {
   promotion: ProductDiscountPromotion | ProductDiscountPromotionConfig;
@@ -32,12 +28,12 @@ type ProductDiscountPromotionEditorProps = {
 
 const PERCENTAGE_PRESETS = [10, 15, 20, 25, 30, 50];
 
-function getProductPriceLabel(product: ProductDiscountProductOption) {
+function getProductPriceLabel(product: ProductOption) {
   return product.price === null ? "Range priced" : formatCurrency(product.price);
 }
 
 function getSelectedProducts(
-  categories: ProductDiscountCategoryOption[],
+  categories: CategoryOption[],
   productIds: string[],
 ) {
   const selectedIds = new Set(productIds);
@@ -54,7 +50,7 @@ export function ProductDiscountPromotionEditor({
   const router = useRouter();
   const options = useProductDiscountOptions();
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>([]);
-  const [form, setForm] = useState<ProductDiscountPromotionForm>(() =>
+  const [form, setForm] = useState<AdminPromotionForm>(() =>
     buildInitialPromotionForm(promotion),
   );
   const initialForm = useMemo(
@@ -108,7 +104,7 @@ export function ProductDiscountPromotionEditor({
   };
 
   const toggleCategoryProducts = (
-    category: ProductDiscountCategoryOption,
+    category: CategoryOption,
     checked: boolean,
   ) => {
     const categoryProductIds = category.products.map((product) => product._id);

@@ -1,7 +1,4 @@
-import {
-  ProductDiscountPromotionForm,
-  ProductDiscountPromotionSavePayload,
-} from "../types";
+import { AdminPromotionForm, AdminPromotionSavePayload } from "../../../types/discount-promotion.type";
 
 function parsePositiveNumber(value: string) {
   const number = Number(value);
@@ -9,8 +6,8 @@ function parsePositiveNumber(value: string) {
 }
 
 export function buildPromotionPayload(
-  form: ProductDiscountPromotionForm,
-): ProductDiscountPromotionSavePayload {
+  form: AdminPromotionForm,
+): AdminPromotionSavePayload {
   return {
     enabled: form.enabled,
     name: form.name.trim(),
