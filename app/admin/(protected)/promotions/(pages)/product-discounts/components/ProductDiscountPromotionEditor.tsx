@@ -6,7 +6,6 @@ import { formatCurrency } from "@/helper/formatCurrency";
 import { DEFAULT_PRODUCT_DISCOUNT_PROMOTION } from "@/types/promotions/product-discount.type";
 import {
   PROMOTION_DISCOUNT_DAYS,
-  type PromotionDiscountDay,
   type PromotionDiscountType,
 } from "@/types/promotions/promotion-constant";
 import type { ProductDiscountPromotionConfig } from "@/types/promotions/product-discount.type";
@@ -19,7 +18,14 @@ import {
 import { buildInitialPromotionForm } from "../helpers/buildInitialPromotionForm";
 import { buildPromotionPayload } from "../helpers/buildPromotionPayload";
 import { ProductDiscountPromotion } from "../types";
-import { AdminPromotionForm, CategoryOption, ProductOption } from "../../../types/discount-promotion.type";
+import { AdminPromotionForm } from "../../../types/discount-promotion.type";
+import { getSelectedProducts } from "../../../helpers/getSelectedProducts";
+import { toggleDay } from "../../../helpers/toggleDay";
+import {
+  toggleCategoryExpansion,
+  toggleCategoryProducts,
+  toggleProduct,
+} from "../../../helpers/productSelection";
 
 type ProductDiscountPromotionEditorProps = {
   promotion: ProductDiscountPromotion | ProductDiscountPromotionConfig;
@@ -27,21 +33,6 @@ type ProductDiscountPromotionEditorProps = {
 };
 
 const PERCENTAGE_PRESETS = [10, 15, 20, 25, 30, 50];
-
-function getProductPriceLabel(product: ProductOption) {
-  return product.price === null ? "Range priced" : formatCurrency(product.price);
-}
-
-function getSelectedProducts(
-  categories: CategoryOption[],
-  productIds: string[],
-) {
-  const selectedIds = new Set(productIds);
-
-  return categories
-    .flatMap((category) => category.products)
-    .filter((product) => selectedIds.has(product._id));
-}
 
 export function ProductDiscountPromotionEditor({
   promotion,
@@ -63,65 +54,12 @@ export function ProductDiscountPromotionEditor({
     mode === "create" || JSON.stringify(form) !== JSON.stringify(initialForm);
   const promotionId = "_id" in promotion ? promotion._id : null;
   const goBackToList = () => router.push("/promotions/product-discounts");
+
   const savePromotion = useSaveProductDiscountPromotion({
     mode,
     promotionId,
     onSuccess: goBackToList,
   });
-
-  const toggleDay = (day: PromotionDiscountDay) => {
-    setForm((current) => {
-      const hasDay = current.days.includes(day);
-
-      return {
-        ...current,
-        days: hasDay
-          ? current.days.filter((candidate) => candidate !== day)
-          : [...current.days, day],
-      };
-    });
-  };
-
-  const toggleCategoryExpansion = (categoryId: string) => {
-    setExpandedCategoryIds((current) =>
-      current.includes(categoryId)
-        ? current.filter((id) => id !== categoryId)
-        : [...current, categoryId],
-    );
-  };
-
-  const toggleProduct = (productId: string) => {
-    setForm((current) => {
-      const hasProduct = current.productIds.includes(productId);
-
-      return {
-        ...current,
-        productIds: hasProduct
-          ? current.productIds.filter((id) => id !== productId)
-          : [...current.productIds, productId],
-      };
-    });
-  };
-
-  const toggleCategoryProducts = (
-    category: CategoryOption,
-    checked: boolean,
-  ) => {
-    const categoryProductIds = category.products.map((product) => product._id);
-
-    setForm((current) => ({
-      ...current,
-      productIds: checked
-        ? [...new Set([...current.productIds, ...categoryProductIds])]
-        : current.productIds.filter((id) => !categoryProductIds.includes(id)),
-      categoryIds:
-        category._id === "uncategorized"
-          ? current.categoryIds
-          : checked
-            ? [...new Set([...current.categoryIds, category._id])]
-            : current.categoryIds.filter((id) => id !== category._id),
-    }));
-  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -131,33 +69,20 @@ export function ProductDiscountPromotionEditor({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-stone-800">
-              {mode === "create"
-                ? "Create Product Discount"
-                : "Edit Product Discount"}
-            </h2>
-            <p className="mt-1 text-sm text-stone-500">
-              Configure the target products, discount value, schedule, and
-              redemption limit.
-            </p>
-          </div>
-          <label className="flex items-center gap-3 text-sm font-semibold text-stone-700">
-            <input
-              type="checkbox"
-              checked={form.enabled}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  enabled: event.target.checked,
-                }))
-              }
-              className="h-4 w-4 accent-brand-color-500"
-            />
-            Enabled
-          </label>
-        </div>
+        <label className="flex items-center gap-3 text-sm font-semibold text-stone-700 mb-8">
+          <input
+            type="checkbox"
+            checked={form.enabled}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                enabled: event.target.checked,
+              }))
+            }
+            className="h-4 w-4 accent-brand-color-500"
+          />
+          Enabled
+        </label>
 
         <div className="grid gap-4 md:grid-cols-2">
           <InputField
@@ -280,7 +205,15 @@ export function ProductDiscountPromotionEditor({
                         type="checkbox"
                         checked={allSelected}
                         onChange={(event) =>
-                          toggleCategoryProducts(category, event.target.checked)
+                          setForm((current) => ({
+                            ...current,
+                            ...toggleCategoryProducts({
+                              category,
+                              checked: event.target.checked,
+                              productIds: current.productIds,
+                              categoryIds: current.categoryIds,
+                            }),
+                          }))
                         }
                         className="h-4 w-4 accent-brand-color-500"
                       />
@@ -295,7 +228,11 @@ export function ProductDiscountPromotionEditor({
                     </label>
                     <button
                       type="button"
-                      onClick={() => toggleCategoryExpansion(category._id)}
+                      onClick={() =>
+                        setExpandedCategoryIds((current) =>
+                          toggleCategoryExpansion(current, category._id),
+                        )
+                      }
                       className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
                     >
                       {isExpanded ? "Hide items" : "Show items"}
@@ -312,7 +249,15 @@ export function ProductDiscountPromotionEditor({
                           <input
                             type="checkbox"
                             checked={form.productIds.includes(product._id)}
-                            onChange={() => toggleProduct(product._id)}
+                            onChange={() =>
+                              setForm((current) => ({
+                                ...current,
+                                productIds: toggleProduct(
+                                  current.productIds,
+                                  product._id,
+                                ),
+                              }))
+                            }
                             className="h-4 w-4 accent-brand-color-500"
                           />
                           {product.imageUrl ? (
@@ -329,7 +274,7 @@ export function ProductDiscountPromotionEditor({
                               {product.name}
                             </span>
                             <span className="block text-xs text-stone-500">
-                              {getProductPriceLabel(product)}
+                              {formatCurrency(product.price) ?? "--"}
                             </span>
                           </span>
                         </label>
@@ -464,7 +409,12 @@ export function ProductDiscountPromotionEditor({
                   <button
                     key={day}
                     type="button"
-                    onClick={() => toggleDay(day)}
+                    onClick={() =>
+                      setForm((current) => ({
+                        ...current,
+                        days: toggleDay(current.days, day),
+                      }))
+                    }
                     className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
                       isSelected
                         ? "border-brand-color-500 bg-brand-color-500 text-white"
