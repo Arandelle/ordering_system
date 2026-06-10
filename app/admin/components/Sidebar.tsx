@@ -8,6 +8,7 @@ import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
 import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { ORDER_STATUSES } from "@/types/orderConstants";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -131,11 +132,14 @@ const navItems: NavItem[] = [
 
 const getNavItemKey = (item: NavItem) => item.path ?? item.name;
 
+const isRouteActive = (basePath: string, currentPath: string) =>
+  currentPath === basePath || currentPath.startsWith(`${basePath}/`);
+
 const getActiveParentKey = (currentPath: string) => {
   const activeParent = navItems.find(
     (item) =>
       item.children?.length &&
-      item.children.some((child) => child.path === currentPath),
+      item.children.some((child) => isRouteActive(child.path, currentPath)),
   );
 
   return activeParent ? getNavItemKey(activeParent) : null;
@@ -151,7 +155,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   );
 
   const pendingCount =
-    placedOrders?.data.filter((order) => order.status === "pending").length ??
+    placedOrders?.data.filter((order) => order.status === ORDER_STATUSES.PENDING).length ??
     0;
   // const lowProductStock = products.filter((order) => order.stock <= 10).length;
 
@@ -201,16 +205,15 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
             {visibleNavItems.map((item) => {
               const hasChildren = Boolean(item.children?.length); // Check if current path matches item or any of its children
 
-              const hasActiveChild = item.children?.some(
-                (child) => child.path === pathname || pathname.startsWith(`${child.path}/`)
+              const hasActiveChild = item.children?.some((child) =>
+                isRouteActive(child.path, pathname),
               ); // Determine if item is active based on current path
 
               const itemKey = getNavItemKey(item);
 
               const isActive =
-                item.path !== null &&
-                (pathname === item.path ||
-                  pathname.startsWith(`${item.path}/`)) || Boolean(hasActiveChild);
+                (item.path !== null && isRouteActive(item.path, pathname)) ||
+                Boolean(hasActiveChild);
 
               const isExpanded = expandedItemKey === itemKey;
 
@@ -284,7 +287,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                             href={child.path}
                             onClick={onClose}
                             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                              pathname === child.path
+                              isRouteActive(child.path, pathname)
                                 ? "bg-brand-color-500/10 text-brand-color-500"
                                 : "text-gray-500 hover:bg-slate-100 hover:text-brand-color-500"
                             }`}
