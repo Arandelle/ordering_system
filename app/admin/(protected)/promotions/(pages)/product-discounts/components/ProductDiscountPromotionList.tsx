@@ -19,22 +19,12 @@ import {
   promotionStatusStyles,
 } from "../helpers/getPromotionStatus";
 import { ProductDiscountPromotion } from "../types";
+import { getCreatorName } from "../../../helpers/getCreatorName";
 
 type ProductDiscountPromotionListProps = {
   promotions: ProductDiscountPromotion[];
 };
 
-function getCreatorName(promotion: ProductDiscountPromotion) {
-  const creator = promotion.createdBy;
-  if (!creator) return "Unknown";
-
-  const fullName = [creator.firstName, creator.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-
-  return fullName || creator.email || "Unknown";
-}
 
 export function ProductDiscountPromotionList({
   promotions,
