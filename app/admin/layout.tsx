@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import React from "react";
 import { syne } from "../font";
 import { StaffProvider } from "@/contexts/StaffContext";
+import { AdminBranchProvider } from "@/contexts/AdminBranchContext";
 
 export const metadata: Metadata = {
   title: "Admin | Harrison House of Inasal & BBQ",
@@ -16,8 +17,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <StaffProvider>
-      <div className={`${syne.className}`}>{children}</div>
-    </StaffProvider>
+    <AdminBranchProvider>
+      <StaffProvider>
+        <div className={`${syne.className}`}>{children}</div>
+      </StaffProvider>
+    </AdminBranchProvider>
   );
 }
