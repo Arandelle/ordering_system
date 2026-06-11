@@ -1,6 +1,6 @@
-import { AdminPromotionBase } from "../types/discount-promotion.type";
+import type { PromotionCreator } from "../types/discount-promotion.type";
 
-export function getCreatorName(promotion: AdminPromotionBase) {
+export function getCreatorName(promotion: { createdBy?: PromotionCreator }) {
   const creator = promotion.createdBy;
   if (!creator) return "Unknown";
 
