@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     await requireAdmin(request);
 
     const data = await OrderDiscountPromotion.find({})
+      .populate("createdBy", "firstName lastName email")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    await requireAdmin(request);
+    const admin = await requireAdmin(request);
 
     const body = (await request.json()) as OrderDiscountPromotionPayload;
     const normalizedConfig = normalizeOrderDiscountPromotionPayload(body);
@@ -46,7 +47,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
-    const [promotion] = await OrderDiscountPromotion.create([normalizedConfig]);
+    const [promotion] = await OrderDiscountPromotion.create([
+      {
+        ...normalizedConfig,
+        createdBy: admin._id,
+      },
+    ]);
 
     return NextResponse.json({ promotion }, { status: 201 });
   } catch (error) {

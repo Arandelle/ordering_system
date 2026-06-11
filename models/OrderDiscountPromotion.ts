@@ -93,6 +93,12 @@ const OrderDiscountPromotionSchema = new Schema(
       min: 0,
       default: DEFAULT_ORDER_DISCOUNT_PROMOTION.redemptionCount,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "Staff",
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true },
 );

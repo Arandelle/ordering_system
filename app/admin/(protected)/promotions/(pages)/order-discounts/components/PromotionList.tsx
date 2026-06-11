@@ -19,6 +19,7 @@ import {
 } from "../helpers/getPromotionStatus";
 import { OrderDiscountPromotion } from "../types";
 import { formatTime } from "@/helper/formatTime";
+import { getCreatorName } from "../../../helpers/getCreatorName";
 
 type PromotionListProps = {
   promotions: OrderDiscountPromotion[];
@@ -59,6 +60,7 @@ export function PromotionList({ promotions }: PromotionListProps) {
                 <TableHead>Schedule</TableHead>
                 <TableHead>Redemptions</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Created By</TableHead>
                 <TableHead>CreatedAt</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -77,8 +79,10 @@ export function PromotionList({ promotions }: PromotionListProps) {
                         {promotion.name}
                       </p>
                       <p className="text-xs text-stone-500">
-                        {formatDateOnly(promotion.startsAt)} {formatTime(promotion.startTime)} - {" "}
-                        {formatDateOnly(promotion.endsAt, "No end Date")} {formatTime(promotion.endTime)}
+                        {formatDateOnly(promotion.startsAt)}{" "}
+                        {formatTime(promotion.startTime)} -{" "}
+                        {formatDateOnly(promotion.endsAt, "No end Date")}{" "}
+                        {formatTime(promotion.endTime)}
                       </p>
                     </td>
                     <td className="px-3 py-4 font-medium text-stone-700">
@@ -108,6 +112,11 @@ export function PromotionList({ promotions }: PromotionListProps) {
                         {promotionStatusLabels[status]}
                       </span>
                     </td>
+
+                    <td className="px-3 py-4 text-stone-600">
+                      {getCreatorName(promotion)}
+                    </td>
+
                     <td className="px-3 py-4 text-stone-600">
                       {formatDate(promotion.createdAt)}
                     </td>

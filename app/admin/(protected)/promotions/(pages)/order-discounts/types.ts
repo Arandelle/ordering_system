@@ -4,6 +4,7 @@ import type {
   PromotionDiscountDayMode,
   PromotionDiscountType,
 } from "@/types/promotions/promotion-constant";
+import type { PromotionCreator } from "../../types/discount-promotion.type";
 
 export type { PromotionStatus } from "@/types/promotions/promotion-constant";
 
@@ -14,6 +15,7 @@ export type OrderDiscountPromotion = Omit<
   _id: string;
   startsAt: string | Date;
   endsAt?: string | Date | null;
+  createdBy?: PromotionCreator;
   createdAt?: string;
   updatedAt?: string;
 };
