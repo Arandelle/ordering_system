@@ -354,9 +354,10 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
     if (!validateAll()) {
-      const errors = Object.values(customerErrors || shippingErrors).filter(
-        Boolean,
-      );
+      const errors = [
+        ...Object.values(customerErrors),
+        ...Object.values(shippingErrors),
+      ].filter(Boolean);
 
       if (errors.length > 0) {
         errors.forEach((error) => toast.error(error));
@@ -387,7 +388,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       lastName,
       customerEmail,
       customerPhone: customerPhone || "",
-      paymentMethod: selectedPayment,
+      paymentMethod: "maya",
       notes,
       applyPromoCardDiscount,
       voucherAmount: parsedVoucherAmount,
@@ -607,9 +608,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       {/* CTA */}
       <>
         <button
-          onClick={
-            isSubmitStep ? () => setShowPaymentOptions(true) : handleNext
-          }
+          onClick={isSubmitStep ? handlePlaceOrder : handleNext}
           disabled={isPending || isNextDisabled || isCodPending}
           className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all ${
             isPending || isNextDisabled || isCodPending
