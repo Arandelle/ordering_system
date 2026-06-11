@@ -2,14 +2,14 @@ import {
   DEFAULT_PROMOTION_DISCOUNT,
   DEFAULT_PROMOTION_RULES,
   PROMOTION_TYPES,
-  PromotionConfig,
+  type PromotionConfig,
 } from "./promotion-constant";
-import { ProductDiscountProductSnapshot } from "./product-discount.type";
+import type { ProductDiscountProductSnapshot } from "./product-discount.type";
 
 export const BUNDLE_TYPE = {
-  SAME_ITEMS : "same_items",
+  SAME_ITEMS: "same_items",
   ANY_ITEMS: "any_items",
-  COMBO_ITEMS: "combo_items"
+  COMBO_ITEMS: "combo_items",
 } as const;
 
 export type BundleType = (typeof BUNDLE_TYPE)[keyof typeof BUNDLE_TYPE];
