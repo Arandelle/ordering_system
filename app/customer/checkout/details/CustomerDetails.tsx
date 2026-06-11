@@ -4,7 +4,7 @@ import { InputField } from "@/components/ui/InputField";
 import { TextareaField } from "@/components/ui/TextAreaField";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { CustomerErrors } from "../useFormErrors";
-import { CustomerSchema, OrderFormState } from "../FormSchema";
+import { OrderFormState } from "../FormSchema";
 
 type customerDataProps = {
   customerData: OrderFormState["customer"];
@@ -77,7 +77,7 @@ const CustomerDetails = ({
         placeholder="Enter any special instructions for your order"
         name="note"
         value={customerData.notes}
-        onChange={(e) => onChange("customer", "note", e.target.value)}
+        onChange={(e) => onChange("customer", "notes", e.target.value)}
       />
     </div>
   );
