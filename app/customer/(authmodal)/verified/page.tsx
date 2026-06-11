@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { syne } from "@/app/font";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/apiClient";
+import { InputField } from "@/components/ui/InputField";
 
 export default function VerifiedPage() {
   const searchParams = useSearchParams();
@@ -31,36 +33,41 @@ export default function VerifiedPage() {
     if (!email) return toast.error("Please enter your email");
     setIsLoading(true);
 
-    const response = await fetch("/api/customer/auth/resend-verification", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
-    });
-    const data = (await response.json()) as {
-      status?: "sent" | "already_verified" | "not_found";
-      error?: string;
-    };
+    try {
+      const data = await apiClient.post<{
+        status?: "sent" | "already_verified" | "not_found";
+        error?: string;
+      }>("/customer/auth/resend-verification", { email });
 
-    if (!response.ok && data.error) {
-      toast.error(data.error);
+      if (data.status) {
+        setResendStatus(data.status);
+      }
+    } catch (error: unknown) {
+      // If apiClient throws on 404 and exposes the body
+      const body = (error as { details?: { status?: string } })?.details;
+      if (body?.status === "not_found") {
+        setResendStatus("not_found");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    if (data.status) {
-      setResendStatus(data.status);
-    }
-
-    setIsLoading(false);
   };
 
   if (isExpired) {
     return (
-      <div className={`${syne.className} min-h-screen flex items-center justify-center bg-gray-50`}>
-        <div className="bg-white rounded-2xl shadow-xl p-10 flex flex-col items-center gap-5 text-center max-w-sm w-full">
+      <div
+        className={`${syne.className} min-h-screen flex items-center justify-center bg-gray-50`}
+      >
+        <div className="bg-white rounded-2xl shadow-xl p-10 flex flex-col items-center gap-5 max-w-sm w-full">
           {resendStatus === "sent" ? (
             <>
-              <DynamicIcon name="MailCheck" size={48} className="text-green-500" />
+              <DynamicIcon
+                name="MailCheck"
+                size={48}
+                className="text-green-500"
+              />
               <h1 className="text-xl font-bold text-gray-900">Email Sent!</h1>
               <p className="text-gray-500 text-sm">
                 Check your inbox for a new verification link.
@@ -68,7 +75,11 @@ export default function VerifiedPage() {
             </>
           ) : resendStatus === "already_verified" ? (
             <>
-              <DynamicIcon name="MailCheck" size={48} className="text-green-500" />
+              <DynamicIcon
+                name="MailCheck"
+                size={48}
+                className="text-green-500"
+              />
               <h1 className="text-xl font-bold text-gray-900">
                 Email Already Verified
               </h1>
@@ -89,7 +100,8 @@ export default function VerifiedPage() {
                 Account Not Found
               </h1>
               <p className="text-gray-500 text-sm">
-                No account exists for this email. Please create an account first.
+                No account exists for this email. Please create an account
+                first.
               </p>
               <button
                 onClick={() => router.push("/?modal=signup")}
@@ -101,16 +113,19 @@ export default function VerifiedPage() {
           ) : (
             <>
               <DynamicIcon name="MailX" size={48} className="text-red-500" />
-              <h1 className="text-xl font-bold text-red-500">Link Expired ❌</h1>
+              <h1 className="text-xl font-bold text-red-500">
+                Link Expired ❌
+              </h1>
               <p className="text-gray-500 text-sm">
                 Your verification link has expired. Request a new one below.
               </p>
-              <input
+
+              <InputField
+                label="Email"
                 type="email"
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-color-500"
               />
               <button
                 onClick={handleResend}
@@ -127,11 +142,17 @@ export default function VerifiedPage() {
   }
 
   return (
-    <div className={`${syne.className} min-h-screen flex items-center justify-center bg-gray-50`}>
+    <div
+      className={`${syne.className} min-h-screen flex items-center justify-center bg-gray-50`}
+    >
       <div className="bg-white rounded-2xl shadow-xl p-10 flex flex-col items-center gap-5 text-center max-w-sm w-full">
         <div className="relative flex items-center justify-center w-20 h-20 rounded-full bg-green-50 ring-8 ring-green-50/50">
           <div className="absolute inset-0 rounded-full bg-green-200 animate-ping opacity-50" />
-          <DynamicIcon name="MailCheck" size={48} className="text-green-500 relative z-10" />
+          <DynamicIcon
+            name="MailCheck"
+            size={48}
+            className="text-green-500 relative z-10"
+          />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Email Verified! 🎉</h1>
         <p className="text-gray-500 text-sm">
