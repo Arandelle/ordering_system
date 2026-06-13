@@ -15,14 +15,20 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(stats);
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch dashboard data";
+    const status =
+      message === "Unauthorized!"
+        ? 401
+        : message === "No branch assigned"
+          ? 403
+          : message === "Invalid branch id"
+            ? 400
+            : 500;
+
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch dashboard stats",
-      },
-      { status: 500 },
+      { error: status === 500 ? "Failed to fetch dashboard data" : message },
+      { status },
     );
   }
 }
