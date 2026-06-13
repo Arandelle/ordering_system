@@ -2,8 +2,48 @@ import { Order } from "@/models/Orders";
 import { connectDB } from "../../lib/mongodb";
 import { SalesData, TopProduct } from "@/types/adminType";
 import { ORDER_STATUSES } from "@/types/orderConstants";
+import { Types } from "mongoose";
+import { STAFF_ROLES, StaffRole } from "@/types/staff";
 
 export type DashboardRange = "week" | "month" | "year";
+
+export type DashboardFilters = {
+  branchId?: string | Types.ObjectId;
+};
+
+type DashboardAdminScope = {
+  role: StaffRole;
+  branch?: string | Types.ObjectId | null;
+};
+
+export function resolveDashboardFilters(
+  admin: DashboardAdminScope,
+  requestedBranchId?: string | null,
+): DashboardFilters {
+  if (admin.role === STAFF_ROLES.SUPERADMIN) {
+    return requestedBranchId && requestedBranchId !== "all"
+      ? { branchId: requestedBranchId }
+      : {};
+  }
+
+  if (!admin.branch) {
+    throw new Error("No branch assigned");
+  }
+
+  return { branchId: admin.branch };
+}
+
+const buildBranchMatch = (filters: DashboardFilters = {}) => {
+  if (!filters.branchId) return {};
+
+  const branchId = filters.branchId.toString();
+
+  if (!Types.ObjectId.isValid(branchId)) {
+    throw new Error("Invalid branch id");
+  }
+
+  return { branchId: new Types.ObjectId(branchId) };
+};
 
 export function getDateRange(range: DashboardRange) {
   const now = new Date();
@@ -24,14 +64,20 @@ export function getDateRange(range: DashboardRange) {
   return { start, end: now };
 }
 
-export async function getDashboardStats() {
+export async function getDashboardStats(filters: DashboardFilters = {}) {
   await connectDB();
 
-  const totalOrders = await Order.countDocuments({status: ORDER_STATUSES.COMPLETED});
+  const branchMatch = buildBranchMatch(filters);
+
+  const totalOrders = await Order.countDocuments({
+    ...branchMatch,
+    status: ORDER_STATUSES.COMPLETED,
+  });
 
   const revenueResult = await Order.aggregate([
     {
       $match: {
+        ...branchMatch,
         status: ORDER_STATUSES.COMPLETED,
       },
     },
@@ -40,11 +86,12 @@ export async function getDashboardStats() {
   const totalRevenue = revenueResult[0]?.totalRevenue || 0;
 
   const pendingOrders = await Order.countDocuments({
+    ...branchMatch,
     status: ORDER_STATUSES.PENDING,
   });
 
   const bestSellerResult = await Order.aggregate([
-    { $match: { status: ORDER_STATUSES.COMPLETED } },
+    { $match: {...branchMatch, status: ORDER_STATUSES.COMPLETED } },
     { $unwind: "$items" },
     { $group: { _id: "$items.name", totalSold: { $sum: "$items.quantity" } } },
     { $sort: { totalSold: -1 } },
@@ -62,16 +109,19 @@ export async function getDashboardStats() {
 
 export async function getSalesData(
   range: DashboardRange = "week",
+  filters: DashboardFilters = {}
 ): Promise<SalesData[]> {
   await connectDB();
 
   const { start, end } = getDateRange(range);
+  const branchMatch = buildBranchMatch(filters);
 
   const dateFormat = range === "year" ? "%Y-%m" : "%m/%d";
 
   const result = await Order.aggregate([
     {
       $match: {
+        ...branchMatch,
         createdAt: { $gt: start, $lte: end },
         status: "completed",
       },
@@ -97,14 +147,18 @@ export async function getSalesData(
 
 export async function getTopProducts(
   range: DashboardRange = "month",
+  filters: DashboardFilters = {}
 ): Promise<TopProduct[]> {
   await connectDB();
 
   const { start, end } = getDateRange(range);
 
+  const branchMatch = buildBranchMatch(filters);
+
   const result = await Order.aggregate([
     {
       $match: {
+        ...branchMatch,
         createdAt: {
           $gte: start,
           $lte: end,
