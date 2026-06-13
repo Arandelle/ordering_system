@@ -21,10 +21,20 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "categories.delete",
 
     "subcategories.read",
+    "subcategories.create",
+    "subcategories.update",
+    "subcategories.delete",
 
     "customers.read",
 
     "promotions.read",
+    "promotions.create",
+    "promotions.update",
+    "promotions.delete",
+
+    "inventories.read",
+    "inventories.create",
+    "inventories.update",
 
     "stores.read",
     "stores.create",
@@ -49,7 +59,7 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "orders.update",
 
     "products.read",
-    
+
     "promotions.read",
 
     "inventories.read",
@@ -68,13 +78,5 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "settings.read",
   ]),
 
-  cashier: new Set([
-    "dashboard.read",
-
-    "orders.read",
-    "orders.update",
-
-    "customers.read",
-    "promo-cards.read",
-  ]),
+  cashier: new Set(["orders.read", "orders.update"]),
 };
