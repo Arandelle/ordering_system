@@ -26,8 +26,8 @@ export async function PUT(request: NextRequest) {
     await connectDB();
     const staff = await requireAdmin(request);
 
-    const branchId = staff.branch as string;
-    const staffId = staff.id as string;
+    const branchId = staff.branch;
+    const staffId = staff._id;
 
     if (!branchId) {
       return NextResponse.json(

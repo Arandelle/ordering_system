@@ -1,5 +1,6 @@
 import { Inventory } from "@/models/Inventory";
 import { Product } from "@/models/Product";
+import { Types } from "mongoose";
 
 /**
  *
@@ -9,7 +10,7 @@ import { Product } from "@/models/Product";
  *
  */
 
-export async function syncInventoryForBranch(branchId: string) {
+export async function syncInventoryForBranch(branchId: Types.ObjectId) {
   // 1. Get all products id
   const products = await Product.find().select("_id");
 

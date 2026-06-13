@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Inventory } from "@/models/Inventory";
 import z from "zod";
 import { requireAdmin } from "@/lib/getAuth";
+import { Types } from "mongoose";
 
 const updateInventorySchema = z
   .object({
@@ -23,8 +24,8 @@ export async function PUT(
     await connectDB();
     const staff = await requireAdmin(req);
 
-    const branchId = staff.branch as string;
-    const staffId = staff.id as string;
+    const branchId = staff.branch;
+    const staffId = staff._id;
 
     if (!branchId) {
       return NextResponse.json(
@@ -56,7 +57,7 @@ export async function PUT(
 
     // 3. Build update object (only update provided fields)
     const updateData: Partial<UpdateInventoryInput> & {
-      updatedBy: string;
+      updatedBy: Types.ObjectId;
     } = {
       updatedBy: staffId,
     };
