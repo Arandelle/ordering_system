@@ -1,18 +1,10 @@
+"use client";
+
 import DashboardCards from "@/app/admin/components/DashboardCard";
 import SalesChart from "@/app/admin/components/SalesChart";
-import { mockSalesData, mockTopProducts } from "@/data/mockData";
-import {
-  DashboardRange,
-  getDashboardStats,
-  getSalesData,
-  getTopProducts,
-} from "@/services/admin/dashboard.service";
+import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
 
-export default async function DashboardPage() {
-  const stats = await getDashboardStats();
-
-  const salesData = await getSalesData("week");
-  const topProducts = await getTopProducts("week");
+export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
@@ -26,14 +18,10 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <DashboardCards stats={stats} />
+      <DashboardCards />
 
       {/* Charts */}
-      <SalesChart
-        initialSalesData={salesData}
-        initialTopProducts={topProducts}
-      />
+      <SalesChart />
     </div>
   );
 }
