@@ -1,19 +1,9 @@
-import { useStaffContext } from "@/contexts/StaffContext";
-import { STAFF_ROLES } from "@/types/staff";
-import { Bell, CircleUser, Menu } from "lucide-react";
-import React from "react";
+import { currentDate } from "@/helper/currentDate";
+import { useStaffData } from "../hooks/useStaffData";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 const AdminHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const admin = useStaffContext();
-
-  const isAdmin = admin?.role === STAFF_ROLES.ADMIN;
+  const { staff, staffRole } = useStaffData();
 
   return (
     <header className="h-20 bg-white border-b border-slate-200 flex item-center justify-between px-4 lg:px-8 sticky top-0 z-30">
@@ -24,22 +14,10 @@ const AdminHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
           className="lg:hidden p-2 hover:bg-slate-200 rounded-lg transition-colors"
           aria-label="Toggle Menu"
         >
-          <Menu size={16} />
+          <DynamicIcon name="Menu" size={16} />
         </button>
         <div>
-          <h2 className="text-lg lg:text-2xl font-bold text-slate-800">
-            {!isAdmin ? (
-              "Welcome back!" 
-            ) : (
-              <>
-                <span className="hidden lg:inline-block">Welcome to</span>{" "}
-                <span className="text-brand-color-500 block lg:inline-block">
-                  {admin?.branch?.name}
-                </span>
-              </>
-            )}
-          </h2>
-          <p className="text-xs lg:text-sm text-slate-500 mt-1">
+          <p className="text-xs lg:text-lg text-slate-500 mt-1">
             {currentDate}
           </p>
         </div>
@@ -48,7 +26,7 @@ const AdminHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
       <div className="flex items-center gap-2 lg:gap-4">
         {/** Notifications */}
         <button className="relative p-2 lg:p-3 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
-          <Bell size={20} />
+          <DynamicIcon name="Bell" size={20} />
           <div className="absolute top-1 lg:top-2 right-1 lg:right-2 rounded-full h-2 w-2 bg-red-500" />
         </button>
 
@@ -56,14 +34,12 @@ const AdminHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
         <div className="flex items-center gap-2 lg:gap-3 pl-2 lg:pl-4 border-l border-slate-200">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-semibold text-slate-800">
-              {`${admin?.firstName ?? "Admin"} ${admin?.lastName ?? ""}`}{" "}
+              {`${staff?.firstName ?? "--"} ${staff?.lastName ?? "--"}`}{" "}
             </p>
-            <p className="text-xs text-slate-500">
-              {admin?.role ?? "Admin role"}
-            </p>
+            <p className="text-xs text-slate-500">{staffRole ?? "--"}</p>
           </div>
 
-          <CircleUser size={24} />
+          <DynamicIcon name="CircleUser" size={24} />
         </div>
       </div>
     </header>

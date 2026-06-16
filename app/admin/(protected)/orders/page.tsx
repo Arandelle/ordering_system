@@ -7,6 +7,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
 import { OrderStatus } from "@/types/orderConstants";
 import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
+import { useBranchName } from "../../hooks/useBranchName";
 
 type statusFilterType = "all" | OrderStatus;
 
@@ -18,17 +19,16 @@ const OrdersPage = () => {
   const [limit, setLimit] = useState(10);
 
   const { selectedBranchId } = useAdminBranchContext();
+  const { dashboardBranchName } = useBranchName();
 
   // ✅ pass all filters to the server
-  const { data, isPending } = useAdminOrders(
-    {
-      page: currentPage,
-      limit,
-      search: appliedSearch,
-      status: statusFilter === "all" ? undefined : statusFilter,
-      branchId: selectedBranchId === "all" ? undefined : selectedBranchId,
-    },
-  );
+  const { data, isPending } = useAdminOrders({
+    page: currentPage,
+    limit,
+    search: appliedSearch,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    branchId: selectedBranchId === "all" ? undefined : selectedBranchId,
+  });
 
   const orders = data?.data ?? [];
   const pagination = data?.pagination;
@@ -53,17 +53,18 @@ const OrdersPage = () => {
       {/** Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Orders Management
+          Orders Management -{" "}
+          <span className="text-brand-color-500">{dashboardBranchName}</span>
         </h1>
         <p className="text-gray-500">View and manage all customers order</p>
       </div>
 
       {/** Filters */}
-      <SearchBar 
-      value={searchQuery}
-      onChange={setSearchQuery}
-      onSearch={handleSearch}
-      placeholder="Search for customer, email, status, reference"
+      <SearchBar
+        value={searchQuery}
+        onChange={setSearchQuery}
+        onSearch={handleSearch}
+        placeholder="Search for customer, email, status, reference"
       />
 
       <OrdersTable orders={orders} isPending={isPending} />
