@@ -10,6 +10,7 @@ export const useLogoutAdmin = () => {
     onSuccess: () => {
       queryClient.clear(); // ← clears all cached queries (admin-me, branches, staff, etc.)
       window.location.href = "/auth/login"; // ← full reload, cleaner for auth transitions
+      sessionStorage.clear()
     },
     onError: () => {
       toast.error("Failed to logout. Try again.");
