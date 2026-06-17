@@ -67,73 +67,73 @@ const CartRow = ({
 
   return (
     <div className="flex gap-3 py-3 first:pt-0">
-    <img
-      src={item.image}
-      alt={item.name || "Product"}
-      className="w-14 h-14 rounded-xl object-cover shrink-0"
-    />
-    <div className="flex-1 min-w-0">
-      <div className="flex justify-between items-start gap-1">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-900 truncate leading-tight">
-            {item.name}
-          </p>
-          {item.category?.name && (
-            <p className="text-xs text-slate-400 mt-0.5">
-              {item.category.name}
+      <img
+        src={item.image}
+        alt={item.name || "Product"}
+        className="w-14 h-14 rounded-xl object-cover shrink-0"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-1">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-900 truncate leading-tight">
+              {item.name}
             </p>
-          )}
-          {hasProductDiscount && (
-            <p className="mt-1 text-[11px] font-semibold text-green-600">
-              {item.activeProductDiscount?.label}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={() => onRemove(item._id)}
-          aria-label="Remove item"
-          className="p-1 text-slate-300 hover:text-red-400 transition-colors shrink-0 rounded-full"
-        >
-          <DynamicIcon name="Trash2" size={13} />
-        </button>
-      </div>
-
-      <div className="flex items-center justify-between mt-2.5">
-        {/* Quantity stepper */}
-        <div className="flex items-center gap-0.5 border border-slate-200 rounded-full overflow-hidden">
+            {item.category?.name && (
+              <p className="text-xs text-slate-400 mt-0.5">
+                {item.category.name}
+              </p>
+            )}
+            {hasProductDiscount && (
+              <p className="mt-1 text-[11px] font-semibold text-green-600">
+                {item.activeProductDiscount?.label}
+              </p>
+            )}
+          </div>
           <button
-            onClick={() => onUpdate(item._id, item.quantity - 1)}
-            className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
+            onClick={() => onRemove(item._id)}
+            aria-label="Remove item"
+            className="p-1 text-slate-300 hover:text-red-400 transition-colors shrink-0 rounded-full"
           >
-            <DynamicIcon name="Minus" size={11} />
-          </button>
-          <span className="w-6 text-center text-xs font-semibold text-slate-800">
-            {item.quantity}
-          </span>
-          <button
-            onClick={() => onUpdate(item._id, item.quantity + 1)}
-            className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
-          >
-            <DynamicIcon name="Plus" size={11} />
+            <DynamicIcon name="Trash2" size={13} />
           </button>
         </div>
 
-        <div className="flex flex-col items-end">
-          <span className="text-sm font-bold text-brand-color-500">
-            PHP {discountedLineTotal.toFixed(2)}
-          </span>
-          {hasProductDiscount && (
-            <span className="text-[11px] text-slate-400 line-through">
-              PHP {lineSubtotal.toFixed(2)}
+        <div className="flex items-center justify-between mt-2.5">
+          {/* Quantity stepper */}
+          <div className="flex items-center gap-0.5 border border-slate-200 rounded-full overflow-hidden">
+            <button
+              onClick={() => onUpdate(item._id, item.quantity - 1)}
+              className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
+            >
+              <DynamicIcon name="Minus" size={11} />
+            </button>
+            <span className="w-6 text-center text-xs font-semibold text-slate-800">
+              {item.quantity}
             </span>
-          )}
+            <button
+              onClick={() => onUpdate(item._id, item.quantity + 1)}
+              className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
+            >
+              <DynamicIcon name="Plus" size={11} />
+            </button>
+          </div>
+
+          <div className="flex flex-col items-end">
+            <span className="text-sm font-bold text-brand-color-500">
+              PHP {discountedLineTotal.toFixed(2)}
+            </span>
+            {hasProductDiscount && (
+              <span className="text-[11px] text-slate-400 line-through">
+                PHP {lineSubtotal.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <span className="hidden">
+            ₱{(item.price * item.quantity).toFixed(2)}
+          </span>
         </div>
-        <span className="hidden">
-          ₱{(item.price * item.quantity).toFixed(2)}
-        </span>
       </div>
     </div>
-  </div>
   );
 };
 
@@ -265,8 +265,16 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
 
   const { firstName, lastName, customerPhone, customerEmail, notes } =
     orderDetails?.customer;
-  const { line1, line2, city, zipCode, province, country, landmark } =
-    orderDetails?.shippingAddress;
+  const {
+    line1,
+    line2,
+    city,
+    zipCode,
+    province,
+    country,
+    landmark,
+    coordinates,
+  } = orderDetails?.shippingAddress;
 
   const {
     cartItems,
@@ -338,7 +346,14 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     (isDetails && isDetailsIncomplete) ||
     (isShipping && isShippingIncomplete);
 
+  const isActionPending = isPending || isCodPending;
+
   const handleNext = () => {
+    if (!selectedBranch) {
+      toast.error("Please select a branch.");
+      return;
+    }
+
     if (isDetails) {
       const result = CustomerSchema.safeParse(orderDetails.customer);
       if (!result.success) {
@@ -347,6 +362,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         return;
       }
     }
+
     // same for shipping step
     onNext();
   };
@@ -359,11 +375,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         ...Object.values(shippingErrors),
       ].filter(Boolean);
 
-      if (errors.length > 0) {
-        errors.forEach((error) => toast.error(error));
-      } else {
-        toast.error("Please complete all required fields.");
-      }
+      errors.map((error) => toast.error(error));
       return;
     }
 
@@ -388,7 +400,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       lastName,
       customerEmail,
       customerPhone: customerPhone || "",
-      paymentMethod: "maya",
+      paymentMethod: selectedPayment,
       notes,
       applyPromoCardDiscount,
       voucherAmount: parsedVoucherAmount,
@@ -403,6 +415,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         province,
         country,
         landmark,
+        coordinates,
       },
     };
 
@@ -438,11 +451,12 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         await clearCart();
         window.location.href = data.redirectUrl;
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.error("Order Failed", {
-        description: error.message,
+        description:
+          error instanceof Error ? error.message : "Failed to place order.",
       });
-      console.log(error.message);
+      console.log(error instanceof Error ? error.message : error);
     }
   };
 
@@ -642,7 +656,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         )}
 
         {isNextDisabled && selectedBranch && (
-          <p className="text-xs text-center text-slate-400">
+          <p className="text-xs text-center text-red-400">
             Complete all required fields to continue
           </p>
         )}
