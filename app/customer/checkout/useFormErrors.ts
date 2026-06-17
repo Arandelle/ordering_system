@@ -21,7 +21,7 @@ const useFormErrors = (orderDetails: OrderFormState) => {
   const validateField = (
     step: "customer" | "shippingAddress",
     field: string,
-    currentValue?: string,
+    currentValue?: unknown,
   ) => {
     const schema = step === "customer" ? CustomerSchema : ShippingSchema;
     const data =
@@ -44,25 +44,18 @@ const useFormErrors = (orderDetails: OrderFormState) => {
           };
     const result = schema.safeParse(data);
 
-    if (result.success) {
-      if (step === "customer") {
-        setCustomerErrors((prev) => ({ ...prev, [field]: undefined }));
-      } else {
-        setShippingErrors((prev) => ({ ...prev, [field]: undefined }));
-      }
-      return;
+    const fieldError = result.success
+      ? undefined
+      : result.error.issues.find((err) => {
+          const path = err.path[err.path.length - 1] as string;
+          return path === field;
+        })?.message;
+
+    if (step === "customer") {
+      setCustomerErrors((prev) => ({ ...prev, [field]: fieldError }));
+    } else {
+      setShippingErrors((prev) => ({ ...prev, [field]: fieldError }));
     }
-
-    result.error.issues.forEach((err) => {
-      const path = err.path[err.path.length - 1] as string;
-      if (path !== field) return;
-
-      if (step === "customer") {
-        setCustomerErrors((prev) => ({ ...prev, [field]: err.message }));
-      } else {
-        setShippingErrors((prev) => ({ ...prev, [field]: err.message }));
-      }
-    });
   };
 
   const validateAll = (): boolean => {
@@ -96,6 +89,9 @@ const useFormErrors = (orderDetails: OrderFormState) => {
         case "shippingAddress.line1":
           formattedShippingErrors.line1 = err.message;
           break;
+        case "shippingAddress.line2":
+          formattedShippingErrors.line2 = err.message;
+          break;
         case "shippingAddress.city":
           formattedShippingErrors.city = err.message;
           break;
@@ -104,6 +100,9 @@ const useFormErrors = (orderDetails: OrderFormState) => {
           break;
         case "shippingAddress.zipCode":
           formattedShippingErrors.zipCode = err.message;
+          break;
+        case "shippingAddress.coordinates":
+          formattedShippingErrors.coordinates = err.message;
           break;
       }
     });
