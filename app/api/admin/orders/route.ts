@@ -9,10 +9,10 @@ import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/getAuth";
 import { STAFF_ROLES } from "@/types/staff";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { queryOrders } from "@/services/order/order.service";
 import { parseRequestQuery } from "@/utils/query-helpers";
 import { ORDER_STATUSES } from "@/types/orderConstants";
-import { Types } from "mongoose";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 
 
@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const admin = await requireAdmin(request);
+    if (!canAccess(admin.role, "orders.read")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { page, limit, skip, sort, match } = parseRequestQuery(request, {
       exactFields: ["status"],
       searchFields: [
@@ -43,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     const requestedBranchId = request.nextUrl.searchParams.get("branchId");
 
-    if (admin.role === STAFF_ROLES.SUPERADMIN) {
+    if (admin.role === STAFF_ROLES.SUPERADMIN || admin.role === STAFF_ROLES.CASHIER) {
       if (requestedBranchId && requestedBranchId !== "all") {
         const branchObjectId = getValidObjectId(requestedBranchId);
 
