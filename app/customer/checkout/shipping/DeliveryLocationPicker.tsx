@@ -1,0 +1,379 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "leaflet-defaulticon-compatibility";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { userIcon } from "@/app/customer/map/markerIcon";
+
+type DeliveryCoordinates = {
+  lat: number;
+  lng: number;
+};
+
+type SearchResult = {
+  display_name: string;
+  lat: string;
+  lon: string;
+};
+
+export type ResolvedDeliveryAddress = {
+  city?: string;
+  province?: string;
+  zipCode?: string;
+};
+
+type ReverseGeocodeResponse = {
+  address?: {
+    city?: string;
+    town?: string;
+    municipality?: string;
+    village?: string;
+    suburb?: string;
+    county?: string;
+    state?: string;
+    region?: string;
+    postcode?: string;
+  };
+};
+
+type DeliveryLocationPickerProps = {
+  value?: DeliveryCoordinates;
+  addressQuery: string;
+  error?: string;
+  onChange: (coordinates: DeliveryCoordinates) => void;
+  onAddressResolved?: (address: ResolvedDeliveryAddress) => void;
+};
+
+const METRO_MANILA_CENTER: [number, number] = [14.5995, 120.9842];
+
+function ClickToPin({
+  onChange,
+}: {
+  onChange: (coordinates: DeliveryCoordinates) => void;
+}) {
+  useMapEvents({
+    click(event) {
+      onChange({
+        lat: event.latlng.lat,
+        lng: event.latlng.lng,
+      });
+    },
+  });
+
+  return null;
+}
+
+function RecenterMap({ value }: { value?: DeliveryCoordinates }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!value) return;
+    map.flyTo([value.lat, value.lng], 16, { duration: 0.8 });
+  }, [map, value]);
+
+  return null;
+}
+
+const DeliveryLocationPicker = ({
+  value,
+  addressQuery,
+  error,
+  onChange,
+  onAddressResolved,
+}: DeliveryLocationPickerProps) => {
+  const markerRef = useRef<L.Marker | null>(null);
+  const [query, setQuery] = useState(addressQuery);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setQuery(addressQuery);
+  }, [addressQuery]);
+
+  const resolveAddressFromCoordinates = useCallback(
+    async (coordinates: DeliveryCoordinates) => {
+      if (!onAddressResolved) return;
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${coordinates.lat}&lon=${coordinates.lng}&format=json&addressdetails=1`,
+          { headers: { "Accept-Language": "en" } },
+        );
+
+        if (!response.ok) return;
+
+        const data = (await response.json()) as ReverseGeocodeResponse;
+        const address = data.address;
+        console.log(data)
+        if (!address) return;
+
+        onAddressResolved({
+          city:
+            address.city ??
+            address.town ??
+            address.municipality ??
+            address.village ??
+            address.suburb,
+          province: address.state ?? address.region ?? address.county,
+          zipCode: address.postcode,
+        });
+      } catch {
+        // Reverse geocoding is a convenience; the pinned coordinates remain authoritative.
+      }
+    },
+    [onAddressResolved],
+  );
+
+  const selectCoordinates = useCallback(
+    (coordinates: DeliveryCoordinates) => {
+      setLocationError(null);
+      const nextCoordinates = {
+        lat: Number(coordinates.lat.toFixed(6)),
+        lng: Number(coordinates.lng.toFixed(6)),
+      };
+      onChange(nextCoordinates);
+      resolveAddressFromCoordinates(nextCoordinates);
+      setTimeout(() => markerRef.current?.openPopup(), 300);
+    },
+    [onChange, resolveAddressFromCoordinates],
+  );
+
+  const searchAddress = useCallback(
+    async (searchText: string) => {
+      const trimmed = searchText.trim();
+      if (trimmed.length < 3) {
+        setResults([]);
+        setLocationError("Enter at least 3 characters to search an address.");
+        return;
+      }
+
+      setIsSearching(true);
+      setLocationError(null);
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            `${trimmed}, Philippines`,
+          )}&format=json&limit=5&countrycodes=ph`,
+          { headers: { "Accept-Language": "en" } },
+        );
+
+        if (!response.ok) {
+          throw new Error("Address search failed.");
+        }
+
+        const data = (await response.json()) as SearchResult[];
+        setResults(data);
+
+        if (data.length === 0) {
+          setLocationError("No matching address found. Try a nearby landmark.");
+        }
+      } catch (searchError) {
+        setResults([]);
+        setLocationError(
+          searchError instanceof Error
+            ? searchError.message
+            : "Address search failed.",
+        );
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [],
+  );
+
+  const useCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError("Your browser does not support location access.");
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        selectCoordinates({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setIsLocating(false);
+      },
+      () => {
+        setLocationError(
+          "Location access was denied or unavailable. Search your address or click the map instead.",
+        );
+        setIsLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10_000,
+        maximumAge: 60_000,
+      },
+    );
+  }, [selectCoordinates]);
+
+  const handleResultSelect = (result: SearchResult) => {
+    setResults([]);
+    setQuery(result.display_name);
+    selectCoordinates({
+      lat: Number(result.lat),
+      lng: Number(result.lon),
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2 md:flex-row">
+        <div className="relative flex-1">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                searchAddress(query);
+              }
+            }}
+            placeholder="Search delivery address or landmark"
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-10 text-sm outline-none focus:border-brand-color-500 focus:ring-1 focus:ring-brand-color-500"
+          />
+          <DynamicIcon
+            name="Search"
+            size={16}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => searchAddress(query)}
+          disabled={isSearching}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSearching ? (
+            <DynamicIcon name="Loader2" size={15} className="animate-spin" />
+          ) : (
+            <DynamicIcon name="Search" size={15} />
+          )}
+          Search
+        </button>
+
+        <button
+          type="button"
+          onClick={useCurrentLocation}
+          disabled={isLocating}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-color-500 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-color-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLocating ? (
+            <DynamicIcon name="Loader2" size={15} className="animate-spin" />
+          ) : (
+            <DynamicIcon name="LocateFixed" size={15} />
+          )}
+          Current location
+        </button>
+      </div>
+
+      {results.length > 0 && (
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          {results.map((result) => (
+            <button
+              key={`${result.lat}-${result.lon}-${result.display_name}`}
+              type="button"
+              onClick={() => handleResultSelect(result)}
+              className="block w-full border-b border-slate-100 px-3 py-2 text-left text-xs text-slate-600 last:border-b-0 hover:bg-slate-50"
+            >
+              {result.display_name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {(locationError || error) && (
+        <p className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-500">
+          {locationError || error}
+        </p>
+      )}
+
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <MapContainer
+          center={value ? [value.lat, value.lng] : METRO_MANILA_CENTER}
+          zoom={value ? 16 : 12}
+          scrollWheelZoom
+          style={{ width: "100%", height: "320px" }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="/">Harrison House of Inasal & BBQ</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <ClickToPin onChange={selectCoordinates} />
+          <RecenterMap value={value} />
+
+          {value && (
+            <Marker
+              draggable
+              position={[value.lat, value.lng]}
+              icon={userIcon}
+              ref={markerRef}
+              eventHandlers={{
+                dragend(event) {
+                  const marker = event.target as L.Marker;
+                  const next = marker.getLatLng();
+                  selectCoordinates({ lat: next.lat, lng: next.lng });
+                },
+              }}
+            >
+              <Popup>
+                <div className="space-y-1 text-xs bg-white p-4 w-full">
+                  <p className="font-semibold text-slate-800">
+                    Delivery location
+                  </p>
+                  <p className="text-slate-500">
+                    {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
+                  </p>
+                  <p className="text-slate-400">
+                    Drag the pin or click the map to adjust.
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+        </MapContainer>
+      </div>
+
+      <div className="flex items-start gap-2 text-xs text-slate-500">
+        <DynamicIcon name="MapPinned" size={15} className="mt-0.5 shrink-0" />
+        <p>
+          Click the map to place your delivery pin, drag the pin to fine-tune
+          it, or allow location access to start from your current position.
+        </p>
+      </div>
+
+      {value && (
+        <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs text-slate-600">
+          <DynamicIcon name="CheckCircle2" size={15} className="text-green-600" />
+          <span>
+            Pinned at {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DeliveryLocationPicker;
