@@ -1,26 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import "leaflet-defaulticon-compatibility";
-import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+import type { Marker as LeafletMarker } from "leaflet";
 
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { userIcon } from "@/app/customer/map/markerIcon";
+import {
+  BaseLeafletMap,
+  DraggableMapMarker,
+  MapClickHandler,
+  RecenterMap,
+  type MapCoordinates,
+} from "@/components/leaflet";
 
-type DeliveryCoordinates = {
-  lat: number;
-  lng: number;
-};
+type DeliveryCoordinates = MapCoordinates;
 
 type SearchResult = {
   display_name: string;
@@ -58,34 +51,6 @@ type DeliveryLocationPickerProps = {
 
 const METRO_MANILA_CENTER: [number, number] = [14.5995, 120.9842];
 
-function ClickToPin({
-  onChange,
-}: {
-  onChange: (coordinates: DeliveryCoordinates) => void;
-}) {
-  useMapEvents({
-    click(event) {
-      onChange({
-        lat: event.latlng.lat,
-        lng: event.latlng.lng,
-      });
-    },
-  });
-
-  return null;
-}
-
-function RecenterMap({ value }: { value?: DeliveryCoordinates }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!value) return;
-    map.flyTo([value.lat, value.lng], 16, { duration: 0.8 });
-  }, [map, value]);
-
-  return null;
-}
-
 const DeliveryLocationPicker = ({
   value,
   addressQuery,
@@ -93,7 +58,7 @@ const DeliveryLocationPicker = ({
   onChange,
   onAddressResolved,
 }: DeliveryLocationPickerProps) => {
-  const markerRef = useRef<L.Marker | null>(null);
+  const markerRef = useRef<LeafletMarker | null>(null);
   const [query, setQuery] = useState(addressQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -118,7 +83,6 @@ const DeliveryLocationPicker = ({
 
         const data = (await response.json()) as ReverseGeocodeResponse;
         const address = data.address;
-        console.log(data)
         if (!address) return;
 
         onAddressResolved({
@@ -309,52 +273,34 @@ const DeliveryLocationPicker = ({
         </p>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <MapContainer
-          center={value ? [value.lat, value.lng] : METRO_MANILA_CENTER}
-          zoom={value ? 16 : 12}
-          scrollWheelZoom
-          style={{ width: "100%", height: "320px" }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="/">Harrison House of Inasal & BBQ</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+      <BaseLeafletMap
+        center={value ? [value.lat, value.lng] : METRO_MANILA_CENTER}
+        zoom={value ? 16 : 12}
+      >
+        <MapClickHandler onClick={selectCoordinates} />
+        <RecenterMap value={value} />
 
-          <ClickToPin onChange={selectCoordinates} />
-          <RecenterMap value={value} />
-
-          {value && (
-            <Marker
-              draggable
-              position={[value.lat, value.lng]}
-              icon={userIcon}
-              ref={markerRef}
-              eventHandlers={{
-                dragend(event) {
-                  const marker = event.target as L.Marker;
-                  const next = marker.getLatLng();
-                  selectCoordinates({ lat: next.lat, lng: next.lng });
-                },
-              }}
-            >
-              <Popup>
-                <div className="space-y-1 text-xs bg-white p-4 w-full">
-                  <p className="font-semibold text-slate-800">
-                    Delivery location
-                  </p>
-                  <p className="text-slate-500">
-                    {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
-                  </p>
-                  <p className="text-slate-400">
-                    Drag the pin or click the map to adjust.
-                  </p>
-                </div>
-              </Popup>
-            </Marker>
-          )}
-        </MapContainer>
-      </div>
+        {value && (
+          <DraggableMapMarker
+            position={value}
+            icon={userIcon}
+            markerRef={markerRef}
+            onDragEnd={selectCoordinates}
+          >
+            <div className="space-y-1 text-xs bg-white p-4 w-full">
+              <p className="font-semibold text-slate-800">
+                Delivery location
+              </p>
+              <p className="text-slate-500">
+                {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
+              </p>
+              <p className="text-slate-400">
+                Drag the pin or click the map to adjust.
+              </p>
+            </div>
+          </DraggableMapMarker>
+        )}
+      </BaseLeafletMap>
 
       <div className="flex items-start gap-2 text-xs text-slate-500">
         <DynamicIcon name="MapPinned" size={15} className="mt-0.5 shrink-0" />

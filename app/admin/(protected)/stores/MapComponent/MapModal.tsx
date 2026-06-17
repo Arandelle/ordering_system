@@ -1,18 +1,14 @@
-import React, { useState } from "react";
-import {
-  Circle,
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMapEvents,
-} from "react-leaflet";
-import { LatLng } from "leaflet";
+"use client";
 
-import "leaflet/dist/leaflet.css";
-import "leaflet-defaulticon-compatibility";
-import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+import React, { useState } from "react";
 import { useBranches } from "@/hooks/api/useBranch";
+import {
+  BaseLeafletMap,
+  MapCircle,
+  MapClickHandler,
+  MapMarker,
+  type MapCoordinates,
+} from "@/components/leaflet";
 
 const METRO_MANILA_CENTER: [number, number] = [14.5995, 120.9842];
 const ALLOWED_RADIUS_METERS = 25_000;
@@ -21,30 +17,11 @@ type MapParentProps = {
   onSelectCoordinates: (latitude: number, longitude: number) => void;
 };
 
-const MapClickHandler = ({
-  selectedCoords,
-  setSelectedCoords,
-}: {
-  selectedCoords: LatLng | null;
-  setSelectedCoords: (coords: LatLng) => void;
-}) => {
-  useMapEvents({
-    click(e) {
-      setSelectedCoords(e.latlng);
-    },
-  });
-
-  return selectedCoords ? (
-    <Marker
-      position={[selectedCoords.lat, selectedCoords.lng]}
-      title={`${selectedCoords.lat.toFixed(4)}, ${selectedCoords.lng.toFixed(4)}`}
-    />
-  ) : null;
-};
-
 const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
   const { data: branches = [], isPending } = useBranches();
-  const [selectedCoords, setSelectedCoords] = useState<LatLng | null>(null);
+  const [selectedCoords, setSelectedCoords] = useState<MapCoordinates | null>(
+    null,
+  );
 
   const handleSave = () => {
     if (!selectedCoords) return;
@@ -61,19 +38,14 @@ const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
       </div>
 
       <div className="flex w-full z-0">
-        <MapContainer
+        <BaseLeafletMap
           center={METRO_MANILA_CENTER}
           zoom={12}
-          style={{ width: "100%", height: "500px" }}
+          height={500}
+          className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white"
         >
-          <TileLayer
-            attribution='&copy; <a href="/">Harrison House of Inasal & BBQ</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-          {/* Service Area Circle */}
-          <Circle
-            center={METRO_MANILA_CENTER}
+          <MapCircle
+            center={{ lat: METRO_MANILA_CENTER[0], lng: METRO_MANILA_CENTER[1] }}
             radius={ALLOWED_RADIUS_METERS}
             pathOptions={{
               color: "#2563eb",
@@ -91,31 +63,32 @@ const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
               if (lng === 0 && lat === 0) return null; // Skip branches with no coordinates
 
               return (
-                <Marker
+                <MapMarker
                   key={branch._id}
-                  position={[lat, lng]}
+                  position={{ lat, lng }}
                   title={branch.name}
                 >
-                  <Popup>
-                    <div className="text-sm">
-                      <p className="font-semibold">{branch.name}</p>
-                      <p className="text-xs text-gray-600">{branch.code}</p>
-                      <p className="text-xs text-gray-600">{branch.address}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {lat.toFixed(4)}, {lng.toFixed(4)}
-                      </p>
-                    </div>
-                  </Popup>
-                </Marker>
+                  <div className="text-sm">
+                    <p className="font-semibold">{branch.name}</p>
+                    <p className="text-xs text-gray-600">{branch.code}</p>
+                    <p className="text-xs text-gray-600">{branch.address}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {lat.toFixed(4)}, {lng.toFixed(4)}
+                    </p>
+                  </div>
+                </MapMarker>
               );
             })}
 
-          {/* Selected Location Marker */}
-          <MapClickHandler
-            selectedCoords={selectedCoords}
-            setSelectedCoords={setSelectedCoords}
-          />
-        </MapContainer>
+          <MapClickHandler onClick={setSelectedCoords} />
+
+          {selectedCoords && (
+            <MapMarker
+              position={selectedCoords}
+              title={`${selectedCoords.lat.toFixed(4)}, ${selectedCoords.lng.toFixed(4)}`}
+            />
+          )}
+        </BaseLeafletMap>
       </div>
 
       <button
