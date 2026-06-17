@@ -2,6 +2,8 @@
 
 import BrandLogo from "@/components/BrandLogo";
 import { InputField } from "@/components/ui/InputField";
+import { apiClient } from "@/lib/apiClient";
+import { STAFF_ROLES } from "@/types/staff";
 import { Loader2, Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, useState } from "react";
@@ -10,6 +12,16 @@ import { toast } from "sonner";
 type CredentialErrors = {
   email?: string;
   password?: string;
+};
+
+type AdminLoginRespose = {
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+  };
 };
 
 const LoginPage = () => {
@@ -47,21 +59,21 @@ const LoginPage = () => {
     }
 
     setLoading(true);
-    const response = await fetch("/api/auth/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
+    try {
+      const response = await apiClient.post<AdminLoginRespose>(
+        `/auth/admin/login`,
+        credentials,
+      );
 
-    setLoading(false);
-
-    if (!response.ok) {
-      const data = await response.json();
-      return toast.error(data.error || "Failed to login");
+      toast.success("Login successfully!");
+      route.push(
+        response.user?.role === STAFF_ROLES.CASHIER ? "/orders" : "/dashboard",
+      );
+    } catch (error: any) {
+      toast.error(error?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Login successfully!");
-    route.push("/dashboard");
   };
 
   return (
