@@ -623,14 +623,14 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       <>
         <button
           onClick={isSubmitStep ? handlePlaceOrder : handleNext}
-          disabled={isPending || isNextDisabled || isCodPending}
+          disabled={isActionPending || isNextDisabled}
           className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all ${
             isPending || isNextDisabled || isCodPending
               ? "cursor-not-allowed bg-gray-200 text-gray-400"
               : "cursor-pointer bg-brand-color-500 hover:bg-[#c13500] active:scale-[0.98] text-white shadow-sm shadow-brand-color-500/20"
           }`}
         >
-          {isPending || isCodPending ? (
+          {isActionPending ? (
             <span className="flex items-center gap-2 justify-center">
               Placing order…
               <DynamicIcon name="Loader" size={14} className="animate-spin" />
