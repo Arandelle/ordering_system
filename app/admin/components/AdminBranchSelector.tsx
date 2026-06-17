@@ -15,7 +15,7 @@ const AdminBranchSelector = () => {
 
   const admin = useStaffContext();
 
-  if (admin.role !== STAFF_ROLES.SUPERADMIN) return null;
+  if (admin.role === STAFF_ROLES.ADMIN) return null;
 
 
   return (
