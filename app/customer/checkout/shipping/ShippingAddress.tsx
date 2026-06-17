@@ -50,6 +50,15 @@ const ShippingAddress = ({
     .join(", ");
 
   const handleAddressResolved = (address: ResolvedDeliveryAddress) => {
+    if (address.placeName) {
+      onChange("shippingAddress", "placeName", address.placeName);
+    }
+
+    if (address.line2) {
+      onChange("shippingAddress", "line2", address.line2);
+      onBlur("line2", address.line2);
+    }
+
     if (address.city) {
       onChange("shippingAddress", "city", address.city);
       onBlur("city", address.city);
@@ -67,14 +76,71 @@ const ShippingAddress = ({
   };
 
   const { modal, openModal, closeModal } = useModalQuery();
+  const hasPinnedLocation = Boolean(shippingAddress.coordinates);
+  const pinnedLocationLabel =
+    shippingAddress.placeName ||
+    [shippingAddress.line2, shippingAddress.city].filter(Boolean).join(", ");
+  const pinButtonTitle = hasPinnedLocation
+    ? "Delivery location pinned"
+    : "Pin your delivery location";
+  const pinButtonDescription = hasPinnedLocation
+    ? pinnedLocationLabel || "Coordinates saved for delivery"
+    : "Open the map to search, use current location, or place the pin manually.";
 
   return (
     <div className="space-y-5 py-6">
       <button
-        className="text-sm text-start cursor-pointer gap-2.5 bg-slate-50 border border-slate-100 px-3.5 py-3 w-full"
+        type="button"
+        className={`flex w-full items-start gap-3 rounded-xl border px-4 py-4 text-left shadow-sm transition-colors ${
+          errors.coordinates
+            ? "border-red-300 bg-red-50 hover:bg-red-100"
+            : hasPinnedLocation
+              ? "border-green-200 bg-green-50 hover:bg-green-100"
+              : "border-brand-color-200 bg-brand-color-50 hover:bg-brand-color-100"
+        }`}
         onClick={() => openModal("shipping-address-coordinates")}
       >
-        {!shippingAddress.coordinates ? "Pin  your Location"  : shippingAddress.coordinates?.lat}
+        <span
+          className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+            errors.coordinates
+              ? "bg-red-100 text-red-600"
+              : hasPinnedLocation
+                ? "bg-green-100 text-green-700"
+                : "bg-white text-brand-color-600"
+          }`}
+        >
+          <DynamicIcon
+            name={hasPinnedLocation ? "MapPinned" : "MapPinPlus"}
+            size={18}
+          />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span
+            className={`block text-sm font-semibold ${
+              errors.coordinates ? "text-red-700" : "text-slate-900"
+            }`}
+          >
+            {pinButtonTitle}
+          </span>
+          <span
+            className={`mt-1 block text-xs leading-5 ${
+              errors.coordinates ? "text-red-600" : "text-slate-600"
+            }`}
+          >
+            {errors.coordinates || pinButtonDescription}
+          </span>
+          {hasPinnedLocation && (
+            <span className="mt-2 block text-[11px] font-medium text-slate-500">
+              {shippingAddress.coordinates?.lat.toFixed(6)},{" "}
+              {shippingAddress.coordinates?.lng.toFixed(6)}
+            </span>
+          )}
+        </span>
+        <DynamicIcon
+          name="ChevronRight"
+          size={18}
+          className="mt-2 shrink-0 text-slate-400"
+        />
       </button>
 
       {/* Line 1 & Line 2 */}
