@@ -4,7 +4,8 @@ export const MODAL_TYPES = {
     LOGIN : "login",
     SIGNUP : "signup",
     LOGOUT : "logout",
-    MAP : "map"
+    MAP : "branch-map",
+    SHIPPING_COORD : "shipping-address-coordinates"
 } as const;  // register here the new modal type to open
 
 export type ModalType = (typeof MODAL_TYPES)[keyof typeof MODAL_TYPES]
