@@ -19,8 +19,11 @@ type CheckoutContextType = {
   customerErrors: ReturnType<typeof useFormErrors>["customerErrors"];
   shippingErrors: ReturnType<typeof useFormErrors>["shippingErrors"];
   handleStateChange: (type: keyof OrderFormState, field: string, value: string) => void;
+  handleShippingCoordinatesChange: (
+    coordinates: OrderFormState["shippingAddress"]["coordinates"],
+  ) => void;
   handleNext: () => void;
-  validateField: (step: "customer" | "shippingAddress", field: string, value: string) => void
+  validateField: (step: "customer" | "shippingAddress", field: string, value: unknown) => void
 };
 
 export const CheckoutStep = {
@@ -65,6 +68,7 @@ export const CheckoutProvider = ({ children }: { children: React.ReactNode }) =>
       zipCode: "",
       country: "Philippines",
       landmark: "",
+      coordinates: undefined,
     },
   });
 
@@ -78,6 +82,18 @@ export const CheckoutProvider = ({ children }: { children: React.ReactNode }) =>
     setOrderDetails((prev) => ({
       ...prev,
       [type]: { ...prev[type], [field]: value },
+    }));
+  };
+
+  const handleShippingCoordinatesChange = (
+    coordinates: OrderFormState["shippingAddress"]["coordinates"],
+  ) => {
+    setOrderDetails((prev) => ({
+      ...prev,
+      shippingAddress: {
+        ...prev.shippingAddress,
+        coordinates,
+      },
     }));
   };
 
@@ -105,6 +121,7 @@ export const CheckoutProvider = ({ children }: { children: React.ReactNode }) =>
         zipCode: shippingAddress?.zipCode || "",
         country: "Philippines",
         landmark: shippingAddress?.landmark || "",
+        coordinates: shippingAddress?.coordinates,
       },
     }));
   }, [session, myAddress]);
@@ -120,6 +137,7 @@ export const CheckoutProvider = ({ children }: { children: React.ReactNode }) =>
         customerErrors,
         shippingErrors,
         handleStateChange,
+        handleShippingCoordinatesChange,
         handleNext,
         validateField
       }}
