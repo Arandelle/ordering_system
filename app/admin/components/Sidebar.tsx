@@ -10,6 +10,7 @@ import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { ORDER_STATUSES } from "@/types/orderConstants";
 import AdminBranchSelector from "./AdminBranchSelector";
+import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -181,9 +182,11 @@ const getActiveParentKey = (currentPath: string) => {
 const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
   const currentUser = useStaffContext();
   const pathname = usePathname();
+  const { selectedBranchId } = useAdminBranchContext();
   const { data: placedOrders } = useAdminOrders({
     status: ORDER_STATUSES.PENDING,
     limit: 1,
+    branchId: selectedBranchId === "all" ? undefined : selectedBranchId,
   });
 
   const logout = useLogoutAdmin();
@@ -316,7 +319,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                             </button>
                           )}
                           {/** Pending order indicator */}
-                          {item.name === "Orders" && pendingCount > 0 && (
+                          {item.path === "/orders" && pendingCount > 0 && (
                             <div className="absolute -top-1 right-0 flex items-center justify-center w-5 h-5 text-xs bg-red-600 text-white rounded-full">
                               {pendingCount}
                             </div>
