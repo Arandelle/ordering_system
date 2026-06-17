@@ -6,10 +6,15 @@ import {
 } from "@/services/admin/dashboard.service";
 import { requireAdmin } from "@/lib/getAuth";
 import { NextRequest, NextResponse } from "next/server";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
 
 export async function GET(req: NextRequest) {
   try {
     const admin = await requireAdmin(req);
+    if (!canAccess(admin.role, "dashboard.read")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const range = (req.nextUrl.searchParams.get("range") ??
       "week") as DashboardRange;
     const requestedBranchId = req.nextUrl.searchParams.get("branchId");
