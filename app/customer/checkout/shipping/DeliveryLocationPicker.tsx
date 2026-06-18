@@ -33,6 +33,7 @@ export type ResolvedDeliveryAddress = {
   line2?: string;
   city?: string;
   province?: string;
+  subMunicipality?: string;
   zipCode?: string;
 };
 
@@ -116,11 +117,13 @@ const DeliveryLocationPicker = ({
         const address = data.address;
         if (!address) return;
 
+        const subMunicipality =
+          address.city_district ?? address.quarter ?? address.suburb;
         const line2 =
           address.quarter ??
           address.neighbourhood ??
-          address.suburb ??
           address.village ??
+          address.suburb ??
           address.city_district;
         const city = address.city ?? address.town ?? address.municipality;
         const province =
@@ -141,6 +144,7 @@ const DeliveryLocationPicker = ({
           line2,
           city,
           province,
+          subMunicipality,
           zipCode: address.postcode,
         });
       } catch {
