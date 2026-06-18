@@ -18,24 +18,25 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
   ) => {
     return (
       <div className="w-full space-y-2">
-        {label && (
-          <label
-            htmlFor={props.id}
-            className="block text-sm font-semibold text-gray-700"
-          >
-            {label}
-            {props.required && <span className="text-red-500 ml-1">*</span>}
-          </label>
-        )}
-
-        {subLabel && (
-          <label
-            htmlFor={props.id}
-            className="block text-xs text-gray-600 mb-2"
-          >
-            {subLabel}
-          </label>
-        )}
+        <div>
+          {label && (
+            <label
+              htmlFor={props.id}
+              className="block text-sm font-semibold text-gray-700"
+            >
+              {label}
+              {props.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          {subLabel && (
+            <label
+              htmlFor={props.id}
+              className="block text-xs text-gray-600 mb-2"
+            >
+              {subLabel}
+            </label>
+          )}
+        </div>
 
         <div className="relative">
           {leftIcon && (
@@ -48,7 +49,7 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
             ref={ref}
             {...props}
             className={twMerge(
-              "w-full py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-1 focus:ring-brand-color-500 focus:border-brand-color-500/80",
+              "w-full py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-1 focus:ring-brand-color-500 focus:border-brand-color-500/80 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400",
               leftIcon ? "pl-10" : "pl-4",
               rightElement ? "pr-12" : "pr-4", // 🔥 dynamic padding
               error && "border-red-500 focus:ring-red-500",

@@ -41,7 +41,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
             ref={ref}
             {...props}
             className={clsx(
-              "w-full py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-1 focus:ring-brand-color-500 focus:border-brand-color-500/80 bg-white appearance-none cursor-pointer",
+              "w-full py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-1 focus:ring-brand-color-500 focus:border-brand-color-500/80 bg-white appearance-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400",
               leftIcon ? "pl-10" : "pl-4",
               "pr-10", // space for chevron
               errors && "border-red-500 focus:ring-red-500",
