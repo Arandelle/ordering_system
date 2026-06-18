@@ -205,6 +205,9 @@ const OrderSchema = new Schema(
       },
       orderDiscountPromotionName: { type: String },
       voucherDiscountAmount: { type: Number, default: 0 },
+      deliveryFeeAmount: { type: Number, default: 0 },
+      deliveryDistanceKm: { type: Number, default: 0 },
+      deliveryBillableKm: { type: Number, default: 0 },
     },
 
     estimatedTime: { type: String, default: "30-45 minutes" },

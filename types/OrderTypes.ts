@@ -94,6 +94,9 @@ export interface OrderType {
     orderDiscountPromotionId?: string;
     orderDiscountPromotionName?: string;
     voucherDiscountAmount?: number;
+    deliveryFeeAmount?: number;
+    deliveryDistanceKm?: number;
+    deliveryBillableKm?: number;
   };
   estimatedTime: string;
 
