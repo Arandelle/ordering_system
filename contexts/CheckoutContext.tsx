@@ -8,6 +8,7 @@ import { useBranch } from "./BranchContext";
 import { useModalQuery } from "@/hooks/utils/useModalQuery";
 import { OrderFormState } from "@/app/customer/checkout/FormSchema";
 import useFormErrors from "@/app/customer/checkout/useFormErrors";
+import { NCR_REGION } from "@/lib/psgcAddress";
 
 // ---- Types ----
 type CheckoutContextType = {
@@ -64,7 +65,13 @@ export const CheckoutProvider = ({ children }: { children: React.ReactNode }) =>
       line1: "",
       line2: "",
       city: "",
-      province: "",
+      cityCode: "",
+      province: NCR_REGION.displayName,
+      region: NCR_REGION.name,
+      regionCode: NCR_REGION.code,
+      barangayCode: "",
+      subMunicipality: "",
+      subMunicipalityCode: "",
       zipCode: "",
       country: "Philippines",
       landmark: "",
@@ -118,7 +125,13 @@ export const CheckoutProvider = ({ children }: { children: React.ReactNode }) =>
         line1: shippingAddress?.line1 || "",
         line2: shippingAddress?.line2 || "",
         city: shippingAddress?.city || "",
-        province: shippingAddress?.province || "",
+        cityCode: shippingAddress?.cityCode || "",
+        province: shippingAddress?.province || NCR_REGION.displayName,
+        region: shippingAddress?.region || NCR_REGION.name,
+        regionCode: shippingAddress?.regionCode || NCR_REGION.code,
+        barangayCode: shippingAddress?.barangayCode || "",
+        subMunicipality: shippingAddress?.subMunicipality || "",
+        subMunicipalityCode: shippingAddress?.subMunicipalityCode || "",
         zipCode: shippingAddress?.zipCode || "",
         country: "Philippines",
         landmark: shippingAddress?.landmark || "",
