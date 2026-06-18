@@ -1,10 +1,10 @@
 import { apiClient } from "@/lib/apiClient";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AddressForm } from "../profile/address/page";
+import type { ShippingAddressForm } from "@/types/address";
 import { toast } from "sonner";
 
 interface AddressResponse {
-  shippingAddress: AddressForm
+  shippingAddress: ShippingAddressForm | null
 }
 
 export const useMyAddress = () => {
@@ -20,7 +20,7 @@ export const useUpdateAddress = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ address }: { address: AddressForm }) =>
+    mutationFn: ({ address }: { address: ShippingAddressForm }) =>
       apiClient.put("/customer/address", {address}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user_address"] });
