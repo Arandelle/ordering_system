@@ -1,6 +1,10 @@
 "use client";
 
 import { InputField } from "@/components/ui/InputField";
+import {
+  PsgcAddressFields,
+} from "@/components/customer/PsgcAddressFields";
+import type { PsgcAddressSelection } from "@/lib/psgcAddress";
 import { ModalType, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { ShippingErrors } from "../useFormErrors";
@@ -59,6 +63,14 @@ const ShippingAddress = ({
       onBlur("line2", address.line2);
     }
 
+    if (address.subMunicipality) {
+      onChange(
+        "shippingAddress",
+        "subMunicipality",
+        address.subMunicipality,
+      );
+    }
+
     if (address.city) {
       onChange("shippingAddress", "city", address.city);
       onBlur("city", address.city);
@@ -72,6 +84,17 @@ const ShippingAddress = ({
     if (address.zipCode) {
       onChange("shippingAddress", "zipCode", address.zipCode);
       onBlur("zipCode", address.zipCode);
+    }
+  };
+
+  const handlePsgcFieldChange = (
+    field: keyof PsgcAddressSelection,
+    value: string,
+  ) => {
+    onChange("shippingAddress", field, value);
+
+    if (field === "city" || field === "province" || field === "line2") {
+      onBlur(field, value);
     }
   };
 
@@ -143,10 +166,11 @@ const ShippingAddress = ({
         />
       </button>
 
-      {/* Line 1 & Line 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Line 1 */}
+      <div className="grid grid-cols-1 gap-4">
         <InputField
-          label="Line 1"
+          label="Address line 1"
+          subLabel="House no., Street name."
           placeholder="House no. / Street"
           type="text"
           name="line1"
@@ -157,48 +181,20 @@ const ShippingAddress = ({
           leftIcon={<DynamicIcon name="MapPin" size={15} />}
           error={errors.line1}
         />
-        <InputField
-          label="Line 2"
-          placeholder="Barangay / Subdivision"
-          type="text"
-          name="line2"
-          value={shippingAddress.line2 ?? ""}
-          onChange={(e) => onChange("shippingAddress", "line2", e.target.value)}
-          onBlur={(e) => onBlur("line2", e.target.value)}
-          leftIcon={<DynamicIcon name="MapPin" size={15} />}
-          error={errors.line2}
-          required
-        />
       </div>
 
-      {/* City & Province */}
-
-      <InputField
-        label="City"
-        placeholder="e.g. Quezon City"
-        type="text"
-        name="city"
-        value={shippingAddress.city}
-        onChange={(e) => onChange("shippingAddress", "city", e.target.value)}
-        onBlur={(e) => onBlur("city", e.target.value)}
-        required
-        leftIcon={<DynamicIcon name="Building2" size={15} />}
-        error={errors.city}
-      />
-      <InputField
-        label="Province"
-        placeholder="e.g. Metro Manila"
-        type="text"
-        name="province"
-        value={shippingAddress.province}
-        onChange={(e) =>
-          onChange("shippingAddress", "province", e.target.value)
-        }
-        onBlur={(e) => onBlur("province", e.target.value)}
-        required
-        leftIcon={<DynamicIcon name="Map" size={15} />}
-        error={errors.province}
-      />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <PsgcAddressFields
+          value={shippingAddress}
+          errors={{
+            city: errors.city,
+            province: errors.province,
+            line2: errors.line2,
+          }}
+          onFieldChange={handlePsgcFieldChange}
+          onFieldBlur={onBlur}
+        />
+      </div>
 
       {/* Postal Code & Country */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
