@@ -30,9 +30,7 @@ import {
   incrementOrderDiscountRedemption,
   resolveOrderDiscountPromotion,
 } from "@/lib/order-promotions/order-promotion.application";
-import type {
-  AppliedOrderDiscountPromotion,
-} from "@/lib/order-promotions/order-promotion.application";
+import type { AppliedOrderDiscountPromotion } from "@/lib/order-promotions/order-promotion.application";
 import {
   incrementProductDiscountRedemptions,
   resolveProductDiscountPromotions,
@@ -43,6 +41,7 @@ import {
   isWithinMetroManilaDeliveryArea,
   OUTSIDE_DELIVERY_AREA_MESSAGE,
 } from "@/lib/deliveryArea";
+import { calculateDeliveryFeeFromCoordinates } from "@/lib/deliveryFee";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -92,6 +91,10 @@ interface TaxBreakdown {
   orderDiscountPromotionName?: string;
   voucherDiscountAmount: number;
   discountCode?: string;
+
+  deliveryFeeAmount: number;
+  deliveryDistanceKm?: number;
+  deliveryBillableKm?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +132,33 @@ export async function fetchBranch(branchId: string, session: ClientSession) {
   const branch = await Branch.findById(branchId).session(session);
   if (!branch) throw new Error("Branch not found!");
   return branch;
+}
+
+const isBranchCoordinates = (
+  coordinates: unknown,
+): coordinates is [number, number] =>
+  Array.isArray(coordinates) &&
+  coordinates.length === 2 &&
+  coordinates.every(
+    (coord) => typeof coord === "number" && Number.isFinite(coord),
+  );
+
+// server-side validation to ensure coordinates are in expected format before calculating delivery fee
+export function resolveDeliveryFee(
+  branch: Awaited<ReturnType<typeof fetchBranch>>,
+  shippingAddress: CreateOrderPayload["shippingAddress"],
+) {
+  const branchCoordinates = branch.location?.coordinates;
+  const deliveryCoordinates = shippingAddress?.coordinates;
+
+  if (!isBranchCoordinates(branchCoordinates) || !deliveryCoordinates) {
+    throw new Error("Delivery fee cannot be calculated for this order.");
+  }
+
+  return calculateDeliveryFeeFromCoordinates(
+    branchCoordinates,
+    deliveryCoordinates,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -259,9 +289,11 @@ export function computeTax(
   discountCode: string = PROMO_CARD.sku,
   voucherDiscountAmount = 0,
   orderDiscountPromotion: AppliedOrderDiscountPromotion | null = null,
+  deliveryFeeAmount = 0,
+  deliveryDistanceKm = 0,
+  deliveryBillableKm = 0,
 ): TaxBreakdown {
-  const productDiscountAmount =
-    productDiscountResolution.productDiscountAmount;
+  const productDiscountAmount = productDiscountResolution.productDiscountAmount;
   const productDiscountedSubtotal =
     productDiscountResolution.discountedSubtotalAmount;
   const promoCardDiscountAmount = applyPromoCardDiscount
@@ -280,7 +312,10 @@ export function computeTax(
   );
   const totalAmount = Number(
     Math.max(
-      promoTotalAmount - orderDiscountAmount - voucherDiscountAmount,
+      promoTotalAmount -
+        orderDiscountAmount -
+        voucherDiscountAmount +
+        deliveryFeeAmount,
       0,
     ).toFixed(2),
   );
@@ -302,6 +337,9 @@ export function computeTax(
     }),
     voucherDiscountAmount,
     ...(promoCardDiscountAmount > 0 && { discountCode }),
+    deliveryFeeAmount,
+    deliveryDistanceKm,
+    deliveryBillableKm,
   };
 }
 
@@ -351,7 +389,26 @@ function buildMayaPayload(
     totalAmount,
     discountAmount,
     voucherDiscountAmount,
+    deliveryFeeAmount,
   } = tax;
+
+  const paymentItems =
+    deliveryFeeAmount > 0
+      ? [
+          ...mayaItems,
+          {
+            name: "Delivery Fee",
+            quantity: 1,
+            code: "DELIVERY_FEE",
+            description: "Distance-based delivery fee",
+            amount: { value: deliveryFeeAmount },
+            totalAmount: {
+              value: deliveryFeeAmount,
+              currency: "PHP",
+            },
+          },
+        ]
+      : mayaItems;
 
   return {
     totalAmount: {
@@ -363,7 +420,7 @@ function buildMayaPayload(
         vatableSales,
       },
     },
-    items: mayaItems,
+    items: paymentItems,
     buyer: {
       firstName,
       lastName,
@@ -393,18 +450,15 @@ async function createMayaCheckout(
 ) {
   if (!process.env.MAYA_PUBLIC_KEY) throw new Error("Maya key not configured");
 
-  const response = await fetch(
-    getMayaCheckoutUrl(),
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: getAuthHeader(),
-      },
-      body: JSON.stringify(payload),
+  const response = await fetch(getMayaCheckoutUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: getAuthHeader(),
     },
-  );
+    body: JSON.stringify(payload),
+  });
 
   const data = await response.json();
   if (!response.ok) throw new Error(data.message ?? "Maya checkout failed");
@@ -449,6 +503,9 @@ export async function persistOrder(
     orderDiscountPromotionName,
     discountCode,
     voucherDiscountAmount,
+    deliveryFeeAmount,
+    deliveryDistanceKm,
+    deliveryBillableKm,
   } = tax;
 
   const order = await Order.create(
@@ -498,6 +555,9 @@ export async function persistOrder(
           orderDiscountPromotionName,
           discountCode,
           voucherDiscountAmount,
+          deliveryFeeAmount,
+          deliveryDistanceKm,
+          deliveryBillableKm,
         },
         notes,
       },
@@ -570,6 +630,11 @@ export async function POST(request: NextRequest) {
     // 4. Resolve branch
     const branch = await fetchBranch(body.branchId, session);
 
+    const deliveryFeeEstimate = resolveDeliveryFee(
+      branch,
+      body.shippingAddress,
+    );
+
     // 5. Resolve cart items + reserve inventory
     const { totalPrice, orderItems, mayaItems } = await resolveCart(
       body.items,
@@ -614,6 +679,9 @@ export async function POST(request: NextRequest) {
       promoCardDiscount?.discountCode,
       voucherDiscountAmount,
       orderDiscountPromotion,
+      deliveryFeeEstimate.deliveryFee,
+      deliveryFeeEstimate.distanceKm,
+      deliveryFeeEstimate.billableKm,
     );
 
     if (tax.totalAmount < MINIMUM_AMOUNT)
@@ -672,11 +740,12 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
 
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to checkout!" },
       { status: 500 },
     );
+  } finally {
+    await session.endSession();
   }
 }
