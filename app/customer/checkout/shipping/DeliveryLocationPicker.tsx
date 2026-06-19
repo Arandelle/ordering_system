@@ -66,9 +66,7 @@ type DeliveryLocationPickerProps = {
   onAddressResolved?: (address: ResolvedDeliveryAddress) => void;
 };
 
-const getUniqueAddressParts = (
-  parts: Array<string | undefined>,
-): string[] => {
+const getUniqueAddressParts = (parts: Array<string | undefined>): string[] => {
   const seen = new Set<string>();
 
   return parts.filter((part): part is string => {
@@ -91,11 +89,18 @@ const DeliveryLocationPicker = ({
   onAddressResolved,
 }: DeliveryLocationPickerProps) => {
   const markerRef = useRef<LeafletMarker | null>(null);
+
+  const resolveRequestIdRef = useRef(0);
+
   const [query, setQuery] = useState(addressQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  const [resolvedAddress, setResolvedAddress] =
+    useState<ResolvedDeliveryAddress | null>(null);
+  const [isResolvingAddress, setIsResolvingAddress] = useState(false);
 
   useEffect(() => {
     setQuery(addressQuery);
@@ -103,17 +108,23 @@ const DeliveryLocationPicker = ({
 
   const resolveAddressFromCoordinates = useCallback(
     async (coordinates: DeliveryCoordinates) => {
-      if (!onAddressResolved) return;
+      const requestId = ++resolveRequestIdRef.current;
 
       try {
+        setIsResolvingAddress(true);
+        setResolvedAddress(null);
+
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?lat=${coordinates.lat}&lon=${coordinates.lng}&format=json&addressdetails=1`,
           { headers: { "Accept-Language": "en" } },
         );
 
-        if (!response.ok) return;
+        if (!response.ok || requestId !== resolveRequestIdRef.current) return;
 
         const data = (await response.json()) as ReverseGeocodeResponse;
+
+        if (requestId !== resolveRequestIdRef.current) return;
+
         const address = data.address;
         if (!address) return;
 
@@ -139,16 +150,25 @@ const DeliveryLocationPicker = ({
           .slice(0, 3)
           .join(", ");
 
-        onAddressResolved({
+        const resolved = {
           placeName: placeName || data.display_name,
           line2,
           city,
           province,
           subMunicipality,
           zipCode: address.postcode,
-        });
+        };
+
+        if (requestId !== resolveRequestIdRef.current) return;
+
+        setResolvedAddress(resolved);
+        onAddressResolved?.(resolved);
       } catch {
         // Reverse geocoding is a convenience; the pinned coordinates remain authoritative.
+      } finally {
+        if (requestId === resolveRequestIdRef.current) {
+          setIsResolvingAddress(false);
+        }
       }
     },
     [onAddressResolved],
@@ -174,49 +194,46 @@ const DeliveryLocationPicker = ({
     [onChange, resolveAddressFromCoordinates],
   );
 
-  const searchAddress = useCallback(
-    async (searchText: string) => {
-      const trimmed = searchText.trim();
-      if (trimmed.length < 3) {
-        setResults([]);
-        setLocationError("Enter at least 3 characters to search an address.");
-        return;
+  const searchAddress = useCallback(async (searchText: string) => {
+    const trimmed = searchText.trim();
+    if (trimmed.length < 3) {
+      setResults([]);
+      setLocationError("Enter at least 3 characters to search an address.");
+      return;
+    }
+
+    setIsSearching(true);
+    setLocationError(null);
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+          `${trimmed}, Philippines`,
+        )}&format=json&limit=5&countrycodes=ph`,
+        { headers: { "Accept-Language": "en" } },
+      );
+
+      if (!response.ok) {
+        throw new Error("Address search failed.");
       }
 
-      setIsSearching(true);
-      setLocationError(null);
+      const data = (await response.json()) as SearchResult[];
+      setResults(data);
 
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            `${trimmed}, Philippines`,
-          )}&format=json&limit=5&countrycodes=ph`,
-          { headers: { "Accept-Language": "en" } },
-        );
-
-        if (!response.ok) {
-          throw new Error("Address search failed.");
-        }
-
-        const data = (await response.json()) as SearchResult[];
-        setResults(data);
-
-        if (data.length === 0) {
-          setLocationError("No matching address found. Try a nearby landmark.");
-        }
-      } catch (searchError) {
-        setResults([]);
-        setLocationError(
-          searchError instanceof Error
-            ? searchError.message
-            : "Address search failed.",
-        );
-      } finally {
-        setIsSearching(false);
+      if (data.length === 0) {
+        setLocationError("No matching address found. Try a nearby landmark.");
       }
-    },
-    [],
-  );
+    } catch (searchError) {
+      setResults([]);
+      setLocationError(
+        searchError instanceof Error
+          ? searchError.message
+          : "Address search failed.",
+      );
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
 
   const useCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -356,16 +373,46 @@ const DeliveryLocationPicker = ({
             markerRef={markerRef}
             onDragEnd={selectCoordinates}
           >
-            <div className="space-y-1 text-xs bg-white p-4 w-full">
-              <p className="font-semibold text-slate-800">
-                Delivery location
-              </p>
-              <p className="text-slate-500">
-                {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
-              </p>
-              <p className="text-slate-400">
-                Drag the pin or click the map to adjust.
-              </p>
+            <div className="w-56 overflow-hidden rounded-xl bg-white">
+              <div className="bg-dark-green-700 px-3 py-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-medium text-white/60 uppercase tracking-widest">
+                      {isResolvingAddress
+                        ? "Fetching Location..."
+                        : "Selected Location"}
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-white leading-snug">
+                      {isResolvingAddress
+                        ? "Finding place name..."
+                        : resolvedAddress?.placeName ||
+                          "Pinned delivery location"}
+                    </p>
+                  </div>
+                  <div className="shrink-0 w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
+                    <DynamicIcon
+                      name="MapPinIcon"
+                      className="w-3.5 h-3.5 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="px-3 py-2.5 border-b border-gray-100 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <DynamicIcon
+                    name="Globe"
+                    className="w-3 h-3 text-gray-400 shrink-0"
+                  />
+                  <span className="text-[11px] text-gray-500">
+                    {value.lat.toFixed(4)}, {value.lng.toFixed(4)}
+                  </span>
+                </div>
+              </div>
+              <div className="px-3 py-2">
+                <p className="text-[10px] text-gray-400 text-center">
+                  Tap the map to move your pin
+                </p>
+              </div>
             </div>
           </DraggableMapMarker>
         )}
@@ -379,15 +426,6 @@ const DeliveryLocationPicker = ({
           to start from your current position.
         </p>
       </div>
-
-      {value && (
-        <div className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs text-slate-600">
-          <DynamicIcon name="CheckCircle2" size={15} className="text-green-600" />
-          <span>
-            Pinned at {value.lat.toFixed(6)}, {value.lng.toFixed(6)}
-          </span>
-        </div>
-      )}
     </div>
   );
 };
