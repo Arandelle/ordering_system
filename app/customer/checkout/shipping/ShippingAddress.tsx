@@ -1,9 +1,7 @@
 "use client";
 
 import { InputField } from "@/components/ui/InputField";
-import {
-  PsgcAddressFields,
-} from "@/components/customer/PsgcAddressFields";
+import { PsgcAddressFields } from "@/components/customer/PsgcAddressFields";
 import type { PsgcAddressSelection } from "@/lib/psgcAddress";
 import { ModalType, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
@@ -12,6 +10,7 @@ import { OrderFormState } from "../FormSchema";
 import dynamic from "next/dynamic";
 import type { ResolvedDeliveryAddress } from "./DeliveryLocationPicker";
 import Modal from "@/components/ui/Modal";
+import { useState } from "react";
 
 const DeliveryLocationPicker = dynamic(
   () => import("./DeliveryLocationPicker"),
@@ -53,6 +52,8 @@ const ShippingAddress = ({
     .filter(Boolean)
     .join(", ");
 
+  const [isResolvingAddress, setIsResolvingAddress] = useState(false);
+
   const handleAddressResolved = (address: ResolvedDeliveryAddress) => {
     if (address.placeName) {
       onChange("shippingAddress", "placeName", address.placeName);
@@ -64,11 +65,7 @@ const ShippingAddress = ({
     }
 
     if (address.subMunicipality) {
-      onChange(
-        "shippingAddress",
-        "subMunicipality",
-        address.subMunicipality,
-      );
+      onChange("shippingAddress", "subMunicipality", address.subMunicipality);
     }
 
     if (address.city) {
@@ -244,13 +241,30 @@ const ShippingAddress = ({
           subTitle="  Search your address, allow current location, or click and drag the
                 pin for the exact dropoff point."
         >
-          <DeliveryLocationPicker
-            value={shippingAddress.coordinates}
-            addressQuery={addressQuery}
-            error={errors.coordinates}
-            onChange={onCoordinatesChange}
-            onAddressResolved={handleAddressResolved}
-          />
+          <>
+            <DeliveryLocationPicker
+              value={shippingAddress.coordinates}
+              addressQuery={addressQuery}
+              error={errors.coordinates}
+              onChange={onCoordinatesChange}
+              onAddressResolved={handleAddressResolved}
+              onResolvingAddressChange={setIsResolvingAddress}
+            />
+            {shippingAddress?.placeName && (
+              <div className="w-full flex py-2">
+                <button
+                  disabled={isResolvingAddress}
+                  className="ml-auto flex items-center gap-2 text-white bg-brand-color-500 hover:bg-brand-color-600 py-2 px-4 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  onClick={closeModal}
+                >
+                  <DynamicIcon name="MapPin" />
+                  {isResolvingAddress
+                    ? "Searching place..."
+                    : shippingAddress?.placeName}
+                </button>
+              </div>
+            )}
+          </>
         </Modal>
       )}
     </div>
