@@ -27,7 +27,7 @@ const BaseLeafletMap = ({
   center,
   zoom,
   children,
-  height = 320,
+  height = 500,
   scrollWheelZoom = true,
   className,
   attribution = DEFAULT_ATTRIBUTION,
