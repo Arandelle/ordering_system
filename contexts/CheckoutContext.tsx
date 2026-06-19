@@ -106,9 +106,10 @@ export const CheckoutProvider = ({
   const { selectedBranch } = useBranch();
   const { openModal } = useModalQuery();
 
-  const [orderDetails, setOrderDetails] = useState<OrderFormState>(() => {
-    return readCheckoutDraft() ?? getDefaultOrderDetails();
-  });
+  const [orderDetails, setOrderDetails] = useState<OrderFormState>(getDefaultOrderDetails);
+
+  // prevent hydration issue
+  const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
 
   const { customerErrors, shippingErrors, validateField } =
     useFormErrors(orderDetails);
@@ -140,13 +141,27 @@ export const CheckoutProvider = ({
     router.push(CheckoutStep.SHIPPING);
   };
 
+  // Prevents hydration issue
+  useEffect(() => {
+    const draft = readCheckoutDraft();
+
+    if(draft){
+      setOrderDetails(draft)
+    }
+
+    setHasLoadedDraft(true);
+  }, []);
+
   // Persist Changes
   useEffect(() => {
+
+    if(!hasLoadedDraft) return
+
     window.sessionStorage.setItem(
       CHECKOUT_DRAFT_KEY,
       JSON.stringify(orderDetails),
     );
-  }, [orderDetails]);
+  }, [hasLoadedDraft, orderDetails]);
 
   useEffect(() => {
     if (!session?.user || !myAddress) return;
