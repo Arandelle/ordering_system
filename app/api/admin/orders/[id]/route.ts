@@ -17,6 +17,7 @@ import {
   canTransitionTo,
   getNextStatus,
   getTimelineField,
+  FULFILLMENT_TYPE,
 } from "@/types/orderConstants";
 import { requireAdmin } from "@/lib/getAuth";
 import { STAFF_ROLES } from "@/types/staff";
@@ -248,6 +249,26 @@ export async function PATCH(
         allowedNextStatus:
           getNextStatus(currentStatus) ?? "no transitions allowed",
       },
+      { status: 400 },
+    );
+  }
+
+  if (
+    order.fulfillmentType === FULFILLMENT_TYPE.PICKUP &&
+    newStatus === ORDER_STATUSES.DISPATCH
+  ) {
+    return NextResponse.json(
+      { error: "Pickup orders should be marked ready for pickup." },
+      { status: 400 },
+    );
+  }
+
+  if (
+    order.fulfillmentType !== FULFILLMENT_TYPE.PICKUP &&
+    newStatus === ORDER_STATUSES.READY_FOR_PICKUP
+  ) {
+    return NextResponse.json(
+      { error: "Delivery orders should be dispatched." },
       { status: 400 },
     );
   }
