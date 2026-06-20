@@ -22,8 +22,8 @@ import {
 import {
   computeTax,
   fetchBranch,
-  resolveDeliveryFee,
 } from "@/services/checkout/checkoutPricing.service";
+import { resolveCheckoutFulfillment } from "@/services/checkout/checkoutFulfillment.service";
 import {
   reserveInventory,
   resolveCart,
@@ -77,10 +77,11 @@ export async function POST(request: NextRequest) {
     // 4. Resolve branch
     const branch = await fetchBranch(body.branchId, session);
 
-    const deliveryFeeEstimate = resolveDeliveryFee(
+    const fulfillment = resolveCheckoutFulfillment({
+      fulfillmentType: body.fulfillmentType,
       branch,
-      body.shippingAddress,
-    );
+      shippingAddress: body.shippingAddress,
+    });
 
     // 5. Resolve cart items + reserve inventory
     const { totalPrice, orderItems, mayaItems } = await resolveCart(
@@ -126,9 +127,9 @@ export async function POST(request: NextRequest) {
       promoCardDiscount?.discountCode,
       voucherDiscountAmount,
       orderDiscountPromotion,
-      deliveryFeeEstimate.deliveryFee,
-      deliveryFeeEstimate.distanceKm,
-      deliveryFeeEstimate.billableKm,
+      fulfillment.deliveryFee,
+      fulfillment.distanceKm,
+      fulfillment.billableKm,
     );
 
     if (tax.totalAmount < MINIMUM_AMOUNT)
@@ -155,6 +156,7 @@ export async function POST(request: NextRequest) {
       referenceNumber,
       customerId,
       session,
+      fulfillment,
     );
 
     // 9. Reserve inventory now that we have orderId
