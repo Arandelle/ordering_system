@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
       preparing: (byStatus["paid"] ?? 0) + (byStatus["preparing"] ?? 0),
 
       // "To receive": out for delivery or ready at counter
-      dispatched: (byStatus["dispatched"] ?? 0) + (byStatus["ready"] ?? 0),
+      dispatch:
+        (byStatus[ORDER_STATUSES.DISPATCH] ?? 0) +
+        (byStatus[ORDER_STATUSES.READY_FOR_PICKUP] ?? 0),
 
       // "Completed": badge only shows unreviewed count (actionable)
       completed: unreviewedByStatus["completed"] ?? 0,
@@ -57,6 +59,7 @@ export async function GET(request: NextRequest) {
         paid: byStatus["paid"] ?? 0,
         preparing: byStatus[ORDER_STATUSES.PREPARING] ?? 0,
         dispatch: byStatus[ORDER_STATUSES.DISPATCH] ?? 0,
+        readyForPickup: byStatus[ORDER_STATUSES.READY_FOR_PICKUP] ?? 0,
         completed: byStatus[ORDER_STATUSES.COMPLETED] ?? 0,
         cancelled: byStatus[ORDER_STATUSES.CANCELLED] ?? 0,
         expired: byStatus[ORDER_STATUSES.EXPIRED] ?? 0,
