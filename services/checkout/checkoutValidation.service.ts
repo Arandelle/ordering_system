@@ -1,13 +1,10 @@
-import {
-  isWithinMetroManilaDeliveryArea,
-  OUTSIDE_DELIVERY_AREA_MESSAGE,
-} from "@/lib/deliveryArea";
 import { getPromoCardConfig } from "@/lib/promoCardConfig";
 import { getStoreStatus } from "@/lib/storeStatus";
 import { Settings } from "@/models/Setting";
 import { CreateOrderPayload } from "@/types/OrderTypes";
 import { ClientSession } from "mongoose";
 import { getPaidPromoCardBenefit } from "../promoCardBenefits";
+import { validateFulfillmentPayload } from "./checkoutFulfillment.service";
 
 export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
   const settings = await Settings.findOne().session(session);
@@ -19,17 +16,13 @@ export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
 
 export function assertValidPayload(body: CreateOrderPayload): void {
   const { branchId, firstName, lastName, customerPhone, items } = body;
-  const coordinates = body.shippingAddress?.coordinates;
 
   if (!branchId) throw new Error("Branch is required.");
   if (!firstName || !lastName || !customerPhone)
     throw new Error("Customer details are required.");
   if (!items || !Array.isArray(items) || items.length === 0)
     throw new Error("Cart is empty.");
-  if (!coordinates) throw new Error("Pin your delivery location on the map.");
-  if (!isWithinMetroManilaDeliveryArea(coordinates)) {
-    throw new Error(OUTSIDE_DELIVERY_AREA_MESSAGE);
-  }
+  validateFulfillmentPayload(body);
 }
 
 export async function assertCanUsePromoCardDiscount(
