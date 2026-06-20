@@ -5,6 +5,7 @@ import {
   isWithinMetroManilaDeliveryArea,
   OUTSIDE_DELIVERY_AREA_MESSAGE,
 } from "@/lib/deliveryArea";
+import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 
 export const CustomerSchema = z.object({
   firstName: z.string().min(1, "Firstname is required"),
@@ -26,7 +27,9 @@ const CoordinatesSchema = z.object({
   lng: z.number().min(-180).max(180),
 });
 
-export const ShippingSchema = z.object({
+export const FulfillmentSchema = z.enum([FULFILLMENT_TYPE.DELIVERY, FULFILLMENT_TYPE.PICKUP]);
+
+const ShippingFieldsSchema = z.object({
   line1: z.string().min(1, "Please provide your house no."),
   line2: z.string().min(1, "Please provide brgy/village"),
   city: z.string().min(1, "City is required"),
@@ -42,7 +45,9 @@ export const ShippingSchema = z.object({
   landmark: z.string().optional(),
   placeName: z.string().optional(),
   coordinates: CoordinatesSchema.optional(),
-}).superRefine((value, ctx) => {
+});
+
+export const ShippingSchema = ShippingFieldsSchema.superRefine((value, ctx) => {
   if (!value.coordinates) {
     ctx.addIssue({
       code: "custom",
@@ -61,9 +66,25 @@ export const ShippingSchema = z.object({
   }
 });
 
-export const OrderFormSchema = z.object({
+const DeliveryOrderFormSchema = z.object({
+  fulfillmentType: z.literal(FULFILLMENT_TYPE.DELIVERY),
   customer: CustomerSchema,
   shippingAddress: ShippingSchema,
 });
 
-export type OrderFormState = z.infer<typeof OrderFormSchema>;
+const PickupOrderFormSchema = z.object({
+  fulfillmentType: z.literal(FULFILLMENT_TYPE.PICKUP),
+  customer: CustomerSchema,
+  shippingAddress: z.unknown(),
+});
+
+export const OrderFormSchema = z.discriminatedUnion("fulfillmentType", [
+  DeliveryOrderFormSchema,
+  PickupOrderFormSchema,
+]);
+
+export type OrderFormState = {
+  fulfillmentType: z.infer<typeof FulfillmentSchema>;
+  customer: z.infer<typeof CustomerSchema>;
+  shippingAddress: z.infer<typeof ShippingFieldsSchema>;
+};
