@@ -79,6 +79,7 @@ const ShippingAddressSchema = new Schema(
     country: { type: String, default: "Philippines" },
 
     // optional but VERY useful for delivery apps
+    placeName: { type: String, default: "" },
     landmark: { type: String },
     coordinates: {
       lat: Number,
@@ -254,8 +255,8 @@ const OrderSchema = new Schema(
 // ============================================
 
 // Optimize queries by status
-OrderSchema.index({ status: 1, createdAt: -1});
-OrderSchema.index({ status: 1, expiresAt: -1});
+OrderSchema.index({ status: 1, createdAt: -1 });
+OrderSchema.index({ status: 1, expiresAt: -1 });
 // Optimize customer queries
 OrderSchema.index({ "paymentInfo.customerEmail": 1 });
 

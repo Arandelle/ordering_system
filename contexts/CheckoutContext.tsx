@@ -247,7 +247,7 @@ export const CheckoutProvider = ({
           zipCode: shippingAddress?.zipCode || "",
           country: "Philippines",
           landmark: shippingAddress?.landmark || "",
-          placeName: "",
+          placeName: shippingAddress?.placeName || "",
           coordinates: shippingAddress?.coordinates,
         },
       };

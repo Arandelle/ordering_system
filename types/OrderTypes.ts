@@ -10,12 +10,12 @@ import { OrderStatus } from "./orderConstants";
 
 // Add this new interface
 export interface OrderItem {
-  productId: string;   // ref to Product — this is what you use for reviews
+  productId: string; // ref to Product — this is what you use for reviews
   name: string;
   price: number;
   description?: string;
   image?: string;
-  category?: string;   // ObjectId as string
+  category?: string; // ObjectId as string
   quantity: number;
   // no _id — your schema has _id: false
 }
@@ -162,7 +162,7 @@ export interface CreateOrderPayload {
     quantity: number;
   }[];
 
-  paymentMethod: string,
+  paymentMethod: string;
   applyPromoCardDiscount?: boolean;
   voucherAmount?: number;
 
@@ -175,6 +175,7 @@ export interface CreateOrderPayload {
     country: "Philippines";
 
     // optional but VERY useful for delivery apps
+    placeName?: string;
     landmark?: string;
     coordinates?: {
       lat: number;

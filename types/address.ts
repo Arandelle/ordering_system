@@ -5,6 +5,7 @@ export interface ShippingAddressForm extends PsgcAddressSelection {
   zipCode: string;
   country: string;
   landmark: string;
+  placeName?: string;
   coordinates?: {
     lat: number;
     lng: number;

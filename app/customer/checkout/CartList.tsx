@@ -279,6 +279,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     country,
     landmark,
     coordinates,
+    placeName,
   } = orderDetails?.shippingAddress;
   const {
     data: deliveryFeeEstimate,
@@ -458,6 +459,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         country,
         landmark,
         coordinates,
+        placeName,
       },
     };
 

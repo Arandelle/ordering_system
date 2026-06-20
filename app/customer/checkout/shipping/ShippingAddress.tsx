@@ -47,7 +47,6 @@ const ShippingAddress = ({
   onCoordinatesChange,
 }: ShippingAddressProps) => {
   const addressQuery = [
-    shippingAddress.line1,
     shippingAddress.line2,
     shippingAddress.city,
     shippingAddress.province,
@@ -261,7 +260,7 @@ const ShippingAddress = ({
           <>
             <DeliveryLocationPicker
               value={shippingAddress.coordinates}
-              addressQuery={addressQuery}
+              addressQuery={shippingAddress.placeName || addressQuery}
               error={errors.coordinates}
               onChange={onCoordinatesChange}
               onAddressResolved={handleAddressResolved}
