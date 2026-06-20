@@ -20,6 +20,7 @@ import {
 import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
 import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
+import { OrderItemImage } from "./OrderItemImage";
 
 const CartDrawer = () => {
   const router = useRouter();
@@ -185,11 +186,12 @@ const CartDrawer = () => {
                   key={index}
                   className="flex gap-4 bg-gray-50 rounded-xl p-4"
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name || "product image"}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
+                  <div className="w-20 h-20 object-cover rounded-lg text-center">
+                    <OrderItemImage
+                      image={item.image}
+                      name={item.name || "Product_Image"}
+                    />
+                  </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900 mb-1">
                       {item.name}
@@ -211,9 +213,7 @@ const CartDrawer = () => {
                         PHP {item.price.toFixed(2)}
                       </p>
                     )}
-                    <p className="hidden">
-                      ₱{item.price}
-                    </p>
+                    <p className="hidden">₱{item.price}</p>
 
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2 bg-white rounded-full border border-gray-200">
@@ -305,7 +305,10 @@ const CartDrawer = () => {
               )}
               {orderDiscountAmount === 0 && nextOrderDiscountHint && (
                 <p className="block font-extralight text-brand-color-500 text-sm">
-                  Spend <span className="font-bold">₱{nextOrderDiscountHint.amountUntilEligible.toFixed(2)}</span>{" "}
+                  Spend{" "}
+                  <span className="font-bold">
+                    ₱{nextOrderDiscountHint.amountUntilEligible.toFixed(2)}
+                  </span>{" "}
                   more to use {nextOrderDiscountHint.name}.
                 </p>
               )}
