@@ -29,8 +29,13 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
       icon: <Package size={14} />,
     },
     dispatch: {
-      label: "Ready to pickup/receive",
+      label: "Out for Delivery",
       color: "bg-orange-100 text-orange-700 border border-orange-200",
+      icon: <Truck size={14} />,
+    },
+    ready_for_pickup: {
+      label: "Ready for Pickup",
+      color: "bg-green-100 text-green-700 border border-green-200",
       icon: <Hamburger size={14} />,
     },
     completed: {
