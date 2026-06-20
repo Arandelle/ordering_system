@@ -2,17 +2,19 @@
 
 import React from "react";
 import ShippingAddress from "./ShippingAddress";
-import { useCheckout } from "@/contexts/CheckoutContext";
+import { useCheckoutContext } from "@/contexts/CheckoutContext";
 
 const page = () => {
   const {
     orderDetails,
     shippingErrors,
+    canSyncProfileDetails,
+    syncCheckoutDetailsFromProfile,
     openModal,
     handleStateChange,
     handleShippingCoordinatesChange,
     validateField,
-  } = useCheckout();
+  } = useCheckoutContext();
 
   const handleShippingBlur = (field: string, value: string) => {
     validateField("shippingAddress", field, value);
@@ -29,6 +31,8 @@ const page = () => {
     <ShippingAddress
       shippingAddress={orderDetails.shippingAddress}
       errors={shippingErrors}
+      canSyncProfileDetails={canSyncProfileDetails}
+      onSyncProfileDetails={syncCheckoutDetailsFromProfile}
       openModal={openModal}
       onChange={handleStateChange}
       onBlur={handleShippingBlur}

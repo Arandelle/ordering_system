@@ -27,6 +27,8 @@ const DeliveryLocationPicker = dynamic(
 type ShippingAddressProps = {
   shippingAddress: OrderFormState["shippingAddress"];
   errors: ShippingErrors;
+  canSyncProfileDetails: boolean;
+  onSyncProfileDetails: () => void;
   onChange: (type: keyof OrderFormState, field: string, value: string) => void;
   onBlur: (field: keyof ShippingErrors, value: string) => void;
   onCoordinatesChange: (
@@ -38,6 +40,8 @@ type ShippingAddressProps = {
 const ShippingAddress = ({
   shippingAddress,
   errors,
+  canSyncProfileDetails,
+  onSyncProfileDetails,
   onChange,
   onBlur,
   onCoordinatesChange,
@@ -109,6 +113,18 @@ const ShippingAddress = ({
 
   return (
     <div className="space-y-5 py-6">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={!canSyncProfileDetails}
+          onClick={onSyncProfileDetails}
+          className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+        >
+          <DynamicIcon name="RefreshCw" size={15} />
+          Sync from profile
+        </button>
+      </div>
+
       <button
         type="button"
         className={`flex w-full items-start gap-3 rounded-xl border px-4 py-4 text-left shadow-sm transition-colors ${
