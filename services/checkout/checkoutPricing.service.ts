@@ -12,6 +12,7 @@ import {
   PROMO_CARD,
 } from "@/lib/promoCard";
 import { AppliedOrderDiscountPromotion } from "@/lib/order-promotions/order-promotion.application";
+import { fetchBranch, isBranchCoordinates } from "../branch/branch.service";
 
 // -------------- TYPES ---------------------------
 export interface TaxBreakdown {
@@ -35,25 +36,6 @@ export interface TaxBreakdown {
 
 // ------------------ CONSTANT -------------------------------
 export const TAX_RATE = 0.12;
-
-// ---------------------------------------------------------------------------
-// Branch helpers
-// ---------------------------------------------------------------------------
-
-export async function fetchBranch(branchId: string, session: ClientSession) {
-  const branch = await Branch.findById(branchId).session(session);
-  if (!branch) throw new Error("Branch not found!");
-  return branch;
-}
-
-const isBranchCoordinates = (
-  coordinates: unknown,
-): coordinates is [number, number] =>
-  Array.isArray(coordinates) &&
-  coordinates.length === 2 &&
-  coordinates.every(
-    (coord) => typeof coord === "number" && Number.isFinite(coord),
-  );
 
 // server-side validation to ensure coordinates are in expected format before calculating delivery fee
 export function resolveDeliveryFee(
