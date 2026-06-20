@@ -60,12 +60,41 @@ type ReverseGeocodeResponse = {
 };
 
 type DeliveryLocationPickerProps = {
+  /**
+   * Current selected delivery pin. When provided, the map centers on it and
+   * renders the draggable marker.
+   */
   value?: DeliveryCoordinates;
+
+  /**
+   * Text used to prefill the search box, usually built from the customer's
+   * typed address fields.
+   */
   addressQuery: string;
+
+  /**
+   * External validation message from the parent form, shown with local map
+   * errors such as outside-service-area selections.
+   */
   error?: string;
+
+  /**
+   * Called after the customer selects a valid Metro Manila coordinate by
+   * search, current location, map click, or marker drag.
+   */
   onChange: (coordinates: DeliveryCoordinates) => void;
+
+  /**
+   * Optional callback with reverse-geocoded address hints. Checkout uses this
+   * to suggest city/barangay text, but the selected form fields remain official.
+   */
   onAddressResolved?: (address: ResolvedDeliveryAddress) => void;
-  onResolvingAddressChange?: (isResolving: boolean) => void
+
+  /**
+   * Optional loading callback for parents that need to disable UI while the
+   * picker is resolving the pinned place name.
+   */
+  onResolvingAddressChange?: (isResolving: boolean) => void;
 };
 
 const getUniqueAddressParts = (parts: Array<string | undefined>): string[] => {
@@ -89,7 +118,7 @@ const DeliveryLocationPicker = ({
   error,
   onChange,
   onAddressResolved,
-  onResolvingAddressChange
+  onResolvingAddressChange,
 }: DeliveryLocationPickerProps) => {
   const markerRef = useRef<LeafletMarker | null>(null);
 
@@ -172,7 +201,7 @@ const DeliveryLocationPicker = ({
       } finally {
         if (requestId === resolveRequestIdRef.current) {
           setIsResolvingAddress(false);
-          onResolvingAddressChange?.(false)
+          onResolvingAddressChange?.(false);
         }
       }
     },
