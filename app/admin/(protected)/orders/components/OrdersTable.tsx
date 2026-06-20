@@ -150,6 +150,7 @@ export default function OrdersTable({
                             paymentStatus={
                               order.paymentInfo.paymentStatus as PaymentStatus
                             }
+                            fulfillmentType={order.fulfillmentType}
                             role="admin"
                           />
                         </PermissionGuard>

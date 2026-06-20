@@ -5,7 +5,7 @@
  * frontend and backend stay in sync
  */
 
-import { ORDER_STATUSES } from "@/types/orderConstants";
+import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { model, models, Schema } from "mongoose";
 
 // ============================================
@@ -138,6 +138,13 @@ const OrderSchema = new Schema(
       required: true,
       index: true, // Frequently queried field
     },
+    fulfillmentType: {
+      type: String,
+      enum: Object.values(FULFILLMENT_TYPE),
+      default: FULFILLMENT_TYPE.DELIVERY,
+      required: true,
+      index: true,
+    },
     items: {
       type: [OrderItemSchema],
       required: true,
@@ -183,7 +190,7 @@ const OrderSchema = new Schema(
       },
       shippingAddress: {
         type: ShippingAddressSchema,
-        required: true,
+        required: false,
       },
     },
 
