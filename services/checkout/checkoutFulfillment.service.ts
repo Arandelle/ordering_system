@@ -5,7 +5,7 @@ import {
 } from "../../lib/deliveryArea";
 import { calculateDeliveryFeeFromCoordinates } from "../../lib/deliveryFee";
 import type { CreateOrderPayload } from "../../types/OrderTypes";
-import { isBranchCoordinates } from "./checkoutPricing.service";
+import { isBranchCoordinates } from "../branch/branch.service";
 
 
 type FulfillmentPayload = {
