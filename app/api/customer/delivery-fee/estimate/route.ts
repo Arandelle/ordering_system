@@ -3,6 +3,7 @@ import { calculateDeliveryFeeFromCoordinates } from "@/lib/deliveryFee";
 import { Branch } from "@/models/Branch";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+import { isValidCoordinate } from "@/helper/isValidCoordinates";
 
 type DeliveryFeeEstimateBody = {
   branchId?: string;
@@ -11,16 +12,6 @@ type DeliveryFeeEstimateBody = {
     lng?: number;
   };
 };
-
-const isValidCoordinate = (lat?: number, lng?: number) =>
-  typeof lat === "number" &&
-  Number.isFinite(lat) &&
-  lat >= -90 &&
-  lat <= 90 &&
-  typeof lng === "number" &&
-  Number.isFinite(lng) &&
-  lng >= -180 &&
-  lng <= 180;
 
 export async function POST(request: NextRequest) {
   try {
