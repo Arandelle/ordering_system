@@ -11,9 +11,8 @@ import {
   Link,
   Img,
 } from "@react-email/components";
-import React from "react";
 import { OrderType } from "@/types/OrderTypes";
-import { OrderStatus } from "@/types/orderConstants";
+import { FULFILLMENT_TYPE, OrderStatus } from "@/types/orderConstants";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 interface OrderSummaryEmailProps {
@@ -54,6 +53,7 @@ const mockOrder: OrderType = {
   _id: "64a3f2b81c9e4d0012ab81c9",
   createdAt: "2026-04-15T10:32:00.000Z",
   status: "pending",
+  fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
   branchSnapshot: {
     name: "Century Mall",
     code: "BR-001",
