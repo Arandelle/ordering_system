@@ -21,7 +21,6 @@ import {
 } from "@/services/checkout/checkoutValidation.service";
 import {
   computeTax,
-  fetchBranch,
 } from "@/services/checkout/checkoutPricing.service";
 import { resolveCheckoutFulfillment } from "@/services/checkout/checkoutFulfillment.service";
 import {
@@ -33,6 +32,7 @@ import {
   persistOrder,
   sendOrderConfirmationEmail,
 } from "@/services/checkout/checkoutOrder.service";
+import { fetchBranch } from "@/services/branch/branch.service";
 
 const MINIMUM_AMOUNT = 100;
 
