@@ -17,6 +17,7 @@ import { useModalQuery } from "@/hooks/utils/useModalQuery";
 import { OrderFormState } from "@/app/customer/checkout/FormSchema";
 import useFormErrors from "@/app/customer/checkout/useFormErrors";
 import { NCR_REGION } from "@/lib/psgcAddress";
+import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 
 // ---- Types ----
 type CheckoutContextType = {
@@ -30,12 +31,15 @@ type CheckoutContextType = {
   shippingErrors: ReturnType<typeof useFormErrors>["shippingErrors"];
   syncCheckoutDetailsFromProfile: () => void;
   handleStateChange: (
-    type: keyof OrderFormState,
+    type: keyof Omit<OrderFormState, "fulfillmentType">,
     field: string,
     value: string,
   ) => void;
   handleShippingCoordinatesChange: (
     coordinates: OrderFormState["shippingAddress"]["coordinates"],
+  ) => void;
+  handleFulfillmentTypeChange: (
+    fulfillmentType: OrderFormState["fulfillmentType"],
   ) => void;
   handleNext: () => void;
   validateField: (
@@ -54,6 +58,7 @@ const CHECKOUT_DRAFT_KEY = "checkout_order_draft";
 
 // Single source for a blank checkout draft so comparisons and resets stay aligned.
 const getDefaultOrderDetails = (): OrderFormState => ({
+  fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
   customer: {
     firstName: "",
     lastName: "",
@@ -87,6 +92,7 @@ const isUntouchedOrderDetails = (orderDetails: OrderFormState) => {
   return (
     JSON.stringify(orderDetails.customer) ===
       JSON.stringify(defaultOrderDetails.customer) &&
+    orderDetails.fulfillmentType === defaultOrderDetails.fulfillmentType &&
     JSON.stringify(orderDetails.shippingAddress) ===
       JSON.stringify(defaultOrderDetails.shippingAddress)
   );
@@ -98,6 +104,7 @@ const isSameProfileSyncedDetails = (
   profileSynced: OrderFormState,
 ) => {
   const currentProfileFields = {
+    fulfillmentType: current.fulfillmentType,
     customer: {
       firstName: current.customer.firstName,
       lastName: current.customer.lastName,
@@ -107,6 +114,7 @@ const isSameProfileSyncedDetails = (
     shippingAddress: current.shippingAddress,
   };
   const syncedProfileFields = {
+    fulfillmentType: profileSynced.fulfillmentType,
     customer: {
       firstName: profileSynced.customer.firstName,
       lastName: profileSynced.customer.lastName,
@@ -173,9 +181,10 @@ export const CheckoutProvider = ({
   const { customerErrors, shippingErrors, validateField } =
     useFormErrors(orderDetails);
 
+
   // Any direct input edit means the checkout draft should win over profile data.
   const handleStateChange = (
-    type: keyof OrderFormState,
+    type: keyof Omit<OrderFormState, "fulfillmentType">,
     field: string,
     value: string,
   ) => {
@@ -199,6 +208,17 @@ export const CheckoutProvider = ({
         ...prev.shippingAddress,
         coordinates,
       },
+    }));
+  };
+
+  const handleFulfillmentTypeChange = (
+    fulfillmentType: OrderFormState["fulfillmentType"],
+  ) => {
+    hasUserEditedDraft.current = true;
+
+    setOrderDetails((prev) => ({
+      ...prev,
+      fulfillmentType,
     }));
   };
 
@@ -337,6 +357,7 @@ export const CheckoutProvider = ({
         syncCheckoutDetailsFromProfile,
         handleStateChange,
         handleShippingCoordinatesChange,
+        handleFulfillmentTypeChange,
         handleNext,
         validateField,
       }}
