@@ -29,7 +29,7 @@ type ShippingAddressProps = {
   errors: ShippingErrors;
   shouldShowSyncProfileDetails: boolean;
   onSyncProfileDetails: () => void;
-  onChange: (type: keyof OrderFormState, field: string, value: string) => void;
+  onChange: (type: keyof Omit<OrderFormState, "fulfillmentType">, field: string, value: string) => void;
   onBlur: (field: keyof ShippingErrors, value: string) => void;
   onCoordinatesChange: (
     coordinates: OrderFormState["shippingAddress"]["coordinates"],
