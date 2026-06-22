@@ -5,10 +5,13 @@ import { TextareaField } from "@/components/ui/TextAreaField";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { CustomerErrors } from "../useFormErrors";
 import { OrderFormState } from "../FormSchema";
+import { useState } from "react";
 
 type customerDataProps = {
   customerData: OrderFormState["customer"];
   errors: CustomerErrors;
+  isAuthenticated: boolean;
+  isDelivery: boolean;
   shouldShowSyncProfileDetails: boolean;
   onSyncProfileDetails: () => void;
   onChange: (type: keyof Omit<OrderFormState, "fulfillmentType">, field: string, value: string) => void;
@@ -18,11 +21,15 @@ type customerDataProps = {
 const CustomerDetails = ({
   customerData,
   errors,
+  isAuthenticated,
+  isDelivery,
   shouldShowSyncProfileDetails,
   onSyncProfileDetails,
   onChange,
   onBlur
 }: customerDataProps) => {
+  const [showProfileHint, setShowProfileHint] = useState(false);
+
   return (
     <div className="space-y-5 py-6">
       {shouldShowSyncProfileDetails && (
@@ -35,6 +42,27 @@ const CustomerDetails = ({
             <DynamicIcon name="RefreshCw" size={15} />
             Sync from profile
           </button>
+        </div>
+      )}
+
+      {isAuthenticated && (
+        <div className="space-y-2 text-sm text-slate-600">
+          <button
+            type="button"
+            onClick={() => setShowProfileHint((current) => !current)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800"
+          >
+            <DynamicIcon name="CircleHelp" size={14} />
+            Why are these details prefilled?
+          </button>
+          {showProfileHint && (
+            <p className="text-xs leading-5 text-slate-500">
+              We prefill checkout from your saved profile when available.
+              {isDelivery
+                ? " Delivery fee is estimated from your saved or pinned delivery location and updates when the delivery pin changes."
+                : " For pickup, we use these details to contact you when the order is ready."}
+            </p>
+          )}
         </div>
       )}
 

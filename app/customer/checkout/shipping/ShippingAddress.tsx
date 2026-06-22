@@ -27,6 +27,7 @@ const DeliveryLocationPicker = dynamic(
 type ShippingAddressProps = {
   shippingAddress: OrderFormState["shippingAddress"];
   errors: ShippingErrors;
+  isAuthenticated: boolean;
   shouldShowSyncProfileDetails: boolean;
   onSyncProfileDetails: () => void;
   onChange: (type: keyof Omit<OrderFormState, "fulfillmentType">, field: string, value: string) => void;
@@ -40,6 +41,7 @@ type ShippingAddressProps = {
 const ShippingAddress = ({
   shippingAddress,
   errors,
+  isAuthenticated,
   shouldShowSyncProfileDetails,
   onSyncProfileDetails,
   onChange,
@@ -99,6 +101,8 @@ const ShippingAddress = ({
   };
 
   const { modal, openModal, closeModal } = useModalQuery();
+  const [showProfileHint, setShowProfileHint] = useState(false);
+  const [showMapHint, setShowMapHint] = useState(false);
   const hasPinnedLocation = Boolean(shippingAddress.coordinates);
   const pinnedLocationLabel =
     shippingAddress.placeName ||
@@ -122,6 +126,26 @@ const ShippingAddress = ({
             <DynamicIcon name="RefreshCw" size={15} />
             Sync from profile
           </button>
+        </div>
+      )}
+
+      {isAuthenticated && (
+        <div className="space-y-2 text-sm text-slate-600">
+          <button
+            type="button"
+            onClick={() => setShowProfileHint((current) => !current)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800"
+          >
+            <DynamicIcon name="CircleHelp" size={14} />
+            Why is my address filled?
+          </button>
+          {showProfileHint && (
+            <p className="text-xs leading-5 text-slate-500">
+              Your saved profile address may be used as a starting point. Check
+              the pinned map location and address fields before placing the
+              order.
+            </p>
+          )}
         </div>
       )}
 
@@ -178,6 +202,24 @@ const ShippingAddress = ({
           className="mt-2 shrink-0 text-slate-400"
         />
       </button>
+
+      <div className="space-y-2 text-sm text-slate-600">
+        <button
+          type="button"
+          onClick={() => setShowMapHint((current) => !current)}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800"
+        >
+          <DynamicIcon name="CircleHelp" size={14} />
+          How is delivery fee calculated?
+        </button>
+        {showMapHint && (
+          <p className="text-xs leading-5 text-slate-500">
+            Delivery fee and service coverage follow the pinned map
+            coordinates. The city, area, barangay, and address fields add the
+            delivery details, so keep them accurate and matched with the pin.
+          </p>
+        )}
+      </div>
 
       {/* Line 1 */}
       <div className="grid grid-cols-1 gap-4">

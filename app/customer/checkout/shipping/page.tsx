@@ -7,6 +7,7 @@ import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 
 const page = () => {
   const {
+    session,
     orderDetails,
     shippingErrors,
     shouldShowSyncProfileDetails,
@@ -48,6 +49,7 @@ const page = () => {
     <ShippingAddress
       shippingAddress={orderDetails.shippingAddress}
       errors={shippingErrors}
+      isAuthenticated={Boolean(session?.user)}
       shouldShowSyncProfileDetails={shouldShowSyncProfileDetails}
       onSyncProfileDetails={syncCheckoutDetailsFromProfile}
       openModal={openModal}
