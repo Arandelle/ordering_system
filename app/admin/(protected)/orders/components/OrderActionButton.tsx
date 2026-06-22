@@ -10,13 +10,12 @@ import {
   OrderStatus,
   STATUS_TRANSITIONS,
 } from "@/types/orderConstants";
-import { PaymentStatus } from "@/types/paymentConstants";
 
 interface Props {
   orderId: string;
   status: OrderStatus;
   paymentMethod: "cod" | "maya";
-  paymentStatus: PaymentStatus;
+  paymentConfirmed?: boolean;
   fulfillmentType?: FulfillmentType;
   role: "admin" | "customer";
 }
@@ -25,7 +24,7 @@ export function OrderActionButton({
   orderId,
   status,
   paymentMethod,
-  paymentStatus,
+  paymentConfirmed,
   fulfillmentType = FULFILLMENT_TYPE.DELIVERY,
   role,
 }: Props) {
@@ -64,13 +63,13 @@ export function OrderActionButton({
           return null;
         }
 
-        // Maya orders must be paid before admin can accept
+        // Maya orders must be paid (paymentConfirmed) before admin can accept
         const isMayaUnpaid =
           paymentMethod === "maya" &&
-          paymentStatus !== "PAYMENT_SUCCESS" &&
+          !paymentConfirmed &&
           nextStatus === ORDER_STATUSES.PREPARING;
 
-        if (isMayaUnpaid) return null; 
+        if (isMayaUnpaid) return null;
 
         return (
           <button
