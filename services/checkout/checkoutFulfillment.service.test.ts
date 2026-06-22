@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { describe } from "node:test";
 
 import {
   resolveCheckoutFulfillment,
@@ -17,35 +17,37 @@ const deliveryAddress = {
   coordinates: { lat: 14.5995, lng: 120.9842 },
 };
 
-test("pickup checkout does not require shipping address and returns zero delivery fee", () => {
-  validateFulfillmentPayload({
-    fulfillmentType: FULFILLMENT_TYPE.PICKUP,
-    shippingAddress: undefined,
+describe("Checkout Fulfillment", () => {
+  test("pickup checkout does not require shipping address and returns zero delivery fee", () => {
+    validateFulfillmentPayload({
+      fulfillmentType: FULFILLMENT_TYPE.PICKUP,
+      shippingAddress: undefined,
+    });
+
+    assert.deepEqual(
+      resolveCheckoutFulfillment({
+        fulfillmentType: FULFILLMENT_TYPE.PICKUP,
+        branch: { location: { coordinates: [120.9842, 14.5995] } },
+        shippingAddress: undefined,
+      }),
+      {
+        fulfillmentType: FULFILLMENT_TYPE.PICKUP,
+        shippingAddress: undefined,
+        deliveryFee: 0,
+        distanceKm: 0,
+        billableKm: 0,
+      },
+    );
   });
 
-  assert.deepEqual(
-    resolveCheckoutFulfillment({
-      fulfillmentType: FULFILLMENT_TYPE.PICKUP,
-      branch: { location: { coordinates: [120.9842, 14.5995] } },
-      shippingAddress: undefined,
-    }),
-    {
-      fulfillmentType: FULFILLMENT_TYPE.PICKUP,
-      shippingAddress: undefined,
-      deliveryFee: 0,
-      distanceKm: 0,
-      billableKm: 0,
-    },
-  );
-});
-
-test("delivery checkout requires a delivery pin", () => {
-  assert.throws(
-    () =>
-      validateFulfillmentPayload({
-        fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
-        shippingAddress: { ...deliveryAddress, coordinates: undefined },
-      }),
-    /Pin your delivery location on the map/,
-  );
+  test("delivery checkout requires a delivery pin", () => {
+    assert.throws(
+      () =>
+        validateFulfillmentPayload({
+          fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
+          shippingAddress: { ...deliveryAddress, coordinates: undefined },
+        }),
+      /Pin your delivery location on the map/,
+    );
+  });
 });
