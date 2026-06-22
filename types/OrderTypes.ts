@@ -59,6 +59,9 @@ export interface OrderType {
     customerEmail: string;
     customerPhone: string;
 
+    // Computed by API: true only when paymentStatus === PAYMENT_SUCCESS AND paymentId exists
+    paymentConfirmed?: boolean;
+
     shippingAddress?: {
       line1: string;
       line2?: string;

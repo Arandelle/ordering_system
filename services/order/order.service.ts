@@ -6,6 +6,7 @@ import {
   STATUS_PRIORITY,
 } from "@/types/orderConstants";
 import { buildPaginationMeta } from "../../utils/query-helpers";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 
 export type OrderQueryOptions = {
   filter: Record<string, any>;
@@ -68,7 +69,13 @@ export async function queryOrders(options: OrderQueryOptions) {
     fulfillmentType: order.fulfillmentType ?? FULFILLMENT_TYPE.DELIVERY,
     items: order.items,
     total: order.total,
-    paymentInfo: order.paymentInfo,
+    paymentInfo: {
+      ...order.paymentInfo,
+      // Computed: true only when both paymentStatus and paymentId confirm a real transaction
+      paymentConfirmed:
+        order.paymentInfo?.paymentStatus === PAYMENT_STATUSES.PAYMENT_SUCCESS &&
+        !!order.paymentInfo?.paymentId,
+    },
     estimatedTime: order.estimatedTime,
     isReviewed: order.isReviewed,
     actionConfig: ORDER_ACTION_CONFIG[order.status as OrderStatus],

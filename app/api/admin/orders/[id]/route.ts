@@ -85,6 +85,13 @@ export async function GET(
     return NextResponse.json({
       ...order,
       _id: order._id.toString(),
+      paymentInfo: {
+        ...order.paymentInfo,
+        // Computed: true only when both paymentStatus and paymentId confirm a real transaction
+        paymentConfirmed:
+          order.paymentInfo?.paymentStatus === "PAYMENT_SUCCESS" &&
+          !!order.paymentInfo?.paymentId,
+      },
     });
   } catch (error: any) {
     console.error("GET /api/orders/[id] error:", error);
@@ -227,7 +234,7 @@ export async function PATCH(
     paymentMethod === "maya" &&
     currentStatus === ORDER_STATUSES.PENDING &&
     newStatus === ORDER_STATUSES.PREPARING &&
-    paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS
+    (paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS || !order.paymentInfo?.paymentId)
   ) {
     return NextResponse.json(
       {
