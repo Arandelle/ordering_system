@@ -40,7 +40,7 @@ export function FulfillmentSelector({
             onClick={() => onChange(option.value)}
             className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
               isSelected
-                ? "border-brand-color-500 bg-brand-color-50 text-slate-900"
+                ? "border-brand-color-500 text-slate-900"
                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
             }`}
           >
