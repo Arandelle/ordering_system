@@ -1,16 +1,12 @@
 "use client";
 
 import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
+import { getBranchQuery } from "@/helper/getBranchQuery";
 import { getErrorMessage } from "@/helper/getErrorMessage";
 import { apiClient } from "@/lib/apiClient";
 import type { DashboardStats } from "@/types/adminType";
 import { getLucideIcon } from "@/utils/iconUtils";
 import { useQuery } from "@tanstack/react-query";
-
-const getBranchQuery = (selectedBranchId: string) =>
-  selectedBranchId === "all"
-    ? ""
-    : `?branchId=${encodeURIComponent(selectedBranchId)}`;
 
 const DashboardCard = () => {
   const { selectedBranchId } = useAdminBranchContext();
