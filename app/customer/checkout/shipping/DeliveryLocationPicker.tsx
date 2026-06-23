@@ -8,15 +8,15 @@ import { userIcon } from "@/app/customer/map/markerIcon";
 import {
   BaseLeafletMap,
   DraggableMapMarker,
-  MapCircle,
   MapClickHandler,
+  MapPolygon,
   RecenterMap,
   type MapCoordinates,
 } from "@/components/leaflet";
 import {
   isWithinMetroManilaDeliveryArea,
   METRO_MANILA_CENTER,
-  METRO_MANILA_DELIVERY_RADIUS_METERS,
+  DELIVERY_AREA_POLYGON,
   OUTSIDE_DELIVERY_AREA_MESSAGE,
 } from "@/lib/deliveryArea";
 import { InputField } from "@/components/ui/InputField";
@@ -382,9 +382,8 @@ const DeliveryLocationPicker = ({
         center={value ? [value.lat, value.lng] : METRO_MANILA_CENTER}
         zoom={value ? 16 : 12}
       >
-        <MapCircle
-          center={{ lat: METRO_MANILA_CENTER[0], lng: METRO_MANILA_CENTER[1] }}
-          radius={METRO_MANILA_DELIVERY_RADIUS_METERS}
+        <MapPolygon
+          positions={DELIVERY_AREA_POLYGON}
           pathOptions={{
             color: "#16a34a",
             fillColor: "#22c55e",
@@ -451,9 +450,10 @@ const DeliveryLocationPicker = ({
       <div className="flex items-start gap-2 text-xs text-slate-500">
         <DynamicIcon name="MapPinned" size={15} className="mt-0.5 shrink-0" />
         <p>
-          Click inside the highlighted Metro Manila service area to place your
-          delivery pin, drag the pin to fine-tune it, or allow location access
-          to start from your current position.
+          Click inside the highlighted service area to place your delivery pin
+          (Makati, Taguig/BGC, Pasay, Mandaluyong, Pasig, Parañaque). Drag the
+          pin to fine-tune it, or allow location access to start from your
+          current position.
         </p>
       </div>
     </div>
