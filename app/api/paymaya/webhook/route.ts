@@ -10,6 +10,7 @@ import {
   awardPromoCardVoucherForOrder,
   refundCustomerVoucher,
 } from "@/services/promoCardBenefits";
+import { logPaymentEvent } from "@/services/activityLog.service";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
@@ -230,6 +231,17 @@ export async function POST(request: NextRequest) {
     console.log(
       `[Maya Webhook] ✅ Order ${requestReferenceNumber} → ${orderStatus}`,
     );
+
+    // Log the payment event
+    await logPaymentEvent({
+      orderId: existingOrder._id,
+      branchId: existingOrder.branchId,
+      referenceNumber: requestReferenceNumber,
+      paymentMethod: "maya",
+      paymentStatus,
+      paymentId: paymentId ?? undefined,
+      session,
+    });
 
     // Step 6- Inventory - PAYMENT_SUCCESS: deduct stock + remove reservation
     if (paymentStatus === "PAYMENT_SUCCESS") {

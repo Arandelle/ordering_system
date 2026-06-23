@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Inventory } from "@/models/Inventory";
 import { Order } from "@/models/Orders";
 import { refundCustomerVoucher } from "@/services/promoCardBenefits";
+import { logOrderCancelledByCustomer } from "@/services/activityLog.service";
 import {
   canTransitionTo,
   getTimelineField,
@@ -105,6 +106,17 @@ export async function PATCH(
       order.total?.voucherDiscountAmount ?? 0,
       session,
     );
+
+    // Log the cancellation (inside transaction for consistency)
+    if (order.customerId) {
+      await logOrderCancelledByCustomer({
+        orderId: order._id,
+        customerId: order.customerId,
+        branchId: order.branchId,
+        referenceNumber: order.paymentInfo?.referenceNumber,
+        session,
+      });
+    }
 
     await session.commitTransaction();
     session.endSession();

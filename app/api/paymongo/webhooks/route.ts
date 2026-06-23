@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
+import { logPaymentEvent } from "@/services/activityLog.service";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -86,6 +88,16 @@ export async function POST(request: NextRequest) {
       }
 
       console.log("Order updated successfully:", updatedOrder._id);
+
+      // Log the payment event
+      await logPaymentEvent({
+        orderId: updatedOrder._id,
+        branchId: updatedOrder.branchId,
+        referenceNumber,
+        paymentMethod: "paymongo",
+        paymentStatus: PAYMENT_STATUSES.PAYMENT_SUCCESS,
+        paymentId: payment?.id ?? undefined,
+      });
 
       return NextResponse.json({
         received: true,

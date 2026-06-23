@@ -37,6 +37,7 @@ import {
   sendOrderConfirmationEmail,
 } from "@/services/checkout/checkoutOrder.service";
 import { fetchBranch } from "@/services/branch/branch.service";
+import { logOrderCreated } from "@/services/activityLog.service";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -161,6 +162,20 @@ export async function POST(request: NextRequest) {
 
     // 9. Reserve inventory now that we have orderId
     await reserveInventory(orderItems, body.branchId, order._id, session);
+
+    // 10. Log the order creation
+    if (customerId) {
+      await logOrderCreated({
+        orderId: order._id,
+        customerId,
+        branchId: body.branchId,
+        referenceNumber,
+        paymentMethod: "maya",
+        totalAmount: tax.totalAmount,
+        fulfillmentType: fulfillment.fulfillmentType,
+        session,
+      });
+    }
 
     const paymentMethod = order?.paymentInfo?.paymentMethod;
 

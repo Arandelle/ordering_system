@@ -33,6 +33,7 @@ import {
   refundCustomerVoucher,
 } from "@/services/promoCardBenefits";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { logOrderStatusChange } from "@/services/activityLog.service";
 
 // ============================================
 // GET /api/orders/[id]
@@ -296,6 +297,17 @@ export async function PATCH(
       }
 
       await Order.updateOne({ _id: id }, { $set: updateData }, { session });
+
+      // Record who changed the status
+      await logOrderStatusChange({
+        orderId: order._id,
+        staffId: staff._id,
+        branchId: order.branchId,
+        referenceNumber: order.paymentInfo?.referenceNumber,
+        fromStatus: currentStatus,
+        toStatus: newStatus,
+        session,
+      });
 
       if (newStatus === ORDER_STATUSES.COMPLETED) {
         await completeInventory(order._id, order.branchId, session);

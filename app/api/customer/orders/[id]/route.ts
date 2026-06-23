@@ -16,6 +16,7 @@ import {
   STATUS_TRANSITIONS,
 } from "@/types/orderConstants";
 import { requireBetterAuth } from "@/lib/getAuth";
+import { logOrderCancelledByCustomer } from "@/services/activityLog.service";
 import { EMAIL_FROM, resend } from "@/lib/resend";
 import { getStatusSubject } from "@/app/api/paymaya/webhook/route";
 import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
@@ -176,6 +177,14 @@ export async function PATCH(
 
     // Save order
     await Order.updateOne({ _id: id }, { $set: updateData });
+
+    // Log the cancellation
+    await logOrderCancelledByCustomer({
+      orderId: order._id,
+      customerId: customer._id,
+      branchId: order.branchId,
+      referenceNumber: order.paymentInfo?.referenceNumber,
+    });
 
     for (const item of order.items) {
       await Inventory.findOneAndUpdate(

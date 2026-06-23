@@ -5,6 +5,7 @@ import { Inventory } from "@/models/Inventory";
 import { ORDER_STATUSES } from "@/types/orderConstants";
 import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 import { refundCustomerVoucher } from "@/services/promoCardBenefits";
+import { ACTOR_TYPE, logActivity } from "@/services/activityLog.service";
 
 export const expireOrder = inngest.createFunction(
   { id: "expire-pending-order", triggers: { event: "order/created" } },
@@ -59,6 +60,24 @@ export const expireOrder = inngest.createFunction(
       await Order.findByIdAndUpdate(order._id, {
         status: ORDER_STATUSES.EXPIRED,
         "timeline.expiredAt": new Date(),
+      });
+
+      // Log the expiration
+      await logActivity({
+        branchId: order.branchId,
+        actor: { actorType: ACTOR_TYPE.SYSTEM },
+        target: {
+          entityType: "Order",
+          entityId: order._id,
+          label: event.data.referenceNumber,
+        },
+        category: "order",
+        action: "order.expired",
+        summary: `Order ${event.data.referenceNumber} expired automatically`,
+        metadata: {
+          paymentMethod: event.data.paymentMethod,
+          previousStatus: expirableStatus,
+        },
       });
 
       return { expired: true, orderId: order._id };
