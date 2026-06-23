@@ -16,7 +16,16 @@ export const createStaffSchema = z.object({
   password: z.string().min(8),
   phone: z.string().optional().refine((val) => !val || /^(\+63|0)[0-9]{10}$/.test(val.trim()), {message: "Invalid phone number."}),
   role: z.enum(["superadmin", "admin", "cashier"]),
-  branch: z.string().min(1),
+  branch: z.string().min(1).optional(),
+}).superRefine((data, ctx) => {
+  // Admin role must have a branch; superadmin and cashier are cross-branch
+  if (data.role === STAFF_ROLES.ADMIN && !data.branch) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["branch"],
+      message: "Branch is required for admin role.",
+    });
+  }
 });
 
 export async function GET(req: NextRequest) {
