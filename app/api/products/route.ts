@@ -1,5 +1,7 @@
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/models/Product";
+import { Inventory } from "@/models/Inventory";
+import { Branch } from "@/models/Branch";
 import { NextResponse, NextRequest } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { z } from "zod";
@@ -336,6 +338,19 @@ export async function POST(request: NextRequest) {
 
     if (!product && uploadResult?.public_id) {
       await cloudinary.uploader.destroy(uploadResult.public_id);
+    }
+
+    // Create unlimited inventory records for all active branches
+    const activeBranches = await Branch.find({ isActive: true }).select("_id");
+    if (activeBranches.length > 0) {
+      await Inventory.insertMany(
+        activeBranches.map((branch) => ({
+          productId: product._id,
+          branchId: branch._id,
+          quantity: 20,
+        })),
+        { ordered: false },
+      );
     }
 
     return NextResponse.json(product, { status: 201 });
