@@ -27,7 +27,9 @@ const AdminBranchSelector = () => {
         options={[
           {
             value: "all",
-            label: isLoadingBranches ? "Loading Branches..." : "All Branches",
+            label: isLoadingBranches
+              ? "Loading Branches..."
+              : "All Branches (Global View)",
           },
           ...branches.map((branch) => ({
             value: branch._id,
