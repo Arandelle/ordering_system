@@ -11,7 +11,12 @@ export interface InventoryItem {
   reorderLevel: number;
   available?: number;
   category: string;
-  status: string
+  status: string;
+  branch?: {
+    _id: string;
+    name: string;
+    code: string;
+  };
 }
 
 export const STOCK_STATUSES = {
