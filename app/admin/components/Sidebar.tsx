@@ -141,6 +141,12 @@ const navSections: NavSection[] = [
         permission: "customers.read",
       },
       {
+        name: "Activity Logs",
+        path: "/activity-logs",
+        icon: "ScrollText",
+        permission: "orders.read",
+      },
+      {
         name: "Store Management",
         path: "/stores",
         icon: "Store",
