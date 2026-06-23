@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { requireAdmin } from "@/lib/getAuth";
 import { Inventory } from "@/models/Inventory";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { Types } from "mongoose";
+import { STAFF_ROLES } from "@/types/staff";
 
 const bulkUpdateSchema = z.object({
   items: z
@@ -14,20 +17,38 @@ const bulkUpdateSchema = z.object({
           reorderLevel: z.coerce.number().min(0).optional(),
         })
         .refine((d) => d.quantity != null || d.reorderLevel != null),
-      {
-        message: "Each item must have at least quantity or reorderLevel",
-      },
     )
     .min(1, "At least one item is required"),
 });
 
+/**
+ * PUT /api/staff/inventories/bulk?branchId=<id>
+ *
+ * Bulk update multiple inventory records. Superadmins can pass `branchId`
+ * to target any branch; regular admins are locked to their own branch.
+ */
 export async function PUT(request: NextRequest) {
   try {
     await connectDB();
     const staff = await requireAdmin(request);
 
-    const branchId = staff.branch;
-    const staffId = staff._id;
+    if (!canAccess(staff.role, "inventories.update")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+
+    // Superadmins can choose a branch; regular admins are locked to their own
+    let branchId: Types.ObjectId | null = staff.branch
+      ? new Types.ObjectId(String(staff.branch))
+      : null;
+
+    if (staff.role === STAFF_ROLES.SUPERADMIN) {
+      const requestedBranch = searchParams.get("branchId");
+      if (requestedBranch) {
+        branchId = new Types.ObjectId(requestedBranch);
+      }
+    }
 
     if (!branchId) {
       return NextResponse.json(
@@ -35,6 +56,8 @@ export async function PUT(request: NextRequest) {
         { status: 403 },
       );
     }
+
+    const staffId = staff._id;
 
     const body = await request.json();
     const parsed = bulkUpdateSchema.safeParse(body);

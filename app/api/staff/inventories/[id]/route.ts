@@ -4,6 +4,8 @@ import { Inventory } from "@/models/Inventory";
 import z from "zod";
 import { requireAdmin } from "@/lib/getAuth";
 import { Types } from "mongoose";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { STAFF_ROLES } from "@/types/staff";
 
 const updateInventorySchema = z
   .object({
@@ -24,7 +26,24 @@ export async function PUT(
     await connectDB();
     const staff = await requireAdmin(req);
 
-    const branchId = staff.branch;
+    if (!canAccess(staff.role, "inventories.update")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+
+    // Superadmins can choose a branch; regular admins are locked to their own
+    let branchId: Types.ObjectId | null = staff.branch
+      ? new Types.ObjectId(String(staff.branch))
+      : null;
+
+    if (staff.role === STAFF_ROLES.SUPERADMIN) {
+      const requestedBranch = searchParams.get("branchId");
+      if (requestedBranch) {
+        branchId = new Types.ObjectId(requestedBranch);
+      }
+    }
+
     const staffId = staff._id;
 
     if (!branchId) {
@@ -33,7 +52,6 @@ export async function PUT(
         { status: 403 },
       );
     }
-
     // Get Product id from the params
     const { id: productId } = await context.params;
     const body = await req.json();
@@ -54,7 +72,6 @@ export async function PUT(
         { status: 400 },
       );
     }
-
     // 3. Build update object (only update provided fields)
     const updateData: Partial<UpdateInventoryInput> & {
       updatedBy: Types.ObjectId;
@@ -64,7 +81,6 @@ export async function PUT(
 
     if (quantity != null) updateData.quantity = quantity;
     if (reorderLevel != null) updateData.reorderLevel = reorderLevel;
-
     // 4. Update (or create if missing)
     const inventory = await Inventory.findOneAndUpdate(
       {
