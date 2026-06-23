@@ -1,3 +1,4 @@
+import "@/models/ActivityLog";
 import "@/models/Branch"
 import "@/models/Bundle"
 import "@/models/Category"
