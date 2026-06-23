@@ -32,8 +32,8 @@ export async function syncInventoryForBranch(branchId: Types.ObjectId) {
   // 4. Prepare new inventory docs
   const newDocs = missingProducts.map((p) => ({
     productId: p._id,
-    branchId: p.branchId,
-    quantity: 0
+    branchId: branchId,
+    quantity: 20,
   }));
 
   // 5. Insert (if any)
