@@ -652,10 +652,10 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           )}
           {isDelivery && (deliveryFeeAmount > 0 || isDeliveryFeeLoading) && (
             <div className="flex justify-between gap-3 text-sm text-slate-500">
-              <span>
+              <span className="text-green-500">
                 Delivery fee
                 {deliveryFeeEstimate?.data.distanceKm != null && (
-                  <span className="ml-1 text-xs text-slate-400">
+                  <span className="ml-1 text-xs">
                     ({deliveryFeeEstimate.data.distanceKm.toFixed(2)} km)
                   </span>
                 )}
