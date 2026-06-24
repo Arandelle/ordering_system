@@ -77,7 +77,7 @@ function groupProducts(products: MenuProduct[]): CategoryGroup[] {
 // ─── Component ────────────────────────────────────────────────────────────
 
 const MenuSection = () => {
-  const { selectedBranch } = useBranch();
+  const { selectedBranch, openBranchSelector } = useBranch();
   const branchId = selectedBranch?._id;
 
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -265,6 +265,7 @@ const MenuSection = () => {
               item={item as BranchProduct}
               hasBranch={!!branchId}
               selectedBranch={selectedBranch?._id}
+              openBranchSelector={openBranchSelector}
             />
           </div>
         );

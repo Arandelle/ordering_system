@@ -16,6 +16,7 @@ interface ProductCardProps {
   item: BranchProduct;
   hasBranch?: boolean;
   selectedBranch?: string;
+  openBranchSelector:() => void
 }
 // ── Helpers (pure, no need to live inside component) ──────────────────────────
 const getStockLabel = (status: string, quantity: number | null): string => {
@@ -82,6 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   item,
   hasBranch,
   selectedBranch,
+  openBranchSelector
 }) => {
   const { data: operatingSched } = useSettings();
   const [showDetail, setShowDetail] = useState(false);
@@ -111,6 +113,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     ? activeProductDiscount!.discountedPrice
     : item.price;
   const productDiscountLabel = getProductDiscountLabel(activeProductDiscount);
+
+  const handleOpenBranchSelector = () => {
+    openBranchSelector();
+    toast.warning("Select branch first")
+    return null;
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -222,7 +230,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               type="button"
               onClick={() => {
                 !selectedBranch
-                  ? toast.warning("Please select a branch first")
+                  ? handleOpenBranchSelector()
                   : setShowDetail(true);
               }}
               disabled={isOutOfStock || !storeStatus?.isOpen}
