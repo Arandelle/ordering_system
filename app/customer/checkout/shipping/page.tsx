@@ -4,6 +4,7 @@ import React from "react";
 import ShippingAddress from "./ShippingAddress";
 import { useCheckoutContext } from "@/contexts/CheckoutContext";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { ShippingFormSkeleton } from "../CheckoutFormSkeleton";
 
 const page = () => {
   const {
@@ -16,6 +17,7 @@ const page = () => {
     handleStateChange,
     handleShippingCoordinatesChange,
     validateField,
+    isReady,
   } = useCheckoutContext();
 
   const handleShippingBlur = (field: string, value: string) => {
@@ -28,6 +30,10 @@ const page = () => {
     handleShippingCoordinatesChange(coordinates);
     validateField("shippingAddress", "coordinates", coordinates);
   };
+
+  if (!isReady) {
+    return <ShippingFormSkeleton />;
+  }
 
   if (orderDetails.fulfillmentType === FULFILLMENT_TYPE.PICKUP) {
     return (
@@ -44,7 +50,7 @@ const page = () => {
       </div>
     );
   }
-    
+
   return (
     <ShippingAddress
       shippingAddress={orderDetails.shippingAddress}

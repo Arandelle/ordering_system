@@ -4,6 +4,7 @@ import React from "react";
 import CustomerDetails from "./CustomerDetails";
 import { useCheckoutContext } from "@/contexts/CheckoutContext";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { DetailsFormSkeleton } from "../CheckoutFormSkeleton";
 
 const page = () => {
   const {
@@ -14,7 +15,12 @@ const page = () => {
     syncCheckoutDetailsFromProfile,
     handleStateChange,
     validateField,
+    isReady,
   } = useCheckoutContext();
+
+  if (!isReady) {
+    return <DetailsFormSkeleton />;
+  }
 
   return (
     <CustomerDetails

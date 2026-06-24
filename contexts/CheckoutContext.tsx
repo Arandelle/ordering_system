@@ -23,6 +23,7 @@ import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 type CheckoutContextType = {
   session: ReturnType<typeof authClient.useSession>["data"];
   isPending: boolean;
+  isReady: boolean;
   selectedBranch: ReturnType<typeof useBranch>["selectedBranch"];
   openModal: ReturnType<typeof useModalQuery>["openModal"];
   orderDetails: OrderFormState;
@@ -339,15 +340,15 @@ export const CheckoutProvider = ({
     session,
   ]);
 
-  if (!hasLoadedDraft) {
-    return null;
-  }
+  // Expose readiness so pages can show skeletons instead of blank space.
+  const isReady = hasLoadedDraft && !isPending && !isAddressPending;
 
   return (
     <CheckoutContext.Provider
       value={{
         session,
         isPending,
+        isReady,
         selectedBranch,
         openModal,
         orderDetails,
