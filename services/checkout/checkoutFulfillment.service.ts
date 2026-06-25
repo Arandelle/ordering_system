@@ -1,5 +1,7 @@
 import { FULFILLMENT_TYPE, FulfillmentType } from "@/types/orderConstants";
 import {
+  CITY_RESTRICTION_MESSAGE,
+  isCityAllowedForDelivery,
   isWithinMetroManilaDeliveryArea,
   OUTSIDE_DELIVERY_AREA_MESSAGE,
 } from "../../lib/deliveryArea";
@@ -56,6 +58,10 @@ export function validateFulfillmentPayload({
   if (!coordinates) throw new Error("Pin your delivery location on the map.");
   if (!isWithinMetroManilaDeliveryArea(coordinates)) {
     throw new Error(OUTSIDE_DELIVERY_AREA_MESSAGE);
+  }
+
+  if (!isCityAllowedForDelivery(shippingAddress)) {
+    throw new Error(CITY_RESTRICTION_MESSAGE);
   }
 }
 
