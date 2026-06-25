@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 export const OrderItemImage = ({
@@ -12,10 +10,16 @@ export const OrderItemImage = ({
 }) => {
   const [hasError, setHasError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     setImageLoaded(false);
     setHasError(false);
+
+    // If the image is already cached, `onLoad` won't fire — check manually
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setImageLoaded(true);
+    }
   }, [image]);
 
   if (!image || hasError) {
@@ -38,18 +42,25 @@ export const OrderItemImage = ({
 
   return (
     <div className="relative w-full h-full">
-      {!imageLoaded && !hasError && (
+      {!imageLoaded && (
         <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
           <div className="flex flex-col items-center justify-center gap-2">
-            <DynamicIcon name="ShoppingBag" size={32} className="text-gray-300" />
+            <DynamicIcon
+              name="ShoppingBag"
+              size={32}
+              className="text-gray-300"
+            />
             <p className="text-gray-300 text-xs">Loading image...</p>
           </div>
         </div>
       )}
       <img
+        ref={imgRef}
         src={image}
         alt={name}
-        className="w-full h-full object-cover"
+        className={`w-full h-full object-cover transition-opacity duration-200 ${
+          imageLoaded ? "opacity-100" : "opacity-0"
+        }`}
         onLoad={() => setImageLoaded(true)}
         onError={() => setHasError(true)}
       />
