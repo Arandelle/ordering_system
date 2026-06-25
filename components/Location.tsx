@@ -17,7 +17,7 @@ const LocationsSection = () => {
   const [current, setCurrent] = useState(0);
   const touchStartX = useRef<number>(0);
 
-  const {data: branches} = useBranches();
+  const { data: branches = [] } = useBranches();
   const locations = [
     {
       id: 1,
@@ -97,7 +97,7 @@ const LocationsSection = () => {
             Our Locations
           </span>
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Find Us in 
+            Find Us in
           </h2>
           <h2 className="text-brand-color-500 text-2xl mb-4">
             (Makati - Paranaque - Santolan)
@@ -125,7 +125,10 @@ const LocationsSection = () => {
                     <div className="relative">
                       <div className="relative h-112.5 rounded-2xl overflow-hidden shadow-xl border border-gray-200 group">
                         <iframe
-                          src={buildEmbedUrl(location.location.coordinates[1], location.location.coordinates[0],)}
+                          src={buildEmbedUrl(
+                            location.location.coordinates[1],
+                            location.location.coordinates[0],
+                          )}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
@@ -138,6 +141,16 @@ const LocationsSection = () => {
                         {/* Info Card Overlay */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                           <div className="bg-white rounded-xl shadow-2xl p-5 border-2 border-brand-color-500/20 transform transition-all duration-300 hover:scale-105 pointer-events-auto">
+                            {/* Opening Soon Badge */}
+                            {location.openingSoon && (
+                              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                <span className="inline-flex items-center gap-1.5 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full shadow-md whitespace-nowrap uppercase tracking-wide">
+                                  <span className="w-1.5 h-1.5 bg-amber-900 rounded-full animate-pulse" />
+                                  Opening Soon
+                                </span>
+                              </div>
+                            )}
+
                             <div className="flex items-center gap-4">
                               <div className="w-14 h-14 bg-linear-to-br from-brand-color-500 to-[#ff4500] rounded-lg flex items-center justify-center shadow-lg p-1">
                                 <img
@@ -174,7 +187,10 @@ const LocationsSection = () => {
                       {/* CTA */}
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pt-4 mx-auto">
                         <a
-                          href={buildMapLink(location.location.coordinates[1], location.location.coordinates[0])}
+                          href={buildMapLink(
+                            location.location.coordinates[1],
+                            location.location.coordinates[0],
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center gap-2 bg-brand-color-500 hover:bg-[#c13500] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 group"
@@ -219,17 +235,29 @@ const LocationsSection = () => {
         {/* Dots + Counter */}
         <div className="flex items-center justify-center gap-4 mt-8">
           <div className="flex gap-2">
-            {branches?.map((_, i) => (
+            {branches?.map((branch, i) => (
               <button
                 key={i}
                 onClick={() => goTo(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === current
-                    ? "w-6 bg-brand-color-500"
-                    : "w-2 bg-gray-300 hover:bg-gray-400"
-                }`}
-                aria-label={`Go to location ${i + 1}`}
-              />
+                aria-label={`Go to ${branch.name}`}
+                className="relative group p-1"
+              >
+                {/* Dot */}
+                <span
+                  className={`block h-2 rounded-full transition-all duration-300 ${
+                    i === current
+                      ? "w-6 bg-brand-color-500"
+                      : "w-2 bg-gray-300 hover:bg-gray-400"
+                  }`}
+                />
+
+                {/* Tooltip */}
+                <span className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                  {branch.name}
+                  {/* Arrow */}
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                </span>
+              </button>
             ))}
           </div>
           <span className="text-sm text-gray-500">
