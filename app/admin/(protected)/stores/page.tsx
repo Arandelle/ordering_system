@@ -31,6 +31,7 @@ export const emptyForm: BranchFormData = {
     latitude: "",
     longitude: "",
   },
+  openingSoon: false,
 };
 
 export default function BranchManagement() {
@@ -109,6 +110,11 @@ export default function BranchManagement() {
             label: "Inactive",
             value: branches.filter((b) => !b.isActive).length,
             icon: "ShieldOff",
+          },
+          {
+            label: "Opening Soon",
+            value: branches.filter((b) => b.openingSoon).length,
+            icon: "Clock",
           },
         ].map((s) => {
           const Icon = getLucideIcon(s.icon);
@@ -192,11 +198,18 @@ export default function BranchManagement() {
                     <div>{branch.address}</div>
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={`text-xs font-semibold py-1.5 px-3 rounded-lg text-white ${branch.isActive ? "bg-dark-green-500" : "bg-red-600"}`}
-                    >
-                      {branch.isActive ? "Active" : "Inactive"}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-xs font-semibold py-1.5 px-3 rounded-lg text-white ${branch.isActive ? "bg-dark-green-500" : "bg-red-600"}`}
+                      >
+                        {branch.isActive ? "Active" : "Inactive"}
+                      </span>
+                      {branch.openingSoon && (
+                        <span className="text-xs font-semibold py-1.5 px-3 rounded-lg bg-amber-500 text-white">
+                          Opening Soon
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">

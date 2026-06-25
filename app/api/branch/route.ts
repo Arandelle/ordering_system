@@ -35,6 +35,7 @@ const branchSchema = z.object({
       .array(z.number())
       .length(2, "Coordinates must be [longitude, latitude]"),
   }),
+  openingSoon: z.boolean().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, address, location } = parsed.data;
+    const { name, address, location, openingSoon } = parsed.data;
 
     // Generate unique branch code
     const count = await Branch.countDocuments();
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
         type: "Point",
         coordinates: location.coordinates, // [longitue, latitude] as GeoJSON format
       },
+      openingSoon,
     });
 
     return NextResponse.json(data, { status: 201 });

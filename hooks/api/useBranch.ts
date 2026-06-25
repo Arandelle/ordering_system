@@ -44,6 +44,7 @@ const formatBranchDataForForm = (branch: Branch): BranchFormData => {
             latitude: branch.location.coordinates[1].toString(),
           }
         : undefined,
+    openingSoon: branch.openingSoon ?? false,
   };
 };
 

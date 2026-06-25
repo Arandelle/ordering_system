@@ -38,6 +38,10 @@ const BranchSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    openingSoon: {
+      type: Boolean,
+      default: false,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Staff",

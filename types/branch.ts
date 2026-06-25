@@ -11,6 +11,7 @@ export type Branch = {
   address: string;
   location: Location,
   isActive: boolean;
+  openingSoon: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -22,6 +23,7 @@ export type BranchFormData = {
     latitude: string;
     longitude: string
   }
+  openingSoon: boolean;
 };
 
 export type BranchFormErrors = Partial<Record<keyof BranchFormData | "location", string>>;
