@@ -1,11 +1,11 @@
-import { InputField } from "@/components/ui/InputField";
 import { useCreateBranch, useUpdateBranch } from "@/hooks/api/useBranch";
 import { Branch, BranchFormData, BranchFormErrors } from "@/types/branch";
-import { Loader2, MapPin, Copy, Check } from "lucide-react";
 import React, { ChangeEvent, useState } from "react";
 import { emptyForm } from "./page";
 import Modal from "@/components/ui/Modal";
 import MapParent from "./MapComponent/MapParent";
+import { ToggleButton, InputField } from "@/components/ui/FormComponents";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 type BranchModalProps = {
   form: BranchFormData;
@@ -109,6 +109,19 @@ const BranchModal = ({
 
   return (
     <div>
+      {/* Opening Soon Toggle */}
+      <div className="mb-4">
+        <ToggleButton
+          label="Opening Soon"
+          subLabel="Mark as not yet ready for orders"
+          checked={form.openingSoon}
+          onCheckedChange={(val) =>
+            setForm((prev) => ({ ...prev, openingSoon: val }))
+          }
+          error={errors.openingSoon}
+        />
+      </div>
+
       {/* Basic Info */}
       <div className="flex flex-col gap-2.5 mb-4">
         <InputField
@@ -134,42 +147,10 @@ const BranchModal = ({
         />
       </div>
 
-
-      {/* Opening Soon Toggle */}
-      <div className="flex items-center gap-3 mb-4">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={form.openingSoon}
-          onClick={() =>
-            setForm((prev) => ({ ...prev, openingSoon: !prev.openingSoon }))
-          }
-          className={[
-            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
-            "focus-visible:ring-2 focus-visible:ring-brand-color-400 focus-visible:ring-offset-2 outline-none",
-            form.openingSoon ? "bg-brand-color-500" : "bg-gray-200",
-          ].join(" ")}
-        >
-          <span
-            aria-hidden="true"
-            className={[
-              "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-              form.openingSoon ? "translate-x-5" : "translate-x-0",
-            ].join(" ")}
-          />
-        </button>
-        <label className="text-sm font-medium text-slate-700 select-none">
-          Opening Soon
-        </label>
-        <span className="text-xs text-slate-400">
-          Mark this branch as not yet ready for orders
-        </span>
-      </div>
-
       {/* Coordinates Section */}
       <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
         <div className="flex items-center gap-2 mb-4">
-          <MapPin size={18} className="text-brand-color-600" />
+          <DynamicIcon name="MapPin" size={18} className="text-brand-color-600" />
           <p className="text-sm font-semibold text-slate-700">
             Location Coordinates
           </p>
@@ -200,9 +181,9 @@ const BranchModal = ({
                   title="Copy latitude"
                 >
                   {copiedField === "lat" ? (
-                    <Check size={14} className="text-green-600" />
+                    <DynamicIcon name="Check" size={14} className="text-green-600" />
                   ) : (
-                    <Copy size={14} className="text-slate-400" />
+                    <DynamicIcon name="Copy" size={14} className="text-slate-400" />
                   )}
                 </button>
               )}
@@ -232,9 +213,9 @@ const BranchModal = ({
                   title="Copy longitude"
                 >
                   {copiedField === "lng" ? (
-                    <Check size={14} className="text-green-600" />
+                    <DynamicIcon name="Check" size={14} className="text-green-600" />
                   ) : (
-                    <Copy size={14} className="text-slate-400" />
+                    <DynamicIcon name="Copy" size={14} className="text-slate-400" />
                   )}
                 </button>
               )}
@@ -248,7 +229,7 @@ const BranchModal = ({
           onClick={() => setIsMapOpen(true)}
           className="w-full py-2.5 px-3 rounded-lg border border-brand-color-400 bg-brand-color-500 hover:bg-brand-color-600 text-white font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
-          <MapPin size={16} />
+          <DynamicIcon name="MapPin" size={16} />
           {hasCoordinates ? "Update Location on Map" : "Set Location on Map"}
         </button>
 
@@ -284,7 +265,7 @@ const BranchModal = ({
           className="py-1.5 px-3 rounded-lg bg-brand-color-500 hover:bg-brand-color-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer transition-colors font-medium"
         >
           {(createBranch.isPending || updateBranch.isPending) && (
-            <Loader2 size={14} className="animate-spin" />
+            <DynamicIcon name="Loader2" size={14} className="animate-spin" />
           )}
           {createBranch.isPending || updateBranch.isPending
             ? "Saving..."
