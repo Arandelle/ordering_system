@@ -7,10 +7,13 @@ import { ClientSession } from "mongoose";
 
 /**
  * Fetch a branch by ID and verify it is available for ordering.
- * Throws if the branch is inactive or flagged as opening soon.
+ * Throws if the branch does not exist, is inactive, or flagged as opening soon.
+ * Session is optional — required inside transactions, omitted otherwise.
  */
-export async function fetchBranch(branchId: string, session: ClientSession) {
-  const branch = await Branch.findById(branchId).session(session);
+export async function fetchBranch(branchId: string, session?: ClientSession) {
+  const query = Branch.findById(branchId);
+  if (session) query.session(session);
+  const branch = await query;
   if (!branch) throw new Error("Branch not found!");
   if (!branch.isActive) throw new Error("This branch is currently inactive and cannot accept orders.");
   if (branch.openingSoon) throw new Error("This branch is opening soon and is not yet accepting orders.");

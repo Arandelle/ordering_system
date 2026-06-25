@@ -5,7 +5,6 @@ import { CreateOrderPayload } from "@/types/OrderTypes";
 import { ClientSession } from "mongoose";
 import { getPaidPromoCardBenefit } from "../promoCardBenefits";
 import { validateFulfillmentPayload } from "./checkoutFulfillment.service";
-import { fetchBranch } from "../branch/branch.service";
 
 export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
   const settings = await Settings.findOne().session(session);
@@ -13,17 +12,6 @@ export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
 
   const storeStatus = getStoreStatus(settings.operatingHours);
   if (!storeStatus.isOpen) throw new Error(storeStatus.message);
-}
-
-/**
- * Assert that a branch exists and is available for ordering.
- * Delegated to fetchBranch which checks isActive && !openingSoon.
- */
-export async function assertBranchCanAcceptOrders(
-  branchId: string,
-  session: ClientSession,
-): Promise<void> {
-  await fetchBranch(branchId, session);
 }
 
 export function assertValidPayload(body: CreateOrderPayload): void {

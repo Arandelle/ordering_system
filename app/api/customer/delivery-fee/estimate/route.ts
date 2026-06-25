@@ -1,9 +1,9 @@
 import { connectDB } from "@/lib/mongodb";
 import { calculateDeliveryFeeFromCoordinates } from "@/lib/deliveryFee";
-import { Branch } from "@/models/Branch";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { isValidCoordinate } from "@/helper/isValidCoordinates";
+import { fetchBranch } from "@/services/branch/branch.service";
 
 type DeliveryFeeEstimateBody = {
   branchId?: string;
@@ -38,34 +38,7 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const branch = await Branch.findById(branchId)
-      .select("location isActive openingSoon")
-      .lean<{
-        location?: { coordinates?: [number, number] };
-        isActive?: boolean;
-        openingSoon?: boolean;
-      }>();
-
-    if (!branch) {
-      return NextResponse.json(
-        { error: "Branch not found." },
-        { status: 404 },
-      );
-    }
-
-    if (!branch.isActive) {
-      return NextResponse.json(
-        { error: "This branch is currently inactive." },
-        { status: 403 },
-      );
-    }
-
-    if (branch.openingSoon) {
-      return NextResponse.json(
-        { error: "This branch is opening soon and is not yet accepting orders." },
-        { status: 403 },
-      );
-    }
+    const branch = await fetchBranch(branchId);
 
     if (!branch.location?.coordinates) {
       return NextResponse.json(
@@ -81,7 +54,14 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json({ data: estimate });
-  } catch {
+  } catch (err: any) {
+    // Surface fetchBranch errors (not found, inactive, opening soon) with appropriate status
+    if (err.message?.includes("not found")) {
+      return NextResponse.json({ error: err.message }, { status: 404 });
+    }
+    if (err.message?.includes("inactive") || err.message?.includes("opening soon")) {
+      return NextResponse.json({ error: err.message }, { status: 403 });
+    }
     return NextResponse.json(
       { error: "Failed to estimate delivery fee." },
       { status: 500 },

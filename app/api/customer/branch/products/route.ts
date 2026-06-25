@@ -6,7 +6,7 @@ import { STOCK_STATUSES } from "@/types/inventory_types";
 import "@/lib/registerModels";
 import { buildPaginationMeta } from "@/utils/query-helpers";
 import { getActiveProductDiscountPreviews } from "@/lib/product-promotions/product-promotion.application";
-import { Branch } from "@/models/Branch";
+import { fetchBranch } from "@/services/branch/branch.service";
 
 type IncludedProductAggregate = {
   _id?: { toString: () => string };
@@ -59,22 +59,12 @@ export async function GET(req: NextRequest) {
 
     console.log(`[BRANCH_PRODUCTS] Fetching products for branch: ${branchId}`);
 
-    // Verify the branch is active and not flagged as opening soon
-    const branch = await Branch.findById(branchId).lean();
-    if (!branch) {
-      return NextResponse.json({ error: "Branch not found." }, { status: 404 });
-    }
-    if (!branch.isActive) {
-      return NextResponse.json(
-        { error: "This branch is currently inactive." },
-        { status: 403 },
-      );
-    }
-    if (branch.openingSoon) {
-      return NextResponse.json(
-        { error: "This branch is opening soon and is not yet accepting orders." },
-        { status: 403 },
-      );
+    // Verify the branch is available for ordering via shared service
+    try {
+      await fetchBranch(branchId);
+    } catch (err: any) {
+      const status = err.message.includes("not found") ? 404 : 403;
+      return NextResponse.json({ error: err.message }, { status });
     }
 
     const page = parseInt(searchParams.get("page") ?? "1");
