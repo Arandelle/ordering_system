@@ -8,6 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import Modal from "@/components/ui/Modal";
 import { syne } from "@/app/font";
+import { OrderItemImage } from "../../components/OrderItemImage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -207,22 +208,16 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       </span>
                     </>
                   )}
-                  <span className="hidden">
-                    ₱{basePrice}
-                  </span>
+                  <span className="hidden">₱{basePrice}</span>
                 </div>
               </div>
 
               {/* image */}
               <div className="w-52 min-w-52 hidden sm:flex items-start">
                 <div className="relative w-full aspect-square rounded-xl overflow-hidden">
-                  <Image
-                    src={item.image.url}
-                    alt={item.name}
-                    fill
-                    className="object-cover"
-                    quality={90}
-                  />
+                  <div className="h-full">
+                    <OrderItemImage image={item.image.url} name={item.name} />
+                  </div>
                   {item.isPopular && (
                     <div className="absolute top-3 left-3 bg-brand-color-500 text-white text-[10px] font-bold px-3 py-1 rounded-full">
                       Best Seller

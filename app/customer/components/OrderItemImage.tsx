@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
 export const OrderItemImage = ({
@@ -11,6 +11,12 @@ export const OrderItemImage = ({
   name?: string;
 }) => {
   const [hasError, setHasError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+    setHasError(false);
+  }, [image]);
 
   if (!image || hasError) {
     return (
@@ -31,11 +37,22 @@ export const OrderItemImage = ({
   }
 
   return (
-    <img
-      src={image}
-      alt={name}
-      className="w-full h-full object-cover"
-      onError={() => setHasError(true)}
-    />
+    <div className="relative w-full h-full">
+      {!imageLoaded && !hasError && (
+        <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-2">
+            <DynamicIcon name="ShoppingBag" size={32} className="text-gray-300" />
+            <p className="text-gray-300 text-xs">Loading image...</p>
+          </div>
+        </div>
+      )}
+      <img
+        src={image}
+        alt={name}
+        className="w-full h-full object-cover"
+        onLoad={() => setImageLoaded(true)}
+        onError={() => setHasError(true)}
+      />
+    </div>
   );
 };
