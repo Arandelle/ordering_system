@@ -1,11 +1,16 @@
 # Changelog
-## [1.3.3] - 2026-06-24
+
+## 1.4.0 - 2026-06-25 - Branch isOpenSoon attributes
+- Add isOpenSoon attributes for branches that are not yet ready for orders
+- Update branch services and other validation to ensure it is guarded for active branches only
+
+## 1.3.3 - 2026-06-24
 ### Changed
 - **Branch Selector** — Replaced map modal with a lightweight dropdown listing
   all available branches. Customers can now select a branch directly without
   triggering a map interaction.
 
-## [1.3.2] - 2026-06-24
+## 1.3.2 - 2026-06-24
 ### Fixed
 - **Order Expiration (Maya)** — Inngest background job now correctly expires
   pending orders for Maya payments where the customer did not complete payment.
