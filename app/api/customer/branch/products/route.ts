@@ -6,6 +6,7 @@ import { STOCK_STATUSES } from "@/types/inventory_types";
 import "@/lib/registerModels";
 import { buildPaginationMeta } from "@/utils/query-helpers";
 import { getActiveProductDiscountPreviews } from "@/lib/product-promotions/product-promotion.application";
+import { Branch } from "@/models/Branch";
 
 type IncludedProductAggregate = {
   _id?: { toString: () => string };
@@ -57,6 +58,24 @@ export async function GET(req: NextRequest) {
     }
 
     console.log(`[BRANCH_PRODUCTS] Fetching products for branch: ${branchId}`);
+
+    // Verify the branch is active and not flagged as opening soon
+    const branch = await Branch.findById(branchId).lean();
+    if (!branch) {
+      return NextResponse.json({ error: "Branch not found." }, { status: 404 });
+    }
+    if (!branch.isActive) {
+      return NextResponse.json(
+        { error: "This branch is currently inactive." },
+        { status: 403 },
+      );
+    }
+    if (branch.openingSoon) {
+      return NextResponse.json(
+        { error: "This branch is opening soon and is not yet accepting orders." },
+        { status: 403 },
+      );
+    }
 
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "20");
