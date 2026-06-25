@@ -6,15 +6,28 @@ import {
   validateFulfillmentPayload,
 } from "./checkoutFulfillment.service";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { CITY_RESTRICTION_MESSAGE } from "@/lib/deliveryArea";
 
+// Makati coordinates — inside polygon AND in allowed cities
 const deliveryAddress = {
   line1: "123 Test Street",
   line2: "Barangay 1",
-  city: "Manila",
+  city: "Makati",
   province: "Metro Manila",
-  zipCode: "1000",
+  zipCode: "1210",
   country: "Philippines" as const,
-  coordinates: { lat: 14.5995, lng: 120.9842 },
+  coordinates: { lat: 14.5547, lng: 121.0244 },
+};
+
+// Pasig coordinates — inside polygon but NOT in allowed cities
+const restrictedCityAddress = {
+  line1: "456 Ortigas Ave",
+  line2: "Barangay 2",
+  city: "Pasig",
+  province: "Metro Manila",
+  zipCode: "1600",
+  country: "Philippines" as const,
+  coordinates: { lat: 14.58, lng: 121.05 },
 };
 
 describe("Checkout Fulfillment", () => {
@@ -49,5 +62,38 @@ describe("Checkout Fulfillment", () => {
         }),
       /Pin your delivery location on the map/,
     );
+  });
+
+  test("delivery checkout rejects address outside the polygon", () => {
+    assert.throws(
+      () =>
+        validateFulfillmentPayload({
+          fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
+          shippingAddress: {
+            ...deliveryAddress,
+            coordinates: { lat: 14.67, lng: 121.04 },
+          },
+        }),
+      /only available within the Makati/,
+    );
+  });
+
+  test("delivery checkout rejects address in polygon but not in allowed cities", () => {
+    assert.throws(
+      () =>
+        validateFulfillmentPayload({
+          fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
+          shippingAddress: restrictedCityAddress,
+        }),
+      new RegExp(CITY_RESTRICTION_MESSAGE),
+    );
+  });
+
+  test("delivery checkout accepts address in polygon AND in allowed cities", () => {
+    // Should not throw — Makati is in both polygon and allowed cities
+    validateFulfillmentPayload({
+      fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
+      shippingAddress: deliveryAddress,
+    });
   });
 });
