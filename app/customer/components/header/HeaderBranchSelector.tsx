@@ -55,6 +55,8 @@ function HeaderBranchSelector() {
   }, []);
 
   const handleSelect = (branch: (typeof branches)[0]) => {
+    // Prevent selecting branches that are not yet ready for orders
+    if (branch.openingSoon) return;
     setSelectedBranch(branch);
     setIsOpen(false);
   };
@@ -116,6 +118,7 @@ function HeaderBranchSelector() {
 
           {branches.map((branch) => {
             const isSelected = selectedBranch?._id === branch._id;
+            const isUnavailable = branch.openingSoon;
 
             return (
               <button
@@ -123,11 +126,13 @@ function HeaderBranchSelector() {
                 type="button"
                 role="option"
                 aria-selected={isSelected}
+                aria-disabled={isUnavailable}
                 onClick={() => handleSelect(branch)}
                 className={[
                   "flex w-full items-center gap-3 rounded-xl px-3 py-2.5",
                   "text-left transition-colors duration-100 outline-none",
                   "focus-visible:ring-2 focus-visible:ring-brand-color-400",
+                  isUnavailable ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
                   isSelected ? "bg-brand-color-50" : "hover:bg-gray-50",
                 ].join(" ")}
               >
@@ -135,7 +140,9 @@ function HeaderBranchSelector() {
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                     isSelected
                       ? "bg-brand-color-100 text-brand-color-600"
-                      : "bg-gray-100 text-gray-400"
+                      : isUnavailable
+                        ? "bg-gray-100 text-gray-300"
+                        : "bg-gray-100 text-gray-400"
                   }`}
                 >
                   <Store size={15} strokeWidth={2} />
@@ -144,7 +151,7 @@ function HeaderBranchSelector() {
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span
                     className={`truncate text-sm font-semibold ${
-                      isSelected ? "text-brand-color-800" : "text-gray-800"
+                      isSelected ? "text-brand-color-800" : isUnavailable ? "text-gray-500" : "text-gray-800"
                     }`}
                   >
                     {branch.name}
@@ -154,13 +161,17 @@ function HeaderBranchSelector() {
                   </span>
                 </span>
 
-                {isSelected && (
+                {isUnavailable ? (
+                  <span className="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-600 px-2 py-1 rounded-md">
+                    Opening Soon
+                  </span>
+                ) : isSelected ? (
                   <Check
                     size={15}
                     strokeWidth={2.5}
                     className="ml-auto shrink-0 text-brand-color-500"
                   />
-                )}
+                ) : null}
               </button>
             );
           })}
