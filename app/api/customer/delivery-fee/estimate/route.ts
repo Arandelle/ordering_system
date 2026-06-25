@@ -38,13 +38,36 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const branch = await Branch.findById(branchId).select("location").lean<{
-      location?: {
-        coordinates?: [number, number];
-      };
-    }>();
+    const branch = await Branch.findById(branchId)
+      .select("location isActive openingSoon")
+      .lean<{
+        location?: { coordinates?: [number, number] };
+        isActive?: boolean;
+        openingSoon?: boolean;
+      }>();
 
-    if (!branch?.location?.coordinates) {
+    if (!branch) {
+      return NextResponse.json(
+        { error: "Branch not found." },
+        { status: 404 },
+      );
+    }
+
+    if (!branch.isActive) {
+      return NextResponse.json(
+        { error: "This branch is currently inactive." },
+        { status: 403 },
+      );
+    }
+
+    if (branch.openingSoon) {
+      return NextResponse.json(
+        { error: "This branch is opening soon and is not yet accepting orders." },
+        { status: 403 },
+      );
+    }
+
+    if (!branch.location?.coordinates) {
       return NextResponse.json(
         { error: "Branch coordinates are not available." },
         { status: 404 },
