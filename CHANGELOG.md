@@ -1,8 +1,18 @@
 # Changelog
 
-## 1.4.0 - 2026-06-25 - Branch isOpenSoon attributes
-- Add isOpenSoon attributes for branches that are not yet ready for orders
-- Update branch services and other validation to ensure it is guarded for active branches only
+## [1.5.0] - 2026-06-25
+
+### Added
+- Allowed cities configuration for restricting delivery coverage to a defined list of cities
+- Admin address search when creating or editing a branch
+- Delivery area validation now enforces the allowed cities list on order placement
+- When the allowed cities list is empty, delivery is open to all addresses within the branch's delivery polygon
+
+## [1.4.0] - 2026-06-25
+
+### Added
+- `isOpenSoon` attribute on branches to mark locations that are not yet accepting orders
+- Branch-level guards across services and validation logic to restrict operations to active branches only
 
 ## 1.3.3 - 2026-06-24
 ### Changed
