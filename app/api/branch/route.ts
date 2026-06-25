@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const filter = user?.role === "superadmin" ? {} : { isActive: true };
 
-    const data = await Branch.find(filter).sort({ createdAt: -1 }).lean();
+    const data = await Branch.find(filter).sort({ openingSoon: 1, createdAt: -1 }).lean();
 
     return NextResponse.json(data, { status: 200 });
 
