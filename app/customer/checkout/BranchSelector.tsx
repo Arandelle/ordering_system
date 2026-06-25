@@ -38,6 +38,11 @@ const BranchSelector = ({ selectedBranch }: BranchSelectorProps) => {
     );
   }
 
+
+  const branchName = (branchName: string, isOpening: boolean) => (
+    isOpening ? `${branchName} - Opening Soon` : branchName
+  )
+
   return (
     <SelectField
       label={selectedBranch ? "Selected branch" : ""}
@@ -47,7 +52,8 @@ const BranchSelector = ({ selectedBranch }: BranchSelectorProps) => {
         { value: "", label: "Select Branch", disabled: true },
         ...branches.map((branch) => ({
           value: branch._id,
-          label: `${branch.name} - ${branch.address}`,
+          label: branchName(`${branch.name} - ${branch.address}`, branch.openingSoon),
+          disabled: branch.openingSoon || !branch.isActive
         })),
       ]}
       className="border-none text-brand-color-500 whitespace-nowrap overflow-hidden text-ellipsis wrap-break-word"
