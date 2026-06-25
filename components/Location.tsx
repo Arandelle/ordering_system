@@ -92,12 +92,15 @@ const LocationsSection = () => {
     >
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 space-y-2">
           <span className="inline-block bg-brand-color-500/10 text-brand-color-500 px-4 py-2 rounded-full text-sm font-semibold uppercase tracking-wider mb-4">
             Our Locations
           </span>
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Find Us in Makati
+            Find Us in 
+          </h2>
+          <h2 className="text-brand-color-500 text-2xl mb-4">
+            (Makati - Paranaque - Santolan)
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg">
             Visit our branches and experience authentic Filipino grilled
