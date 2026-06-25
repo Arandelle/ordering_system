@@ -17,6 +17,59 @@ export const OUTSIDE_DELIVERY_AREA_MESSAGE =
   "Delivery is only available within the Makati and nearby cities service area.";
 
 /**
+ * Temporary city-level restriction on top of the polygon check.
+ * Only addresses whose resolved city/suburb/municipality matches one of
+ * these names (case-insensitive) will be accepted.
+ *
+ * To remove the restriction, simply empty this array — the check
+ * function will then always return true.
+ */
+export const ALLOWED_DELIVERY_CITIES: string[] = [
+  "mandaluyong",
+  "pasay",
+  "makati",
+];
+
+export const CITY_RESTRICTION_MESSAGE =
+  "Delivery is currently limited to Mandaluyong, Pasay, and Makati only.";
+
+/**
+ * Checks whether a reverse-geocoded address belongs to an allowed city.
+ * When ALLOWED_DELIVERY_CITIES is empty, this always returns true
+ * (no city restriction active).
+ *
+ * Nominatim may populate city, town, municipality, suburb, or
+ * city_district — we check all of them against the allowed list.
+ */
+export const isCityAllowedForDelivery = (
+  address: {
+    city?: string;
+    town?: string;
+    municipality?: string;
+    suburb?: string;
+    city_district?: string;
+  },
+): boolean => {
+  if (ALLOWED_DELIVERY_CITIES.length === 0) return true;
+
+  const candidates = [
+    address.city,
+    address.town,
+    address.municipality,
+    address.suburb,
+    address.city_district,
+  ];
+
+  return candidates.some((candidate) => {
+    if (!candidate) return false;
+    const normalized = candidate.trim().toLowerCase();
+    return ALLOWED_DELIVERY_CITIES.some(
+      (allowed) => normalized.includes(allowed),
+    );
+  });
+};
+
+/**
  * Polygon boundary covering Makati + nearby core delivery cities:
  * Makati, Taguig/BGC, Pasay, Mandaluyong, Pasig, Parañaque.
  * Coordinates are ordered clockwise and form a closed loop (first == last).
