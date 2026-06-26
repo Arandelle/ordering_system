@@ -5,6 +5,7 @@ import {
   calculateDeliveryFee,
   calculateDeliveryFeeFromCoordinates,
   resolveEffectiveDeliveryFee,
+  isFreeDeliveryEligible,
   FREE_DELIVERY_MINIMUM_PURCHASE,
   FREE_DELIVERY_MAX_DISTANCE_KM,
 } from "./deliveryFee";
@@ -110,5 +111,35 @@ describe("Free Delivery", () => {
     const result = resolveEffectiveDeliveryFee(0, 500);
 
     assert.equal(result.freeDeliveryReason, undefined);
+  });
+});
+
+describe("isFreeDeliveryEligible", () => {
+  test("returns true for delivery with subtotal ≥ 500 and distance ≤ 5 km", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 3, 500), true);
+  });
+
+  test("returns true at exactly 500 subtotal and exactly 5 km", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 5, 500), true);
+  });
+
+  test("returns false for pickup regardless of subtotal", () => {
+    assert.equal(isFreeDeliveryEligible("pickup", 3, 500), false);
+  });
+
+  test("returns false when subtotal < 500", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 3, 499), false);
+  });
+
+  test("returns false when distance > 5 km even if subtotal ≥ 500", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 6, 600), false);
+  });
+
+  test("returns false when both conditions fail", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 7, 300), false);
+  });
+
+  test("returns false at boundary distance slightly over 5 km", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 5.01, 500), false);
   });
 });
