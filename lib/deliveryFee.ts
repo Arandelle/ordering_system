@@ -1,5 +1,5 @@
 import { getDistanceMeters } from "./deliveryArea";
-import { roundMoney } from "./promotions/promotion.calculation";
+import { roundMoney } from "./money";
 
 type Coordinates = {
   lat: number;

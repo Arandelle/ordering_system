@@ -5,6 +5,13 @@ import {
   calculatePromoCardDiscount,
   calculatePromoCardTotal,
 } from "@/lib/promoCard";
+import {
+  clampMoneyMin,
+  minMoney,
+  multiplyMoney,
+  roundMoney,
+  subtractMoney,
+} from "@/lib/money";
 import { CartItem } from "@/types/MenuTypes";
 import React, {
   createContext,
@@ -230,29 +237,26 @@ export const CartProvider: React.FC<{
   const totalProducts = cartItems.length;
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotalPrice = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + multiplyMoney(item.price, item.quantity),
     0,
   );
-  const productDiscountAmount = Number(
-    cartItems
-      .reduce((sum, item) => {
-        const unitDiscount = item.activeProductDiscount?.discountAmount ?? 0;
-        const lineSubtotal = item.price * item.quantity;
-        return sum + Math.min(unitDiscount * item.quantity, lineSubtotal);
-      }, 0)
-      .toFixed(2),
+  const productDiscountAmount = roundMoney(
+    cartItems.reduce((sum, item) => {
+      const unitDiscount = item.activeProductDiscount?.discountAmount ?? 0;
+      const lineSubtotal = multiplyMoney(item.price, item.quantity);
+      return sum + minMoney(multiplyMoney(unitDiscount, item.quantity), lineSubtotal);
+    }, 0),
   );
-  const productDiscountedSubtotal = Number(
-    Math.max(subtotalPrice - productDiscountAmount, 0).toFixed(2),
-  );
+  const productDiscountedSubtotal = clampMoneyMin(subtotalPrice - productDiscountAmount);
   const promoCardDiscount = applyPromoCardDiscount
     ? calculatePromoCardDiscount(productDiscountedSubtotal, promoCardDiscountRate)
     : 0;
   const totalPrice = applyPromoCardDiscount
     ? calculatePromoCardTotal(productDiscountedSubtotal, promoCardDiscountRate)
     : productDiscountedSubtotal;
-  const vatableSales = totalPrice / 1.12;
-  const vatAmount = totalPrice - vatableSales;
+  // VAT-inclusive: vatableSales = totalPrice / 1.12, using centavo arithmetic
+  const vatableSales = multiplyMoney(totalPrice, 1 / 1.12);
+  const vatAmount = subtractMoney(totalPrice, vatableSales);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 

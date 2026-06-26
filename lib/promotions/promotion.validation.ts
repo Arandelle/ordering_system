@@ -6,6 +6,7 @@ import {
   type PromotionConfig,
 } from "@/types/promotions/promotion-constant";
 import { getDefaultPromotionEndDate } from "./promotions.service";
+import { roundMoney } from "@/lib/money";
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 type PromotionBaseConfig = Omit<PromotionConfig, "promotionType">;
@@ -21,7 +22,7 @@ export function parseOptionalPromotionDate(
 
 export function normalizePromotionAmount(value: unknown) {
   const amount = Number(value);
-  return Number.isFinite(amount) ? Number(amount.toFixed(2)) : NaN;
+  return Number.isFinite(amount) ? roundMoney(amount) : NaN;
 }
 
 export function normalizeMaximumRedemptions(value: unknown) {

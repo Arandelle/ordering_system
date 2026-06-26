@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
+import { roundMoney } from "@/lib/money";
 import {
   DEFAULT_PROMO_CARD_VALIDITY_RULE,
   PROMO_CARD,
@@ -291,7 +292,7 @@ export async function PATCH(request: NextRequest) {
           discountRules,
           voucherRule: normalizedVoucherRule,
           validityRule: normalizedValidityRule,
-          purchasePrice: Number(purchasePrice.toFixed(2)),
+          purchasePrice: roundMoney(purchasePrice),
           sku: PROMO_CARD.sku,
         },
       },

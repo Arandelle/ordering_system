@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Star, Check, Minus, Plus, ShoppingBag } from "lucide-react";
-import Image from "next/image";
+import { multiplyMoney } from "@/lib/money";
 import { BranchProduct } from "@/hooks/api/useBranchProductInfinite";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
@@ -108,7 +108,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const displayUnitPrice = hasProductDiscount
     ? activeProductDiscount!.discountedPrice
     : basePrice;
-  const total = displayUnitPrice * mainQty;
+  const total = multiplyMoney(displayUnitPrice, mainQty);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 

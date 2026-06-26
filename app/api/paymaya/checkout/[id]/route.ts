@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
 import { ORDER_STATUSES } from "@/types/orderConstants";
 import { PAYMENT_STATUSES } from "@/types/paymentConstants";
+import { addMoney, multiplyMoney, roundMoney } from "@/lib/money";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -66,9 +67,10 @@ export async function POST(
         value: order.total.totalAmount,
         currency: "PHP",
         details: {
-          discount:
-            (order.total.discountAmount ?? 0) +
-            (order.total.voucherDiscountAmount ?? 0),
+          discount: addMoney(
+            order.total.discountAmount ?? 0,
+            order.total.voucherDiscountAmount ?? 0,
+          ),
           vatAmount: order.total.vatAmount,
           subTotal: order.total.vatableSales,
         },
@@ -77,10 +79,10 @@ export async function POST(
         name: item.name,
         quantity: item.quantity,
         amount: {
-          value: parseFloat(item.price),
+          value: roundMoney(item.price),
         },
         totalAmount: {
-          value: parseFloat((item.price * item.quantity).toFixed(2)), // calculate the value
+          value: multiplyMoney(item.price, item.quantity),
           currency: "PHP",
         },
       })),

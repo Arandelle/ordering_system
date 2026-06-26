@@ -5,6 +5,7 @@
 import { Inventory } from "@/models/Inventory";
 import { Product } from "@/models/Product";
 import { CreateOrderPayload } from "@/types/OrderTypes";
+import { multiplyMoney } from "@/lib/money";
 import mongoose, { ClientSession } from "mongoose";
 
 export interface ResolvedCartItem {
@@ -58,6 +59,8 @@ async function resolveCartItem(
       `${product.name} is out of stock or insufficient quantity.`,
     );
 
+  const lineTotal = multiplyMoney(product.price, cartItem.quantity);
+
   return {
     orderItem: {
       productId: product._id,
@@ -78,11 +81,11 @@ async function resolveCartItem(
       info: product.info,
       amount: { value: product.price },
       totalAmount: {
-        value: product.price * cartItem.quantity,
+        value: lineTotal,
         currency: "PHP",
       },
     },
-    subtotal: product.price * cartItem.quantity,
+    subtotal: lineTotal,
   };
 }
 

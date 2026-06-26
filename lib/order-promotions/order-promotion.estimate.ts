@@ -1,5 +1,6 @@
 import type { ActivePromotion } from "@/types/promotions.type";
 import { calculateOrderDiscountAmount } from "./order-promotion.calculation";
+import { subtractMoney } from "@/lib/money";
 
 export type OrderDiscountEstimate = {
   name: string;
@@ -40,9 +41,7 @@ export function getNextOrderDiscountEligibilityHint(
     ?.filter((promotion) => subtotalAmount < promotion.minimumOrderAmount)
     .map((promotion) => ({
       name: promotion.name,
-      amountUntilEligible: Number(
-        (promotion.minimumOrderAmount - subtotalAmount).toFixed(2),
-      ),
+      amountUntilEligible: subtractMoney(promotion.minimumOrderAmount, subtotalAmount),
     }))
     .sort((a, b) => a.amountUntilEligible - b.amountUntilEligible)[0];
 

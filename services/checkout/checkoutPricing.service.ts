@@ -13,6 +13,12 @@ import {
 } from "@/lib/promoCard";
 import { AppliedOrderDiscountPromotion } from "@/lib/order-promotions/order-promotion.application";
 import { fetchBranch, isBranchCoordinates } from "../branch/branch.service";
+import {
+  addMoney,
+  clampMoneyMin,
+  multiplyMoney,
+  subtractMoney,
+} from "@/lib/money";
 
 // -------------- TYPES ---------------------------
 export interface TaxBreakdown {
@@ -81,24 +87,23 @@ export function computeTax(
     ? calculatePromoCardTotal(productDiscountedSubtotal, discountRate)
     : productDiscountedSubtotal;
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
-  const discountAmount = Number(
-    (
-      productDiscountAmount +
-      promoCardDiscountAmount +
-      orderDiscountAmount
-    ).toFixed(2),
+  const discountAmount = addMoney(
+    addMoney(productDiscountAmount, promoCardDiscountAmount),
+    orderDiscountAmount,
   );
-  const totalAmount = Number(
-    Math.max(
-      promoTotalAmount -
-        orderDiscountAmount -
-        voucherDiscountAmount +
-        deliveryFeeAmount,
-      0,
-    ).toFixed(2),
+  const totalAmount = clampMoneyMin(
+    addMoney(
+      subtractMoney(
+        subtractMoney(promoTotalAmount, orderDiscountAmount),
+        voucherDiscountAmount,
+      ),
+      deliveryFeeAmount,
+    ),
   );
-  const vatableSales = parseFloat((totalAmount / (1 + TAX_RATE)).toFixed(2));
-  const vatAmount = parseFloat((totalAmount - vatableSales).toFixed(2));
+  // VAT-inclusive: totalAmount = vatableSales + vatAmount, where vatAmount = vatableSales * 0.12
+  // So vatableSales = totalAmount / 1.12, using centavo arithmetic to avoid float drift
+  const vatableSales = multiplyMoney(totalAmount, 1 / (1 + TAX_RATE));
+  const vatAmount = subtractMoney(totalAmount, vatableSales);
 
   return {
     vatableSales,

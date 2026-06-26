@@ -17,6 +17,7 @@ import {
   getBestOrderDiscountEstimate,
   getNextOrderDiscountEligibilityHint,
 } from "@/lib/order-promotions/order-promotion.estimate";
+import { clampMoneyMin, multiplyMoney, subtractMoney } from "@/lib/money";
 import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
 import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
@@ -95,11 +96,9 @@ const CartDrawer = () => {
     productDiscountedSubtotal,
   );
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
-  const displayTotalPrice = Number(
-    Math.max(totalPrice - orderDiscountAmount, 0).toFixed(2),
-  );
-  const displayVatableSales = displayTotalPrice / 1.12;
-  const displayVatAmount = displayTotalPrice - displayVatableSales;
+  const displayTotalPrice = clampMoneyMin(subtractMoney(totalPrice, orderDiscountAmount));
+  const displayVatableSales = multiplyMoney(displayTotalPrice, 1 / 1.12);
+  const displayVatAmount = subtractMoney(displayTotalPrice, displayVatableSales);
 
   React.useEffect(() => {
     if (!canUsePromoCardDiscount && applyPromoCardDiscount) {

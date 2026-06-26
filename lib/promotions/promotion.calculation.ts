@@ -1,14 +1,11 @@
 import type { PromotionDiscountType } from "@/types/promotions/promotion-constant";
+import { minMoney, multiplyMoney } from "@/lib/money";
 
 export type PromotionDiscountCalculationInput = {
   discountType: PromotionDiscountType;
   discountValue: number;
   maximumDiscountAmount?: number | null;
 };
-
-export function roundMoney(value: number) {
-  return Number(value.toFixed(2));
-}
 
 export function calculatePromotionDiscountAmount(
   promotion: PromotionDiscountCalculationInput,
@@ -17,14 +14,15 @@ export function calculatePromotionDiscountAmount(
   if (discountableAmount <= 0) return 0;
 
   if (promotion.discountType === "fixed") {
-    return roundMoney(Math.min(promotion.discountValue, discountableAmount));
+    return minMoney(promotion.discountValue, discountableAmount);
   }
 
-  const percentageDiscount = roundMoney(
-    discountableAmount * (promotion.discountValue / 100),
+  const percentageDiscount = multiplyMoney(
+    discountableAmount,
+    promotion.discountValue / 100,
   );
 
   return promotion.maximumDiscountAmount
-    ? Math.min(percentageDiscount, promotion.maximumDiscountAmount)
+    ? minMoney(percentageDiscount, promotion.maximumDiscountAmount)
     : percentageDiscount;
 }

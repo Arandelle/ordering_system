@@ -5,6 +5,7 @@ import { InputField } from "@/components/ui/FormComponents/InputField";
 import { TextareaField } from "@/components/ui/FormComponents/TextAreaField";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/api/useProducts";
 import { toast } from "sonner";
+import { multiplyMoney, roundMoney, subtractMoney } from "@/lib/money";
 import { Category } from "@/types/category";
 import {
   IncludedItemUI,
@@ -81,12 +82,12 @@ const TAX_RATE = 0.12;
 function computeTax(totalPrice: string) {
   const total = parseFloat(totalPrice) || 0;
   if (total <= 0) return { taxable: 0, tax: 0, total: 0 };
-  const taxable = total / (1 + TAX_RATE);
-  const tax = total - taxable;
+  const taxable = multiplyMoney(total, 1 / (1 + TAX_RATE));
+  const tax = subtractMoney(total, taxable);
   return {
-    taxable: parseFloat(taxable.toFixed(2)),
-    tax: parseFloat(tax.toFixed(2)),
-    total: parseFloat(total.toFixed(2)),
+    taxable: roundMoney(taxable),
+    tax: roundMoney(tax),
+    total: roundMoney(total),
   };
 }
 

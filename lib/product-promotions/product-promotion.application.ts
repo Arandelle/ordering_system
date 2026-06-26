@@ -6,7 +6,7 @@ import type {
   PromotionDiscountDayMode,
   PromotionDiscountType,
 } from "@/types/promotions/promotion-constant";
-import { roundMoney } from "@/lib/promotions/promotion.calculation";
+import { clampMoneyMin, minMoney, multiplyMoney, roundMoney } from "@/lib/money";
 import { isPromotionScheduleActive } from "@/lib/promotions/promotions.service";
 
 type ProductDiscountPromotionRecord = {
@@ -72,18 +72,16 @@ const productDiscountStrategies: Record<
 > = {
   percentage(promotion, line) {
     const lineSubtotal = getLineSubtotal(line);
-    return roundMoney(lineSubtotal * (promotion.discountValue / 100));
+    return multiplyMoney(lineSubtotal, promotion.discountValue / 100);
   },
   fixed(promotion, line) {
     const lineSubtotal = getLineSubtotal(line);
-    return roundMoney(
-      Math.min(promotion.discountValue * line.quantity, lineSubtotal),
-    );
+    return minMoney(multiplyMoney(promotion.discountValue, line.quantity), lineSubtotal);
   },
 };
 
 function getLineSubtotal(line: ProductDiscountCartLine) {
-  return roundMoney(line.price * line.quantity);
+  return multiplyMoney(line.price, line.quantity);
 }
 
 function getProductKey(productId: Types.ObjectId) {
@@ -181,9 +179,7 @@ export async function getActiveProductDiscountPreviews(
     if (!bestPromotion) continue;
 
     const originalPrice = roundMoney(line.price);
-    const discountAmount = roundMoney(
-      Math.min(bestPromotion.discountAmount, originalPrice),
-    );
+    const discountAmount = minMoney(bestPromotion.discountAmount, originalPrice);
 
     if (discountAmount <= 0) continue;
 
@@ -201,7 +197,7 @@ export async function getActiveProductDiscountPreviews(
       discountType: promotion.discountType,
       discountValue: promotion.discountValue,
       originalPrice,
-      discountedPrice: roundMoney(Math.max(originalPrice - discountAmount, 0)),
+      discountedPrice: clampMoneyMin(originalPrice - discountAmount),
       discountAmount,
       label: getProductDiscountLabel(promotion),
     });
@@ -247,9 +243,7 @@ export async function resolveProductDiscountPromotions(
 
   return {
     originalSubtotalAmount,
-    discountedSubtotalAmount: roundMoney(
-      Math.max(originalSubtotalAmount - productDiscountAmount, 0),
-    ),
+    discountedSubtotalAmount: clampMoneyMin(originalSubtotalAmount - productDiscountAmount),
     productDiscountAmount,
     appliedPromotions,
   };

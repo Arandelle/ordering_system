@@ -24,6 +24,13 @@ import {
   getBestOrderDiscountEstimate,
   getNextOrderDiscountEligibilityHint,
 } from "@/lib/order-promotions/order-promotion.estimate";
+import {
+  addMoney,
+  clampMoneyMin,
+  minMoney,
+  multiplyMoney,
+  subtractMoney,
+} from "@/lib/money";
 import { CartItem } from "@/types/MenuTypes";
 import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
@@ -63,9 +70,9 @@ const CartRow = ({
   onUpdate: (id: string, qty: number) => void;
 }) => {
   const unitDiscount = item.activeProductDiscount?.discountAmount ?? 0;
-  const lineSubtotal = item.price * item.quantity;
-  const lineDiscount = Math.min(unitDiscount * item.quantity, lineSubtotal);
-  const discountedLineTotal = Math.max(lineSubtotal - lineDiscount, 0);
+  const lineSubtotal = multiplyMoney(item.price, item.quantity);
+  const lineDiscount = minMoney(multiplyMoney(unitDiscount, item.quantity), lineSubtotal);
+  const discountedLineTotal = clampMoneyMin(subtractMoney(lineSubtotal, lineDiscount));
   const hasProductDiscount = lineDiscount > 0;
 
   return (
@@ -130,7 +137,7 @@ const CartRow = ({
             )}
           </div>
           <span className="hidden">
-            ₱{(item.price * item.quantity).toFixed(2)}
+            ₱{multiplyMoney(item.price, item.quantity).toFixed(2)}
           </span>
         </div>
       </div>
@@ -345,9 +352,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     productDiscountedSubtotal,
   );
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
-  const discountAdjustedTotal = Number(
-    Math.max(totalPrice - orderDiscountAmount, 0).toFixed(2),
-  );
+  const discountAdjustedTotal = clampMoneyMin(subtractMoney(totalPrice, orderDiscountAmount));
   const [voucherAmount, setVoucherAmount] = useState("");
   const parsedVoucherAmount = Math.min(
     Math.max(0, Number(voucherAmount || 0)),
@@ -357,14 +362,11 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   const deliveryFeeAmount = isDelivery
     ? (deliveryFeeEstimate?.data.deliveryFee ?? 0)
     : 0;
-  const displayTotalPrice = Number(
-    Math.max(
-      discountAdjustedTotal - parsedVoucherAmount + deliveryFeeAmount,
-      0,
-    ).toFixed(2),
+  const displayTotalPrice = clampMoneyMin(
+    addMoney(subtractMoney(discountAdjustedTotal, parsedVoucherAmount), deliveryFeeAmount),
   );
-  const displayVatableSales = displayTotalPrice / 1.12;
-  const displayVatAmount = displayTotalPrice - displayVatableSales;
+  const displayVatableSales = multiplyMoney(displayTotalPrice, 1 / 1.12);
+  const displayVatAmount = subtractMoney(displayTotalPrice, displayVatableSales);
 
   useEffect(() => {
     if (!canUsePromoCardDiscount && applyPromoCardDiscount) {

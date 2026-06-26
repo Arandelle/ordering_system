@@ -5,7 +5,7 @@ import {
   PROMOTION_DISCOUNT_DAYS,
   PromotionDiscountDay,
 } from "@/types/promotions/promotion-constant";
-import { roundMoney } from "./promotions/promotion.calculation";
+import { clampMoneyMin, multiplyMoney } from "./money";
 
 export const PROMO_CARD = {
   enabled: false,
@@ -70,7 +70,7 @@ export function calculatePromoCardDiscount(
   discountRate: number = PROMO_CARD.discountRate,
 ): number {
   if (subtotal <= 0) return 0;
-  return roundMoney(subtotal * discountRate);
+  return multiplyMoney(subtotal, discountRate);
 }
 
 export function calculatePromoCardTotal(
@@ -78,7 +78,7 @@ export function calculatePromoCardTotal(
   discountRate: number = PROMO_CARD.discountRate,
 ): number {
   const discount = calculatePromoCardDiscount(subtotal, discountRate);
-  return roundMoney(Math.max(subtotal - discount, 0));
+  return clampMoneyMin(subtotal - discount);
 }
 
 export function getPromoCardDay(date = new Date()): PromotionDiscountDay {

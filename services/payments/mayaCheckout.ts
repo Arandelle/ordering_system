@@ -7,6 +7,7 @@ import { ResolvedCartItem } from "../checkout/checkoutInventory.service";
 import { TaxBreakdown } from "../checkout/checkoutPricing.service";
 import { getMayaCheckoutUrl } from "@/lib/mayaConfig";
 import { getAuthHeader } from "@/lib/getAuthHeader";
+import { addMoney } from "@/lib/money";
 
 export function buildMayaPayload(
   body: CreateOrderPayload,
@@ -49,7 +50,7 @@ export function buildMayaPayload(
       value: totalAmount,
       currency: "PHP",
       details: {
-        discount: Number((discountAmount + voucherDiscountAmount).toFixed(2)),
+        discount: addMoney(discountAmount, voucherDiscountAmount),
         vatAmount,
         vatableSales,
       },

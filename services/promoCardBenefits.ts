@@ -12,6 +12,7 @@ import {
   DEFAULT_VOUCHER_USAGE_RULE,
   VoucherValidityRule,
 } from "@/types/voucher.types";
+import { roundMoney } from "@/lib/money";
 import mongoose, { ClientSession } from "mongoose";
 
 type PromoCardBenefit = {
@@ -191,7 +192,7 @@ export async function redeemCustomerVoucher(
 ): Promise<number> {
   if (!customerId || requestedAmount <= 0) return 0;
 
-  let remaining = Number(requestedAmount.toFixed(2));
+  let remaining = roundMoney(requestedAmount);
   let redeemed = 0;
 
   const vouchers = await Voucher.find({
@@ -209,13 +210,13 @@ export async function redeemCustomerVoucher(
     const amount = Math.min(voucher.remainingAmount, remaining);
     voucher.remainingAmount = voucher.usageRule?.isOneTimeUse
       ? 0
-      : Number((voucher.remainingAmount - amount).toFixed(2));
+      : roundMoney(voucher.remainingAmount - amount);
     voucher.status = voucher.remainingAmount <= 0 ? "used" : "active";
     voucher.usedAt = voucher.status === "used" ? new Date() : voucher.usedAt;
     await voucher.save({ session });
 
-    redeemed = Number((redeemed + amount).toFixed(2));
-    remaining = Number((remaining - amount).toFixed(2));
+    redeemed = roundMoney(redeemed + amount);
+    remaining = roundMoney(remaining - amount);
   }
 
   if (redeemed < requestedAmount) {
