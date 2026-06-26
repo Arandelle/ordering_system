@@ -216,6 +216,7 @@ const OrderSchema = new Schema(
       deliveryFeeAmount: { type: Number, default: 0 },
       deliveryDistanceKm: { type: Number, default: 0 },
       deliveryBillableKm: { type: Number, default: 0 },
+      freeDeliveryApplied: { type: Boolean, default: false },
     },
 
     estimatedTime: { type: String, default: "30-45 minutes" },

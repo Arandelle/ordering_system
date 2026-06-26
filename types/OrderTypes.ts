@@ -101,6 +101,7 @@ export interface OrderType {
     deliveryFeeAmount?: number;
     deliveryDistanceKm?: number;
     deliveryBillableKm?: number;
+    freeDeliveryApplied?: boolean;
   };
   estimatedTime: string;
 
