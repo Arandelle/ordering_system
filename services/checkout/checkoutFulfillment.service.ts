@@ -65,7 +65,11 @@ export function validateFulfillmentPayload({
   }
 }
 
-// Resolves final server-authoritative fulfillment pricing for checkout.
+// Resolves server-authoritative fulfillment pricing: validates the delivery
+// address and computes the raw delivery fee + distance. Free delivery
+// eligibility is NOT resolved here because the item subtotal is unknown at
+// this point in the checkout flow — it is computed separately in the checkout
+// routes after cart resolution.
 export function resolveCheckoutFulfillment({
   fulfillmentType,
   branch,
