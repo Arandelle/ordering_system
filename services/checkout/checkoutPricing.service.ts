@@ -38,6 +38,7 @@ export interface TaxBreakdown {
   deliveryFeeAmount: number;
   deliveryDistanceKm?: number;
   deliveryBillableKm?: number;
+  freeDeliveryApplied?: boolean;
 }
 
 // ------------------ CONSTANT -------------------------------
@@ -76,6 +77,7 @@ export function computeTax(
   deliveryFeeAmount = 0,
   deliveryDistanceKm = 0,
   deliveryBillableKm = 0,
+  freeDeliveryApplied = false,
 ): TaxBreakdown {
   const productDiscountAmount = productDiscountResolution.productDiscountAmount;
   const productDiscountedSubtotal =
@@ -91,13 +93,14 @@ export function computeTax(
     addMoney(productDiscountAmount, promoCardDiscountAmount),
     orderDiscountAmount,
   );
+  const effectiveDeliveryFee = freeDeliveryApplied ? 0 : deliveryFeeAmount;
   const totalAmount = clampMoneyMin(
     addMoney(
       subtractMoney(
         subtractMoney(promoTotalAmount, orderDiscountAmount),
         voucherDiscountAmount,
       ),
-      deliveryFeeAmount,
+      effectiveDeliveryFee,
     ),
   );
   // VAT-inclusive: totalAmount = vatableSales + vatAmount, where vatAmount = vatableSales * 0.12
@@ -120,8 +123,9 @@ export function computeTax(
     }),
     voucherDiscountAmount,
     ...(promoCardDiscountAmount > 0 && { discountCode }),
-    deliveryFeeAmount,
+    deliveryFeeAmount: effectiveDeliveryFee,
     deliveryDistanceKm,
     deliveryBillableKm,
+    ...(freeDeliveryApplied && { freeDeliveryApplied }),
   };
 }
