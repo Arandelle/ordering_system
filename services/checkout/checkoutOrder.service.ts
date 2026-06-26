@@ -50,6 +50,7 @@ export async function persistOrder(
     deliveryFeeAmount,
     deliveryDistanceKm,
     deliveryBillableKm,
+    freeDeliveryApplied,
   } = tax;
 
   const order = await Order.create(
@@ -103,6 +104,7 @@ export async function persistOrder(
           deliveryFeeAmount,
           deliveryDistanceKm,
           deliveryBillableKm,
+          freeDeliveryApplied,
         },
         notes,
       },
