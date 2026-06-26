@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/mongodb";
-import { calculateDeliveryFeeFromCoordinates } from "@/lib/deliveryFee";
+import { resolveEffectiveDeliveryFeeFromCoordinates } from "@/lib/deliveryFee";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { isValidCoordinate } from "@/helper/isValidCoordinates";
@@ -11,12 +11,13 @@ type DeliveryFeeEstimateBody = {
     lat?: number;
     lng?: number;
   };
+  itemSubtotalAmount?: number;
 };
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as DeliveryFeeEstimateBody;
-    const { branchId, coordinates } = body;
+    const { branchId, coordinates, itemSubtotalAmount } = body;
     const deliveryCoordinates = {
       lat: Number(coordinates?.lat),
       lng: Number(coordinates?.lng),
@@ -36,6 +37,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Item subtotal must be a non-negative number for free delivery eligibility check.
+    const subtotal = Number(itemSubtotalAmount ?? 0);
+    if (subtotal < 0) {
+      return NextResponse.json(
+        { error: "itemSubtotalAmount must be a non-negative number." },
+        { status: 400 },
+      );
+    }
+
     await connectDB();
 
     const branch = await fetchBranch(branchId);
@@ -47,10 +57,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // The client sends only the delivery pin; branch coordinates come from DB.
-    const estimate = calculateDeliveryFeeFromCoordinates(
+    // Resolve effective delivery fee including free delivery eligibility.
+    const estimate = resolveEffectiveDeliveryFeeFromCoordinates(
       branch.location.coordinates,
       deliveryCoordinates,
+      subtotal,
     );
 
     return NextResponse.json({ data: estimate });
