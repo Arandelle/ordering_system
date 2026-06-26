@@ -404,6 +404,26 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                     value={`₱${orderToView.total.deliveryFeeAmount?.toLocaleString()}`}
                   />
                 )}
+              {orderToView.fulfillmentType !== FULFILLMENT_TYPE.PICKUP &&
+                (orderToView.total?.deliveryFeeAmount ?? 0) === 0 &&
+                orderToView.total?.freeDeliveryApplied && (
+                  <InfoRow
+                    label={
+                      <span>
+                        Delivery Fee
+                        {orderToView.total.deliveryDistanceKm != null && (
+                          <span className="text-[10px] text-stone-300 ml-1">
+                            ({orderToView.total.deliveryDistanceKm.toFixed(1)}{" "}
+                            km)
+                          </span>
+                        )}
+                      </span>
+                    }
+                    value={
+                      <span className="text-green-600 font-bold">FREE</span>
+                    }
+                  />
+                )}
               {(orderToView.total?.discountAmount ?? 0) > 0 && (
                 <InfoRow
                   label="Discount"
