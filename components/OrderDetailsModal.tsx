@@ -8,6 +8,8 @@ import { useOrderBase } from "@/hooks/api/shared/useOrdersBase";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { useState } from "react";
 import { DynamicIcon } from "./ui/DynamicIcon";
+import { OrderType } from "@/types/OrderTypes";
+import { buildEmbedUrl } from "@/lib/google-maps";
 
 interface OrderDetailsProps {
   orderId: string;
@@ -97,9 +99,7 @@ const SectionToggle = ({
   >
     <div className="flex items-center gap-2.5">
       <span className="text-sm font-semibold text-gray-800">{title}</span>
-      {badge && (
-        <span className="ml-2 font-light text-gray-500">{badge}</span>
-      )}
+      {badge && <span className="ml-2 font-light text-gray-500">{badge}</span>}
     </div>
     {expanded ? (
       <DynamicIcon name="ChevronUp" size={16} className="text-gray-400" />
@@ -201,26 +201,19 @@ const CustomerCard = ({
 /** Fulfillment (pickup/delivery) card with themed styles */
 const FulfillmentCard = ({
   isPickup,
-  branchName,
-  shippingAddress,
+  isAdmin,
+  order,
   estimatedTime,
 }: {
   isPickup: boolean;
-  branchName: string;
-  shippingAddress?: {
-    line1: string;
-    line2?: string;
-    city: string;
-    province: string;
-    postalCode: string;
-    country?: string;
-    landmark?: string;
-    coordinates?: { lat: number; lng: number };
-  };
+  isAdmin: boolean;
+  order: OrderType;
   estimatedTime: string;
 }) => {
   const theme = fulfillmentTheme[isPickup ? "pickup" : "delivery"];
   const label = isPickup ? "Pickup" : "Delivery";
+
+  const { branchSnapshot, paymentInfo } = order;
 
   return (
     <div
@@ -230,11 +223,7 @@ const FulfillmentCard = ({
         <div
           className={`w-7 h-7 rounded-lg flex items-center justify-center ${theme.iconWrapper}`}
         >
-          <DynamicIcon
-            name={theme.iconName}
-            size={14}
-            className={theme.icon}
-          />
+          <DynamicIcon name={theme.iconName} size={14} className={theme.icon} />
         </div>
         <p
           className={`text-xs font-semibold uppercase tracking-wide ${theme.label}`}
@@ -244,47 +233,86 @@ const FulfillmentCard = ({
         <span
           className={`ml-auto inline-flex items-center rounded-lg px-3 py-1 text-xs font-bold shadow-sm ${theme.badge}`}
         >
-          {branchName}
+          {branchSnapshot?.name}
         </span>
       </div>
 
-      {!isPickup && shippingAddress && (
+      {/* Pickup: show branch address with directions link for all roles */}
+      {isPickup && (branchSnapshot?.address || branchSnapshot?.location) && (
         <div className="flex flex-col gap-1 text-sm text-gray-600 mb-1">
           <span className="font-medium text-gray-700">
-            {shippingAddress.line1}
-            {shippingAddress.line2 && (
-              <span className="text-gray-400">
-                , {shippingAddress.line2}
+            {branchSnapshot?.address}
+          </span>
+          {branchSnapshot?.location?.coordinates && !isAdmin && (
+            <a
+              href={`https://www.google.com/maps?q=${branchSnapshot.location.coordinates[1]},${branchSnapshot.location.coordinates[0]}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1 transition-colors w-fit"
+            >
+              <DynamicIcon name="MapPin" size={12} />
+              Get directions
+              <DynamicIcon name="ExternalLink" size={10} />
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Delivery: full address + map link for admin; brief confirmation for customer */}
+      {!isPickup && paymentInfo?.shippingAddress && (
+        <div className="flex flex-col gap-1 text-sm text-gray-600 mb-1">
+          {isAdmin ? (
+            <>
+              <span className="font-medium text-gray-700">
+                {paymentInfo?.shippingAddress.line1}
+                {paymentInfo?.shippingAddress.line2 && (
+                  <span className="text-gray-400">
+                    , {paymentInfo?.shippingAddress.line2}
+                  </span>
+                )}
               </span>
-            )}
-          </span>
-          <span>
-            {shippingAddress.city}, {shippingAddress.province}{" "}
-            {shippingAddress.postalCode}
-          </span>
-          {shippingAddress.country && (
-            <span className="text-xs text-gray-300">
-              {shippingAddress.country}
+              <span>
+                {paymentInfo?.shippingAddress.city},{" "}
+                {paymentInfo?.shippingAddress.province}{" "}
+                {paymentInfo?.shippingAddress.postalCode}
+              </span>
+              {paymentInfo?.shippingAddress.country && (
+                <span className="text-xs text-gray-300">
+                  {paymentInfo?.shippingAddress.country}
+                </span>
+              )}
+              {paymentInfo?.shippingAddress.landmark && (
+                <span className="text-xs text-gray-400 mt-0.5">
+                  Landmark: {paymentInfo?.shippingAddress.landmark}
+                </span>
+              )}
+              {paymentInfo?.shippingAddress.coordinates?.lat &&
+                paymentInfo?.shippingAddress.coordinates?.lng && (
+                  <a
+                    href={`https://www.google.com/maps?q=${paymentInfo?.shippingAddress.coordinates.lat},${paymentInfo?.shippingAddress.coordinates.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1 transition-colors w-fit"
+                  >
+                    <DynamicIcon name="MapPin" size={12} />
+                    View on Google Maps
+                    <DynamicIcon name="ExternalLink" size={10} />
+                  </a>
+                )}
+            </>
+          ) : (
+            <span className="font-medium text-gray-700">
+              {paymentInfo?.shippingAddress.line1}
+              {paymentInfo?.shippingAddress.line2 && (
+                <span className="text-gray-400">
+                  , {paymentInfo?.shippingAddress.line2}
+                </span>
+              )}
+              , {paymentInfo?.shippingAddress.city},{" "}
+              {paymentInfo?.shippingAddress.province}{" "}
+              {paymentInfo?.shippingAddress.postalCode}
             </span>
           )}
-          {shippingAddress.landmark && (
-            <span className="text-xs text-gray-400 mt-0.5">
-              Landmark: {shippingAddress.landmark}
-            </span>
-          )}
-          {shippingAddress.coordinates?.lat &&
-            shippingAddress.coordinates?.lng && (
-              <a
-                href={`https://www.google.com/maps?q=${shippingAddress.coordinates.lat},${shippingAddress.coordinates.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1 transition-colors w-fit"
-              >
-                <DynamicIcon name="MapPin" size={12} />
-                View on Google Maps
-                <DynamicIcon name="ExternalLink" size={10} />
-              </a>
-            )}
         </div>
       )}
 
@@ -350,8 +378,6 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
   const discountCode = total?.discountCode;
   const vatAmount = total?.vatAmount ?? 0;
 
-  const branchName = orderToView?.branchSnapshot?.name ?? "No branch name";
-
   const isMaya = paymentInfo?.paymentMethod === "maya";
   const isMayaPaid = paymentInfo?.paymentConfirmed === true;
   const isPickup = orderToView?.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
@@ -382,9 +408,11 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                 <p className="text-sm font-mono font-semibold text-gray-800 truncate">
                   {referenceNumber}
                 </p>
-                <p className="text-[11px] text-gray-300 font-mono truncate">
-                  {orderToView._id}
-                </p>
+                {role === "admin" && (
+                  <p className="text-[11px] text-gray-300 font-mono truncate">
+                    {orderToView._id}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col items-end gap-1.5 shrink-0">
                 <StatusBadge status={status!} />
@@ -396,14 +424,42 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                       <PaymentStatusPill variant="awaitingPayment" />
                     )}
                 </div>
-                {status === ORDER_STATUSES.PENDING &&
-                  isMaya &&
-                  !isMayaPaid && <PaymentStatusPill variant="unpaid" />}
+                {status === ORDER_STATUSES.PENDING && isMaya && !isMayaPaid && (
+                  <PaymentStatusPill variant="unpaid" />
+                )}
               </div>
             </div>
           </div>
 
-          {/* ── Info Grid: Customer + Fulfillment ── */}
+          {/* Map iframe: branch location for pickup (customer only), shipping address for delivery (admin only) */}
+          {(() => {
+            const isAdmin = role === "admin";
+
+            // Pickup: customer needs directions to branch; admin already knows their own branch
+            // Delivery: admin needs to see shipping location; customer knows their own address
+            if (isPickup && isAdmin) return null;
+            if (!isPickup && !isAdmin) return null;
+
+            const branchCoords =
+              orderToView?.branchSnapshot?.location?.coordinates;
+            const lat = isPickup ? branchCoords?.[1] : shippingAddress?.coordinates?.lat;
+            const lng = isPickup ? branchCoords?.[0] : shippingAddress?.coordinates?.lng;
+
+            return lat && lng ? (
+              <iframe
+                src={buildEmbedUrl(lat, lng)}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="grayscale-[0.2] contrast-[1.1] transition-all duration-300 group-hover:grayscale-0"
+              />
+            ) : null;
+          })()}
+
+          {/* ── Info Grid: Customer (admin only) + Fulfillment ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <CustomerCard
               firstName={firstName}
@@ -411,10 +467,11 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
               email={customerEmail}
               phone={customerPhone}
             />
+
             <FulfillmentCard
               isPickup={isPickup}
-              branchName={branchName}
-              shippingAddress={shippingAddress}
+              isAdmin={role === "admin"}
+              order={orderToView}
               estimatedTime={estimatedTime}
             />
           </div>
@@ -481,25 +538,21 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                   value={`₱${deliveryFeeAmount.toLocaleString()}`}
                 />
               )}
-              {!isPickup &&
-                deliveryFeeAmount === 0 &&
-                freeDeliveryApplied && (
-                  <InfoRow
-                    label={
-                      <span>
-                        Delivery Fee
-                        {deliveryDistanceKm != null && (
-                          <span className="text-[10px] text-gray-300 ml-1">
-                            ({deliveryDistanceKm.toFixed(1)} km)
-                          </span>
-                        )}
-                      </span>
-                    }
-                    value={
-                      <span className="text-green-600 font-bold">FREE</span>
-                    }
-                  />
-                )}
+              {!isPickup && deliveryFeeAmount === 0 && freeDeliveryApplied && (
+                <InfoRow
+                  label={
+                    <span>
+                      Delivery Fee
+                      {deliveryDistanceKm != null && (
+                        <span className="text-[10px] text-gray-300 ml-1">
+                          ({deliveryDistanceKm.toFixed(1)} km)
+                        </span>
+                      )}
+                    </span>
+                  }
+                  value={<span className="text-green-600 font-bold">FREE</span>}
+                />
+              )}
               {discountAmount > 0 && (
                 <InfoRow
                   label="Discount"
@@ -609,9 +662,7 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                 value={
                   <span
                     className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      isMaya
-                        ? paymentMethodBadge.maya
-                        : paymentMethodBadge.cash
+                      isMaya ? paymentMethodBadge.maya : paymentMethodBadge.cash
                     }`}
                   >
                     {isMaya
@@ -645,7 +696,7 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                   </span>
                 }
               />
-              {paymentId && (
+              {paymentId && role === "admin" && (
                 <InfoRow
                   label="Payment ID"
                   value={
@@ -678,7 +729,7 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
           </SectionCard>
 
           {/* ── Timeline ── */}
-          {timeline && Object.keys(timeline).length > 0 && (
+          {(timeline && Object.keys(timeline).length > 0) || orderToView?.createdAt && (
             <SectionCard
               section="timeline"
               title="Timeline"
@@ -687,13 +738,24 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
             >
               <div className="relative flex flex-col gap-3 pl-4">
                 <div className="absolute left-1.75 top-2 bottom-2 w-px bg-gray-100" />
-                {Object.entries(timeline)
+
+                {/* Placed entry — always the first event */}
+                {orderToView?.createdAt && (
+                  <div className="relative flex items-center gap-3">
+                    <div className="w-3.5 h-3.5 rounded-full bg-gray-200 border-2 border-white shrink-0 z-1" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-600">Placed</p>
+                      <p className="text-[11px] text-gray-300">
+                        {new Date(orderToView.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {Object.entries(timeline ?? {})
                   .filter(([_, value]) => value)
                   .map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="relative flex items-center gap-3"
-                    >
+                    <div key={key} className="relative flex items-center gap-3">
                       <div className="w-3.5 h-3.5 rounded-full bg-gray-200 border-2 border-white shrink-0 z-1" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-gray-600 capitalize">
