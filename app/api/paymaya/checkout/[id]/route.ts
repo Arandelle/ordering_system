@@ -63,65 +63,61 @@ export async function POST(
     const referenceNumber = paymentInfo?.referenceNumber;
 
     const productItems = order.items.map((item: any) => ({
-        name: item.name,
-        quantity: item.quantity,
-        code: String(item.productId ?? item._id),
-        description: item.description ?? "",
-        amount: {
-          value: roundMoney(item.price),
-        },
-        totalAmount: {
-          value: multiplyMoney(item.price, item.quantity),
-          currency: "PHP",
-        },
-      }));
+      name: item.name,
+      quantity: item.quantity,
+      code: String(item.productId ?? item._id),
+      description: item.description ?? "",
+      amount: {
+        value: roundMoney(item.price),
+      },
+      totalAmount: {
+        value: multiplyMoney(item.price, item.quantity),
+        currency: "PHP",
+      },
+    }));
 
     // Delivery fee line items: show original fee as ₱0 when free delivery was
     // applied (PayMaya rejects negative totalAmount values), or the regular fee.
-    const deliveryItems = order.total.freeDeliveryApplied && order.total.rawDeliveryFee
-      ? [
-          {
-            name: `Delivery Fee (FREE)`,
-            quantity: 1,
-            code: "DELIVERY_FEE_FREE",
-            description: `Free delivery — originally ₱${order.total.rawDeliveryFee}`,
-            amount: { value: order.total.rawDeliveryFee },
-            totalAmount: {
-              value: 0,
-              currency: "PHP",
-            },
-          },
-        ]
-      : order.total.deliveryFeeAmount > 0
+    const deliveryItems =
+      order.total.freeDeliveryApplied && order.total.rawDeliveryFee
         ? [
             {
-              name: "Delivery Fee",
+              name: `Delivery Fee (FREE)`,
               quantity: 1,
-              code: "DELIVERY_FEE",
-              description: "Distance-based delivery fee",
-              amount: { value: order.total.deliveryFeeAmount },
+              code: "DELIVERY_FEE_FREE",
+              description: `Free delivery — originally ₱${order.total.rawDeliveryFee}`,
+              amount: { value: order.total.rawDeliveryFee },
               totalAmount: {
-                value: order.total.deliveryFeeAmount,
+                value: 0,
                 currency: "PHP",
               },
             },
           ]
-        : [];
+        : order.total.deliveryFeeAmount > 0
+          ? [
+              {
+                name: "Delivery Fee",
+                quantity: 1,
+                code: "DELIVERY_FEE",
+                description: "Distance-based delivery fee",
+                amount: { value: order.total.deliveryFeeAmount },
+                totalAmount: {
+                  value: order.total.deliveryFeeAmount,
+                  currency: "PHP",
+                },
+              },
+            ]
+          : [];
 
     const payload = {
       totalAmount: {
         value: order.total.totalAmount,
         currency: "PHP",
         details: {
-          discount: order.total.freeDeliveryApplied && order.total.rawDeliveryFee
-            ? addMoney(
-                addMoney(order.total.discountAmount ?? 0, order.total.voucherDiscountAmount ?? 0),
-                order.total.rawDeliveryFee,
-              )
-            : addMoney(
-                order.total.discountAmount ?? 0,
-                order.total.voucherDiscountAmount ?? 0,
-              ),
+          discount: addMoney(
+            order.total.discountAmount ?? 0,
+            order.total.voucherDiscountAmount ?? 0,
+          ),
           vatAmount: order.total.vatAmount,
           subTotal: order.total.vatableSales,
         },
@@ -146,7 +142,6 @@ export async function POST(
             countryCode: "PH",
           },
         }),
-
       },
       redirectUrl: {
         success: `${process.env.NEXT_PUBLIC_URL}/payment/success?referenceNumber=${referenceNumber}`,
@@ -156,18 +151,15 @@ export async function POST(
       requestReferenceNumber: paymentInfo.referenceNumber,
     };
 
-    const response = await fetch(
-      getMayaCheckoutUrl(),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: getAuthHeader(),
-        },
-        body: JSON.stringify(payload),
+    const response = await fetch(getMayaCheckoutUrl(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: getAuthHeader(),
       },
-    );
+      body: JSON.stringify(payload),
+    });
 
     const data = await response.json();
 
