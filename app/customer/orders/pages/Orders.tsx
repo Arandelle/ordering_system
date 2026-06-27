@@ -6,7 +6,11 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { GuestOrderLookup } from "./GuestPage";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { useOrderActions } from "@/hooks/useOrderActions";
-import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
+import {
+  FULFILLMENT_TYPE,
+  ORDER_STATUSES,
+  OrderStatus,
+} from "@/types/orderConstants";
 import { authClient } from "@/lib/auth-client";
 import { ItemMosaic } from "../../menu/components/ItemMosaic";
 import {
@@ -133,10 +137,9 @@ function OrderCard({
   onLeaveReview: () => void;
   isLoading: boolean;
 }) {
-  
   const itemNames = order.items.map((i: any) => i.name).join(", ");
 
-  const [isCancelOrder, setIsCancelOrder] = useState(false)
+  const [isCancelOrder, setIsCancelOrder] = useState(false);
 
   const actions = useOrderState(order);
   if (!actions) return null;
@@ -150,6 +153,10 @@ function OrderCard({
     isCodPending,
     canCancel,
   } = actions;
+
+  const isPickup =
+    order?.fulfillmentType &&
+    order.fulfillementType === FULFILLMENT_TYPE.PICKUP;
 
   return (
     <div
@@ -200,6 +207,18 @@ function OrderCard({
                 <DynamicIcon name="Clock" size={13} />
                 {formatDate(order.createdAt)}
               </span>
+              {order.fulfillmentType && (
+                <span
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium ${
+                    isPickup
+                      ? "bg-blue-50 text-blue-600"
+                      : "bg-orange-50 text-orange-600"
+                  }`}
+                >
+                  <DynamicIcon name={isPickup ? "Store" : "Truck"} size={12} />
+                  {isPickup ? "Pickup" : "Delivery"}
+                </span>
+              )}
               {order.branchSnapshot?.name && (
                 <span className="flex items-center gap-1 text-[12px] text-gray-400">
                   <DynamicIcon name="Store" size={13} />
