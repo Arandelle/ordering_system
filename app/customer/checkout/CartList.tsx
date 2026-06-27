@@ -37,6 +37,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
 import { OrderItemImage } from "../components/OrderItemImage";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { FREE_DELIVERY_ENABLED } from "@/lib/deliveryFee";
 import { getCheckoutActionMode } from "./checkoutAction";
 
 const createCodOrder = async (payload: CreateOrderPayload) => {
@@ -364,12 +365,14 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     availableVoucherBalance,
     discountAdjustedTotal,
   );
-  const freeDeliveryEligible = isDelivery
-    ? (deliveryFeeEstimate?.data.freeDeliveryEligible ?? false)
-    : false;
-  const freeDeliveryReason = isDelivery
-    ? (deliveryFeeEstimate?.data.freeDeliveryReason ?? undefined)
-    : undefined;
+  const freeDeliveryEligible =
+    FREE_DELIVERY_ENABLED && isDelivery
+      ? (deliveryFeeEstimate?.data.freeDeliveryEligible ?? false)
+      : false;
+  const freeDeliveryReason =
+    FREE_DELIVERY_ENABLED && isDelivery
+      ? (deliveryFeeEstimate?.data.freeDeliveryReason ?? undefined)
+      : undefined;
   const deliveryFeeAmount = isDelivery
     ? (deliveryFeeEstimate?.data.deliveryFee ?? 0)
     : 0;
