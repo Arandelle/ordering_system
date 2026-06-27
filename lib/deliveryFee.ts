@@ -22,8 +22,8 @@ export type EffectiveDeliveryFee = DeliveryFeeEstimate & {
 
 const BASE_DELIVERY_FARE = 49;
 const FIRST_TIER_KM = 5;
-const FIRST_TIER_RATE = 6;
-const EXCESS_TIER_RATE = 5;
+const FIRST_TIER_RATE = 10;
+const EXCESS_TIER_RATE = 8;
 
 // Free delivery: waived when item subtotal ≥ threshold AND distance is within the max km.
 // Distance exceeding the max km disqualifies free delivery even if the subtotal threshold is met.
