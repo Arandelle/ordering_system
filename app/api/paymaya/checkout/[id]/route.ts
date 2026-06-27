@@ -62,6 +62,52 @@ export async function POST(
 
     const referenceNumber = paymentInfo?.referenceNumber;
 
+    const productItems = order.items.map((item: any) => ({
+        name: item.name,
+        quantity: item.quantity,
+        code: String(item.productId ?? item._id),
+        description: item.description ?? "",
+        amount: {
+          value: roundMoney(item.price),
+        },
+        totalAmount: {
+          value: multiplyMoney(item.price, item.quantity),
+          currency: "PHP",
+        },
+      }));
+
+    // Delivery fee line items: show original fee as ₱0 when free delivery was
+    // applied (PayMaya rejects negative totalAmount values), or the regular fee.
+    const deliveryItems = order.total.freeDeliveryApplied && order.total.rawDeliveryFee
+      ? [
+          {
+            name: `Delivery Fee (${order.total.rawDeliveryFee} waived)`,
+            quantity: 1,
+            code: "DELIVERY_FEE_FREE",
+            description: `Free delivery — originally ₱${order.total.rawDeliveryFee}`,
+            amount: { value: order.total.rawDeliveryFee },
+            totalAmount: {
+              value: 0,
+              currency: "PHP",
+            },
+          },
+        ]
+      : order.total.deliveryFeeAmount > 0
+        ? [
+            {
+              name: "Delivery Fee",
+              quantity: 1,
+              code: "DELIVERY_FEE",
+              description: "Distance-based delivery fee",
+              amount: { value: order.total.deliveryFeeAmount },
+              totalAmount: {
+                value: order.total.deliveryFeeAmount,
+                currency: "PHP",
+              },
+            },
+          ]
+        : [];
+
     const payload = {
       totalAmount: {
         value: order.total.totalAmount,
@@ -75,17 +121,7 @@ export async function POST(
           subTotal: order.total.vatableSales,
         },
       },
-      items: order.items.map((item: any) => ({
-        name: item.name,
-        quantity: item.quantity,
-        amount: {
-          value: roundMoney(item.price),
-        },
-        totalAmount: {
-          value: multiplyMoney(item.price, item.quantity),
-          currency: "PHP",
-        },
-      })),
+      items: [...productItems, ...deliveryItems],
       buyer: {
         firstName: paymentInfo.firstName,
         lastName: paymentInfo.lastName,

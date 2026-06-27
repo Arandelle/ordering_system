@@ -25,12 +25,32 @@ export function buildMayaPayload(
     discountAmount,
     voucherDiscountAmount,
     deliveryFeeAmount,
+    freeDeliveryApplied,
+    rawDeliveryFee,
   } = tax;
 
-  const paymentItems =
-    deliveryFeeAmount > 0
+  // When free delivery applies, show the original fee as a line item at 0
+  // so the receipt says "Delivery Fee (FREE)". PayMaya rejects negative totalAmount
+  // values, so the savings are communicated via the line item description only.
+  const freeDeliveryItems = freeDeliveryApplied && rawDeliveryFee
+    ? [
+        {
+          name: "Delivery Fee (FREE)",
+          quantity: 1,
+          code: "DELIVERY_FEE_FREE",
+          description: `Free delivery — originally ₱${rawDeliveryFee}`,
+          amount: { value: rawDeliveryFee },
+          totalAmount: {
+            value: 0,
+            currency: "PHP",
+          },
+        },
+      ]
+    : [];
+
+  const regularDeliveryItem =
+    !freeDeliveryApplied && deliveryFeeAmount > 0
       ? [
-          ...mayaItems,
           {
             name: "Delivery Fee",
             quantity: 1,
@@ -43,7 +63,9 @@ export function buildMayaPayload(
             },
           },
         ]
-      : mayaItems;
+      : [];
+
+  const paymentItems = [...mayaItems, ...freeDeliveryItems, ...regularDeliveryItem];
 
   return {
     totalAmount: {
