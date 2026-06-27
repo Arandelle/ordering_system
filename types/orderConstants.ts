@@ -135,8 +135,8 @@ export const ORDER_ACTION_CONFIG: Record<
 > = {
   [ORDER_STATUSES.PENDING_PAYMENT]: {
     [ORDER_STATUSES.CANCELLED]: {
-      label: "Cancel Order",
-      variant: "bg-red-600 hover:bg-red-700",
+      label: "Cancel",
+      variant: "text-red-600 hover:text-red-700",
       roles: ["customer"],
       paymentMethods: ["maya"],
     },
@@ -144,15 +144,15 @@ export const ORDER_ACTION_CONFIG: Record<
 
   [ORDER_STATUSES.PENDING]: {
     [ORDER_STATUSES.PREPARING]: {
-      label: "Accept Order",
-      variant: "bg-[#ef4501] hover:bg-[#c13500]",
+      label: "Accept",
+      variant: "text-[#ef4501] hover:text-[#c13500]",
       roles: ["admin"],
       paymentMethods: ["cod", "maya"],
     },
 
     [ORDER_STATUSES.CANCELLED]: {
       label: "Cancel Order",
-      variant: "bg-red-600 hover:bg-red-700",
+      variant: "text-red-600 hover:text-red-700",
       roles: ["customer"],
     },
   },
@@ -160,12 +160,12 @@ export const ORDER_ACTION_CONFIG: Record<
   [ORDER_STATUSES.PREPARING]: {
     [ORDER_STATUSES.DISPATCH]: {
       label: "Dispatch",
-      variant: "bg-green-700 hover:bg-green-800",
+      variant: "text-green-700 hover:text-green-800",
       roles: ["admin"],
     },
     [ORDER_STATUSES.READY_FOR_PICKUP]: {
       label: "Ready for Pickup",
-      variant: "bg-green-700 hover:bg-green-800",
+      variant: "text-green-700 hover:text-green-800",
       roles: ["admin"],
     },
   },
@@ -174,14 +174,14 @@ export const ORDER_ACTION_CONFIG: Record<
   [ORDER_STATUSES.DISPATCH]: {
     [ORDER_STATUSES.COMPLETED]: {
       label: "Mark Completed",
-      variant: "bg-amber-500 hover:bg-amber-600",
+      variant: "text-amber-500 hover:text-amber-600",
       roles: ["admin"],
     },
   },
   [ORDER_STATUSES.READY_FOR_PICKUP]: {
     [ORDER_STATUSES.COMPLETED]: {
       label: "Mark Completed",
-      variant: "bg-amber-500 hover:bg-amber-600",
+      variant: "text-amber-500 hover:text-amber-600",
       roles: ["admin"],
     },
   },
