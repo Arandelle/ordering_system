@@ -15,7 +15,7 @@ import PermissionGuard from "@/lib/PermissionGuard";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { formatDate } from "@/helper/formatDate";
 import { useRouter } from "next/navigation";
-import { ORDER_STATUSES } from "@/types/orderConstants";
+import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 
 export default function OrdersTable({
   orders,
@@ -28,14 +28,50 @@ export default function OrdersTable({
 
   const headerTitles = [
     "Customer",
-    "Items",
     "Total",
-    "Reference",
     "Payment Method",
+    "Branch",
     "Status",
     "Time",
     "Actions",
   ];
+
+  const PaymentStatusCapsule = (status: "awaiting" | "paid" | "unpaid") => {
+    const statusObject = {
+      paid: {
+        text: "text-green-700",
+        bg: "bg-green-50",
+        bgPill: "bg-green-500",
+        border: "border-green-200",
+        title: "Paid",
+      },
+      awaiting: {
+        text: "text-amber-700",
+        bg: "bg-amber-50",
+        bgPill: "bg-amber-500",
+        border: "border-amber-200",
+        title: "Awaiting Payment",
+      },
+      unpaid: {
+        text: "text-red-700",
+        bg: "bg-red-50",
+        bgPill: "bg-red-500",
+        border: "border-red-200",
+        title: "Unpaid",
+      },
+    };
+
+    const current = statusObject[status];
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${current.border} ${current.bg} ${current.text}`}
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${current.bgPill}`} />
+        {current.title}
+      </span>
+    );
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
@@ -85,19 +121,8 @@ export default function OrdersTable({
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
-                      <span className="text-sm text-stone-600">
-                        {order.items.length} item
-                        {order.items.length > 1 ? "s" : ""}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
                       <span className="text-sm font-semibold text-stone-800">
                         ₱{order.total.totalAmount?.toFixed(2)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
-                      <span className="text-xs font-medium text-stone-600 uppercase">
-                        {order.paymentInfo.referenceNumber}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -111,42 +136,36 @@ export default function OrdersTable({
                         {isMaya ? "Maya" : "Cash on Delivery"}
                       </span>
                     </TableCell>
+                    <TableCell className={`text-xs font-semibold`}>
+                      <span
+                        className={`text-xs font-semibold ${order.fulfillmentType === FULFILLMENT_TYPE.PICKUP ? "text-blue-500" : "text-brand-color-500"}`}
+                      >
+                        {order.fulfillmentType}
+                      </span>
+                      <p className="text-nowrap">
+                        {order.branchSnapshot?.name}
+                      </p>
+                    </TableCell>
                     <TableCell className="px-6 py-4">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-end justify-end gap-1.5">
+                        <div className="flex items-end flex-col gap-1.5 flex-wrap">
                           <StatusBadge status={order.status} />
                           {/* Payment status badge beside order status — shows Paid / Awaiting payment / Unpaid */}
-                          {isMaya && isMayaPaid && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
-                              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                              Paid
-                            </span>
-                          )}
+                          {isMaya && isMayaPaid && PaymentStatusCapsule("paid")}
                           {order.status === ORDER_STATUSES.PENDING_PAYMENT &&
                             isMaya &&
-                            !isMayaPaid && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                Awaiting payment
-                              </span>
-                            )}
+                            !isMayaPaid &&
+                            PaymentStatusCapsule("awaiting")}
                           {/* For COD orders, payment is confirmed at handover — no badge needed unless paymentId exists */}
-                          {!isMaya && order.paymentInfo?.paymentId && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
-                              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                              Paid
-                            </span>
-                          )}
+                          {!isMaya &&
+                            order.paymentInfo?.paymentId &&
+                            PaymentStatusCapsule("paid")}
+                          {/* Warning: order reached "pending" status but payment not confirmed — possible data inconsistency */}
+                          {order.status === ORDER_STATUSES.PENDING &&
+                            isMaya &&
+                            !isMayaPaid &&
+                            PaymentStatusCapsule("unpaid")}
                         </div>
-                        {/* Warning: order reached "pending" status but payment not confirmed — possible data inconsistency */}
-                        {order.status === ORDER_STATUSES.PENDING &&
-                          isMaya &&
-                          !isMayaPaid && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">
-                              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                              Unpaid — may need review
-                            </span>
-                          )}
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
@@ -156,12 +175,12 @@ export default function OrdersTable({
                     </TableCell>
 
                     <TableCell className="px-6 py-4">
-                      <div className="flex flex-col lg:flex-row gap-2 items-center justify-center">
+                      <div className="flex flex-col lg:flex-row items-center justify-center">
                         <button
                           onClick={() => router.push(`/orders/${order._id}`)}
-                          className="text-xs font-bold bg-blue-700 hover:bg-blue-800 py-2 px-3 text-white rounded-full cursor-pointer text-nowrap"
+                          className="text-xs font-bold py-2 px-2 text-blue-500 hover:text-blue-600 cursor-pointer text-nowrap"
                         >
-                          View Details
+                          Details
                         </button>
 
                         <PermissionGuard permission="orders.update">
@@ -169,7 +188,9 @@ export default function OrdersTable({
                             orderId={order._id}
                             status={order.status}
                             paymentMethod={order.paymentInfo.paymentMethod}
-                            paymentConfirmed={order.paymentInfo.paymentConfirmed}
+                            paymentConfirmed={
+                              order.paymentInfo.paymentConfirmed
+                            }
                             fulfillmentType={order.fulfillmentType}
                             role="admin"
                           />
