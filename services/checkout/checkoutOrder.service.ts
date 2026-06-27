@@ -64,6 +64,7 @@ export async function persistOrder(
           code: branch.code,
           address: branch.address,
           contactNumber: branch.contactNumber,
+          location: branch.location,
         },
         status:
           paymentMethod === "maya"
