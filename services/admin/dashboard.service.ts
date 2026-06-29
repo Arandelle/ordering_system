@@ -5,7 +5,55 @@ import { ORDER_STATUSES } from "@/types/orderConstants";
 import { Types } from "mongoose";
 import { STAFF_ROLES, StaffRole } from "@/types/staff";
 
+/**
+ * The time period the dashboard filters by.
+ * - "week" → last 7 days (relative)
+ * - "month" with month+year → specific calendar month (e.g. June 2026)
+ * - "year" with year → specific calendar year (e.g. 2025)
+ */
+export type DashboardPeriod =
+  | { range: "week" }
+  | { range: "month"; month: number; year: number }
+  | { range: "year"; year: number };
+
+/** Legacy alias kept for backward-compat with any external consumers. */
 export type DashboardRange = "week" | "month" | "year";
+
+/**
+ * Parses a DashboardPeriod from URL search params.
+ * - ?range=week → { range: "week" }
+ * - ?range=month&month=6&year=2026 → { range: "month", month: 6, year: 2026 }
+ * - ?range=year&year=2025 → { range: "year", year: 2025 }
+ * Defaults to { range: "week" } when no range param is present.
+ */
+export function parseDashboardPeriod(
+  params: URLSearchParams,
+): DashboardPeriod {
+  const range = params.get("range");
+
+  if (!range) return { range: "week" };
+
+  if (range === "week") return { range: "week" };
+
+  if (range === "month") {
+    const month = Number(params.get("month"));
+    const year = Number(params.get("year"));
+    if (!month || !year) {
+      throw new Error("month and year are required when range=month");
+    }
+    return { range: "month", month, year };
+  }
+
+  if (range === "year") {
+    const year = Number(params.get("year"));
+    if (!year) {
+      throw new Error("year is required when range=year");
+    }
+    return { range: "year", year };
+  }
+
+  throw new Error(`Invalid range: ${range}`);
+}
 
 export type DashboardFilters = {
   branchId?: string | Types.ObjectId;
@@ -45,78 +93,123 @@ const buildBranchMatch = (filters: DashboardFilters = {}) => {
   return { branchId: new Types.ObjectId(branchId) };
 };
 
-export function getDateRange(range: DashboardRange) {
-  const now = new Date();
-  const start = new Date();
-
-  if (range === "week") {
+/**
+ * Computes the exact start/end dates for a given DashboardPeriod.
+ * - week: last 7 days from now
+ * - month: first day → last day of the specific calendar month
+ * - year: Jan 1 → Dec 31 of the specific year
+ */
+export function getDateRange(period: DashboardPeriod) {
+  if (period.range === "week") {
+    const now = new Date();
+    const start = new Date();
     start.setDate(now.getDate() - 7);
+    return { start, end: now };
   }
 
-  if (range === "month") {
-    start.setMonth(now.getMonth() - 1);
+  if (period.range === "month") {
+    // First day of the specific month
+    const start = new Date(period.year, period.month - 1, 1);
+    // Last day of the specific month (day 0 of next month = last day)
+    const end = new Date(period.year, period.month, 0, 23, 59, 59, 999);
+    return { start, end };
   }
 
-  if (range === "year") {
-    start.setFullYear(now.getFullYear() - 1);
-  }
-
-  return { start, end: now };
+  // year
+  const start = new Date(period.year, 0, 1);
+  const end = new Date(period.year, 11, 31, 23, 59, 59, 999);
+  return { start, end };
 }
 
-export async function getDashboardStats(filters: DashboardFilters = {}) {
+/**
+ * Shared aggregation pipeline for ranking products by quantity sold.
+ * Used by both getDashboardStats (limit=1 for best seller) and getTopProducts (limit=5).
+ */
+async function getProductRanking(
+  filters: DashboardFilters = {},
+  period?: DashboardPeriod,
+  limit: number = 5,
+): Promise<TopProduct[]> {
+  await connectDB();
+
+  const matchStage: Record<string, unknown> = {
+    ...buildBranchMatch(filters),
+    status: ORDER_STATUSES.COMPLETED,
+  };
+
+  if (period) {
+    const { start, end } = getDateRange(period);
+    matchStage.createdAt = { $gte: start, $lte: end };
+  }
+
+  const result = await Order.aggregate([
+    { $match: matchStage },
+    { $unwind: "$items" },
+    { $group: { _id: "$items.name", sales: { $sum: "$items.quantity" } } },
+    { $sort: { sales: -1 } },
+    { $limit: limit },
+    { $project: { _id: 0, name: "$_id", sales: 1 } },
+  ]);
+
+  return result;
+}
+
+export async function getDashboardStats(
+  filters: DashboardFilters = {},
+  period?: DashboardPeriod,
+) {
   await connectDB();
 
   const branchMatch = buildBranchMatch(filters);
 
-  const totalOrders = await Order.countDocuments({
+  // Build match for completed orders — apply date range if provided
+  const completedMatch: Record<string, unknown> = {
     ...branchMatch,
     status: ORDER_STATUSES.COMPLETED,
-  });
+  };
+
+  if (period) {
+    const { start, end } = getDateRange(period);
+    completedMatch.createdAt = { $gte: start, $lte: end };
+  }
+
+  const totalOrders = await Order.countDocuments(completedMatch);
 
   const revenueResult = await Order.aggregate([
-    {
-      $match: {
-        ...branchMatch,
-        status: ORDER_STATUSES.COMPLETED,
-      },
-    },
+    { $match: completedMatch },
     { $group: { _id: null, totalRevenue: { $sum: "$total.totalAmount" } } },
   ]);
   const totalRevenue = revenueResult[0]?.totalRevenue || 0;
 
+  // Pending orders are always current — not date-filtered
   const pendingOrders = await Order.countDocuments({
     ...branchMatch,
     status: ORDER_STATUSES.PENDING,
   });
 
-  const bestSellerResult = await Order.aggregate([
-    { $match: {...branchMatch, status: ORDER_STATUSES.COMPLETED } },
-    { $unwind: "$items" },
-    { $group: { _id: "$items.name", totalSold: { $sum: "$items.quantity" } } },
-    { $sort: { totalSold: -1 } },
-    { $limit: 1 },
-  ]);
+  // Best seller uses the shared ranking pipeline (limit=1)
+  const ranking = await getProductRanking(filters, period, 1);
 
   return {
     totalOrders,
     totalRevenue,
     pendingOrders,
-    bestSellingProduct: bestSellerResult[0]?._id || "NA",
-    bestSellingCount: bestSellerResult[0]?.totalSold || 0,
+    bestSellingProduct: ranking[0]?.name || "NA",
+    bestSellingCount: ranking[0]?.sales || 0,
   };
 }
 
 export async function getSalesData(
-  range: DashboardRange = "week",
+  period: DashboardPeriod,
   filters: DashboardFilters = {}
 ): Promise<SalesData[]> {
   await connectDB();
 
-  const { start, end } = getDateRange(range);
+  const { start, end } = getDateRange(period);
   const branchMatch = buildBranchMatch(filters);
 
-  const dateFormat = range === "year" ? "%Y-%m" : "%m/%d";
+  // Daily buckets for week/month, monthly buckets for year
+  const dateFormat = period.range === "year" ? "%Y-%m" : "%m/%d";
 
   const result = await Order.aggregate([
     {
@@ -146,38 +239,8 @@ export async function getSalesData(
 }
 
 export async function getTopProducts(
-  range: DashboardRange = "month",
+  period: DashboardPeriod,
   filters: DashboardFilters = {}
 ): Promise<TopProduct[]> {
-  await connectDB();
-
-  const { start, end } = getDateRange(range);
-
-  const branchMatch = buildBranchMatch(filters);
-
-  const result = await Order.aggregate([
-    {
-      $match: {
-        ...branchMatch,
-        createdAt: {
-          $gte: start,
-          $lte: end,
-        },
-        status: "completed",
-      },
-    },
-    {
-      $unwind: "$items",
-    },
-    {
-      $group: {
-        _id: "$items.name",
-        sales: { $sum: "$items.quantity" },
-      },
-    },
-    { $sort: { sales: -1 } },
-    { $limit: 5 },
-    { $project: { _id: 0, name: "$_id", sales: 1 } },
-  ]);
-  return result;
+  return getProductRanking(filters, period, 5);
 }
