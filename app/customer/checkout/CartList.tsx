@@ -692,7 +692,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
             </div>
           )}
           {isDelivery && !freeDeliveryEligible && freeDeliveryReason && !isDeliveryFeeLoading && (
-            <p className="text-xs font-medium text-green-600">
+            <p className="text-xs font-medium text-red-600">
               {freeDeliveryReason}
             </p>
           )}
