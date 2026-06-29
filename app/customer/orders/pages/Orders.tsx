@@ -20,8 +20,10 @@ import {
 } from "@/hooks/api/customers/useCustomerOrders";
 import Pagination from "@/components/ui/Pagination";
 import { formatDate } from "@/helper/formatDate";
-import { useOrderState } from "../hooks/useOrderState";
+import { useOrderState, CustomerPaymentKey } from "../hooks/useOrderState";
 import CancelOrderModal from "../components/CancelOrderModal";
+import { OrderType } from "@/types/OrderTypes";
+import { formatCurrency } from "@/helper/formatCurrency";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
@@ -70,7 +72,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  [ORDER_STATUSES.PENDING_PAYMENT]: "Awaiting payment",
+  [ORDER_STATUSES.PENDING_PAYMENT]: "Pending",
   [ORDER_STATUSES.PENDING]: "Pending",
   [ORDER_STATUSES.PREPARING]: "Preparing",
   [ORDER_STATUSES.DISPATCH]: "Dispatched / To Receive",
@@ -80,6 +82,37 @@ const STATUS_LABELS: Record<string, string> = {
   [ORDER_STATUSES.FAILED]: "Failed",
   [ORDER_STATUSES.EXPIRED]: "Expired",
 };
+
+/* ─── Payment status pill ────────────────────────────────────────────── */
+const PAYMENT_STYLES: Record<CustomerPaymentKey, string> = {
+  awaiting_payment: "bg-amber-50 text-amber-800",
+  unpaid: "bg-amber-50 text-amber-800",
+  cod_pending: "bg-gray-100 text-gray-500",
+  paid: "bg-green-50 text-green-800",
+  payment_failed: "bg-red-50 text-red-700",
+  payment_expired: "bg-gray-100 text-gray-600",
+  payment_cancelled: "bg-red-50 text-red-800",
+};
+
+const PAYMENT_LABELS: Record<CustomerPaymentKey, string> = {
+  awaiting_payment: "Awaiting payment",
+  unpaid: "Unpaid",
+  cod_pending: "Pay on pickup",
+  paid: "Paid",
+  payment_failed: "Payment failed",
+  payment_expired: "Payment expired",
+  payment_cancelled: "Payment cancelled",
+};
+
+function PaymentStatusPill({ paymentKey }: { paymentKey: CustomerPaymentKey }) {
+  return (
+    <span
+      className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${PAYMENT_STYLES[paymentKey] ?? "bg-gray-100 text-gray-600"}`}
+    >
+      {PAYMENT_LABELS[paymentKey] ?? paymentKey}
+    </span>
+  );
+}
 
 function StatusPill({ status }: { status: OrderStatus }) {
   return (
@@ -129,7 +162,7 @@ function OrderCard({
   onLeaveReview,
   isLoading,
 }: {
-  order: any;
+  order: OrderType;
   onViewDetails: () => void;
   onPayOrder: () => void;
   onCancelOrder: () => void;
@@ -145,18 +178,16 @@ function OrderCard({
   if (!actions) return null;
   const {
     status,
-    isMayaPaid,
+    paymentStatusKey,
     needPayment,
     isCompleted,
     needsReview,
     isCancelled,
-    isCodPending,
     canCancel,
   } = actions;
 
   const isPickup =
-    order?.fulfillmentType &&
-    order.fulfillementType === FULFILLMENT_TYPE.PICKUP;
+    order?.fulfillmentType && order.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
 
   return (
     <div
@@ -179,21 +210,10 @@ function OrderCard({
                 {order.paymentInfo?.referenceNumber ??
                   order._id.slice(-6).toUpperCase()}
               </span>
-              {isCodPending ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-500">
-                  Awaiting pickup
-                </span>
-              ) : isMayaPaid ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-800">
-                  Paid
-                </span>
-              ) : needPayment ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800">
-                  Unpaid
-                </span>
-              ) : (
+              <div className="flex items-center gap-1.5">
                 <StatusPill status={status} />
-              )}
+                <PaymentStatusPill paymentKey={paymentStatusKey} />
+              </div>
             </div>
 
             {/* Item names – 2-line clamp */}
@@ -231,10 +251,7 @@ function OrderCard({
           {/* Footer row: total + primary CTA */}
           <div className="flex items-center justify-between mt-3">
             <p className="text-[15px] font-medium text-gray-900">
-              <span className="text-[11px] font-normal text-gray-400 mr-0.5">
-                ₱
-              </span>
-              {order.total?.totalAmount?.toFixed(2)}
+              {formatCurrency(Number(order.total?.totalAmount))}
             </p>
 
             <div className="flex gap-1.5">
