@@ -1,14 +1,13 @@
 "use client";
 
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
-import { SelectField } from "@/components/ui/FormComponents/SelectField";
 import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
+import { MONTHS } from "@/data/months";
 import { getErrorMessage } from "@/helper/getErrorMessage";
 import { apiClient } from "@/lib/apiClient";
-import type { DashboardRange } from "@/services/admin/dashboard.service";
+import type { DashboardPeriod } from "@/services/admin/dashboard.service";
 import type { SalesData, TopProduct } from "@/types/adminType";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -50,26 +49,35 @@ type SalesChartResponse = {
   topProducts: TopProduct[];
 };
 
-const getDashboardQuery = (range: DashboardRange, selectedBranchId: string) => {
-  const params = new URLSearchParams({ range });
+/**
+ * Builds the query string from a DashboardPeriod and branchId.
+ */
+function buildDashboardQuery(period: DashboardPeriod, branchId: string) {
+  const params = new URLSearchParams();
 
-  if (selectedBranchId !== "all") {
-    params.set("branchId", selectedBranchId);
+  params.set("range", period.range);
+  if (period.range === "month") {
+    params.set("month", String(period.month));
+    params.set("year", String(period.year));
+  } else if (period.range === "year") {
+    params.set("year", String(period.year));
+  }
+
+  if (branchId !== "all") {
+    params.set("branchId", branchId);
   }
 
   return params.toString();
-};
+}
 
-export default function SalesChartClient() {
+export default function SalesChartClient({ period }: { period: DashboardPeriod }) {
   const { selectedBranchId } = useAdminBranchContext();
 
-  const [selectedRange, setSelectedRange] = useState<DashboardRange>("week");
-
   const dashboardQuery = useQuery({
-    queryKey: ["admin-sales-chart", selectedBranchId, selectedRange],
+    queryKey: ["admin-sales-chart", selectedBranchId, period],
     queryFn: () =>
       apiClient.get<SalesChartResponse>(
-        `/admin/dashboard?${getDashboardQuery(selectedRange, selectedBranchId)}`,
+        `/admin/dashboard?${buildDashboardQuery(period, selectedBranchId)}`,
       ),
   });
 
@@ -79,25 +87,26 @@ export default function SalesChartClient() {
     ? getErrorMessage(dashboardQuery.error)
     : null;
 
-  const dateRangeOptions = [
-    { value: "week", label: "This Week" },
-    { value: "month", label: "This Month" },
-    { value: "year", label: "This Year" },
-  ];
+  const rangeLabel =
+    period.range === "week"
+      ? "Weekly"
+      : period.range === "month"
+        ? MONTHS[period.month - 1]?.label ?? "Monthly"
+        : String(period.year);
+
+  const periodSubtext =
+    period.range === "week"
+      ? "this week"
+      : period.range === "month"
+        ? `in ${MONTHS[period.month - 1]?.label} ${period.year}`
+        : `in ${period.year}`;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="grid grid-cols-2 mb-6">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">Sales Overview</h3>
-            <p className="text-sm text-gray-500 mt-1">Weekly revenue trend</p>
-          </div>
-          <SelectField
-            value={selectedRange}
-            options={dateRangeOptions}
-            onChange={(e) => setSelectedRange(e.target.value as DashboardRange)}
-          />
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-gray-800">Sales Overview</h3>
+          <p className="text-sm text-gray-500 mt-1">{rangeLabel} revenue trend</p>
         </div>
         {dashboardQuery.isLoading ? (
           <NotDataFound
@@ -154,7 +163,7 @@ export default function SalesChartClient() {
             Top Selling Products
           </h3>
           <p className="text-sm text-stone-500 mt-1">
-            Best performers this month
+            Best performers {periodSubtext}
           </p>
         </div>
         {dashboardQuery.isLoading ? (
