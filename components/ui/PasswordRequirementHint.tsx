@@ -1,15 +1,6 @@
 import React from "react";
 import { DynamicIcon } from "./DynamicIcon";
 
-export function isPasswordSecure(password: string): boolean {
-  return (
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[0-9]/.test(password) &&
-    /[^A-Za-z0-9]/.test(password)
-  );
-}
-
 type Requirement = { check: boolean; text: string };
 
 type Props = {
