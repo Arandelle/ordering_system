@@ -12,14 +12,13 @@ const Footer = ({
 }: {
   variant?: "marketing" | "customer";
 }) => {
-
-  const {data: settings} = useSettings();
+  const { data: settings } = useSettings();
 
   const contact = {
     phone: settings?.contact.phone || "09687080780",
     email: settings?.contact.email || "jp@foodlab.com",
-    viber: settings?.contact.viber || "09687080780"
-  }
+    viber: settings?.contact.viber || "09687080780",
+  };
 
   const currentYear = new Date().getFullYear();
   const homeUrl = useSubdomainPath("/", "");
@@ -44,11 +43,13 @@ const Footer = ({
     ],
   };
 
+  const PARENT_PAGE = "/policies";
+
   const legalLinks = [
-    { name: "Privacy Policy", href: "/privacy-policy" },
-    { name: "Terms of Service", href: "/privacy-policy" },
-    { name: "Refund Policy", href: "#" },
-    { name: "FAQ", href: "#" },
+    { name: "Privacy Policy", href: `${PARENT_PAGE}/privacy-policy` },
+    { name: "Terms of Use", href: `${PARENT_PAGE}/terms-of-use` },
+    { name: "Refund Policy", href: `${PARENT_PAGE}/refund-policy` },
+    { name: "Delivery Policy", href: `${PARENT_PAGE}/delivery-policy` },
   ];
 
   const contactUs = [
