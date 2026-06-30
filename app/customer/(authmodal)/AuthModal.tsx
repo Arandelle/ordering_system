@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import BrandLogo from "../../../components/BrandLogo";
 import { MODAL_TYPES, type ModalType } from "@/hooks/utils/useModalQuery";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { maskEmail } from "@/helper/maskEmail";
 import { mergeGuestCartOnLogin } from "@/contexts/CartContext";
+import { isPasswordSecure } from "@/lib/validations";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LoginForm } from "./LoginForm";
 import { SignupForm } from "./SignupForm";
@@ -155,49 +156,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   /**
-   * After successful email login, check if the user has a credential account
-   * and whether they've already been prompted. If they haven't, show the
-   * password change prompt. Skip for OAuth-only accounts.
+   * After successful email login, check if the entered password meets
+   * the current security policy. If not, show the change-prompt modal
+   * BEFORE closing the AuthModal — otherwise isOpen becomes false and
+   * the prompt never renders. If the password is already secure, close
+   * immediately.
    */
-  const checkAndShowPasswordPrompt = useCallback(async () => {
-    // Check localStorage - if they've already skipped, don't prompt again
-    if (localStorage.getItem(PASSWORD_PROMPT_SKIPPED_KEY)) return;
-
-    try {
-      const { data: accounts } = await authClient.listAccounts();
-      if (!accounts) return;
-
-      // Only prompt for credential-based accounts (not OAuth-only)
-      const hasCredential = accounts.some(
-        (acc: { providerId: string }) => acc.providerId === "credential",
-      );
-      if (!hasCredential) return;
-
-      setShowPasswordPrompt(true);
-    } catch {
-      // If account check fails, just proceed normally
-    }
-  }, []);
-
-  const handlePasswordChange = async (newPassword: string) => {
-    setIsChangingPassword(true);
-    try {
-      await apiClient.post("/auth/customer/change-password", { newPassword });
-      toast.success("Password updated successfully!");
-      setShowPasswordPrompt(false);
-      localStorage.setItem(PASSWORD_PROMPT_SKIPPED_KEY, "true");
-    } catch (err: unknown) {
-      throw err instanceof Error ? err : new Error("Failed to change password");
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
-
-  const handlePasswordPromptSkip = () => {
-    setShowPasswordPrompt(false);
-    localStorage.setItem(PASSWORD_PROMPT_SKIPPED_KEY, "true");
-  };
-
   const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
     let signedIn = false;
@@ -210,7 +174,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
       {
         onSuccess: () => {
           signedIn = true;
-          onClose();
           setIsLoading(false);
         },
         onError: (ctx) => {
@@ -222,8 +185,37 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
     if (signedIn) {
       await mergeGuestCartOnLogin();
-      checkAndShowPasswordPrompt();
+
+      if (
+        !localStorage.getItem(PASSWORD_PROMPT_SKIPPED_KEY) &&
+        !isPasswordSecure(values.password)
+      ) {
+        setShowPasswordPrompt(true);
+      } else {
+        onClose();
+      }
     }
+  };
+
+  const handlePasswordChange = async (newPassword: string) => {
+    setIsChangingPassword(true);
+    try {
+      await apiClient.post("/auth/customer/change-password", { newPassword });
+      toast.success("Password updated successfully!");
+      setShowPasswordPrompt(false);
+      localStorage.setItem(PASSWORD_PROMPT_SKIPPED_KEY, "true");
+      onClose();
+    } catch (err: unknown) {
+      throw err instanceof Error ? err : new Error("Failed to change password");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handlePasswordPromptSkip = () => {
+    setShowPasswordPrompt(false);
+    localStorage.setItem(PASSWORD_PROMPT_SKIPPED_KEY, "true");
+    onClose();
   };
 
   if (!isOpen) return null;
