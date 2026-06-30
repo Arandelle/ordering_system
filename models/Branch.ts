@@ -42,6 +42,15 @@ const BranchSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    maxActiveOrders: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+    isBusy: {
+      type: Boolean,
+      default: false,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Staff",

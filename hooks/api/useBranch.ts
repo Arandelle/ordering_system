@@ -10,7 +10,7 @@ import { toast } from "sonner";
  * to GeoJSON format: { type: "Point", coordinates: [lng, lat] }
  */
 const formatBranchFormDataForAPI = (formData: BranchFormData) => {
-  const { location, ...rest } = formData;
+  const { location, isBusy, maxActiveOrders, ...rest } = formData;
 
   const payload = {
     ...rest,
@@ -24,7 +24,9 @@ const formatBranchFormDataForAPI = (formData: BranchFormData) => {
           ],
         },
       }),
-  };0
+    ...(isBusy !== undefined && { isBusy }),
+    ...(maxActiveOrders !== undefined && { maxActiveOrders }),
+  };
 
   return payload;
 };
@@ -45,6 +47,8 @@ const formatBranchDataForForm = (branch: Branch): BranchFormData => {
           }
         : undefined,
     openingSoon: branch.openingSoon ?? false,
+    isBusy: branch.isBusy ?? false,
+    maxActiveOrders: branch.maxActiveOrders ?? null,
   };
 };
 

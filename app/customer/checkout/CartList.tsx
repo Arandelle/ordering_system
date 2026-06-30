@@ -39,6 +39,7 @@ import { OrderItemImage } from "../components/OrderItemImage";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import { FREE_DELIVERY_ENABLED } from "@/lib/deliveryFee";
 import { getCheckoutActionMode } from "./checkoutAction";
+import { useBranchCapacity } from "@/hooks/api/useBranchCapacity";
 
 const createCodOrder = async (payload: CreateOrderPayload) => {
   const res = await fetch("/api/customer/cod-checkout", {
@@ -238,6 +239,9 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     fulfillmentType: orderDetails.fulfillmentType,
   });
 
+  const { data: branchCapacity } = useBranchCapacity(selectedBranch?._id ?? null);
+  const isAtCapacity = branchCapacity?.canAcceptOrders === false;
+
   const { data: session } = authClient.useSession();
   const { data: promoCardStatus } = useQuery({
     queryKey: ["customer", "promo-card", "status"],
@@ -411,6 +415,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
 
   const isNextDisabled =
     !selectedBranch ||
+    isAtCapacity ||
     (isDetails && isDetailsIncomplete) ||
     (isShipping &&
       (isShippingIncomplete ||
@@ -557,6 +562,22 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   }
   return (
     <div className="space-y-3">
+      {/* High demand banner */}
+      {isAtCapacity && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <DynamicIcon name="Clock" size={16} className="text-amber-500" />
+            <p className="text-sm font-bold text-amber-700">
+              We&apos;re Experiencing High Demand
+            </p>
+          </div>
+          <p className="text-xs text-amber-600">
+            We&apos;re currently at capacity and can&apos;t accept new orders at this moment.
+            We&apos;ll be ready shortly — please check back soon!
+          </p>
+        </div>
+      )}
+
       {/* Cart Items */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {/* Header */}
@@ -770,7 +791,13 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           </p>
         )}
 
-        {isNextDisabled && selectedBranch && (
+        {isNextDisabled && selectedBranch && isAtCapacity && (
+          <p className="text-xs text-center text-amber-500">
+            Currently at capacity — please check back shortly
+          </p>
+        )}
+
+        {isNextDisabled && selectedBranch && !isAtCapacity && (
           <p className="text-xs text-center text-red-400">
             Complete all required fields to continue
           </p>

@@ -47,6 +47,11 @@ const SettingsSchema = new Schema(
       },
       isClosed: { type: Boolean, default: false },
     },
+    globalMaxActiveOrders: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
   },
   { timestamps: true }
 );

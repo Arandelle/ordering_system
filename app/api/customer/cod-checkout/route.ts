@@ -16,6 +16,7 @@ import {
 } from "@/lib/product-promotions/product-promotion.application";
 import {
   assertCanUsePromoCardDiscount,
+  assertBranchCanAcceptOrders,
   assertStoreIsOpen,
   assertValidPayload,
 } from "@/services/checkout/checkoutValidation.service";
@@ -47,16 +48,19 @@ export async function POST(request: NextRequest) {
     // 1. Guard: store open?
     await assertStoreIsOpen(session);
 
-    // 2. Auth (optional customer)
-    const customer = await requireBetterAuth(request);
-    const customerId = customer?._id ?? null;
-
-    // 3. Parse & validate body
+    // 2. Parse & validate body early so we have branchId for capacity check
     const body: CreateOrderPayload = await request.json();
     assertValidPayload(body);
     if (body.paymentMethod !== "cod") {
       throw new Error("Invalid payment method for COD checkout.");
     }
+
+    // 3. Guard: branch capacity — blocks checkout if at limit
+    await assertBranchCanAcceptOrders(body.branchId, session);
+
+    // 4. Auth (optional customer)
+    const customer = await requireBetterAuth(request);
+    const customerId = customer?._id ?? null;
 
     const promoCardDiscount =
       body.applyPromoCardDiscount === true

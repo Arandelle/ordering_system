@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import BrandLogo from "../../../components/BrandLogo";
@@ -8,17 +9,11 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { maskEmail } from "@/helper/maskEmail";
 import { mergeGuestCartOnLogin } from "@/contexts/CartContext";
-import { isPasswordSecure } from "@/lib/validations";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LoginForm } from "./LoginForm";
 import { SignupForm } from "./SignupForm";
 import { VerificationSent } from "./VerificationSent";
-import { PasswordChangePromptModal } from "../../../components/ui/PasswordChangePromptModal";
-import { apiClient } from "@/lib/apiClient";
 import type { AuthMode, LoginFormValues, SignupFormValues } from "./types";
-
-/** localStorage key to track if the user has already skipped the password prompt. */
-const PASSWORD_PROMPT_SKIPPED_KEY = "password_prompt_skipped";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -43,10 +38,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [verificationEmailHint, setVerificationEmailHint] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
-
-  // Password change prompt state
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const isLogin = mode === MODAL_TYPES.LOGIN;
 
@@ -155,13 +146,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
     );
   };
 
-  /**
-   * After successful email login, check if the entered password meets
-   * the current security policy. If not, show the change-prompt modal
-   * BEFORE closing the AuthModal — otherwise isOpen becomes false and
-   * the prompt never renders. If the password is already secure, close
-   * immediately.
-   */
   const handleLogin = async (values: LoginFormValues) => {
     setIsLoading(true);
     let signedIn = false;
@@ -174,6 +158,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       {
         onSuccess: () => {
           signedIn = true;
+          onClose();
           setIsLoading(false);
         },
         onError: (ctx) => {
@@ -185,57 +170,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
     if (signedIn) {
       await mergeGuestCartOnLogin();
-
-      if (
-        !localStorage.getItem(PASSWORD_PROMPT_SKIPPED_KEY) &&
-        !isPasswordSecure(values.password)
-      ) {
-        setShowPasswordPrompt(true);
-      } else {
-        onClose();
-      }
     }
-  };
-
-  const handlePasswordChange = async (newPassword: string) => {
-    setIsChangingPassword(true);
-    try {
-      await apiClient.post("/auth/customer/change-password", { newPassword });
-      toast.success("Password updated successfully!");
-      setShowPasswordPrompt(false);
-      localStorage.setItem(PASSWORD_PROMPT_SKIPPED_KEY, "true");
-      onClose();
-    } catch (err: unknown) {
-      throw err instanceof Error ? err : new Error("Failed to change password");
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
-
-  const handlePasswordPromptSkip = () => {
-    setShowPasswordPrompt(false);
-    localStorage.setItem(PASSWORD_PROMPT_SKIPPED_KEY, "true");
-    onClose();
   };
 
   if (!isOpen) return null;
-
-  // Password change prompt overlay
-  if (showPasswordPrompt) {
-    return (
-      <>
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-          onClick={handlePasswordPromptSkip}
-        />
-        <PasswordChangePromptModal
-          onChangePassword={handlePasswordChange}
-          onSkip={handlePasswordPromptSkip}
-          loading={isChangingPassword}
-        />
-      </>
-    );
-  }
 
   if (verificationSent) {
     return (

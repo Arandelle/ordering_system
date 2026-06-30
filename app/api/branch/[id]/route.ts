@@ -67,7 +67,7 @@ export async function PUT(
       );
     }
 
-    const { name, address, location, openingSoon } = body;
+    const { name, address, location, openingSoon, isBusy, maxActiveOrders } = body;
 
     // Validate required fields
     if (!name?.trim() || !address?.trim()) {
@@ -97,6 +97,10 @@ export async function PUT(
       name,
       address,
       openingSoon: openingSoon ?? false,
+      ...(isBusy !== undefined && { isBusy }),
+      ...(maxActiveOrders !== undefined && {
+        maxActiveOrders: maxActiveOrders === null || maxActiveOrders === "" ? null : Math.max(1, Number(maxActiveOrders)),
+      }),
     };
 
     // only update location if provided
