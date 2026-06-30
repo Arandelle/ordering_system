@@ -30,6 +30,9 @@ import { Ban, Loader2, Search } from "lucide-react";
 import { ChangeEvent, useState } from "react";
 import SectionHeader from "../../components/SectionHeader";
 import { SelectField } from "@/components/ui/FormComponents/SelectField";
+import { PasswordRequirementHint } from "@/components/ui/PasswordRequirementHint";
+import { ADMIN_EMAIL_DOMAINS, isAllowedAdminDomain } from "@/lib/isAllowedEmails";
+import { isPasswordSecure } from "@/lib/validations";
 
 const ROLES: { value: StaffRole; label: string }[] = [
   { value: STAFF_ROLES.SUPERADMIN, label: "Super Admin" },
@@ -82,6 +85,8 @@ export default function StaffManagement() {
     if (!form.email.trim()) e.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       e.email = "Invalid email.";
+    else if (!isAllowedAdminDomain(form.email))
+      e.email = `Only @${ADMIN_EMAIL_DOMAINS.join(" or @")} email addresses are accepted`;
 
     // ✅ Add phone validation to match backend
     if (form.phone?.trim() && !/^(\+63|0)[0-9]{10}$/.test(form.phone.trim())) {
@@ -90,8 +95,10 @@ export default function StaffManagement() {
 
     if (!staffToEdit && !form.password.trim())
       e.password = "Password is required.";
-    else if (!staffToEdit && form.password.length < 8)
-      e.password = "Password must be at least 8 characters.";
+    else if (!staffToEdit && !isPasswordSecure(form.password))
+      e.password = "Password must meet all the requirements below.";
+    else if (staffToEdit && form.password.trim() && !isPasswordSecure(form.password))
+      e.password = "Password must meet all the requirements below.";
 
     if (!form.role) e.role = "Role is required.";
     // Branch is only required for admin role — superadmin/cashier are cross-branch
@@ -398,7 +405,8 @@ export default function StaffManagement() {
                 type="email"
                 value={form.email}
                 onChange={handleChangeForm}
-                placeholder="e.g., juan@example.com"
+                placeholder="e.g., juan@jpfoodlab.com"
+                subLabel={`Only @${ADMIN_EMAIL_DOMAINS.join(" or @")} addresses`}
                 error={errors.email}
                 className="lowercase"
                 required
@@ -424,7 +432,7 @@ export default function StaffManagement() {
                   type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={handleChangeForm}
-                  placeholder="Min. 8 characters"
+                  placeholder="Min. 8 characters, 1 uppercase, 1 number, 1 symbol"
                   error={errors.password}
                   required={!staffToEdit}
                 />
@@ -436,6 +444,9 @@ export default function StaffManagement() {
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
+              {form.password && (
+                <PasswordRequirementHint password={form.password} />
+              )}
             </div>
 
             {/* Assignment */}
