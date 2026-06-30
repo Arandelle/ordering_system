@@ -1,10 +1,9 @@
 import { useState } from "react";
-import PasswordRequirementHint, {
-  isPasswordSecure,
-} from "./PasswordRequirementHint";
+import PasswordRequirementHint from "./PasswordRequirementHint";
 import Modal from "./Modal";
 import { DynamicIcon } from "./DynamicIcon";
 import { InputField } from "./FormComponents";
+import { isPasswordSecure } from "@/lib/validations";
 
 type PasswordChangePromptModalProps = {
   onChangePassword: (newPw: string) => Promise<void>;
