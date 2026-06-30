@@ -9,19 +9,8 @@ import { createAuthMiddleware, APIError } from "better-auth/api";
 import { VerificationEmail } from "@/app/emails/VerificationEmail";
 import { ForgotPasswordEmail } from "@/app/emails/ForgotPasswordEmail";
 import { expo } from "@better-auth/expo"; // ✅ correct
-
-/** Only gmail.com addresses are accepted for customer signup/login. */
-const CUSTOMER_EMAIL_DOMAIN = "gmail.com";
-
-/** Password must meet these complexity requirements. */
-function isPasswordSecure(password: string): boolean {
-  return (
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[0-9]/.test(password) &&
-    /[^A-Za-z0-9]/.test(password)
-  );
-}
+import { GMAIL_DOMAIN } from "@/lib/isAllowedEmails";
+import { isPasswordSecure } from "@/lib/validations";
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 const db = client.db();
@@ -134,9 +123,9 @@ export const auth = betterAuth({
         const email = body.email?.trim().toLowerCase();
         if (email) {
           const domain = email.split("@")[1];
-          if (domain !== CUSTOMER_EMAIL_DOMAIN) {
+          if (domain !== GMAIL_DOMAIN) {
             throw new APIError("BAD_REQUEST", {
-              message: `Only @${CUSTOMER_EMAIL_DOMAIN} email addresses are accepted`,
+              message: `Only @${GMAIL_DOMAIN} email addresses are accepted`,
             });
           }
         }
@@ -155,9 +144,9 @@ export const auth = betterAuth({
         const email = body.email?.trim().toLowerCase();
         if (email) {
           const domain = email.split("@")[1];
-          if (domain !== CUSTOMER_EMAIL_DOMAIN) {
+          if (domain !== GMAIL_DOMAIN) {
             throw new APIError("BAD_REQUEST", {
-              message: `Only @${CUSTOMER_EMAIL_DOMAIN} email addresses are accepted`,
+              message: `Only @${GMAIL_DOMAIN} email addresses are accepted`,
             });
           }
         }
