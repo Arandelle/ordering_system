@@ -2,12 +2,18 @@
 
 import BrandLogo from "@/components/BrandLogo";
 import { InputField } from "@/components/ui/FormComponents/InputField";
+import { PasswordChangePromptModal } from "@/components/ui/PasswordChangePromptModal";
+import { isPasswordSecure } from "@/lib/validations";
 import { apiClient } from "@/lib/apiClient";
+import { ADMIN_EMAIL_DOMAINS, isAllowedAdminDomain } from "@/lib/isAllowedEmails";
 import { STAFF_ROLES } from "@/types/staff";
 import { Loader2, Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, useState } from "react";
 import { toast } from "sonner";
+
+/** localStorage key to track if the admin has already skipped the password prompt. */
+const ADMIN_PASSWORD_PROMPT_SKIPPED_KEY = "admin_password_prompt_skipped";
 
 type CredentialErrors = {
   email?: string;
@@ -31,6 +37,11 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<CredentialErrors>({});
 
+  // Password change prompt state
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [redirectPath, setRedirectPath] = useState("/dashboard");
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
     setErrors((prev) => ({
@@ -44,6 +55,8 @@ const LoginPage = () => {
     if (!credentials.email.trim()) error.email = "Email is required";
     else if (!/\S+@\S+\.\S+$/.test(credentials.email))
       error.email = "Enter valid email";
+    else if (!isAllowedAdminDomain(credentials.email))
+      error.email = `Only @${ADMIN_EMAIL_DOMAINS.join(" or @")} email addresses are accepted`;
     if (!credentials.password.trim()) error.password = "Password is required!";
 
     return error;
@@ -66,18 +79,72 @@ const LoginPage = () => {
       );
 
       toast.success("Login successfully!");
-      route.push(
-        response.user?.role === STAFF_ROLES.CASHIER ? "/orders" : "/dashboard",
-      );
-    } catch (error: any) {
-      toast.error(error?.message || "Login failed. Please try again.");
+
+      // Determine redirect path
+      const path =
+        response.user?.role === STAFF_ROLES.CASHIER ? "/orders" : "/dashboard";
+
+      // Check if the entered password meets the new security policy
+      // If not, show the password change prompt before redirecting
+      if (!isPasswordSecure(credentials.password)) {
+        // Check if they've already skipped the prompt on this device
+        if (localStorage.getItem(ADMIN_PASSWORD_PROMPT_SKIPPED_KEY)) {
+          route.push(path);
+        } else {
+          setRedirectPath(path);
+          setShowPasswordPrompt(true);
+        }
+      } else {
+        route.push(path);
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Login failed. Please try again.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePasswordChange = async (newPassword: string) => {
+    setIsChangingPassword(true);
+    try {
+      await apiClient.post("/auth/admin/change-password", { newPassword });
+      toast.success("Password updated successfully!");
+      setShowPasswordPrompt(false);
+      localStorage.setItem(ADMIN_PASSWORD_PROMPT_SKIPPED_KEY, "true");
+      route.push(redirectPath);
+    } catch (err: unknown) {
+      throw err instanceof Error ? err : new Error("Failed to change password");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handlePasswordPromptSkip = () => {
+    setShowPasswordPrompt(false);
+    localStorage.setItem(ADMIN_PASSWORD_PROMPT_SKIPPED_KEY, "true");
+    route.push(redirectPath);
+  };
+
   return (
     <>
+      {/* Password change prompt overlay */}
+      {showPasswordPrompt && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            onClick={handlePasswordPromptSkip}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <PasswordChangePromptModal
+              onChangePassword={handlePasswordChange}
+              onSkip={handlePasswordPromptSkip}
+              loading={isChangingPassword}
+            />
+          </div>
+        </>
+      )}
+
       <main className="grid grid-cols-1 lg:grid-cols-2 min-h-screen w-full">
         {/* Left panel */}
         <div className="hidden lg:flex flex-col justify-between p-12 relative overflow-hidden bg-brand-color-500/90">
@@ -121,25 +188,11 @@ const LoginPage = () => {
           </div>
 
           <div className="w-full max-w-xl">
-            {/* <div className="mb-8 text-center lg:text-start">
-              <p className="mb-4 text-dark-green-500">
-                Test Account: <br />
-                Email : harrisonmain@gmail.com
-                <br />
-                Password: 12345678
-              </p>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                Welcome back
-              </h2>
-              <p className="text-sm text-gray-400">
-                Sign in to your admin account
-              </p>
-            </div> */}
-
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <InputField
                 label="Email address"
-                placeholder="you@example.com"
+                placeholder="you@jpfoodlab.com"
+                subLabel={`Only @${ADMIN_EMAIL_DOMAINS.join(" or @")} addresses`}
                 type="email"
                 name="email"
                 value={credentials.email}
