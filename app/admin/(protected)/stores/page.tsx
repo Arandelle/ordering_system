@@ -32,6 +32,8 @@ export const emptyForm: BranchFormData = {
     longitude: "",
   },
   openingSoon: false,
+  isBusy: false,
+  maxActiveOrders: null,
 };
 
 export default function BranchManagement() {
@@ -115,6 +117,11 @@ export default function BranchManagement() {
             label: "Opening Soon",
             value: branches.filter((b) => b.openingSoon).length,
             icon: "Clock",
+          },
+          {
+            label: "Busy",
+            value: branches.filter((b) => b.isBusy).length,
+            icon: "Truck",
           },
         ].map((s) => {
           const Icon = getLucideIcon(s.icon);
@@ -207,6 +214,11 @@ export default function BranchManagement() {
                       {branch.openingSoon && (
                         <span className="text-xs font-semibold py-1.5 px-3 rounded-lg bg-amber-500 text-white">
                           Opening Soon
+                        </span>
+                      )}
+                      {branch.isBusy && (
+                        <span className="text-xs font-semibold py-1.5 px-3 rounded-lg bg-orange-600 text-white">
+                          Busy
                         </span>
                       )}
                     </div>
