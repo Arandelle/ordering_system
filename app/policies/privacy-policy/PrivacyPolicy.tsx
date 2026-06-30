@@ -6,7 +6,7 @@ import React from "react";
 
 const PrivacyPolicy = () => {
   return (
-    <PolicyPageLayout activeTab="/privacy-policy">
+    <PolicyPageLayout>
       <PrivacyPolicyContent />
     </PolicyPageLayout>
   );

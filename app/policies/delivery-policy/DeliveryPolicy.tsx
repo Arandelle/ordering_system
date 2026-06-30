@@ -6,7 +6,7 @@ import React from "react";
 
 const DeliveryPolicy = () => {
   return (
-    <PolicyPageLayout activeTab="/delivery-policy">
+    <PolicyPageLayout>
       <DeliveryPolicyContent />
     </PolicyPageLayout>
   );

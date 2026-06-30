@@ -6,7 +6,7 @@ import React from "react";
 
 const RefundPolicy = () => {
   return (
-    <PolicyPageLayout activeTab="/refund-policy">
+    <PolicyPageLayout>
       <RefundPolicyContent />
     </PolicyPageLayout>
   );

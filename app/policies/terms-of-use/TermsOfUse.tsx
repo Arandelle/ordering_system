@@ -6,7 +6,7 @@ import React from "react";
 
 const TermsOfUse = () => {
   return (
-    <PolicyPageLayout activeTab="/terms-of-use">
+    <PolicyPageLayout>
       <TermsOfUseContent />
     </PolicyPageLayout>
   );

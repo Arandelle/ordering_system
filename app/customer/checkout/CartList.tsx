@@ -815,7 +815,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         By placing an order, you agree to our{" "}
         <span className="font-semibold text-slate-600">Terms of Service</span>,{" "}
         <Link
-          href="/privacy-policy"
+          href="/policies/privacy-policy"
           className="font-semibold text-brand-color-600 hover:underline"
         >
           Privacy Policy
