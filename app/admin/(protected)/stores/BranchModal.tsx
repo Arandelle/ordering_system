@@ -122,6 +122,47 @@ const BranchModal = ({
         />
       </div>
 
+      {/* Order Capacity Controls */}
+      <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+        <div className="flex items-center gap-2 mb-3">
+          <DynamicIcon name="Truck" size={18} className="text-amber-600" />
+          <p className="text-sm font-semibold text-amber-700">
+            Order Capacity
+          </p>
+        </div>
+
+        <ToggleButton
+          label="Pause Orders (Busy)"
+          subLabel="Manually block new orders — use when overloaded or dealing with operational issues"
+          checked={form.isBusy}
+          onCheckedChange={(val) =>
+            setForm((prev) => ({ ...prev, isBusy: val }))
+          }
+        />
+
+        <div className="mt-3">
+          <label className="block text-xs font-medium text-slate-600 mb-1.5">
+            Max Active Orders
+          </label>
+          <InputField
+            type="number"
+            name="maxActiveOrders"
+            value={form.maxActiveOrders === null ? "" : String(form.maxActiveOrders)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm((prev) => ({
+                ...prev,
+                maxActiveOrders: val === "" ? null : Math.max(1, parseInt(val) || 1),
+              }));
+            }}
+            placeholder="Leave empty for no limit (uses global setting)"
+          />
+          <p className="text-[11px] text-slate-500 mt-1">
+            Maximum concurrent orders this branch can handle. Leave empty to use the global setting.
+          </p>
+        </div>
+      </div>
+
       {/* Basic Info */}
       <div className="flex flex-col gap-2.5 mb-4">
         <InputField
