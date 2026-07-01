@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Star, Check, Minus, Plus, ShoppingBag } from "lucide-react";
 import { multiplyMoney } from "@/lib/money";
+import { trackViewContent, trackAddToCart } from "@/lib/metaPixel";
 import { BranchProduct } from "@/hooks/api/useBranchProductInfinite";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
@@ -96,6 +97,16 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const { addToCart } = useCart();
 
   const [activeTab, setActiveTab] = useState<"info" | "desc">("info");
+
+  // Fire ViewContent when the product detail modal opens
+  React.useEffect(() => {
+    trackViewContent({
+      content_name: item.name,
+      content_category: item.category?.name ?? "Menu Item",
+      currency: "PHP",
+      value: item.price ?? 0,
+    });
+  }, [item.name, item.category?.name, item.price]);
   const [mainQty, setMainQty] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
@@ -138,6 +149,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         name: item.category.name,
       },
       quantity: mainQty,
+    });
+
+    // Track AddToCart pixel event with the effective unit price
+    trackAddToCart({
+      content_name: item.name,
+      content_category: item.category?.name ?? "Menu Item",
+      currency: "PHP",
+      value: displayUnitPrice,
     });
 
     setIsAdded(true);
