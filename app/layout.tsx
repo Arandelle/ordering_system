@@ -5,7 +5,7 @@ import { QueryProvider } from "@/provider/QueryProvider";
 import { larken, syne } from "./font";
 import { Suspense } from "react";
 import LoadingPage from "@/components/ui/LoadingPage";
-
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Home | Harrison House of Inasal & BBQ",
@@ -75,36 +75,33 @@ export default function RootLayout({
       <body className={`${syne.className} antialiased`}>
         {/* Meta Pixel — raw inline script so fbq is available immediately
             before any React hydration / client-component effects fire. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}
-              (window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
+        <Script id="facebook-pixel" strategy="beforeInteractive">
+          {`
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}
+    (window, document, 'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
 
-              fbq('init', '1584332956581235');
-              fbq('track', 'PageView');
-            `,
-          }}
-        />
+    fbq('init', '2998314207040726');
+    fbq('track', 'PageView');
+  `}
+        </Script>
         <QueryProvider>
-          <Toaster richColors position="top-right" closeButton expand/>
+          <Toaster richColors position="top-right" closeButton expand />
           <Suspense fallback={<LoadingPage />}>{children}</Suspense>
           {modal}
         </QueryProvider>
-
         <noscript>
           <img
             height="1"
             width="1"
             style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=1584332956581235&ev=PageView&noscript=1"
+            src="https://www.facebook.com/tr?id=2998314207040726&ev=PageView&noscript=1"
             alt=""
           />
         </noscript>
