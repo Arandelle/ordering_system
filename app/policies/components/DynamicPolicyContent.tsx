@@ -1,4 +1,4 @@
-import { formatDate } from "@/helper/formatDate";
+import { formatDate, formatDateOnly } from "@/helper/formatDate";
 import type { PolicyData } from "@/hooks/api/usePolicies";
 import { marked } from "marked";
 
@@ -16,7 +16,7 @@ marked.setOptions({
 
 const DynamicPolicyContent = ({ policy }: { policy: PolicyData }) => {
   const lastUpdated = policy.updatedAt
-    ? formatDate(policy.updatedAt)
+    ? formatDateOnly(policy.updatedAt)
     : "June 30, 2026";
 
   return (
