@@ -11,12 +11,13 @@ import { getStoreStatus } from "@/lib/storeStatus";
 import { useSettings } from "@/hooks/api/useSettings";
 import { OrderItemImage } from "../../components/OrderItemImage";
 import { formatCurrency } from "@/helper/formatCurrency";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface ProductCardProps {
   item: BranchProduct;
   hasBranch?: boolean;
   selectedBranch?: string;
-  openBranchSelector:() => void
+  openBranchSelector: () => void;
 }
 // ── Helpers (pure, no need to live inside component) ──────────────────────────
 const getStockLabel = (status: string, quantity: number | null): string => {
@@ -77,16 +78,46 @@ const StoreClosedOverlay = ({ message }: { message: string }) => {
   );
 };
 
+// Simple slugify helper — put this in a shared util file, e.g. @/helper/slugify.ts
+const slugify = (text: string) =>
+  text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ProductCard: React.FC<ProductCardProps> = ({
   item,
   hasBranch,
   selectedBranch,
-  openBranchSelector
+  openBranchSelector,
 }) => {
   const { data: operatingSched } = useSettings();
-  const [showDetail, setShowDetail] = useState(false);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // The id is the source of truth for matching; the slug is just for a readable URL
+  const productSlug = `${item._id}-${slugify(item.name)}`;
+
+  // modal is open when the URL's product param matches this item's id
+  const showDetail = searchParams.get("product") === productSlug;
+
+  const openModal = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("product", productSlug);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const closeModal = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("product");
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const storeStatus = operatingSched
     ? getStoreStatus(operatingSched.operatingHours)
@@ -116,9 +147,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleOpenBranchSelector = () => {
     openBranchSelector();
-    toast.warning("Select branch first")
+    toast.warning("Select branch first");
     return null;
-  }
+  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -229,9 +260,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <button
               type="button"
               onClick={() => {
-                !selectedBranch
-                  ? handleOpenBranchSelector()
-                  : setShowDetail(true);
+                !selectedBranch ? handleOpenBranchSelector() : openModal();
               }}
               disabled={isOutOfStock || !storeStatus?.isOpen}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-color-500 text-white transition-colors hover:bg-brand-color-600 disabled:cursor-not-allowed disabled:bg-gray-300"
@@ -247,7 +276,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <ProductDetailModal
           item={item}
           selectedBranch={selectedBranch}
-          onClose={() => setShowDetail(false)}
+          onClose={closeModal}
         />
       )}
     </div>
