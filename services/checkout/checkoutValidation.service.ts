@@ -3,6 +3,7 @@ import { getStoreStatus } from "@/lib/storeStatus";
 import { Settings } from "@/models/Setting";
 import { Order } from "@/models/Orders";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 import { CreateOrderPayload } from "@/types/OrderTypes";
 import { ClientSession } from "mongoose";
 import { getPaidPromoCardBenefit } from "../promoCardBenefits";
@@ -56,12 +57,19 @@ export async function assertBranchCanAcceptOrders(
     ORDER_STATUSES.DISPATCH,
   ];
 
-  // When shared capacity is enabled, count active orders across ALL branches
-  // so branches that share riders/resources are affected by each other's load.
-  // Otherwise, count only this branch's orders independently.
+  // Only count orders with confirmed payment so unconfirmed Maya
+  // checkouts don't artificially block capacity.
+  // Maya orders require both PAYMENT_SUCCESS and a real paymentId.
   const activeOrderCount = await Order.countDocuments({
     ...(isSharedCapacity ? {} : { branchId }),
     status: { $in: activeStatuses },
+    $or: [
+      { "paymentInfo.paymentMethod": "cod" },
+      {
+        "paymentInfo.paymentStatus": PAYMENT_STATUSES.PAYMENT_SUCCESS,
+        "paymentInfo.paymentId": { $exists: true, $ne: null },
+      },
+    ],
   }).session(session);
 
   if (activeOrderCount >= maxActiveOrders) {

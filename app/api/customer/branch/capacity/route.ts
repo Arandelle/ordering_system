@@ -3,6 +3,7 @@ import { Order } from "@/models/Orders";
 import { Branch } from "@/models/Branch";
 import { Settings } from "@/models/Setting";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
 
@@ -69,12 +70,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ canAcceptOrders: true });
     }
 
-    // When shared capacity is enabled, count active orders across ALL branches
-    // so branches that share riders/resources are affected by each other's load.
-    // Otherwise, count only this branch's orders independently.
+    // Only count orders with confirmed payment so unconfirmed Maya
+    // checkouts (user never paid) don't artificially block capacity.
+    // COD orders are always counted — payment happens on delivery.
+    // Maya orders require both PAYMENT_SUCCESS and a real paymentId
+    // (set only by the webhook after actual payment confirmation).
     const activeOrderCount = await Order.countDocuments({
       ...(isSharedCapacity ? {} : { branchId }),
       status: { $in: ACTIVE_STATUSES },
+      $or: [
+        { "paymentInfo.paymentMethod": "cod" },
+        {
+          "paymentInfo.paymentStatus": PAYMENT_STATUSES.PAYMENT_SUCCESS,
+          "paymentInfo.paymentId": { $exists: true, $ne: null },
+        },
+      ],
     });
 
     const canAccept = activeOrderCount < maxActiveOrders;
