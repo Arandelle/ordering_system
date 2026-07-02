@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Guard: branch capacity — blocks checkout if at limit
-    await assertBranchCanAcceptOrders(body.branchId, session);
+    await assertBranchCanAcceptOrders(body.branchId, body.fulfillmentType, session);
 
     // 4. Auth (optional customer)
     const customer = await requireBetterAuth(request);

@@ -240,7 +240,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     fulfillmentType: orderDetails.fulfillmentType,
   });
 
-  const { data: branchCapacity } = useBranchCapacity(selectedBranch?._id ?? null);
+  const { data: branchCapacity } = useBranchCapacity(selectedBranch?._id ?? null, orderDetails.fulfillmentType ?? null);
   const isAtCapacity = branchCapacity?.canAcceptOrders === false;
 
   const { data: session } = authClient.useSession();
