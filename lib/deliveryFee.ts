@@ -20,7 +20,7 @@ export type EffectiveDeliveryFee = DeliveryFeeEstimate & {
   freeDeliveryReason?: string;   // why free delivery does not apply (if not eligible)
 };
 
-const BASE_DELIVERY_FARE = 49;
+const BASE_DELIVERY_FARE = 65;
 const FIRST_TIER_KM = 5;
 const FIRST_TIER_RATE = 10;
 const EXCESS_TIER_RATE = 8;
