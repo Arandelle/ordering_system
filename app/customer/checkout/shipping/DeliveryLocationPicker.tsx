@@ -313,10 +313,16 @@ const DeliveryLocationPicker = ({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        selectCoordinates({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
+        const { latitude, longitude, accuracy } = position.coords;
+        if (accuracy > 5000) {
+          // 5km threshold  - tune as needed
+          setLocationError(
+            "We couldn't get a precise location from your device (signal too weak or GPS unavailbale). Please searach your address or tap your location on the map instead.",
+          );
+          setIsLocating(false);
+          return;
+        }
+        selectCoordinates({ lat: latitude, lng: longitude });
         setIsLocating(false);
       },
       () => {
@@ -328,7 +334,7 @@ const DeliveryLocationPicker = ({
       {
         enableHighAccuracy: true,
         timeout: 10_000,
-        maximumAge: 60_000,
+        maximumAge: 0,
       },
     );
   }, [selectCoordinates]);
