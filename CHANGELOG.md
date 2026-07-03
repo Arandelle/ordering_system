@@ -1,5 +1,47 @@
 # Changelog
 
+
+## 1.8.0 - Branch Capacity Management, Meta Pixel Analytics & Legal Policies - 2026-07-03
+**Release Focus:** Smarter order fulfillment control (branch capacity/busy status with pickup fallback), full Meta Pixel/Conversions tracking across the customer journey, and a centralized legal policies system.
+
+### Added
+- Branch capacity management: admins can manually toggle a branch as "busy" and set a maximum active order count per branch, or globally for all branches
+- Global capacity sharing setting (`isGlobalCapacityShared`) — when enabled, active orders are counted across all branches; when disabled, counted per selected branch only
+- Checkout guard that blocks order placement if the selected branch is busy or at capacity
+- Automatic fallback to pickup as an alternative fulfillment method when delivery/branch cannot accept orders
+- Pickup orders bypass capacity checks entirely, but still respect an admin-set "busy" flag on the branch
+- Fulfillment type now passed as a param through the order flow to determine which capacity rules apply
+- Polling mechanism to recheck branch capacity while a customer has an active order in progress
+- Admin dashboard card showing count of currently busy branches
+- Active order counts now only include legitimately paid orders
+- Product details modal now opens based on URL params
+- Full Meta Pixel (Facebook Pixel) integration: `PageView`, `Search`, `Contact`, `Lead`, `ViewContent`, `AddToCart`, `InitiateCheckout`, `Purchase`, and `CompleteRegistration` events
+- Helper utility for tracking user behavior via Meta Pixel, including product ID tracking on relevant events
+- Legal Policies system: Privacy Policy, Terms of Use, Refund Policy, and Delivery Policy pages, backed by a new `Policy` model
+- Public API endpoint for customer-facing policy pages, and a shared policy page component (fetches by slug) reused across all policy routes
+- Static fallback data for policies, with a check to confirm all policies are seeded on the backend
+- Admin section to create/update legal policies, with access restricted to admin and superadmin roles
+- Overlay component for modal/loading states
+
+### Improved
+- Centralized policy contact details and dynamic content shared across all policy pages
+- Policy "last updated" field now stores date only (no time component)
+- Positioning of policy page navigation adjusted to account for the global system header
+- Customer-facing banners redesigned on the customer landing page
+- Active tab styling now correctly determined by checking the current pathname
+- Auth flow now reuses an existing `Account` model record if present instead of always creating a new one
+- Password hint UI redesigned for clarity
+
+### Fixed
+- Email preview no longer incorrectly renderable as a standalone page
+
+### Changed
+- Reverted forced password-change prompt for non-OAuth accounts with passwords not meeting new password rules
+
+### Chores
+- Installed `marked` for rendering policy content as HTML from Markdown
+
+
 ## [1.7.1] - 2026-06-30
 
 ### Added
