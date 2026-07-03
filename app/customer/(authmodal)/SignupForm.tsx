@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import Link from "next/link";
 import { InputField } from "../../../components/ui/FormComponents/InputField";
 import {
   PasswordRequirementHint,
@@ -31,7 +32,10 @@ export function SignupForm({
     email: "",
     password: "",
     confirmPassword: "",
+    termsAcceptedAt: "",
   });
+  const [agreedToPolicies, setAgreedToPolicies] = useState(false);
+  const [agreedAt, setAgreedAt] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Track whether password meets the full policy — controls button state
@@ -69,6 +73,10 @@ export function SignupForm({
       nextErrors.confirmPassword = "Passwords do not match";
     }
 
+    if (!agreedToPolicies) {
+      nextErrors.agreedToPolicies = "You must accept the policies to create an account";
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -82,12 +90,12 @@ export function SignupForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-    onSubmit(formData);
+    onSubmit({ ...formData, termsAcceptedAt: agreedAt! });
   };
 
-  // Button is disabled when loading, social loading, or password policy isn't met
+  // Button is disabled when loading, social loading, password policy isn't met, or policies not accepted
   const isSubmitDisabled =
-    isLoading || isDisabled || !passwordMeetsPolicy || !passwordsMatch;
+    isLoading || isDisabled || !passwordMeetsPolicy || !passwordsMatch || !agreedToPolicies;
 
   return (
     <div className="space-y-4">
@@ -186,6 +194,43 @@ export function SignupForm({
             </button>
           }
         />
+
+        <div className="space-y-1">
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreedToPolicies}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAgreedToPolicies(checked);
+                setAgreedAt(checked ? new Date().toISOString() : null);
+                if (errors.agreedToPolicies) setErrors((prev) => ({ ...prev, agreedToPolicies: "" }));
+              }}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-color-500 focus:ring-brand-color-500 accent-brand-color-500"
+            />
+            <span className="text-sm text-gray-500">
+              I agree to the{" "}
+              <Link
+                href="/policies/terms-of-use"
+                target="_blank"
+                className="font-semibold text-brand-color-500 hover:underline"
+              >
+                Terms of Use
+              </Link>
+              {" "}and{" "}
+              <Link
+                href="/policies/privacy-policy"
+                target="_blank"
+                className="font-semibold text-brand-color-500 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
+          {errors.agreedToPolicies && (
+            <p className="text-xs text-red-500">{errors.agreedToPolicies}</p>
+          )}
+        </div>
 
         <button
           type="submit"

@@ -123,6 +123,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         name: fullName,
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
+        termsAcceptedAt: values.termsAcceptedAt,
         callbackURL: `/verified?email=${encodeURIComponent(normalizedEmail)}`,
       },
       {
