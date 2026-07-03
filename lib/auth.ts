@@ -35,6 +35,10 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
+      termsAcceptedAt: {
+        type: "string",
+        required: false,
+      },
     },
   },
 
@@ -117,9 +121,9 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      // Validate email domain + password complexity on customer signup
+      // Validate email domain + password complexity + terms acceptance on customer signup
       if (ctx.path === "/sign-up/email") {
-        const body = ctx.body as { email?: string; password?: string };
+        const body = ctx.body as { email?: string; password?: string; termsAcceptedAt?: string };
         const email = body.email?.trim().toLowerCase();
         if (email) {
           const domain = email.split("@")[1];
@@ -134,6 +138,11 @@ export const auth = betterAuth({
           throw new APIError("BAD_REQUEST", {
             message:
               "Password must be at least 8 characters with at least one uppercase letter, one number, and one symbol",
+          });
+        }
+        if (!body.termsAcceptedAt) {
+          throw new APIError("BAD_REQUEST", {
+            message: "You must accept the Terms of Use and Privacy Policy to create an account",
           });
         }
       }
