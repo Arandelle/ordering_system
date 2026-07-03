@@ -16,6 +16,11 @@ export type OrderQueryOptions = {
   sort?: Record<string, 1 | -1>;
 };
 
+/** Count orders matching a filter — used for tab count badges */
+export async function countOrders(filter: Record<string, any>): Promise<number> {
+  return Order.countDocuments(filter);
+}
+
 export async function queryOrders(options: OrderQueryOptions) {
   const { filter, page = 1, limit = 20, skip = 0 } = options;
 
