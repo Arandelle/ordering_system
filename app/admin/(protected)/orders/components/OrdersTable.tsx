@@ -98,26 +98,43 @@ export default function OrdersTable({
             {orders.length > 0 ? (
               orders.map((order) => {
                 const isMaya = order.paymentInfo.paymentMethod === "maya";
-                // Derived from API's paymentConfirmed field — computed server-side from paymentStatus + paymentId
                 const isMayaPaid = order.paymentInfo.paymentConfirmed === true;
+                const isNewPaidOrder =
+                  isMaya && isMayaPaid && order.status === ORDER_STATUSES.PENDING;
 
                 return (
                   <TableRow
                     key={order._id}
-                    className="hover:bg-stone-50 transition-colors"
+                    className={`relative transition-colors ${
+                      isNewPaidOrder ? "bg-brand-color-50 hover:bg-brand-color-100" : "hover:bg-stone-50"
+                    }`}
                   >
                     <TableCell className="px-6 py-4">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium text-gray-900">
-                          {order.paymentInfo.firstName ?? "—"}{" "}
-                          {order.paymentInfo.lastName ?? "—"}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {order.paymentInfo.customerEmail ?? "—"}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {order.paymentInfo.customerPhone ?? "—"}
-                        </span>
+                      <div className="flex items-center gap-2">
+                        {/* Ribbon badge — sits in normal flow, doesn't overlap text */}
+                        {isNewPaidOrder && (
+                          <span
+                            className="shrink-0 inline-flex items-center bg-red-500 text-white
+                              text-[10px] font-bold uppercase tracking-wide
+                              py-1 pl-2 pr-3
+                              [clip-path:polygon(0_0,80%_0,100%_50%,80%_100%,0_100%)]
+                              animate-pulse"
+                          >
+                            New
+                          </span>
+                        )}
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="text-sm font-medium text-gray-900 truncate">
+                            {order.paymentInfo.firstName ?? "—"}{" "}
+                            {order.paymentInfo.lastName ?? "—"}
+                          </span>
+                          <span className="text-xs text-gray-500 truncate">
+                            {order.paymentInfo.customerEmail ?? "—"}
+                          </span>
+                          <span className="text-xs text-gray-500 truncate">
+                            {order.paymentInfo.customerPhone ?? "—"}
+                          </span>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4">
@@ -150,17 +167,14 @@ export default function OrdersTable({
                       <div className="flex items-end justify-end gap-1.5">
                         <div className="flex items-end flex-col gap-1.5 flex-wrap">
                           <StatusBadge status={order.status} />
-                          {/* Payment status badge beside order status — shows Paid / Awaiting payment / Unpaid */}
                           {isMaya && isMayaPaid && PaymentStatusCapsule("paid")}
                           {order.status === ORDER_STATUSES.PENDING_PAYMENT &&
                             isMaya &&
                             !isMayaPaid &&
                             PaymentStatusCapsule("awaiting")}
-                          {/* For COD orders, payment is confirmed at handover — no badge needed unless paymentId exists */}
                           {!isMaya &&
                             order.paymentInfo?.paymentId &&
                             PaymentStatusCapsule("paid")}
-                          {/* Warning: order reached "pending" status but payment not confirmed — possible data inconsistency */}
                           {order.status === ORDER_STATUSES.PENDING &&
                             isMaya &&
                             !isMayaPaid &&
