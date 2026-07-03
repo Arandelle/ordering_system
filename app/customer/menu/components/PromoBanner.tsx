@@ -24,6 +24,10 @@ const PromoBanner = ({
   // Sample promo cards
   const promoCards: PromoCard[] = [
     {
+      id: 0,
+      image: "promos/COVER PHOTO V1.png",
+    },
+    {
       id: 1,
       image: "promos/BANNER V1.png",
     },
@@ -92,14 +96,14 @@ const PromoBanner = ({
         >
           {promoCards.map((card) => (
             <div key={card.id} className="min-w-full relative">
-              <div className="relative h-64 sm:h-72 md:h-80 lg:h-96">
-                <div className="w-full h-full object-cover">
+              <div className="relative h-64 sm:h-72 md:h-80 lg:h-108">
+                <div className="w-full h-full">
                   <OrderItemImage
                     image={card.image}
                     name={`Promo Banner ${card.id}`}
+                    className="aspect-video"
                   />
-
-                  <div className="absolute bg-linear-to-t from-black/30 to-transparent inset-0"/>
+                  <div className="absolute bg-linear-to-t from-black/30 to-transparent inset-0" />
                 </div>
               </div>
             </div>
@@ -112,14 +116,22 @@ const PromoBanner = ({
           className="absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
           aria-label="Previous slide"
         >
-          <DynamicIcon name="ChevronLeft" size={20} className="text-gray-800 sm:w-6 sm:h-6" />
+          <DynamicIcon
+            name="ChevronLeft"
+            size={20}
+            className="text-gray-800 sm:w-6 sm:h-6"
+          />
         </button>
         <button
           onClick={goToNext}
           className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
           aria-label="Next slide"
         >
-          <DynamicIcon name="ChevronRight" size={20} className="text-gray-800 sm:w-6 sm:h-6" />
+          <DynamicIcon
+            name="ChevronRight"
+            size={20}
+            className="text-gray-800 sm:w-6 sm:h-6"
+          />
         </button>
 
         {/* Dots Indicator */}
@@ -186,16 +198,24 @@ const PromoBanner = ({
             className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white hover:bg-gray-100 p-3 rounded-full shadow-lg transition-all z-10"
             aria-label="Previous slide"
           >
-            <DynamicIcon name="ChevronLeft" size={24} className="text-gray-800" />
+            <DynamicIcon
+              name="ChevronLeft"
+              size={24}
+              className="text-gray-800"
+            />
           </button>
           <button
             onClick={goToNext}
             className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white hover:bg-gray-100 p-3 rounded-full shadow-lg transition-all z-10"
             aria-label="Next slide"
           >
-            <DynamicIcon name="ChevronRight" size={24} className="text-gray-800" />
+            <DynamicIcon
+              name="ChevronRight"
+              size={24}
+              className="text-gray-800"
+            />
           </button>
-          
+
           <div className="flex justify-center gap-2 mt-6">
             {Array.from({ length: totalSlides }).map((_, index) => (
               <button
