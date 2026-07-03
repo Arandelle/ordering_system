@@ -161,6 +161,29 @@ export const auth = betterAuth({
         }
       }
     }),
+    after: createAuthMiddleware(async (ctx) => {
+      // Auto-save termsAcceptedAt on first login (email sign-in & social/OAuth callback).
+      // Only sets if the user doesn't already have a timestamp — preserves original acceptance date.
+      const isEmailSignIn = ctx.path === "/sign-in/email";
+      const isOAuthCallback = ctx.path.startsWith("/callback/");
+      const isSocialIdToken = ctx.path === "/sign-in/social" && (ctx.context.returned as Record<string, unknown>)?.user;
+
+      if (isEmailSignIn || isOAuthCallback || isSocialIdToken) {
+        const userId =
+          ctx.context.newSession?.user?.id ||
+          ((ctx.context.returned as Record<string, unknown>)?.user as Record<string, unknown>)?.id as string | undefined;
+
+        if (userId) {
+          // Check if termsAcceptedAt is already set — don't overwrite
+          const existingUser = await ctx.context.internalAdapter.findUserById(userId) as (Record<string, unknown> | null);
+          if (existingUser && !existingUser.termsAcceptedAt) {
+            await ctx.context.internalAdapter.updateUser(userId, {
+              termsAcceptedAt: new Date().toISOString(),
+            });
+          }
+        }
+      }
+    }),
   },
 
   trustedOrigins: [
