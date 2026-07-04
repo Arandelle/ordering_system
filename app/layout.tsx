@@ -6,6 +6,7 @@ import { larken, syne } from "./font";
 import { Suspense } from "react";
 import LoadingPage from "@/components/ui/LoadingPage";
 import Script from "next/script";
+import TooltipProvider from "@/provider/TooltipProvider";
 
 export const metadata: Metadata = {
   title: "Home | Harrison House of Inasal & BBQ",
@@ -92,6 +93,7 @@ export default function RootLayout({
   `}
         </Script>
         <QueryProvider>
+          <TooltipProvider />
           <Toaster richColors position="top-right" closeButton expand />
           <Suspense fallback={<LoadingPage />}>{children}</Suspense>
           {modal}
