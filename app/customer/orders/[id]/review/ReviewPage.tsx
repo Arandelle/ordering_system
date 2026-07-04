@@ -39,7 +39,8 @@ const StarRow = ({
             star <= display ? "group-hover:scale-110" : ""
           }`}
         >
-          <DynamicIcon name="Star"
+          <DynamicIcon
+            name="Star"
             className={`${dim} transition-all duration-150`}
             fill={star <= display ? "#ef4501" : "#e5e7eb"}
             stroke={star <= display ? "#c13500" : "#d1d5db"}
@@ -75,6 +76,7 @@ const ReviewPage = () => {
   // ── Order-level state ──────────────────────────────────────────────────────
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   // ── Item-level state: map of productId → { rating, comment } ──────────────
   const [itemRatings, setItemRatings] = useState<
@@ -150,6 +152,7 @@ const ReviewPage = () => {
       await submitReview({
         rating,
         comment: comment.trim() || undefined,
+        isAnonymous,
         itemReviews,
       });
       toast.success("Thank you for your review!");
@@ -216,12 +219,29 @@ const ReviewPage = () => {
               </div>
               <TextareaField
                 label="Overall Comment (Optional)"
+                subLabel={`Tell us about your experience`}
                 name="comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="What did you love? What could be better?"
                 rows={3}
               />
+
+              {/* Anonymous toggle */}
+              <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isAnonymous}
+                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-brand-color-500 focus:ring-brand-color-500 accent-brand-color-500 cursor-pointer"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Post anonymously
+                </span>
+                <span className="text-xs text-gray-400">
+                  — Your name will be hidden from other customers
+                </span>
+              </label>
             </div>
 
             {/* ── Per-Item Ratings ── */}
@@ -253,7 +273,11 @@ const ReviewPage = () => {
                           </div>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <DynamicIcon name="Package" size={20} className="text-gray-400" />
+                            <DynamicIcon
+                              name="Package"
+                              size={20}
+                              className="text-gray-400"
+                            />
                           </div>
                         )}
                       </div>
@@ -276,14 +300,15 @@ const ReviewPage = () => {
 
                     {/* Item comment — only show if item has been rated */}
                     {(itemRatings[item.productId]?.rating ?? 0) > 0 && (
-                      <textarea
+                      <TextareaField
+                        label="Leave a comment"
+                        subLabel={`Did ${item.name} satisfy your cravings?`}
+                        placeholder={`Share your thoughts about ${item.name} (optional)`}
                         value={itemRatings[item.productId]?.comment ?? ""}
                         onChange={(e) =>
                           setItemComment(item.productId, e.target.value)
                         }
-                        placeholder={`Anything about ${item.name}? (optional)`}
                         rows={2}
-                        className="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-brand-color-500/30 focus:border-brand-color-500 transition"
                       />
                     )}
                   </div>
