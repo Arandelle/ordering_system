@@ -43,22 +43,41 @@ const StarRatingDisplay = ({
 }: {
   rating: number;
   size?: number;
-}) => (
-  <span className="inline-flex items-center gap-0.5">
-    {[1, 2, 3, 4, 5].map((s) => (
-      <DynamicIcon
-        name="Star"
-        key={s}
-        size={size}
-        className={
-          rating >= s
-            ? "fill-yellow-400 text-yellow-400"
-            : rating >= s - 0.5
-              ? "fill-yellow-400/50 text-yellow-400"
-              : "fill-gray-200 text-gray-300"
-        }
-      />
-    ))}
-  </span>
-);
+}) => {
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => {
+        // how "full" this particular star should be, 0-100%
+        const fillPct = Math.max(0, Math.min(1, rating - (s - 1))) * 100;
+
+        return (
+          <span
+            key={s}
+            className="relative inline-block"
+            style={{ width: size, height: size }}
+          >
+            {/* empty/background star */}
+            <DynamicIcon
+              name="Star"
+              size={size}
+              className="absolute inset-0 fill-gray-200 text-gray-300"
+            />
+            {/* filled star, clipped to fillPct width */}
+            <span
+              className="absolute inset-0 overflow-hidden"
+              style={{ width: `${fillPct}%` }}
+            >
+              <DynamicIcon
+                name="Star"
+                size={size}
+                className="fill-yellow-400 text-yellow-400"
+              />
+            </span>
+          </span>
+        );
+      })}
+    </span>
+  );
+};
+
 export default StarRatingDisplay;
