@@ -156,11 +156,18 @@ export interface HelpfulVoteResponse {
 
 // ── Edit review payload ─────────────────────────────────────────────────────
 
-export interface EditReviewPayload {
-  rating?: number;
+/** For editing — productId is required to identify which item to merge into; all other fields optional */
+export interface ItemReviewEditInput {
+  productId: string; // required: identifies which itemReview to update
+  rating?: number | null;
   comment?: string | null;
+}
+
+export interface EditReviewPayload {
+  rating?: number; // order-level rating (optional)
+  comment?: string | null; // order-level comment (optional)
   isAnonymous?: boolean;
-  itemReviews?: ItemReviewInput[];
+  itemReviews?: ItemReviewEditInput[]; // item-level edits, merged by productId
 }
 
 export interface EditReviewResponse {
