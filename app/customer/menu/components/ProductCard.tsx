@@ -249,9 +249,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <span className="hidden">PHP {item.price?.toFixed(2) ?? "--"}</span>
             <button
               type="button"
-              onClick={() => {
-                !selectedBranch ? handleOpenBranchSelector() : openModal();
-              }}
+              onClick={() => openModal()}
               disabled={isOutOfStock}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-color-500 text-white transition-colors hover:bg-brand-color-600 disabled:cursor-not-allowed disabled:bg-gray-300"
               aria-label={`Add ${item.name} to cart`}

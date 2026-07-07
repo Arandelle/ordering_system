@@ -141,11 +141,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   const handleAddToCart = () => {
-    if (!selectedBranch) {
-      toast.warning("Please select a branch first");
-      return;
-    }
-
     addToCart({
       _id: item._id,
       name: item.name,
@@ -204,10 +199,11 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex">
-                       <StarRatingDisplay rating={reviews.averageRating}/>
+                        <StarRatingDisplay rating={reviews.averageRating} />
                       </div>
                       <span className="text-xs text-gray-400">
-                        {Number(reviews.averageRating).toFixed(1)} · {Number(reviews.totalReviews)} reviews
+                        {Number(reviews.averageRating).toFixed(1)} ·{" "}
+                        {Number(reviews.totalReviews)} reviews
                       </span>
                     </div>
                   </div>
@@ -282,11 +278,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="px-5 py-4 border-t border-gray-100 flex items-center gap-3 bg-white">
               <QuantityStepper value={mainQty} min={1} onChange={setMainQty} />
               <button
-                onClick={() =>
-                  !selectedBranch
-                    ? toast.warning("Please select a branch first")
-                    : handleAddToCart()
-                }
+                onClick={() => handleAddToCart()}
                 disabled={isAdded}
                 className={`flex-1 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   isAdded

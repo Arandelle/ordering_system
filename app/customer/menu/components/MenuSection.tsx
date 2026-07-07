@@ -178,6 +178,8 @@ const MenuSection = () => {
       hasBranchNextPage,
       isFetchingNextBranchPage,
       fetchNextBranchPage,
+      allProducts,
+      branchProducts,
     ],
   );
 
@@ -186,6 +188,7 @@ const MenuSection = () => {
     if (!el) return;
     const observer = new IntersectionObserver(handleObserver, {
       threshold: 0.1,
+      rootMargin: "200px 0px",
     });
     observer.observe(el);
     return () => observer.disconnect();
