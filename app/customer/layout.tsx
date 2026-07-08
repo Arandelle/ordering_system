@@ -8,6 +8,7 @@ import { BranchProvider } from "@/contexts/BranchContext";
 import HeaderSkeleton from "@/app/customer/components/HeaderSkeleton";
 import IndexHeader from "./components/header/IndexHeader";
 import ActivePromotionsFloatingNotice from "./components/ActivePromotionsFloatingNotice";
+import StoreStatusBanner from "./components/StoreStatusBanner";
 
 export const metadata: Metadata = {
   title: "Customer | House of Inasal & BBQ",
@@ -22,6 +23,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
             <Suspense fallback={<HeaderSkeleton />}>
               <IndexHeader />
             </Suspense>
+            <StoreStatusBanner />
             <CartDrawer />
             <ActivePromotionsFloatingNotice />
             {children}
