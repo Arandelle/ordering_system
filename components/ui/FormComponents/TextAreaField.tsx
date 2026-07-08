@@ -37,7 +37,7 @@ export const TextareaField = forwardRef<
         ref={ref}
         {...props}
         className={clsx(
-          "w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-1 focus:ring-brand-color-500 focus:border-brand-color-500/80 resize-none",
+          "w-full px-4 py-3 border border-gray-300 rounded-lg outline-none transition focus:ring-1 focus:ring-brand-color-500 focus:border-brand-color-500/80 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 resize-none",
           error && "border-red-500 focus:ring-red-500",
           className,
         )}
