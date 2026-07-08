@@ -15,7 +15,7 @@ export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
   if (!settings) throw new Error("Store settings not found.");
 
   const storeStatus = getStoreStatus(settings.operatingHours);
-  if (!storeStatus.isOpen) throw new Error(storeStatus.message);
+  if (!storeStatus.isOpen) throw new Error(`${storeStatus.title}: ${storeStatus.body}`);
 }
 
 /**

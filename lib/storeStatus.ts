@@ -3,12 +3,19 @@ import { Days, SettingsType } from "@/hooks/api/useSettings";
 
 const DAYS: Days[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+export type StoreClosedStatus = {
+  isOpen: false;
+  /** Short headline — e.g. "Closed Today" or "Currently Closed" */
+  title: string;
+  /** Explanation of why the store is closed */
+  body: string;
+  /** Actionable suggestion for the customer */
+  suggestion: string;
+};
+
 export type StoreStatus =
   | { isOpen: true }
-  | {
-      isOpen: false;
-      message: string;
-    };
+  | StoreClosedStatus;
 
 function toMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
@@ -28,7 +35,9 @@ export function getStoreStatus(
   if (!operatingHours) {
     return {
       isOpen: false,
-      message: "Store hours not available right now.",
+      title: "Hours Not Available",
+      body: "Store hours are not available right now.",
+      suggestion: "Check back soon or contact us for updates.",
     };
   }
 
@@ -37,14 +46,18 @@ export function getStoreStatus(
   if (isClosed) {
     return {
       isOpen: false,
-      message: "We are currently not accepting orders at the moment.",
+      title: "Not Accepting Orders",
+      body: "We are currently not accepting orders at the moment.",
+      suggestion: "You can still browse the menu and build your cart — we'll be ready for you when we reopen!",
     };
   }
 
   if (!openTime || !closeTime) {
     return {
       isOpen: false,
-      message: "Store hours are not properly configured.",
+      title: "Hours Not Configured",
+      body: "Store hours are not properly configured.",
+      suggestion: "Check back soon or contact us for our operating schedule.",
     };
   }
 
@@ -61,7 +74,12 @@ export function getStoreStatus(
 
   const crossesMidnight = closeMinutes <= openMinutes;
 
-  const hoursMessage = `We are currently closed. Ordering hours are from ${formatTime(openTime)} - ${formatTime(closeTime)}.`;
+  const closedHoursStatus: StoreClosedStatus = {
+    isOpen: false,
+    title: "Currently Closed",
+    body: `Our ordering hours are ${formatTime(openTime)} – ${formatTime(closeTime)}.`,
+    suggestion: "You can still add items to your cart — checkout opens as soon as we're back!",
+  };
 
   if (!crossesMidnight) {
     const isOpenToday =
@@ -73,15 +91,13 @@ export function getStoreStatus(
       if (!days.includes(todayLabel)) {
         return {
           isOpen: false,
-          message:
-            "Closed Today. We are closed today and not accepting orders at the moment.",
+          title: "Closed Today",
+          body: "We are closed today and not accepting orders.",
+          suggestion: "You can still browse the menu and build your cart — we'll be ready for you on our next open day!",
         };
       }
 
-      return {
-        isOpen: false,
-        message: hoursMessage,
-      };
+      return closedHoursStatus;
     }
 
     return { isOpen: true };
@@ -105,26 +121,11 @@ export function getStoreStatus(
   ) {
     return {
       isOpen: false,
-      message:
-        "Closed Today. We are closed today and not accepting orders at the moment.",
+      title: "Closed Today",
+      body: "We are closed today and not accepting orders.",
+      suggestion: "You can still browse the menu and build your cart — we'll be ready for you on our next open day!",
     };
   }
 
-  console.log({
-    days,
-    todayLabel,
-    openTime,
-    closeTime,
-    currentMinutes,
-    openMinutes,
-    closeMinutes,
-    crossesMidnight,
-  });
-
-  console.log({ todayLabel, days, includes: days.includes(todayLabel) });
-
-  return {
-    isOpen: false,
-    message: hoursMessage,
-  };
+  return closedHoursStatus;
 }

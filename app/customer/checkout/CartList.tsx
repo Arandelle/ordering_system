@@ -2,6 +2,8 @@ import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
 import { useCreateOrder } from "@/hooks/api/customers/useCustomerOrders";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { useSettings } from "@/hooks/api/useSettings";
+import { getStoreStatus } from "@/lib/storeStatus";
 import { Branch } from "@/types/branch";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -74,8 +76,13 @@ const CartRow = ({
 }) => {
   const unitDiscount = item.activeProductDiscount?.discountAmount ?? 0;
   const lineSubtotal = multiplyMoney(item.price, item.quantity);
-  const lineDiscount = minMoney(multiplyMoney(unitDiscount, item.quantity), lineSubtotal);
-  const discountedLineTotal = clampMoneyMin(subtractMoney(lineSubtotal, lineDiscount));
+  const lineDiscount = minMoney(
+    multiplyMoney(unitDiscount, item.quantity),
+    lineSubtotal,
+  );
+  const discountedLineTotal = clampMoneyMin(
+    subtractMoney(lineSubtotal, lineDiscount),
+  );
   const hasProductDiscount = lineDiscount > 0;
 
   return (
@@ -240,8 +247,26 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     fulfillmentType: orderDetails.fulfillmentType,
   });
 
-  const { data: branchCapacity } = useBranchCapacity(selectedBranch?._id ?? null, orderDetails.fulfillmentType ?? null);
+  const { data: branchCapacity } = useBranchCapacity(
+    selectedBranch?._id ?? null,
+    orderDetails.fulfillmentType ?? null,
+  );
   const isAtCapacity = branchCapacity?.canAcceptOrders === false;
+
+  // Check if the store is currently open — disables checkout when closed
+  const { data: settings } = useSettings();
+  const storeStatus = settings?.operatingHours
+    ? getStoreStatus(settings.operatingHours)
+    : null;
+  const isStoreClosed = storeStatus ? !storeStatus.isOpen : false;
+  const storeClosedInfo =
+    storeStatus && !storeStatus.isOpen
+      ? {
+          title: storeStatus.title,
+          body: storeStatus.body,
+          suggestion: storeStatus.suggestion,
+        }
+      : null;
 
   const { data: session } = authClient.useSession();
   const { data: promoCardStatus } = useQuery({
@@ -363,7 +388,9 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     productDiscountedSubtotal,
   );
   const orderDiscountAmount = orderDiscountPromotion?.discountAmount ?? 0;
-  const discountAdjustedTotal = clampMoneyMin(subtractMoney(totalPrice, orderDiscountAmount));
+  const discountAdjustedTotal = clampMoneyMin(
+    subtractMoney(totalPrice, orderDiscountAmount),
+  );
   const [voucherAmount, setVoucherAmount] = useState("");
   const parsedVoucherAmount = Math.min(
     Math.max(0, Number(voucherAmount || 0)),
@@ -383,10 +410,16 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     : 0;
   const effectiveDeliveryFee = freeDeliveryEligible ? 0 : deliveryFeeAmount;
   const displayTotalPrice = clampMoneyMin(
-    addMoney(subtractMoney(discountAdjustedTotal, parsedVoucherAmount), effectiveDeliveryFee),
+    addMoney(
+      subtractMoney(discountAdjustedTotal, parsedVoucherAmount),
+      effectiveDeliveryFee,
+    ),
   );
   const displayVatableSales = multiplyMoney(displayTotalPrice, 1 / 1.12);
-  const displayVatAmount = subtractMoney(displayTotalPrice, displayVatableSales);
+  const displayVatAmount = subtractMoney(
+    displayTotalPrice,
+    displayVatableSales,
+  );
 
   useEffect(() => {
     if (!canUsePromoCardDiscount && applyPromoCardDiscount) {
@@ -415,6 +448,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     !ShippingSchema.safeParse(orderDetails.shippingAddress).success;
 
   const isNextDisabled =
+    isStoreClosed ||
     !selectedBranch ||
     isAtCapacity ||
     (isDetails && isDetailsIncomplete) ||
@@ -573,8 +607,8 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
             </p>
           </div>
           <p className="text-xs text-amber-600">
-            We&apos;re currently at capacity and can&apos;t accept new orders at this moment.
-            We&apos;ll be ready shortly — please check back soon!
+            We&apos;re currently at capacity and can&apos;t accept new orders at
+            this moment. We&apos;ll be ready shortly — please check back soon!
           </p>
         </div>
       )}
@@ -691,7 +725,13 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           )}
           {isDelivery && (deliveryFeeAmount > 0 || isDeliveryFeeLoading) && (
             <div className="flex justify-between gap-3 text-sm">
-              <span className={freeDeliveryEligible ? "text-green-600 font-semibold" : "text-green-500"}>
+              <span
+                className={
+                  freeDeliveryEligible
+                    ? "text-green-600 font-semibold"
+                    : "text-green-500"
+                }
+              >
                 Delivery fee
                 {deliveryFeeEstimate?.data.distanceKm != null && (
                   <span className="ml-1 text-xs">
@@ -701,7 +741,9 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
               </span>
               {freeDeliveryEligible ? (
                 <span className="flex items-center gap-1.5">
-                  <span className="line-through text-slate-400">₱{deliveryFeeAmount.toFixed(2)}</span>
+                  <span className="line-through text-slate-400">
+                    ₱{deliveryFeeAmount.toFixed(2)}
+                  </span>
                   <span className="text-green-600 font-bold">FREE</span>
                 </span>
               ) : (
@@ -713,11 +755,14 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
               )}
             </div>
           )}
-          {isDelivery && !freeDeliveryEligible && freeDeliveryReason && !isDeliveryFeeLoading && (
-            <p className="text-xs font-medium text-red-600">
-              {freeDeliveryReason}
-            </p>
-          )}
+          {isDelivery &&
+            !freeDeliveryEligible &&
+            freeDeliveryReason &&
+            !isDeliveryFeeLoading && (
+              <p className="text-xs font-medium text-red-600">
+                {freeDeliveryReason}
+              </p>
+            )}
           {isDelivery && isDeliveryFeeError && (
             <p className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-500">
               Delivery fee could not be calculated. Please adjust your pin or
@@ -786,7 +831,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
         </button>
 
         {/* show which fields are still missing */}
-        {isNextDisabled && !selectedBranch && (
+        {isNextDisabled && !selectedBranch && !isStoreClosed && (
           <p className="text-xs text-center text-red-400">
             Select a branch to continue
           </p>
@@ -798,11 +843,29 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           </p>
         )}
 
-        {isNextDisabled && selectedBranch && !isAtCapacity && (
-          <p className="text-xs text-center text-red-400">
-            Complete all required fields to continue
-          </p>
+        {isStoreClosed && storeClosedInfo && (
+          <div className="bg-red-50 border border-red-200/60 rounded-2xl px-4 py-3 text-center">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <DynamicIcon name="Store" size={14} className="text-red-500" />
+              <p className="text-xs font-bold text-red-700">
+                {storeClosedInfo.title}
+              </p>
+            </div>
+            <p className="text-xs text-red-600">{storeClosedInfo.body}</p>
+            <p className="text-xs text-red-500 mt-1">
+              {storeClosedInfo.suggestion}
+            </p>
+          </div>
         )}
+
+        {isNextDisabled &&
+          selectedBranch &&
+          !isAtCapacity &&
+          !isStoreClosed && (
+            <p className="text-xs text-center text-red-400">
+              Complete all required fields to continue
+            </p>
+          )}
       </>
 
       <Link
@@ -811,19 +874,21 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       >
         Need to add more items?
       </Link>
-
-      <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
-        By placing an order, you agree to our{" "}
-        <span className="font-semibold text-slate-600">Terms of Service</span>,{" "}
-        <Link
-          href="/policies/privacy-policy"
-          className="font-semibold text-brand-color-600 hover:underline"
-        >
-          Privacy Policy
-        </Link>
-        , and delivery service guidelines, including use of your provided
-        contact details and delivery location to process the order.
-      </p>
+      {!isStoreClosed && (
+        <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-500">
+          By placing an order, you agree to our{" "}
+          <span className="font-semibold text-slate-600">Terms of Service</span>
+          ,{" "}
+          <Link
+            href="/policies/privacy-policy"
+            className="font-semibold text-brand-color-600 hover:underline"
+          >
+            Privacy Policy
+          </Link>
+          , and delivery service guidelines, including use of your provided
+          contact details and delivery location to process the order.
+        </p>
+      )}
 
       {showPaymentOptions && (
         <Modal
@@ -856,10 +921,11 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
             </div>
             {/* Confirm */}
             <button
-              disabled={!selectedPayment}
+              disabled={isStoreClosed || !selectedPayment}
               onClick={() => {
                 trackAddPaymentInfo({
-                  content_category: selectedPayment === "maya" ? "Maya" : "Cash on Delivery",
+                  content_category:
+                    selectedPayment === "maya" ? "Maya" : "Cash on Delivery",
                   currency: "PHP",
                   value: totalPrice,
                 });
@@ -871,6 +937,11 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
             >
               Confirm Payment
             </button>
+            {isStoreClosed && storeClosedInfo && (
+              <p className="text-xs text-center text-red-500 mt-2">
+                {storeClosedInfo.body} — {storeClosedInfo.suggestion}
+              </p>
+            )}
           </div>
         </Modal>
       )}
