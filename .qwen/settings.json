@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Agent(Explore)",
+      "Bash(git rm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(dir *)",
+      "Bash(type *)",
+      "Agent(general-purpose)",
+      "Bash(mkdir *)",
+      "Bash(npm install *)",
+      "Bash(rmdir *)",
+      "Bash(del *)",
+      "Bash(select-object *)",
+      "Bash(npm run *)"
+    ]
+  },
+  "$version": 4
+}

@@ -1,0 +1,1 @@
+- [Order capacity guard](orderCapacityGuard.md) — Auto + manual order capacity limiting with isBusy/maxActiveOrders per branch, globalMaxActiveOrders per settings, and capacity check endpoint + frontend overlay + admin controls

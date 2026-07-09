@@ -41,7 +41,3 @@ yarn-error.log*
 next-env.d.ts
 
 .env.local
-
-# Qwen Code personal settings
-.qwen/settings.json
-.qwen
