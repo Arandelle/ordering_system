@@ -174,3 +174,17 @@ export interface EditReviewResponse {
   message: string;
   reviewId: string;
 }
+
+// ── Order review response (GET /api/customer/orders/[id]/review) ─────────────
+
+export interface OrderReviewResponse {
+  _id: string;
+  orderId: string;
+  customerId: string | null;
+  rating: number;
+  comment: string | null;
+  isAnonymous: boolean;
+  itemReviews: ItemReviewListItem[];
+  createdAt: string;
+  updatedAt: string;
+}

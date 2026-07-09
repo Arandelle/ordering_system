@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { Types } from "mongoose";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import { Order } from "@/models/Orders";
@@ -7,6 +8,82 @@ import { Review } from "@/models/Review";
 import { ReviewBody } from "@/types/ReviewTypes";
 import { getAPIError } from "@/lib/getApiError";
 import { ORDER_STATUSES } from "@/types/orderConstants";
+
+// Lean shapes returned by Mongoose .lean() — ObjectIds stay as ObjectId objects
+
+interface LeanItemReview {
+  productId: Types.ObjectId | null;
+  name: string;
+  image: string | null;
+  rating: number | null;
+  comment: string | null;
+}
+
+interface LeanOrderItem {
+  productId: Types.ObjectId;
+  name: string;
+  price: number;
+  description?: string;
+  image?: string;
+  category?: Types.ObjectId;
+  quantity: number;
+}
+
+// ─── GET /api/customer/orders/[id]/review ────────────────────────────────────
+// Fetches the review for a given order, if one exists.
+// Only the order owner (authenticated customer or guest) can access it.
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id: orderId } = await params;
+
+    await connectDB();
+
+    const session = await auth.api.getSession({ headers: await headers() });
+    const sessionUserId = session?.session?.userId ?? null;
+
+    const order = await Order.findById(orderId).lean();
+    if (!order) {
+      return getAPIError("Order not found", 404);
+    }
+
+    // Authorization: authenticated user must own the order; guest orders are accessible by anyone with the orderId
+    if (sessionUserId && order.customerId) {
+      if (order.customerId.toString() !== sessionUserId) {
+        return getAPIError("Forbidden", 403);
+      }
+    }
+
+    const review = await Review.findOne({ orderId }).lean();
+    if (!review) {
+      return getAPIError("No review found for this order", 404);
+    }
+
+    return NextResponse.json({
+      _id: review._id.toString(),
+      orderId: review.orderId.toString(),
+      customerId: review.customerId?.toString() ?? null,
+      rating: review.rating,
+      comment: review.comment,
+      isAnonymous: review.isAnonymous,
+      itemReviews: (review.itemReviews as LeanItemReview[]).map((ir) => ({
+        productId: ir.productId?.toString() ?? null,
+        name: ir.name,
+        image: ir.image ?? null,
+        rating: ir.rating ?? null,
+        comment: ir.comment ?? null,
+      })),
+      createdAt: review.createdAt,
+      updatedAt: review.updatedAt,
+    });
+  } catch (error: unknown) {
+    console.error("[GET /review]", error);
+    return getAPIError(error, 500, {fallbackMessage: "Failed to fetch review on this order"});
+  }
+}
 
 // ─── POST /api/customer/orders/[id]/review ────────────────────────────────────
 
@@ -65,8 +142,8 @@ export async function POST(
       }
 
       // Ensure the productId actually belongs to this order
-      const belongsToOrder = order.items.some(
-        (i: any) => i.productId.toString() === item.productId,
+      const belongsToOrder = (order.items as LeanOrderItem[]).some(
+        (i) => i.productId.toString() === item.productId,
       );
       if (!belongsToOrder) {
         return getAPIError(
@@ -103,13 +180,18 @@ export async function POST(
       { message: "Review submitted successfully", reviewId: review._id },
       { status: 201 },
     );
-  } catch (error: any) {
-    // Duplicate key — review already exists at DB level
-    if (error?.code === 11000) {
+  } catch (error: unknown) {
+    // MongoDB duplicate key — review already exists at DB level (code 11000)
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code: number }).code === 11000
+    ) {
       return getAPIError("This order has already been reviewed", 409);
     }
 
     console.error("[POST /review]", error);
-    return getAPIError(error, 500);
+    return getAPIError(error, 500, {fallbackMessage: "Failed to create review"});
   }
 }
