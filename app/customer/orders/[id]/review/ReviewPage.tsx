@@ -1,59 +1,30 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useCustomerOrder } from "@/hooks/api/customers/useCustomerOrders";
 import { useSubmitReview } from "@/hooks/api/customers/useSubmitReview";
-import { ItemReviewInput } from "@/types/ReviewTypes";
+import {
+  useGetOrderReview,
+  orderReviewKeys,
+} from "@/hooks/api/customers/useGetOrderReview";
+import { useEditReview } from "@/hooks/api/customers/useProductReviews";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  ItemReviewInput,
+  ItemReviewEditInput,
+  EditReviewPayload,
+  OrderReviewResponse,
+} from "@/types/ReviewTypes";
 import { TextareaField } from "@/components/ui/FormComponents";
 import { OrderItemImage } from "@/app/customer/components/OrderItemImage";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { OrderType } from "@/types/OrderTypes";
+import { ORDER_STATUSES } from "@/types/orderConstants";
+import LoadingPage from "@/components/ui/LoadingPage";
 
 // ─── Star Row ─────────────────────────────────────────────────────────────────
-
-const StarRow = ({
-  value,
-  onChange,
-  size = "md",
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  size?: "sm" | "md" | "lg";
-}) => {
-  const [hovered, setHovered] = useState(0);
-  const display = hovered || value;
-  const dim =
-    size === "lg" ? "w-12 h-12" : size === "sm" ? "w-7 h-7" : "w-9 h-9";
-
-  return (
-    <div className="flex items-center gap-1 group">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => onChange(star)}
-          onMouseEnter={() => setHovered(star)}
-          onMouseLeave={() => setHovered(0)}
-          className={`transition-transform focus:outline-none active:scale-150 cursor-pointer ${
-            star <= display ? "group-hover:scale-110" : ""
-          }`}
-        >
-          <DynamicIcon
-            name="Star"
-            className={`${dim} transition-all duration-150`}
-            fill={star <= display ? "#ef4501" : "#e5e7eb"}
-            stroke={star <= display ? "#c13500" : "#d1d5db"}
-            strokeWidth={1.5}
-          />
-        </button>
-      ))}
-    </div>
-  );
-};
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 const LABELS = [
   "No rating",
   "Poor 😓",
@@ -62,53 +33,126 @@ const LABELS = [
   "Very Good 😋",
   "Excellent 😍",
 ];
+
+const StarRow = ({
+  value,
+  onChange,
+  size = "md",
+  labels,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  size?: "sm" | "md" | "lg";
+  labels?: string[];
+}) => {
+  const [hovered, setHovered] = useState(0);
+  const display = hovered || value;
+  const dim =
+    size === "lg" ? "w-12 h-12" : size === "sm" ? "w-7 h-7" : "w-9 h-9";
+  const labelSize =
+    size === "lg"
+      ? "text-lg font-semibold"
+      : size === "sm"
+        ? "text-sm font-medium"
+        : "text-base font-semibold";
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="flex items-center-safe gap-1 group">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            onMouseEnter={() => setHovered(star)}
+            onMouseLeave={() => setHovered(0)}
+            className={`transition-transform focus:outline-none active:scale-150 cursor-pointer ${
+              star <= display ? "group-hover:scale-110" : ""
+            }`}
+          >
+            <DynamicIcon
+              name="Star"
+              className={`${dim} transition-all duration-150`}
+              fill={star <= display ? "#ef4501" : "#e5e7eb"}
+              stroke={star <= display ? "#c13500" : "#d1d5db"}
+              strokeWidth={1.5}
+            />
+          </button>
+        ))}
+      </div>
+      {labels && display > 0 && (
+        <span
+          className={`${labelSize} text-brand-color-500 ml-2 transition-opacity duration-150 ${
+            hovered ? "opacity-100" : "opacity-80"
+          }`}
+        >
+          {labels[display]}
+        </span>
+      )}
+    </div>
+  );
+};
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const ITEMS_TO_SHOW = 3;
 
-const ReviewPage = () => {
-  const params = useParams();
-  const router = useRouter();
-  const orderId = String(params.id ?? "");
+// ─── Review Form Inner ────────────────────────────────────────────────────────
+// Uses lazy useState initialization from existingReview so we avoid
+// calling setState inside effects (which triggers cascading renders).
 
-  const { data: order, isPending: isLoading } = useCustomerOrder(orderId);
-  const { mutateAsync: submitReview, isPending: isSubmitting } =
-    useSubmitReview(orderId);
+function ReviewFormInner({
+  order,
+  existingReview,
+  isEditMode,
+  submitReview,
+  editReview,
+  isProcessing,
+  queryClient,
+  router,
+}: {
+  order: OrderType;
+  existingReview: OrderReviewResponse | undefined;
+  isEditMode: boolean;
+  submitReview: (payload: any) => Promise<any>;
+  editReview: (args: any) => Promise<any>;
+  isProcessing: boolean;
+  queryClient: any;
+  router: ReturnType<typeof useRouter>;
+}) {
+  // Lazy state initialization from existing review data
+  const [rating, setRating] = useState(existingReview?.rating ?? 0);
+  const [comment, setComment] = useState(existingReview?.comment ?? "");
+  const [isAnonymous, setIsAnonymous] = useState(
+    existingReview?.isAnonymous ?? false,
+  );
 
-  // ── Order-level state ──────────────────────────────────────────────────────
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(false);
-
-  // ── Item-level state: map of productId → { rating, comment } ──────────────
   const [itemRatings, setItemRatings] = useState<
     Record<string, { rating: number | null; comment: string }>
-  >({});
-
-  const [showAllItems, setShowAllItems] = useState(false);
-
-  // ── Guard: redirect if not reviewable ─────────────────────────────────────
-  useEffect(() => {
-    if (!order) return;
-
-    if (order.isReviewed) {
-      toast.info("You've already reviewed this order!");
-      router.push("/orders");
-      return;
-    }
-
-    if (order.status !== "completed") {
-      toast.warning("You can only review completed orders");
-      router.push("/orders");
-      return;
-    }
-
-    // Pre-populate item map so we always have an entry per item
+  >(() => {
     const initial: Record<string, { rating: number | null; comment: string }> =
       {};
+    // Pre-fill from existing review item entries
+    if (existingReview) {
+      existingReview.itemReviews.forEach((ir) => {
+        if (ir.productId) {
+          initial[ir.productId] = {
+            rating: ir.rating ?? null,
+            comment: ir.comment ?? "",
+          };
+        }
+      });
+    }
+    // Ensure every order item has an entry (some items may not have been individually rated)
     order.items.forEach((item) => {
-      initial[item.productId] = { rating: null, comment: "" };
+      if (!initial[item.productId]) {
+        initial[item.productId] = { rating: null, comment: "" };
+      }
     });
-    setItemRatings(initial);
-  }, [order]);
+    return initial;
+  });
+
+  const [showAllItems, setShowAllItems] = useState(false);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -126,6 +170,17 @@ const ReviewPage = () => {
     }));
   };
 
+  // mergedItemRatings ensures all order items have entries even if not previously rated
+  const mergedItemRatings = useMemo(() => {
+    const merged = { ...itemRatings };
+    order.items.forEach((item) => {
+      if (!merged[item.productId]) {
+        merged[item.productId] = { rating: null, comment: "" };
+      }
+    });
+    return merged;
+  }, [itemRatings, order]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -134,53 +189,83 @@ const ReviewPage = () => {
       return;
     }
 
-    // Build itemReviews — only include items that have at least a rating or comment
-    const itemReviews: ItemReviewInput[] = order!.items
-      .map((item) => {
-        const ir = itemRatings[item.productId];
-        return {
-          productId: item.productId,
-          name: item.name,
-          image: item.image ?? null,
-          rating: ir?.rating ?? null,
-          comment: ir?.comment?.trim() || null,
-        };
-      })
-      .filter((ir) => ir.rating !== null || ir.comment);
+    if (isEditMode && existingReview) {
+      // ── Edit: PATCH existing review ────────────────────────────────────
+      const itemReviews: ItemReviewEditInput[] = order.items
+        .map((item) => {
+          const ir = mergedItemRatings[item.productId];
+          return {
+            productId: item.productId,
+            rating: ir?.rating ?? null,
+            comment: ir?.comment?.trim() || null,
+          };
+        })
+        .filter((ir) => ir.rating !== null || ir.comment !== null);
 
-    try {
-      await submitReview({
+      const payload: EditReviewPayload = {
         rating,
-        comment: comment.trim() || undefined,
+        comment: comment.trim() || null,
         isAnonymous,
         itemReviews,
-      });
-      toast.success("Thank you for your review!");
-      router.push("/orders");
-    } catch (error: any) {
-      const msg =
-        error?.message ?? "Failed to submit review. Please try again.";
-      toast.error(msg);
+      };
+
+      try {
+        await editReview({
+          reviewId: existingReview._id,
+          payload,
+        });
+        // Invalidate review + order queries so UI reflects the update
+        queryClient.invalidateQueries({
+          queryKey: orderReviewKeys.detail(order._id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["orders", "customer", order._id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["orders", "customer"],
+        });
+        toast.success("Review updated successfully!");
+        router.push("/orders?status=completed");
+      } catch (error: unknown) {
+        const msg =
+          error instanceof Error
+            ? error.message
+            : "Failed to update review. Please try again.";
+        toast.error(msg);
+      }
+    } else {
+      // ── New: POST review ───────────────────────────────────────────────
+      const itemReviews: ItemReviewInput[] = order.items
+        .map((item) => {
+          const ir = mergedItemRatings[item.productId];
+          return {
+            productId: item.productId,
+            name: item.name,
+            image: item.image ?? null,
+            rating: ir?.rating ?? null,
+            comment: ir?.comment?.trim() || null,
+          };
+        })
+        .filter((ir) => ir.rating !== null || ir.comment);
+
+      try {
+        await submitReview({
+          rating,
+          comment: comment.trim() || undefined,
+          isAnonymous,
+          itemReviews,
+        });
+        toast.success("Thank you for your review!");
+        router.push("/orders?status=completed");
+      } catch (error: unknown) {
+        const msg =
+          error instanceof Error
+            ? error.message
+            : "Failed to submit review. Please try again.";
+        toast.error(msg);
+      }
     }
   };
-
-  // ── Render states ──────────────────────────────────────────────────────────
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">Loading order...</div>
-      </div>
-    );
-  }
-
-  if (!order) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Order not found.</div>
-      </div>
-    );
-  }
 
   const displayedItems = showAllItems
     ? order.items
@@ -193,7 +278,7 @@ const ReviewPage = () => {
           {/* ── Header ── */}
           <div className="mb-8">
             <h1 className="text-brand-color-500 text-2xl md:text-3xl font-bold mb-2">
-              Rate Your Experience
+              {isEditMode ? "Edit Your Review" : "Rate Your Experience"}
             </h1>
             <p className="text-slate-600 font-semibold">
               Order #{order.paymentInfo.referenceNumber}
@@ -201,6 +286,15 @@ const ReviewPage = () => {
             <p className="text-sm text-gray-500 mt-1">
               Completed on {new Date(order.createdAt).toLocaleDateString()}
             </p>
+            {isEditMode && existingReview && (
+              <p className="text-xs text-gray-400 mt-1">
+                Originally reviewed on{" "}
+                {new Date(existingReview.createdAt).toLocaleDateString()}
+                {existingReview.updatedAt &&
+                  existingReview.updatedAt !== existingReview.createdAt &&
+                  ` · Last edited ${new Date(existingReview.updatedAt).toLocaleDateString()}`}
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -209,13 +303,13 @@ const ReviewPage = () => {
               <label className="font-[550] text-gray-700">
                 Overall Experience <span className="text-red-500">*</span>
               </label>
-              <div className="flex flex-col items-center gap-3 py-4">
-                <StarRow value={rating} onChange={setRating} size="lg" />
-                {rating > 0 && (
-                  <p className="text-lg font-semibold text-brand-color-500">
-                    {LABELS[rating]}
-                  </p>
-                )}
+              <div className="flex items-center justify-center py-4">
+                <StarRow
+                  value={rating}
+                  onChange={setRating}
+                  size="lg"
+                  labels={LABELS}
+                />
               </div>
               <TextareaField
                 label="Overall Comment (Optional)"
@@ -291,7 +385,7 @@ const ReviewPage = () => {
                       </div>
                       <div className="shrink-0">
                         <StarRow
-                          value={itemRatings[item.productId]?.rating ?? 0}
+                          value={mergedItemRatings[item.productId]?.rating ?? 0}
                           onChange={(v) => setItemRating(item.productId, v)}
                           size="sm"
                         />
@@ -299,12 +393,12 @@ const ReviewPage = () => {
                     </div>
 
                     {/* Item comment — only show if item has been rated */}
-                    {(itemRatings[item.productId]?.rating ?? 0) > 0 && (
+                    {(mergedItemRatings[item.productId]?.rating ?? 0) > 0 && (
                       <TextareaField
                         label="Leave a comment"
                         subLabel={`Did ${item.name} satisfy your cravings?`}
                         placeholder={`Share your thoughts about ${item.name} (optional)`}
-                        value={itemRatings[item.productId]?.comment ?? ""}
+                        value={mergedItemRatings[item.productId]?.comment ?? ""}
                         onChange={(e) =>
                           setItemComment(item.productId, e.target.value)
                         }
@@ -332,17 +426,23 @@ const ReviewPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting || rating === 0}
+                disabled={isProcessing || rating === 0}
                 className="flex-1 bg-brand-color-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#c13500] transition-colors disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Submitting..." : "Submit Review"}
+                {isProcessing
+                  ? isEditMode
+                    ? "Updating..."
+                    : "Submitting..."
+                  : isEditMode
+                    ? "Update Review"
+                    : "Submit Review"}
               </button>
               <button
                 type="button"
                 onClick={() => router.back()}
                 className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
               >
-                Skip for Now
+                {isEditMode ? "Cancel" : "Skip for Now"}
               </button>
             </div>
           </form>
@@ -353,6 +453,83 @@ const ReviewPage = () => {
         </p>
       </div>
     </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+const ReviewPage = () => {
+  const params = useParams();
+  const router = useRouter();
+  const orderId = String(params.id ?? "");
+  const queryClient = useQueryClient();
+
+  const { data: order, isPending: isLoading } = useCustomerOrder(orderId);
+  const { mutateAsync: submitReview, isPending: isSubmitting } =
+    useSubmitReview(orderId);
+  const { mutateAsync: editReview, isPending: isEditing } = useEditReview();
+
+  // Whether this is an edit (order already reviewed) vs. a new submission
+  const isEditMode = useMemo(() => !!order?.isReviewed, [order]);
+
+  // Fetch existing review when in edit mode
+  const { data: existingReview, isPending: isReviewLoading } =
+    useGetOrderReview(orderId, isEditMode);
+
+  // Guard: redirect if order not completed
+  useEffect(() => {
+    if (order && order.status !== ORDER_STATUSES.COMPLETED) {
+      toast.warning("You can only review completed orders");
+      router.push("/orders");
+    }
+  }, [order, router]);
+
+  const isProcessing = isSubmitting || isEditing;
+
+  if (isLoading || (isEditMode && isReviewLoading)) {
+    return <LoadingPage text="Loading order review..." />;
+  }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen flex flex-col gap-4 items-center justify-center bg-gray-50 px-4">
+        <div className="flex flex-col items-center gap-4 bg-white border border-gray-200 rounded-2xl shadow-sm px-10 py-12 max-w-sm w-full text-center">
+          <div className="flex items-center justify-center size-16 rounded-full bg-red-50">
+            <DynamicIcon
+              name="HandPlatter"
+              size={32}
+              className="text-red-500"
+              strokeWidth={1.75}
+            />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-gray-900 font-semibold text-base">
+              Order not found
+            </h2>
+            <p className="text-gray-500 text-sm">
+              We couldn't find the order you're looking for. It may have been
+              removed or the link is incorrect.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // key forces ReviewFormInner to remount when existingReview arrives,
+  // so lazy useState initialization picks up the new data
+  return (
+    <ReviewFormInner
+      key={existingReview?._id ?? "new"}
+      order={order}
+      existingReview={existingReview}
+      isEditMode={isEditMode}
+      submitReview={submitReview}
+      editReview={editReview}
+      isProcessing={isProcessing}
+      queryClient={queryClient}
+      router={router}
+    />
   );
 };
 
