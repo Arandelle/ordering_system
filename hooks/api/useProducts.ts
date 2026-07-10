@@ -125,7 +125,7 @@ export const useUpdateProduct = () => {
             // but the cache holds full populated objects
             category: p.category,
             subcategory: p.subcategory,
-            includedItems: p.includedItems,
+            modifierGroups: p.modifierGroups,
           };
         });
       });

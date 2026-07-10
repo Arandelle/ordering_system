@@ -1,16 +1,23 @@
 import mongoose, { Schema, models } from "mongoose";
 
-const IncludedItemsSchema = new Schema({
-  product: {type: Schema.Types.ObjectId, ref: "Product", required: true},
-  quantity: {type: Number, required: true, min:1 , default: 1},
+// A selectable item option within a modifier group
+const ModifierItemSchema = new Schema({
+  product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+  quantity: { type: Number, default: 1, min: 1 },
+  label: { type: String, default: null },
+  price: { type: Number, default: null, min: 0 },
+  snapshotName: { type: String, default: null },
+  snapshotPrice: { type: Number, default: null },
+}, { _id: false });
 
-  // Override display name if needed - e.g "Drink (choice of Coke or Water)"
-  // Falls back to product.name if null
-  label: {type: String,  default: null},
-
-  // Historical fallback when the referenced product is later deleted.
-  snapshotName: {type: String, default: null}
-}, {_id: false});
+// A group of choices the customer must fill — e.g. "Grilled", "Drink"
+const ModifierGroupSchema = new Schema({
+  name: { type: String, required: true },
+  required: { type: Boolean, default: true },
+  minSelect: { type: Number, default: 1, min: 1 },
+  maxSelect: { type: Number, default: 1, min: 1 },
+  items: { type: [ModifierItemSchema], default: [] },
+}, { _id: true });
 
 const ProductSchema = new Schema(
   {
@@ -35,8 +42,8 @@ const ProductSchema = new Schema(
       default: "solo"
     },
 
-    // Descriptive included items for combo/sets - display only
-    includedItems: {type: [IncludedItemsSchema], default: []},
+    // Modifier groups for combo/set products — each group defines a customer choice slot
+    modifierGroups: { type: [ModifierGroupSchema], default: [] },
 
     paxCount: {type: Number, default: null},
 

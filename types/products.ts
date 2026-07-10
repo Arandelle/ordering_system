@@ -12,22 +12,44 @@ export interface ActiveProductDiscountPreview {
   label: string;
 }
 
-export interface IncludedItem {
+export interface ModifierItem {
   product: string | Product; // string when sending, populated Product when receiving
   quantity: number;
   label: string | null;
+  price?: number | null; // override price for this item in the combo context
   snapshotName?: string | null;
-  _price?: number;
+  snapshotPrice?: number | null;
 }
 
-// UI-only type — lives inside the modal, never sent to API
-export interface IncludedItemUI {
+// UI-only type — lives inside the admin form, never sent to API
+export interface ModifierItemUI {
   product: string; // always ObjectId string in the form
   quantity: number;
   label: string | null;
+  price: number | null; // override price (defaults to solo price, admin can edit)
   snapshotName?: string | null;
+  snapshotPrice?: number | null;
   _name: string; // display only
-  _price: number | null; // display only
+  _price: number | null; // original solo price — display only
+}
+
+export interface ModifierGroup {
+  _id?: string;
+  name: string;
+  required: boolean;
+  minSelect: number;
+  maxSelect: number;
+  items: ModifierItem[];
+}
+
+// UI-only type — lives inside the admin form, never sent to API
+export interface ModifierGroupUI {
+  _id?: string;
+  name: string;
+  required: boolean;
+  minSelect: number;
+  maxSelect: number;
+  items: ModifierItemUI[];
 }
 
 export const ITEM_TYPES = {
@@ -51,7 +73,7 @@ export interface Product {
     public_id?: string;
   };
   productType: ProductType;
-  includedItems: IncludedItem[];
+  modifierGroups: ModifierGroup[];
   paxCount?: number | null;
   isPopular?: boolean;
   isSignature?: boolean;
@@ -74,5 +96,5 @@ export interface ProductPayload {
   isPopular?: boolean;
   productType: ProductType;
   paxCount?: number | null;
-  includedItems?: IncludedItem[];
+  modifierGroups?: ModifierGroup[];
 }

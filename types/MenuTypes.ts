@@ -4,6 +4,29 @@ import { Category } from "./category";
 import type { ActiveProductDiscountPreview } from "./products";
 
 /**
+ * A selected modifier item within a combo/set order
+ */
+export interface ModifierSelectionItem {
+  productId: string;
+  name: string;
+  label: string | null;
+  upgradePrice: number;
+  quantity: number;
+}
+
+/**
+ * A completed modifier group selection within a combo/set order
+ */
+export interface ModifierSelection {
+  groupId: string;
+  groupName: string;
+  required: boolean;
+  minSelect: number;
+  maxSelect: number;
+  items: ModifierSelectionItem[];
+}
+
+/**
  * Base menu item interface
  */
 export interface MenuItem {
@@ -19,10 +42,16 @@ export interface MenuItem {
   isBestSeller?: boolean;
   image: string;
   activeProductDiscount?: ActiveProductDiscountPreview | null;
+  productType?: string;
+  modifierSelections?: ModifierSelection[];
 }
 
 /**
- * Cart item extends MenuItem with quantity
+ * Cart item extends MenuItem with quantity.
+ *
+ * For combo/set items:
+ * - `price` includes the base combo price + all upgrade prices of selected modifiers
+ * - `modifierSelections` records which items the customer picked per group
  */
 export interface CartItem extends MenuItem {
   quantity: number;
