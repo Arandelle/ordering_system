@@ -71,14 +71,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
   // The id is the source of truth for matching; the slug is just for a readable URL
   const productSlug = `${item._id}-${slugify(item.name)}`;
 
-  // modal is open when the URL's product param matches this item's id
-  const showDetail = searchParams.get("product") === productSlug;
+  // ── Derived state: product type (needed before openDetail) ─────────────────
+  const isCombo = item.productType === ITEM_TYPES.COMBO;
+  const isSet = item.productType === ITEM_TYPES.SET;
+  const isNonSolo =
+    item.productType !== ITEM_TYPES.SOLO && item.productType != null;
 
-  const openModal = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("product", productSlug);
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  // Combo/set products open in a dedicated page; solo products use the modal
+  const openDetail = () => {
+    if (isNonSolo) {
+      router.push(`/products/${item._id}`);
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("product", productSlug);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    }
   };
+
+  // Modal is open only for solo products when the URL's product param matches this item's id
+  const showDetail = !isNonSolo && searchParams.get("product") === productSlug;
 
   const closeModal = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -87,7 +98,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
-  // ── Derived state (declared early, used throughout) ───────────────────────
+  // ── Derived state (remaining) ──────────────────────────────────────────────
   // Stock info is only meaningful when a branch is selected
   const quantity = hasBranch ? (item.quantity ?? 0) : null;
   const status = hasBranch ? (item.status ?? "") : "";
@@ -95,10 +106,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     hasBranch &&
     (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0);
   const isLowStock = hasBranch && status === STOCK_STATUSES.LOW_STOCK;
-  const isCombo = item.productType === ITEM_TYPES.COMBO;
-  const isSet = item.productType === ITEM_TYPES.SET;
-  const isNonSolo =
-    item.productType !== ITEM_TYPES.SOLO && item.productType != null;
   const modifierGroupNames = getModifierGroupNames(item.modifierGroups);
   const hasModifierGroups = isNonSolo && modifierGroupNames.length > 0;
   const activeProductDiscount = item.activeProductDiscount;
@@ -242,7 +249,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <span className="hidden">PHP {item.price?.toFixed(2) ?? "--"}</span>
             <button
               type="button"
-              onClick={() => openModal()}
+              onClick={() => openDetail()}
               disabled={isOutOfStock}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-color-500 text-white transition-colors hover:bg-brand-color-600 disabled:cursor-not-allowed disabled:bg-gray-300"
               aria-label={`Add ${item.name} to cart`}
