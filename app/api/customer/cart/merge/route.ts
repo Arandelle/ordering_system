@@ -5,7 +5,7 @@
  * Called once right after login via `mergeGuestCartOnLogin()` in CartContext.
  *
  * Merge strategy: guest items are added on top of existing DB quantities.
- * If the same item exists in both, quantities are summed.
+ * If the same item (matched by composite cart key) exists in both, quantities are summed.
  */
 
 import { Cart } from "@/models/Cart";
@@ -14,6 +14,7 @@ import { NextResponse } from "next/server";
 import { CartItem } from "@/types/MenuTypes";
 import { requireBetterAuth } from "@/lib/getAuth";
 import { getAPIError } from "@/lib/getApiError";
+import { getCartKey } from "@/contexts/CartContext";
 
 export async function POST(req: Request) {
   try {
@@ -34,11 +35,12 @@ export async function POST(req: Request) {
     const dbItems: CartItem[] = existing?.items ?? [];
 
     // Merge: start from DB items, layer guest items on top
+    // Match by composite cart key so combo/set items with different
+    // modifier selections are treated as separate entries
     const merged = [...dbItems];
     for (const guestItem of guestItems) {
-      const idx = merged.findIndex(
-        (i) => String(i._id) === String(guestItem._id),
-      );
+      const guestKey = getCartKey(guestItem);
+      const idx = merged.findIndex((i) => getCartKey(i) === guestKey);
       if (idx !== -1) {
         // Sum quantities for items that exist in both
         merged[idx] = {

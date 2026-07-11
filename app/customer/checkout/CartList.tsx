@@ -1,5 +1,6 @@
 import OrderNowButton from "@/components/ui/OrderNowButton";
 import { useCart } from "@/contexts/CartContext";
+import { getCartKey } from "@/contexts/CartContext";
 import { useCreateOrder } from "@/hooks/api/customers/useCustomerOrders";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useSettings } from "@/hooks/api/useSettings";
@@ -38,30 +39,21 @@ import { CartItem } from "@/types/MenuTypes";
 import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
 import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
-import { OrderItemImage } from "../components/OrderItemImage";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import { FREE_DELIVERY_ENABLED } from "@/lib/deliveryFee";
 import { getCheckoutActionMode } from "./checkoutAction";
 import { useBranchCapacity } from "@/hooks/api/useBranchCapacity";
+import { AppImage } from "@/components/AppImage";
+import { formatCurrency } from "@/helper/formatCurrency";
+import { InputField } from "@/components/ui/FormComponents";
 
 const createCodOrder = async (payload: CreateOrderPayload) => {
-  const res = await fetch("/api/customer/cod-checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-
-  if (!res.ok) {
-    throw new Error(data.error ?? "Failed to place order.");
-  }
-
-  return data as {
+  const response = await apiClient.post<{
     success: boolean;
     referenceNumber: string;
-  };
+  }>("/customer/cod-checkout", payload);
+
+  return response;
 };
 
 /** Single cart row */
@@ -71,9 +63,10 @@ const CartRow = ({
   onUpdate,
 }: {
   item: CartItem;
-  onRemove: (id: string) => void;
-  onUpdate: (id: string, qty: number) => void;
+  onRemove: (cartKey: string) => void;
+  onUpdate: (cartKey: string, qty: number) => void;
 }) => {
+  const cartKey = getCartKey(item);
   const unitDiscount = item.activeProductDiscount?.discountAmount ?? 0;
   const lineSubtotal = multiplyMoney(item.price, item.quantity);
   const lineDiscount = minMoney(
@@ -88,7 +81,7 @@ const CartRow = ({
   return (
     <div className="flex gap-3 py-3 first:pt-0">
       <div className="w-14 h-14 rounded-xl object-cover shrink-0">
-        <OrderItemImage image={item.image} name={item.name} />
+        <AppImage src={item.image} alt={item.name} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-1">
@@ -108,7 +101,7 @@ const CartRow = ({
             )}
           </div>
           <button
-            onClick={() => onRemove(item._id)}
+            onClick={() => onRemove(cartKey)}
             aria-label="Remove item"
             className="p-1 text-slate-300 hover:text-red-400 transition-colors shrink-0 rounded-full"
           >
@@ -120,7 +113,7 @@ const CartRow = ({
           {/* Quantity stepper */}
           <div className="flex items-center gap-0.5 border border-slate-200 rounded-full overflow-hidden">
             <button
-              onClick={() => onUpdate(item._id, item.quantity - 1)}
+              onClick={() => onUpdate(cartKey, item.quantity - 1)}
               className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
             >
               <DynamicIcon name="Minus" size={11} />
@@ -129,7 +122,7 @@ const CartRow = ({
               {item.quantity}
             </span>
             <button
-              onClick={() => onUpdate(item._id, item.quantity + 1)}
+              onClick={() => onUpdate(cartKey, item.quantity + 1)}
               className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 transition-colors text-slate-600"
             >
               <DynamicIcon name="Plus" size={11} />
@@ -138,16 +131,16 @@ const CartRow = ({
 
           <div className="flex flex-col items-end">
             <span className="text-sm font-bold text-brand-color-500">
-              PHP {discountedLineTotal.toFixed(2)}
+              {formatCurrency(discountedLineTotal)}
             </span>
             {hasProductDiscount && (
               <span className="text-[11px] text-slate-400 line-through">
-                PHP {lineSubtotal.toFixed(2)}
+                {formatCurrency(lineSubtotal)}
               </span>
             )}
           </div>
           <span className="hidden">
-            ₱{multiplyMoney(item.price, item.quantity).toFixed(2)}
+            {formatCurrency(multiplyMoney(item.price, item.quantity))}
           </span>
         </div>
       </div>
@@ -208,7 +201,7 @@ const PaymentButton = ({
       <div className="flex items-start justify-between w-full">
         <div className="w-20 h-20 rounded-xl bg-white flex items-center justify-center shrink-0">
           <div className="w-full h-full object-contain">
-            <OrderItemImage image={imageSrc} name={imageAlt} />
+            <AppImage src={imageSrc} alt={imageAlt} />
           </div>
         </div>
         <div
@@ -498,7 +491,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
 
     if (displayTotalPrice < MINIMUM_AMOUNT) {
       toast.warning("Minimum Order Amount", {
-        description: `The minimum amount for online payment is ₱${MINIMUM_AMOUNT.toFixed(2)}.`,
+        description: `The minimum amount for online payment is ${formatCurrency(MINIMUM_AMOUNT)}.`,
         duration: 6000,
       });
       return;
@@ -666,18 +659,18 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           )}
           <div className="flex justify-between text-sm text-slate-500">
             <span>Subtotal</span>
-            <span>₱{subtotalPrice.toFixed(2)}</span>
+            <span>{formatCurrency(subtotalPrice)}</span>
           </div>
           {productDiscountAmount > 0 && (
             <div className="flex justify-between text-sm font-semibold text-green-600">
               <span>Product discounts</span>
-              <span>-PHP {productDiscountAmount.toFixed(2)}</span>
+              <span>-{formatCurrency(productDiscountAmount)}</span>
             </div>
           )}
           {promoCardDiscount > 0 && (
             <div className="flex justify-between text-sm font-semibold text-green-600">
               <span>Promo card discount</span>
-              <span>-₱{promoCardDiscount.toFixed(2)}</span>
+              <span>-{formatCurrency(promoCardDiscount)}</span>
             </div>
           )}
           {orderDiscountAmount > 0 && (
@@ -685,42 +678,35 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
               <span className="min-w-0 truncate">
                 {orderDiscountPromotion?.name}
               </span>
-              <span>-₱{orderDiscountAmount.toFixed(2)}</span>
+              <span>-{formatCurrency(orderDiscountAmount)}</span>
             </div>
           )}
           {orderDiscountAmount === 0 && nextOrderDiscountHint && (
             <p className="block font-extralight text-brand-color-500 text-sm">
               Spend{" "}
               <span className="font-bold">
-                ₱{nextOrderDiscountHint.amountUntilEligible.toFixed(2)}
+                {formatCurrency(nextOrderDiscountHint.amountUntilEligible)}
               </span>{" "}
               more to use {nextOrderDiscountHint.name}.
             </p>
           )}
           {availableVoucherBalance > 0 && (
-            <label className="block rounded-xl border border-green-200 bg-white p-3 text-sm">
-              <span className="block font-semibold text-slate-800">
-                Use voucher balance
-              </span>
-              <span className="mt-1 block text-xs text-slate-500">
-                Available: ₱{availableVoucherBalance.toFixed(2)}
-              </span>
-              <input
-                type="number"
-                min={0}
-                max={Math.min(availableVoucherBalance, discountAdjustedTotal)}
-                step={0.01}
-                value={voucherAmount}
-                onChange={(event) => setVoucherAmount(event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-color-500"
-                placeholder="Enter voucher amount"
-              />
-            </label>
+            <InputField
+              label="Use voucher balance"
+              subLabel={`Available ${formatCurrency(availableVoucherBalance)}`}
+              type="number"
+              min={0}
+              max={Math.min(availableVoucherBalance, discountAdjustedTotal)}
+              step={0.01}
+              value={voucherAmount}
+              onChange={(event) => setVoucherAmount(event.target.value)}
+              placeholder="Enter voucher amount"
+            />
           )}
           {parsedVoucherAmount > 0 && (
             <div className="flex justify-between text-sm font-semibold text-green-600">
               <span>Voucher discount</span>
-              <span>-₱{parsedVoucherAmount.toFixed(2)}</span>
+              <span>-{formatCurrency(parsedVoucherAmount)}</span>
             </div>
           )}
           {isDelivery && (deliveryFeeAmount > 0 || isDeliveryFeeLoading) && (
@@ -742,7 +728,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
               {freeDeliveryEligible ? (
                 <span className="flex items-center gap-1.5">
                   <span className="line-through text-slate-400">
-                    ₱{deliveryFeeAmount.toFixed(2)}
+                    {formatCurrency(deliveryFeeAmount)}
                   </span>
                   <span className="text-green-600 font-bold">FREE</span>
                 </span>
@@ -750,7 +736,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
                 <span className="text-slate-500">
                   {isDeliveryFeeLoading
                     ? "Calculating..."
-                    : `₱${deliveryFeeAmount.toFixed(2)}`}
+                    : formatCurrency(deliveryFeeAmount)}
                 </span>
               )}
             </div>
@@ -771,18 +757,18 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           )}
           <div className="flex justify-between text-sm text-slate-500">
             <span>VATable Sales</span>
-            <span>₱{displayVatableSales.toFixed(2)}</span>
+            <span>{formatCurrency(displayVatableSales)}</span>
           </div>
           <div className="flex justify-between text-sm text-slate-500">
             <span>VAT (12%)</span>
-            <span>₱{displayVatAmount.toFixed(2)}</span>
+            <span>{formatCurrency(displayVatAmount)} </span>
           </div>
           <div className="  flex justify-between items-baseline pt-2 border-t border-slate-200">
             <span className="text-sm font-semibold text-slate-900">
               Total (VAT Inc)
             </span>
             <span className="text-lg font-bold text-brand-color-500">
-              ₱{displayTotalPrice.toFixed(2)}
+              {formatCurrency(displayTotalPrice)}
             </span>
           </div>
         </div>
