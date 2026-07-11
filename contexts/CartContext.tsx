@@ -29,9 +29,10 @@ import { apiClient } from "@/lib/apiClient";
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string | number) => void;
-  updateQuantity: (id: string | number, quantity: number) => void;
+  removeFromCart: (cartKey: string) => void;
+  updateQuantity: (cartKey: string, quantity: number) => void;
   clearCart: () => Promise<void>;
+  getCartKey: (item: CartItem) => string;
   totalProducts: number;
   totalItems: number;
   vatableSales: number;
@@ -53,6 +54,29 @@ interface CartContextType {
 
 const LOCALSTORAGE_KEY = "cart_guest";
 const DEBOUNCE_MS = 800;
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+
+/**
+ * Generate a composite cart key that distinguishes combo/set items
+ * with different modifier selections from each other.
+ * Solo items just use their _id; combo items append a hash of their selections.
+ */
+export function getCartKey(item: CartItem): string {
+  if (!item.modifierSelections || item.modifierSelections.length === 0) {
+    return item._id;
+  }
+  const selKey = item.modifierSelections
+    .map((g) =>
+      g.items
+        .map((i) => `${i.productId}:${i.quantity}:${i.upgradePrice}`)
+        .sort()
+        .join(","),
+    )
+    .sort()
+    .join("|");
+  return `${item._id}__${selKey}`;
+}
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -181,62 +205,41 @@ export const CartProvider: React.FC<{
 
   // ─── Cart actions (always optimistic) ───────────────────────────────────────
 
-  /**
-   * Generate a composite cart key that distinguishes combo/set items
-   * with different modifier selections from each other.
-   * Solo items just use their _id; combo items append a hash of their selections.
-   */
-  const getCartKey = useCallback((item: CartItem): string => {
-    if (!item.modifierSelections || item.modifierSelections.length === 0) {
-      return item._id;
-    }
-    // Build a stable string from the modifier selections to differentiate combos
-    const selKey = item.modifierSelections
-      .map((g) =>
-        g.items
-          .map((i) => `${i.productId}:${i.quantity}:${i.upgradePrice}`)
-          .sort()
-          .join(","),
-      )
-      .sort()
-      .join("|");
-    return `${item._id}__${selKey}`;
+  const addToCart = useCallback((item: CartItem) => {
+    setCartItems((prev) => {
+      const itemKey = getCartKey(item);
+      const existing = prev.find((c) => getCartKey(c) === itemKey);
+      if (existing) {
+        return prev.map((c) =>
+          getCartKey(c) === itemKey
+            ? {
+                ...c,
+                activeProductDiscount: item.activeProductDiscount ?? null,
+                quantity: c.quantity + item.quantity,
+              }
+            : c,
+        );
+      }
+      return [...prev, { ...item }];
+    });
   }, []);
 
-  const addToCart = useCallback(
-    (item: CartItem) => {
-      setCartItems((prev) => {
-        const itemKey = getCartKey(item);
-        const existing = prev.find((c) => getCartKey(c) === itemKey);
-        if (existing) {
-          return prev.map((c) =>
-            getCartKey(c) === itemKey
-              ? {
-                  ...c,
-                  activeProductDiscount: item.activeProductDiscount ?? null,
-                  quantity: c.quantity + item.quantity,
-                }
-              : c,
-          );
-        }
-        return [...prev, { ...item }];
-      });
-    },
-    [getCartKey],
-  );
-
-  const removeFromCart = useCallback((id: string | number) => {
-    setCartItems((prev) => prev.filter((item) => item._id !== id));
+  /** Remove a cart item by its composite cart key (not just _id) */
+  const removeFromCart = useCallback((cartKey: string) => {
+    setCartItems((prev) => prev.filter((item) => getCartKey(item) !== cartKey));
   }, []);
 
+  /** Update quantity for a specific cart entry by its composite cart key */
   const updateQuantity = useCallback(
-    (id: string | number, quantity: number) => {
+    (cartKey: string, quantity: number) => {
       if (quantity <= 0) {
-        removeFromCart(id);
+        removeFromCart(cartKey);
         return;
       }
       setCartItems((prev) =>
-        prev.map((item) => (item._id === id ? { ...item, quantity } : item)),
+        prev.map((item) =>
+          getCartKey(item) === cartKey ? { ...item, quantity } : item,
+        ),
       );
     },
     [removeFromCart],
@@ -299,6 +302,7 @@ export const CartProvider: React.FC<{
         removeFromCart,
         updateQuantity,
         clearCart,
+        getCartKey,
         totalProducts,
         totalItems,
         vatableSales,
