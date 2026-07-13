@@ -1,21 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  InputField,
-  ToggleButton,
-} from "@/components/ui/FormComponents";
+import { InputField, ToggleButton } from "@/components/ui/FormComponents";
 import { toast } from "sonner";
 import {
   ModifierGroupUI,
   ModifierItemUI,
+  ModifierGroupTemplate,
   Product,
 } from "@/types/products";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { AppImage } from "@/components/AppImage";
 import ProductSelectionModal from "../ProductSelectionModal";
+import ModifierTemplateSelector from "./ModifierTemplateSelector";
 import ComboPricePreview from "./ComboPricePreview";
 import { ProductSectionCard } from "./ProductSectionCard";
+import { apiClient } from "@/lib/apiClient";
+import { IconButton } from "@/components/ui/buttons";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,8 +29,6 @@ export interface ModifierGroupsState {
 interface ModifierGroupsSectionProps {
   /** Base product price — used by ComboPricePreview */
   price: string;
-  /** Categories for ProductSelectionModal grouping */
-  categories: { _id: string; name: string }[];
   /** Pre-populated groups when editing an existing product */
   initialModifierGroups?: ModifierGroupUI[];
   /** Callback fired whenever the modifier groups state changes */
@@ -41,11 +40,11 @@ interface ModifierGroupsSectionProps {
 /**
  * Self-contained section for managing modifier groups on combo/set products.
  * Handles its own state for groups, product selection modal, and product fetching.
+ * Supports applying reusable modifier group templates with local overrides.
  * Reports group changes back to parent via `onModifierGroupsChange`.
  */
 const ModifierGroupsSection = ({
   price,
-  categories,
   initialModifierGroups = [],
   onModifierGroupsChange,
 }: ModifierGroupsSectionProps) => {
@@ -62,8 +61,12 @@ const ModifierGroupsSection = ({
   const [activeSelectionGroupIndex, setActiveSelectionGroupIndex] = useState<
     number | null
   >(null);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // ── Template selector modal state ───────────────────────────────────────────
+
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [templates, setTemplates] = useState<ModifierGroupTemplate[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
 
   // ── Report state changes to parent ──────────────────────────────────────────
 
@@ -71,27 +74,17 @@ const ModifierGroupsSection = ({
     onModifierGroupsChange(modifierGroups);
   }, [modifierGroups, onModifierGroupsChange]);
 
-  // ── Fetch all products on mount ─────────────────────────────────────────────
-
-  useEffect(() => {
-    if (allProducts.length === 0) {
-      fetchAllProducts();
-    }
-  }, []);
-
-  /** Fetch all solo products for the product selection modal */
-  const fetchAllProducts = async () => {
-    setLoadingProducts(true);
+  /** Fetch all modifier group templates for the template selector */
+  const fetchTemplates = async () => {
+    setLoadingTemplates(true);
     try {
-      const res = await fetch(`/api/products?limit=100`);
+      const res = await fetch(`/api/modifier-group-templates`);
       const data = await res.json();
-      setAllProducts(
-        Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [],
-      );
+      setTemplates(data?.data ?? []);
     } catch {
-      toast.error("Failed to load products");
+      toast.error("Failed to load templates");
     } finally {
-      setLoadingProducts(false);
+      setLoadingTemplates(false);
     }
   };
 
@@ -123,6 +116,7 @@ const ModifierGroupsSection = ({
           snapshotName: p.name,
           _name: p.name,
           _price: p.price ?? null,
+          _imageUrl: p.image?.url ?? null,
         }));
 
       groups[groupIndex] = {
@@ -144,6 +138,7 @@ const ModifierGroupsSection = ({
       ...prev,
       {
         _id: undefined,
+        templateId: null,
         name: "",
         required: true,
         minSelect: 1,
@@ -155,6 +150,128 @@ const ModifierGroupsSection = ({
     setShowProductSelectionModal(true);
   };
 
+  /** Apply a modifier group template — copies template data into the product with templateId reference */
+  const applyTemplate = (template: ModifierGroupTemplate) => {
+    const templateItems: ModifierItemUI[] = template.items.map((item) => {
+      // The template API already populates product objects with name, price, image
+      const populatedProduct =
+        typeof item.product === "object" ? item.product : null;
+
+      return {
+        product:
+          typeof item.product === "string"
+            ? item.product
+            : (item.product?._id ?? ""),
+        label: item.label ?? null,
+        price: item.price ?? populatedProduct?.price ?? null,
+        snapshotName: item.snapshotName ?? populatedProduct?.name ?? null,
+        _name:
+          populatedProduct?.name ||
+          item.snapshotName ||
+          item.label ||
+          "Unknown",
+        _price: populatedProduct?.price ?? item.snapshotPrice ?? null,
+        _imageUrl: populatedProduct?.image?.url ?? null,
+      };
+    });
+
+    setModifierGroups((prev) => [
+      ...prev,
+      {
+        _id: undefined,
+        templateId: template._id,
+        name: template.name,
+        required: template.required,
+        minSelect: template.minSelect,
+        maxSelect: template.maxSelect,
+        items: templateItems,
+      },
+    ]);
+
+    setShowTemplateSelector(false);
+    toast.success(`Applied "${template.name}" template`);
+  };
+
+  /** Open the template selector modal */
+  const openTemplateSelector = () => {
+    fetchTemplates();
+    setShowTemplateSelector(true);
+  };
+
+  /** Sync a modifier group from its linked template — re-fetches and re-applies template data */
+  const syncFromTemplate = async (groupIndex: number) => {
+    const group = modifierGroups[groupIndex];
+    if (!group.templateId) return;
+
+    try {
+      const response = await apiClient.get<{ data: ModifierGroupTemplate }>(
+        `/modifier-group-templates/${group.templateId}`,
+      );
+
+      const template: ModifierGroupTemplate = response?.data;
+
+      if (!template) {
+        toast.error("Template no longer exists. Detaching reference.");
+        detachTemplate(groupIndex);
+        return;
+      }
+
+      const syncedItems: ModifierItemUI[] = template.items.map((item) => {
+        // The template API already populates product objects with name, price, image
+        const populatedProduct =
+          typeof item.product === "object" ? item.product : null;
+
+        return {
+          product:
+            typeof item.product === "string"
+              ? item.product
+              : (item.product?._id ?? ""),
+          label: item.label ?? null,
+          price: item.price ?? populatedProduct?.price ?? null,
+          snapshotName: item.snapshotName ?? populatedProduct?.name ?? null,
+          _name:
+            populatedProduct?.name ||
+            item.snapshotName ||
+            item.label ||
+            "Unknown",
+          _price: populatedProduct?.price ?? item.snapshotPrice ?? null,
+          _imageUrl: populatedProduct?.image?.url ?? null,
+        };
+      });
+
+      setModifierGroups((prev) => {
+        const groups = [...prev];
+        groups[groupIndex] = {
+          ...groups[groupIndex],
+          name: template.name,
+          required: template.required,
+          minSelect: template.minSelect,
+          maxSelect: template.maxSelect,
+          items: syncedItems,
+        };
+        return groups;
+      });
+
+      toast.success(`Synced "${template.name}" from template`);
+    } catch (error: any) {
+      toast.error(error.message);
+      toast.error("Failed to sync from template");
+    }
+  };
+
+  /** Detach a modifier group from its template — removes templateId, keeps embedded data */
+  const detachTemplate = (groupIndex: number) => {
+    setModifierGroups((prev) => {
+      const groups = [...prev];
+      groups[groupIndex] = {
+        ...groups[groupIndex],
+        templateId: null,
+      };
+      return groups;
+    });
+    toast.success("Detached from template — group is now standalone");
+  };
+
   /** Remove a modifier group by index */
   const removeModifierGroup = (groupIndex: number) => {
     setModifierGroups((prev) => prev.filter((_, i) => i !== groupIndex));
@@ -164,7 +281,7 @@ const ModifierGroupsSection = ({
   const updateModifierGroup = (
     groupIndex: number,
     field: keyof ModifierGroupUI,
-    value: string | boolean | number,
+    value: string | boolean | number | null,
   ) => {
     setModifierGroups((prev) => {
       const groups = [...prev];
@@ -213,7 +330,8 @@ const ModifierGroupsSection = ({
       {/* Empty state */}
       {modifierGroups.length === 0 && (
         <p className="text-xs text-gray-400">
-          No groups yet. Add a group so customers can choose their items.
+          No groups yet. Add a group or apply a template so customers can choose
+          their items.
         </p>
       )}
 
@@ -221,13 +339,11 @@ const ModifierGroupsSection = ({
       {modifierGroups.map((group, groupIndex) => (
         <ProductSectionCard
           key={group._id ?? groupIndex}
-          title={
-            modifierGroups[groupIndex].name || `Group ${groupIndex + 1}`
-          }
+          title={modifierGroups[groupIndex].name || `Group ${groupIndex + 1}`}
           iconName="Utensils"
           className="space-y-3"
         >
-          {/* Group header — name + delete */}
+          {/* Template reference badge + group header */}
           <div className="flex items-stretch gap-3">
             <InputField
               type="text"
@@ -238,16 +354,46 @@ const ModifierGroupsSection = ({
               }
               required
             />
-            <button
-              type="button"
-              onClick={() => removeModifierGroup(groupIndex)}
-              className="bg-red-400 text-white hover:bg-red-500 transition p-4 rounded-lg cursor-pointer"
-              data-tooltip-id="app-tooltip"
-              data-tooltip-content={"Delete this group"}
-            >
-              <DynamicIcon name="Trash2" size={15} />
-            </button>
+            {/* Template actions */}
+            {group.templateId && (
+              <div className="flex items-center gap-1 shrink-0">
+                <IconButton
+                  type="button"
+                  onClick={() => syncFromTemplate(groupIndex)}
+                  icon={{ name: "RefreshCw", size: 15 }}
+                  className="p-4 rounded-lg"
+                  title="Sync from template (re-apply latest template data)"
+                />
+                <IconButton
+                  type="button"
+                  onClick={() => detachTemplate(groupIndex)}
+                  variant="secondary"
+                  icon={{ name: "Unlink2" }}
+                  className="p-4 rounded-lg"
+                  title="Detach from template (keep data as standalone)"
+                />
+                <IconButton
+                  type="button"
+                  variant="danger"
+                  onClick={() => removeModifierGroup(groupIndex)}
+                  icon={{ name: "Trash2", size: 15 }}
+                  title="Delete this group"
+                  className="p-4 rounded-lg"
+                />
+              </div>
+            )}
           </div>
+
+          {/* Template badge */}
+          {group.templateId && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+              <DynamicIcon name="Layers" size={14} className="text-blue-500" />
+              <span className="text-blue-600 font-semibold">From template</span>
+              <span className="text-blue-400">
+                — edits are local overrides, won't change the template
+              </span>
+            </div>
+          )}
 
           {/* Group settings row */}
           <div className="grid grid-cols-[2fr_5fr_5fr] gap-3">
@@ -294,20 +440,13 @@ const ModifierGroupsSection = ({
           </div>
 
           {/* Select products button */}
-          <button
-            type="button"
+          <IconButton
             onClick={() => openProductSelection(groupIndex)}
-            disabled={loadingProducts}
-            className="flex items-center gap-2 underline text-brand-color-500 hover:text-brand-color-600 hover:gap-4 transition-transform cursor-pointer"
-            data-tooltip-id="app-tooltip"
-            data-tooltip-content={
-              "Choose which products customers can upgrade to"
-            }
-          >
-            {loadingProducts
-              ? "Loading..."
-              : `Select Products for ${modifierGroups[groupIndex].name || `Group ${groupIndex + 1}`}`}
-          </button>
+            variant="underline"
+            text={`Select Products for ${modifierGroups[groupIndex].name || `Group ${groupIndex + 1}`}`}
+            title="Choose which products customers can upgrade to"
+            className="text-lg"
+          />
 
           {/* Items in this group */}
           {group.items.length > 0 && (
@@ -318,75 +457,27 @@ const ModifierGroupsSection = ({
                 const isDiscountedUpgrade =
                   upgradePrice < soloPrice && soloPrice > 0;
 
-                const matchedProduct = allProducts.find(
-                  (p) => p._id === item.product,
-                );
-                const itemImageUrl = matchedProduct?.image?.url || null;
-
                 return (
                   <div
                     key={itemIndex}
                     className="flex gap-4 p-3 bg-gray-50 border border-gray-200 rounded-lg relative"
                   >
-                    <button
+                    <IconButton
                       type="button"
-                      onClick={() =>
-                        removeItemFromGroup(groupIndex, itemIndex)
-                      }
-                      className="absolute -right-1 -top-1 bg-red-400 text-white p-1 hover:bg-red-500 transition shrink-0 cursor-pointer rounded-full"
-                      data-tooltip-id="app-tooltip"
-                      data-tooltip-content={"Delete this product"}
-                    >
-                      <DynamicIcon name="Trash2" size={14} />
-                    </button>
-
+                      onClick={() => removeItemFromGroup(groupIndex, itemIndex)}
+                      title="Delete this product"
+                      icon={{ name: "Trash2" }}
+                      className="absolute right-2 top-2 rounded-full opacity-80"
+                      variant="danger"
+                    />
                     {/* Image — left, full height */}
                     <div className="flex flex-col items-center justify-center bg-gray-100 p-3 gap-2 flex-1 max-w-52">
                       <div className="w-11 h-11 rounded-md shrink-0 border border-gray-200 overflow-hidden">
-                        <AppImage
-                          src={itemImageUrl ?? ""}
-                          alt={item._name}
-                        />
+                        <AppImage src={item._imageUrl ?? ""} alt={item._name} />
                       </div>
                       <p className="text-sm font-semibold text-gray-800">
                         {item._name || item.product}
                       </p>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[10px] text-gray-400 uppercase font-semibold">
-                          Qty
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateItemInGroup(
-                              groupIndex,
-                              itemIndex,
-                              "quantity",
-                              Math.max(1, item.quantity - 1),
-                            )
-                          }
-                          className="w-6 h-6 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm flex items-center justify-center transition"
-                        >
-                          −
-                        </button>
-                        <span className="w-5 text-center text-sm font-semibold">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateItemInGroup(
-                              groupIndex,
-                              itemIndex,
-                              "quantity",
-                              item.quantity + 1,
-                            )
-                          }
-                          className="w-6 h-6 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm flex items-center justify-center transition"
-                        >
-                          ＋
-                        </button>
-                      </div>
                     </div>
 
                     {/* Right column — everything else, compact */}
@@ -396,15 +487,12 @@ const ModifierGroupsSection = ({
                         {soloPrice > 0 && (
                           <span className="text-xs text-gray-400 shrink-0">
                             Solo:{" "}
-                            <span className="line-through">
-                              ₱{soloPrice}
-                            </span>
+                            <span className="line-through">₱{soloPrice}</span>
                           </span>
                         )}
                         {isDiscountedUpgrade && (
                           <span className="text-xs text-green-600 font-semibold shrink-0">
-                            ↓ saves
-                            ₱{(soloPrice - upgradePrice).toFixed(0)}
+                            ↓ saves ₱{(soloPrice - upgradePrice).toFixed(0)}
                           </span>
                         )}
                       </div>
@@ -457,17 +545,27 @@ const ModifierGroupsSection = ({
         </ProductSectionCard>
       ))}
 
-      {/* Add group button */}
-      <button
-        type="button"
-        onClick={addModifierGroup}
-        className="flex items-center gap-2 mx-4 underline text-brand-color-500 hover:text-brand-color-600 hover:gap-4 transition-transform cursor-pointer"
-        data-tooltip-id="app-tooltip"
-        data-tooltip-content={"e.g Grilled, Drinks, Appetizer"}
-      >
-        Add Group
-        <DynamicIcon name="ChevronRight" />
-      </button>
+      {/* Add group buttons */}
+      <div className="flex items-center gap-2">
+        <IconButton
+          type="button"
+          onClick={addModifierGroup}
+          variant="primary"
+          icon={{ name: "Plus", position: "right" }}
+          text="Add Group"
+          title="Create a new group manually (e.g Grilled, Drinks, Appetizer)"
+          className="px-4 rounded-lg"
+        />
+        <IconButton
+          type="button"
+          onClick={openTemplateSelector}
+          variant="secondary"
+          icon={{ name: "Layers", position: "right" }}
+          text="Apply Template"
+          title="Apply a reusable modifier group template"
+          className="px-4 rounded-lg"
+        />
+      </div>
 
       {/* Product selection modal */}
       {showProductSelectionModal && activeSelectionGroupIndex !== null && (
@@ -477,14 +575,21 @@ const ModifierGroupsSection = ({
             setActiveSelectionGroupIndex(null);
           }}
           onConfirm={handleProductSelectionConfirm}
-          allProducts={allProducts}
-          categories={categories}
           alreadySelectedIds={
             modifierGroups[activeSelectionGroupIndex]?.items.map(
               (i) => i.product,
             ) ?? []
           }
-          loading={loadingProducts}
+        />
+      )}
+
+      {/* Template selector modal */}
+      {showTemplateSelector && (
+        <ModifierTemplateSelector
+          onClose={() => setShowTemplateSelector(false)}
+          onSelect={applyTemplate}
+          templates={templates}
+          loading={loadingTemplates}
         />
       )}
     </ProductSectionCard>

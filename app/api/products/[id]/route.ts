@@ -59,6 +59,7 @@ export async function GET(
             as: "group",
             in: {
               _id: "$$group._id",
+              templateId: "$$group.templateId",
               name: "$$group.name",
               required: "$$group.required",
               minSelect: "$$group.minSelect",
@@ -80,7 +81,6 @@ export async function GET(
                         0,
                       ],
                     },
-                    quantity: "$$item.quantity",
                     label: "$$item.label",
                     price: "$$item.price",
                     snapshotName: "$$item.snapshotName",
@@ -272,13 +272,13 @@ export async function PUT(
         modifierGroups:
           resolvedProductType !== "solo"
             ? (modifierGroups ?? []).map((group: any) => ({
+                templateId: group.templateId ?? null,
                 name: group.name,
                 required: group.required ?? true,
                 minSelect: group.minSelect ?? 1,
                 maxSelect: group.maxSelect ?? 1,
                 items: (group.items ?? []).map((item: any) => ({
                   product: item.product,
-                  quantity: item.quantity ?? 1,
                   label: item.label ?? null,
                   price: item.price ?? null,
                   snapshotName: item.snapshotName ?? item.label ?? null,

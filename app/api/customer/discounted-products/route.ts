@@ -46,7 +46,6 @@ type ModifierProductAggregate = {
 
 type ModifierItemAggregate = {
   product?: ModifierProductAggregate | null;
-  quantity: number;
   label?: string | null;
   price?: number | null;
   snapshotName?: string | null;
@@ -55,6 +54,7 @@ type ModifierItemAggregate = {
 
 type ModifierGroupAggregate = {
   _id?: string;
+  templateId?: string;
   name: string;
   required: boolean;
   minSelect: number;
@@ -129,6 +129,7 @@ function normalizeProduct(
     modifierGroups:
       product.modifierGroups?.map((group: ModifierGroupAggregate) => ({
         _id: group._id?.toString(),
+        templateId: group.templateId?.toString() || null,
         name: group.name,
         required: group.required,
         minSelect: group.minSelect,
@@ -147,7 +148,6 @@ function normalizeProduct(
                   productType: item.product.productType || "solo",
                 }
               : "",
-            quantity: item.quantity,
             label: item.label,
             price: item.price,
             snapshotName: item.snapshotName,
@@ -336,6 +336,7 @@ export async function GET(request: NextRequest) {
               as: "group",
               in: {
                 _id: "$$group._id",
+                templateId: "$$group.templateId",
                 name: "$$group.name",
                 required: "$$group.required",
                 minSelect: "$$group.minSelect",
@@ -357,7 +358,6 @@ export async function GET(request: NextRequest) {
                           0,
                         ],
                       },
-                      quantity: "$$item.quantity",
                       label: "$$item.label",
                       price: "$$item.price",
                       snapshotName: "$$item.snapshotName",

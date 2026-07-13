@@ -147,7 +147,6 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
               return {
                 product: productId,
-                quantity: item.quantity,
                 label: item.label,
                 price: item.price ?? includedProduct?.price ?? null,
                 snapshotName:
@@ -166,6 +165,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
 
           return {
             _id: group._id,
+            templateId: group.templateId ?? null,
             name: group.name,
             required: group.required,
             minSelect: group.minSelect,
@@ -298,14 +298,14 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         paxCount: formData.paxCount ? parseInt(formData.paxCount) : null,
         modifierGroups: isComboOrSet
           ? modifierGroupsState.map((group) => ({
+              templateId: group.templateId ?? null,
               name: group.name,
               required: group.required,
               minSelect: group.minSelect,
               maxSelect: group.maxSelect,
               items: group.items.map(
-                ({ product, quantity, label, price, _name, _price }) => ({
+                ({ product, label, price, _name, _price }) => ({
                   product,
-                  quantity,
                   label,
                   price: price ?? null,
                   snapshotName: _name || label || null,
@@ -397,10 +397,10 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                           key={opt.value}
                           type="button"
                           onClick={() => handleProductTypeChange(opt.value)}
-                          className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-150 cursor-pointer
+                          className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border text-sm font-semibold transition-all duration-150 cursor-pointer
                           ${
                             formData.productType === opt.value
-                              ? "border-brand-color-500 bg-brand-color-500/10 text-brand-color-500"
+                              ? "border-brand-color-500  text-brand-color-500"
                               : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
                           }`}
                         >
@@ -452,10 +452,6 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                 {isComboOrSet && (
                   <ModifierGroupsSection
                     price={formData.price}
-                    categories={categorySelection.categories.map((cat) => ({
-                      _id: cat._id,
-                      name: cat.name,
-                    }))}
                     initialModifierGroups={modifierGroupsState}
                     onModifierGroupsChange={setModifierGroupsState}
                   />

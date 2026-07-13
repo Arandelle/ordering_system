@@ -14,7 +14,6 @@ export interface ActiveProductDiscountPreview {
 
 export interface ModifierItem {
   product: string | Product; // string when sending, populated Product when receiving
-  quantity: number;
   label: string | null;
   price?: number | null; // override price for this item in the combo context
   snapshotName?: string | null;
@@ -24,13 +23,13 @@ export interface ModifierItem {
 // UI-only type — lives inside the admin form, never sent to API
 export interface ModifierItemUI {
   product: string; // always ObjectId string in the form
-  quantity: number;
   label: string | null;
   price: number | null; // override price (defaults to solo price, admin can edit)
   snapshotName?: string | null;
   snapshotPrice?: number | null;
   _name: string; // display only
   _price: number | null; // original solo price — display only
+  _imageUrl?: string | null; // product image URL — display only
 }
 
 export interface ModifierGroup {
@@ -58,7 +57,6 @@ export interface ModifierGroupUI {
 
 export interface ModifierGroupTemplateItem {
   product: string | Product; // string when sending, populated Product when receiving from API
-  quantity: number;
   label: string | null;
   price: number | null;
   snapshotName?: string | null;
@@ -72,6 +70,8 @@ export interface ModifierGroupTemplate {
   minSelect: number;
   maxSelect: number;
   items: ModifierGroupTemplateItem[];
+  /** Number of products that reference this template via modifierGroups.templateId */
+  productCount?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

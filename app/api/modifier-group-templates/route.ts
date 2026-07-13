@@ -11,7 +11,6 @@ import { canAccess } from "@/lib/roleBasedAccessCtrl";
 
 const modifierTemplateItemSchema = z.object({
   product: z.string().min(1, "Item must reference a product"),
-  quantity: z.coerce.number().int().min(1).default(1),
   label: z.string().nullable().optional(),
   price: z.coerce.number().nullable().optional(),
   snapshotName: z.string().nullable().optional(),
@@ -49,6 +48,19 @@ export async function GET(request: NextRequest) {
       {
         $lookup: {
           from: "products",
+          let: { templateId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$modifierGroups.templateId", "$$templateId"] } } },
+            { $count: "total" },
+          ],
+          as: "_productCount",
+        },
+      },
+      { $addFields: { productCount: { $ifNull: [{ $arrayElemAt: ["$_productCount.total", 0] }, 0] } } },
+      { $unset: "_productCount" },
+      {
+        $lookup: {
+          from: "products",
           localField: "items.product",
           foreignField: "_id",
           as: "_modifierProducts",
@@ -73,7 +85,6 @@ export async function GET(request: NextRequest) {
                     0,
                   ],
                 },
-                quantity: "$$item.quantity",
                 label: "$$item.label",
                 price: "$$item.price",
                 snapshotName: "$$item.snapshotName",
@@ -89,6 +100,7 @@ export async function GET(request: NextRequest) {
     const normalized = templates.map((t) => ({
       ...t,
       _id: t._id?.toString(),
+      productCount: t.productCount ?? 0,
       items: t.items?.map((item: any) => ({
         ...item,
         product: item.product
@@ -140,7 +152,6 @@ export async function POST(request: NextRequest) {
       maxSelect: validated.maxSelect,
       items: validated.items.map((item) => ({
         product: item.product,
-        quantity: item.quantity,
         label: item.label ?? null,
         price: item.price ?? null,
         snapshotName: item.snapshotName ?? item.label ?? null,

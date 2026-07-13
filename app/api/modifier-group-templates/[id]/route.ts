@@ -1,6 +1,8 @@
 import "@/lib/registerModels";
 import { connectDB } from "@/lib/mongodb";
+import mongoose from "mongoose";
 import { ModifierGroupTemplate } from "@/models/ModifierGroupTemplate";
+import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/getAuth";
@@ -12,7 +14,6 @@ import { canAccess } from "@/lib/roleBasedAccessCtrl";
 
 const modifierTemplateItemSchema = z.object({
   product: z.string().min(1, "Item must reference a product"),
-  quantity: z.coerce.number().int().min(1).default(1),
   label: z.string().nullable().optional(),
   price: z.coerce.number().nullable().optional(),
   snapshotName: z.string().nullable().optional(),
@@ -55,7 +56,20 @@ export async function GET(
     }
 
     const [template] = await ModifierGroupTemplate.aggregate([
-      { $match: { _id: { $toObjectId: id } } },
+      { $match: { _id: new mongoose.Types.ObjectId(id)} },
+      {
+        $lookup: {
+          from: "products",
+          let: { templateId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$modifierGroups.templateId", "$$templateId"] } } },
+            { $count: "total" },
+          ],
+          as: "_productCount",
+        },
+      },
+      { $addFields: { productCount: { $ifNull: [{ $arrayElemAt: ["$_productCount.total", 0] }, 0] } } },
+      { $unset: "_productCount" },
       {
         $lookup: {
           from: "products",
@@ -83,7 +97,6 @@ export async function GET(
                     0,
                   ],
                 },
-                quantity: "$$item.quantity",
                 label: "$$item.label",
                 price: "$$item.price",
                 snapshotName: "$$item.snapshotName",
@@ -103,6 +116,7 @@ export async function GET(
     const normalized = {
       ...template,
       _id: template._id?.toString(),
+      productCount: template.productCount ?? 0,
       items: template.items?.map((item: any) => ({
         ...item,
         product: item.product
@@ -166,7 +180,6 @@ export async function PUT(
     if (validated.items !== undefined) {
       updateFields.items = validated.items.map((item) => ({
         product: item.product,
-        quantity: item.quantity,
         label: item.label ?? null,
         price: item.price ?? null,
         snapshotName: item.snapshotName ?? item.label ?? null,
@@ -184,7 +197,15 @@ export async function PUT(
       return getAPIError("Template not found", 404);
     }
 
-    return NextResponse.json({ data: updated }, { status: 200 });
+    // Count products referencing this template so the UI can show warnings
+    const productCount = await Product.countDocuments({
+      "modifierGroups.templateId": new mongoose.Types.ObjectId(id),
+    });
+
+    return NextResponse.json(
+      { data: { ...updated.toObject(), productCount } },
+      { status: 200 },
+    );
   } catch (error) {
     return getAPIError(error, 500, {
       fallbackMessage: "Failed to update modifier group template",
@@ -218,6 +239,11 @@ export async function DELETE(
       return getAPIError("Invalid template id", 400);
     }
 
+    // Count products referencing this template before deleting
+    const productCount = await Product.countDocuments({
+      "modifierGroups.templateId": new mongoose.Types.ObjectId(id),
+    });
+
     const deleted = await ModifierGroupTemplate.findByIdAndDelete(id);
 
     if (!deleted) {
@@ -225,7 +251,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { message: "Modifier group template deleted successfully" },
+      { message: "Modifier group template deleted successfully", productCount },
       { status: 200 },
     );
   } catch (error) {

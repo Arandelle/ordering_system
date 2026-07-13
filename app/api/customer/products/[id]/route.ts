@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { Product } from "@/models/Product";
 import { STOCK_STATUSES } from "@/types/inventory_types";
@@ -21,7 +22,6 @@ type ModifierProductAggregate = {
 
 type ModifierItemAggregate = {
   product?: ModifierProductAggregate | null;
-  quantity: number;
   label?: string | null;
   price?: number | null;
   snapshotName?: string | null;
@@ -30,6 +30,7 @@ type ModifierItemAggregate = {
 
 type ModifierGroupAggregate = {
   _id?: string;
+  templateId?: string;
   name: string;
   required: boolean;
   minSelect: number;
@@ -108,6 +109,7 @@ export async function GET(
               as: "group",
               in: {
                 _id: "$$group._id",
+                templateId: "$$group.templateId",
                 name: "$$group.name",
                 required: "$$group.required",
                 minSelect: "$$group.minSelect",
@@ -129,7 +131,6 @@ export async function GET(
                           0,
                         ],
                       },
-                      quantity: "$$item.quantity",
                       label: "$$item.label",
                       price: "$$item.price",
                       snapshotName: "$$item.snapshotName",
@@ -265,6 +266,7 @@ export async function GET(
       modifierGroups:
         product.modifierGroups?.map((group: ModifierGroupAggregate) => ({
           _id: group._id?.toString(),
+          templateId: group.templateId?.toString() || null,
           name: group.name,
           required: group.required,
           minSelect: group.minSelect,
@@ -283,7 +285,6 @@ export async function GET(
                     productType: item.product.productType || "solo",
                   }
                 : "",
-              quantity: item.quantity,
               label: item.label,
               price: item.price,
               snapshotName: item.snapshotName,

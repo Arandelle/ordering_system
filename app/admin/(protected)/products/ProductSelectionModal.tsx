@@ -4,6 +4,12 @@ import React, { useState, useMemo } from "react";
 import Modal from "@/components/ui/Modal";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { Product } from "@/types/products";
+import { apiClient } from "@/lib/apiClient";
+import { IconButton } from "@/components/ui/buttons";
+import { FetchError } from "@/components/ui/FetchError";
+import { useQuery } from "@tanstack/react-query";
+import { AppImage } from "@/components/AppImage";
+import { Checkbox, InputField } from "@/components/ui/FormComponents";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,31 +27,61 @@ interface GroupedProducts {
 interface ProductSelectionModalProps {
   onClose: () => void;
   onConfirm: (selectedProducts: Product[]) => void;
-  allProducts: Product[];
-  categories: CategoryOption[];
   /** IDs already selected in the current group (pre-checked and disabled) */
-  alreadySelectedIds: string[];
-  loading: boolean;
+  alreadySelectedIds?: string[];
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 /**
  * Modal for selecting solo products to include in a modifier group.
- * Products are grouped by category with category-level and individual checkboxes.
+ * Fetches products and categories internally, grouped by category with
+ * category-level and individual checkboxes.
  */
 const ProductSelectionModal = ({
   onClose,
   onConfirm,
-  allProducts,
-  categories,
-  alreadySelectedIds,
-  loading,
+  alreadySelectedIds = [],
 }: ProductSelectionModalProps) => {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(alreadySelectedIds),
   );
+
+  const productsQuery = useQuery<
+    { data: Product[] } | Product[], // raw response shape
+    Error,
+    Product[] // shape after `select`
+  >({
+    queryKey: ["products", { limit: 500 }],
+    queryFn: () => apiClient.get<{ data: Product[] }>("/products?limit=500"),
+    select: (res) =>
+      Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [],
+    staleTime: 60_000,
+  });
+
+  const categoriesQuery = useQuery<
+    { data: CategoryOption[] } | CategoryOption[],
+    Error,
+    CategoryOption[]
+  >({
+    queryKey: ["categories"],
+    queryFn: () => apiClient.get<{ data: CategoryOption[] }>("/categories"),
+    select: (res) =>
+      Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [],
+    staleTime: 60_000,
+  });
+
+  const allProducts = productsQuery.data ?? [];
+  const categories = categoriesQuery.data ?? [];
+
+  const loading = productsQuery.isLoading || categoriesQuery.isLoading;
+  const isError = productsQuery.isError || categoriesQuery.isError;
+
+  const refetchAll = () => {
+    productsQuery.refetch();
+    categoriesQuery.refetch();
+  };
 
   // Only solo products are selectable (combo/set items shouldn't be nested)
   const soloProducts = useMemo(
@@ -108,24 +144,27 @@ const ProductSelectionModal = ({
   const filteredGroups = useMemo(() => {
     if (!search.trim()) return groupedProducts;
 
-    return groupedProducts.filter((group) => {
-      const hasMatch = group.products.some((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()),
-      );
-      // Also match category name
-      const catMatch = group.categoryName
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      return hasMatch || catMatch;
-    }).map((group) => ({
-      ...group,
-      products: search.trim()
-        ? group.products.filter((p) =>
-            p.name.toLowerCase().includes(search.toLowerCase()) ||
-            group.categoryName.toLowerCase().includes(search.toLowerCase())
-          )
-        : group.products,
-    }));
+    return groupedProducts
+      .filter((group) => {
+        const hasMatch = group.products.some((p) =>
+          p.name.toLowerCase().includes(search.toLowerCase()),
+        );
+        // Also match category name
+        const catMatch = group.categoryName
+          .toLowerCase()
+          .includes(search.toLowerCase());
+        return hasMatch || catMatch;
+      })
+      .map((group) => ({
+        ...group,
+        products: search.trim()
+          ? group.products.filter(
+              (p) =>
+                p.name.toLowerCase().includes(search.toLowerCase()) ||
+                group.categoryName.toLowerCase().includes(search.toLowerCase()),
+            )
+          : group.products,
+      }));
   }, [groupedProducts, search]);
 
   // Toggle a single product
@@ -187,26 +226,30 @@ const ProductSelectionModal = ({
       contentClassName="!p-0"
     >
       {/* Search bar */}
-      <div className="sticky top-[72px] bg-white px-6 py-3 border-b border-slate-100 z-30">
-        <div className="flex items-center gap-2 px-3 py-2.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-brand-color-500">
-          <DynamicIcon name="Search" size={16} className="text-gray-400 shrink-0" />
-          <input
-            type="text"
-            placeholder="Search by product or category name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-400"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <DynamicIcon name="X" size={14} />
-            </button>
-          )}
-        </div>
+      <div className="sticky top-18 bg-white px-6 py-3 border-b border-slate-100 z-30">
+        <InputField
+          type="text"
+          placeholder="Search by product or category name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          leftIcon={
+            <DynamicIcon
+              name="Search"
+              size={16}
+              className="text-gray-400 shrink-0"
+            />
+          }
+          rightElement={
+            search && (
+              <IconButton
+                type="button"
+                onClick={() => setSearch("")}
+                icon={{ name: "X" }}
+                variant="ghost"
+              />
+            )
+          }
+        />
       </div>
 
       {/* Loading state */}
@@ -215,11 +258,15 @@ const ProductSelectionModal = ({
           <DynamicIcon name="LoaderCircle" size={24} className="animate-spin" />
           <p className="text-sm">Loading products...</p>
         </div>
+      ) : isError ? (
+        <FetchError onRetry={refetchAll} error={categoriesQuery.error} />
       ) : filteredGroups.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 gap-2 text-gray-400">
           <DynamicIcon name="PackageOpen" size={28} />
           <p className="text-sm">
-            {search ? "No products match your search" : "No solo products available"}
+            {search
+              ? "No products match your search"
+              : "No solo products available"}
           </p>
         </div>
       ) : (
@@ -228,71 +275,82 @@ const ProductSelectionModal = ({
             const catIds = group.products.map((p) => p._id);
             const allCatSelected = catIds.every((id) => selectedIds.has(id));
             const someCatSelected = catIds.some((id) => selectedIds.has(id));
-            const selectedInCat = catIds.filter((id) => selectedIds.has(id)).length;
+            const selectedInCat = catIds.filter((id) =>
+              selectedIds.has(id),
+            ).length;
 
             return (
               <div key={group.categoryId} className="space-y-2">
                 {/* Category header with group checkbox */}
-                <label className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition">
-                  <input
-                    type="checkbox"
-                    checked={allCatSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = someCatSelected && !allCatSelected;
-                    }}
-                    onChange={() => toggleCategory(group.categoryId)}
-                    className="w-4 h-4 rounded border-gray-300 text-brand-color-500 focus:ring-brand-color-500/30 cursor-pointer accent-[#e13500]"
-                  />
-                  <DynamicIcon name="FolderOpen" size={16} className="text-gray-500" />
-                  <span className="text-sm font-semibold text-gray-800">
-                    {group.categoryName}
-                  </span>
-                  <span className="text-xs text-gray-400 ml-auto">
-                    {selectedInCat}/{group.products.length}
-                  </span>
-                </label>
-
+                <Checkbox
+                  checked={allCatSelected}
+                  indeterminate={someCatSelected && !allCatSelected}
+                  onChange={() => toggleCategory(group.categoryId)}
+                  wrapperClassName="bg-gray-50 border border-gray-200 hover:bg-gray-100"
+                  leftElement={
+                    <DynamicIcon
+                      name="FolderOpen"
+                      size={16}
+                      className="text-gray-500"
+                    />
+                  }
+                  label={
+                    <span className="font-semibold text-gray-800">
+                      {group.categoryName}
+                    </span>
+                  }
+                  rightElement={
+                    <span className="text-xs text-gray-400 ml-auto">
+                      {selectedInCat}/{group.products.length}
+                    </span>
+                  }
+                />
                 {/* Individual product checkboxes */}
                 <div className="space-y-1 pl-2">
                   {group.products.map((product) => {
                     const isSelected = selectedIds.has(product._id);
-                    const isPreSelected = alreadySelectedIds.includes(product._id);
+                    const isPreSelected = alreadySelectedIds.includes(
+                      product._id,
+                    );
 
                     return (
-                      <label
+                      <Checkbox
                         key={product._id}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition cursor-pointer
-                          ${isSelected
+                        checked={isSelected}
+                        onChange={() => toggleProduct(product._id)}
+                        disabled={isPreSelected}
+                        wrapperClassName={
+                          isSelected
                             ? "bg-brand-color-500/5 border border-brand-color-500/20"
-                            : "hover:bg-gray-50 border border-transparent"
-                          }
-                          ${isPreSelected ? "opacity-60" : ""}
-                        `}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleProduct(product._id)}
-                          disabled={isPreSelected}
-                          className="w-4 h-4 rounded border-gray-300 text-brand-color-500 focus:ring-brand-color-500/30 cursor-pointer accent-[#e13500]"
-                        />
-                        {product.image?.url && (
-                          <img
-                            src={product.image.url}
-                            alt={product.name}
-                            className="w-8 h-8 rounded-md object-cover shrink-0"
-                          />
-                        )}
-                        <span className="flex-1 text-sm text-gray-700 truncate">
-                          {product.name}
-                          {isPreSelected && (
-                            <span className="text-xs text-brand-color-500 ml-1">(already added)</span>
-                          )}
-                        </span>
-                        <span className="text-xs text-gray-400 shrink-0 font-medium">
-                          ₱{product.price ?? "—"}
-                        </span>
-                      </label>
+                            : "border border-transparent"
+                        }
+                        leftElement={
+                          product.image?.url && (
+                            <div className="w-8 h-8 rounded-md object-cover shrink-0">
+                              <AppImage
+                                src={product.image.url}
+                                alt={product.name}
+                                loading="lazy"
+                              />
+                            </div>
+                          )
+                        }
+                        label={
+                          <>
+                            {product.name}
+                            {isPreSelected && (
+                              <span className="text-xs text-brand-color-500 ml-1">
+                                (already added)
+                              </span>
+                            )}
+                          </>
+                        }
+                        rightElement={
+                          <span className="text-xs text-gray-400 shrink-0 font-medium">
+                            ₱{product.price ?? "—"}
+                          </span>
+                        }
+                      />
                     );
                   })}
                 </div>
@@ -305,7 +363,10 @@ const ProductSelectionModal = ({
       {/* Footer */}
       <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-between z-30">
         <div className="text-sm text-gray-600">
-          <span className="font-semibold text-brand-color-500">{totalSelected}</span> selected
+          <span className="font-semibold text-brand-color-500">
+            {totalSelected}
+          </span>{" "}
+          selected
           {newlyAddedCount > 0 && (
             <span className="text-xs text-green-600 ml-1.5">
               (+{newlyAddedCount} new)
@@ -314,20 +375,21 @@ const ProductSelectionModal = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
+          <IconButton
             onClick={onClose}
-            className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
+            text="Cancel"
+            variant="secondary"
+            className="rounded-lg px-4"
+          />
+
+          <IconButton
             type="button"
             onClick={handleConfirm}
-            className="px-5 py-2 text-sm font-semibold text-white bg-brand-color-500 rounded-lg hover:bg-[#c13500] transition cursor-pointer shadow-md"
-          >
-            Confirm Selection
-          </button>
+            disabled={loading}
+            text="Confirm Selection"
+            variant="primary"
+            className="rounded-lg px-4"
+          />
         </div>
       </div>
     </Modal>

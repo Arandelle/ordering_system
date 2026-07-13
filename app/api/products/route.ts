@@ -17,7 +17,6 @@ import { getAPIError } from "@/lib/getApiError";
 
 const modifierItemSchema = z.object({
   product: z.string().min(1, "Modifier item must reference a product"),
-  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1").default(1),
   label: z.string().nullable().optional(),
   price: z.coerce.number().nullable().optional(),
   snapshotName: z.string().nullable().optional(),
@@ -26,6 +25,7 @@ const modifierItemSchema = z.object({
 
 const modifierGroupSchema = z.object({
   _id: z.string().optional(),
+  templateId: z.string().nullable().optional(),
   name: z.string().min(1, "Group name is required"),
   required: z.boolean().default(true),
   minSelect: z.coerce.number().int().min(1).default(1),
@@ -94,7 +94,6 @@ type ModifierProductAggregate = {
 
 type ModifierItemAggregate = {
   product?: ModifierProductAggregate | null;
-  quantity: number;
   label?: string | null;
   price?: number | null;
   snapshotName?: string | null;
@@ -103,6 +102,7 @@ type ModifierItemAggregate = {
 
 type ModifierGroupAggregate = {
   _id?: string;
+  templateId?: string;
   name: string;
   required: boolean;
   minSelect: number;
@@ -177,6 +177,7 @@ export async function GET(request: NextRequest) {
               as: "group",
               in: {
                 _id: "$$group._id",
+                templateId: "$$group.templateId",
                 name: "$$group.name",
                 required: "$$group.required",
                 minSelect: "$$group.minSelect",
@@ -198,7 +199,6 @@ export async function GET(request: NextRequest) {
                           0,
                         ],
                       },
-                      quantity: "$$item.quantity",
                       label: "$$item.label",
                       price: "$$item.price",
                       snapshotName: "$$item.snapshotName",
@@ -258,6 +258,7 @@ export async function GET(request: NextRequest) {
       modifierGroups:
         product.modifierGroups?.map((group: ModifierGroupAggregate) => ({
           _id: group._id?.toString(),
+          templateId: group.templateId?.toString() || null,
           name: group.name,
           required: group.required,
           minSelect: group.minSelect,
@@ -276,7 +277,6 @@ export async function GET(request: NextRequest) {
                     productType: item.product.productType || "solo",
                   }
                 : "",
-              quantity: item.quantity,
               label: item.label,
               price: item.price,
               snapshotName: item.snapshotName,
@@ -376,13 +376,13 @@ export async function POST(request: NextRequest) {
       modifierGroups:
         productType !== "solo"
           ? (modifierGroups ?? []).map((group) => ({
+              templateId: group.templateId ?? null,
               name: group.name,
               required: group.required ?? true,
               minSelect: group.minSelect ?? 1,
               maxSelect: group.maxSelect ?? 1,
               items: (group.items ?? []).map((item) => ({
                 product: item.product,
-                quantity: item.quantity ?? 1,
                 label: item.label ?? null,
                 price: item.price ?? null,
                 snapshotName: item.snapshotName ?? item.label ?? null,
