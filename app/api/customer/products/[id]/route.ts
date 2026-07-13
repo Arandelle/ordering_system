@@ -1,5 +1,4 @@
 import { connectDB } from "@/lib/mongodb";
-import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { Product } from "@/models/Product";
 import { STOCK_STATUSES } from "@/types/inventory_types";
