@@ -20,7 +20,8 @@ interface IconButtonProps extends ComponentPropsWithoutRef<"button"> {
     | "ghost"
     | "danger"
     | "success"
-    | "disabled";
+    | "disabled"
+    | "underline";
   isLoading?: boolean;
   children?: React.ReactNode; // if provided, overrides text/icon layout entirely
 }
@@ -54,6 +55,7 @@ const variantClasses: Record<
   success:
     "bg-green-500 text-white disabled:bg-green-500 disabled:text-white disabled:opacity-100 disabled:cursor-default",
   disabled: DEFAULT_DISABLED,
+  underline: "text-brand-color-500 hover:text-brand-color-600 underline",
 };
 
 const IconButton = ({
@@ -75,7 +77,7 @@ const IconButton = ({
       type={type}
       disabled={disabled || isLoading}
       className={cn(
-        "inline-flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold transition-all cursor-pointer",
+        "inline-flex items-center justify-center gap-2 p-2 text-sm font-semibold transition-all cursor-pointer",
         variantClasses[variant],
         className,
       )}
@@ -90,14 +92,14 @@ const IconButton = ({
           {isLoading && (
             <DynamicIcon
               name="Loader2"
-              size={icon?.size ?? 16}
+              size={icon?.size ?? 14}
               className="animate-spin"
             />
           )}
           {!isLoading && icon && iconPosition === "left" && (
             <DynamicIcon
               name={icon.name}
-              size={icon.size ?? 16}
+              size={icon.size ?? 14}
               className={icon.className}
             />
           )}
@@ -105,7 +107,7 @@ const IconButton = ({
           {!isLoading && icon && iconPosition === "right" && (
             <DynamicIcon
               name={icon.name}
-              size={icon.size ?? 16}
+              size={icon.size ?? 14}
               className={icon.className}
             />
           )}
