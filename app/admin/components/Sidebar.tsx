@@ -128,6 +128,12 @@ const navSections: NavSection[] = [
           },
         ],
       },
+      {
+        name: "Modifier Groups",
+        path: "/modifier-groups",
+        icon: "SlidersHorizontal",
+        permission: "modifier-groups.read",
+      },
     ],
   },
   // Administration
