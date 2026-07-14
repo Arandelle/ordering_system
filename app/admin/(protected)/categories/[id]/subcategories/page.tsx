@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import PermissionGuard from "@/lib/PermissionGuard";
 import { SubCategory } from "@/types/category";
 import SectionHeader from "@/app/admin/components/SectionHeader";
+import { debounce, REORDER_DEBOUNCE_MS } from "@/utils/debounce";
 
 // ── Inline edit row ───────────────────────────────────────────────────────────
 const SubEditRow = ({
@@ -212,12 +213,21 @@ const SubcategoriesPage = () => {
     onError: (error: Error) => toast.error(error.message || "Failed to delete subcategory"),
   });
 
+  const debouncedReorderRef = useRef<ReturnType<typeof debounce> | null>(null);
+
   const reorderMutation = useMutation({
     mutationFn: subcategories_api.reorder,
     onSuccess: () =>
       queryClient.invalidateQueries({
         queryKey: ["subcategories", categoryId],
       }),
+    onError: () => {
+      // Rollback optimistic update by re-fetching from server
+      queryClient.invalidateQueries({
+        queryKey: ["subcategories", categoryId],
+      });
+      toast.error("Failed to save reorder. Refreshing...");
+    },
   });
 
   const handleDrop = (targetId: string) => {
@@ -228,12 +238,18 @@ const SubcategoriesPage = () => {
     const reordered = [...sorted];
     const [moved] = reordered.splice(fromIdx, 1);
     reordered.splice(toIdx, 0, moved);
+    const updates = reordered.map((s, i) => ({ id: s._id, position: i + 1 }));
+    // Optimistic update: immediately reflect in cache
     queryClient.setQueryData(["subcategories", categoryId], () =>
       reordered.map((s, i) => ({ ...s, position: i + 1 })),
     );
-    reorderMutation.mutate(
-      reordered.map((s, i) => ({ id: s._id, position: i + 1 })),
+    // Cancel any pending debounced reorder, schedule new one
+    if (debouncedReorderRef.current) debouncedReorderRef.current.cancel();
+    debouncedReorderRef.current = debounce(
+      () => reorderMutation.mutate(updates),
+      REORDER_DEBOUNCE_MS,
     );
+    debouncedReorderRef.current();
     setDragId(null);
     setDragOverId(null);
   };

@@ -14,6 +14,7 @@ import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import { Loader2, Trash2 } from "lucide-react";
 import { fileToBase64 } from "@/utils/fileUtils";
+import { debounce, REORDER_DEBOUNCE_MS } from "@/utils/debounce";
 
 // ── Image Upload Button ───────────────────────────────────────────────────────
 const ImageUploadButton = ({
@@ -419,12 +420,20 @@ const Page = () => {
       toast.error(error.message || "Failed to delete category"),
   });
 
+  const debouncedReorderRef = useRef<ReturnType<typeof debounce> | null>(null);
+
   const reorderMutation = useMutation({
     mutationFn: categories_api.reorder,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("Reordered successfully!");
+    },
+    onError: () => {
+      // Rollback optimistic update by re-fetching from server
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.error("Failed to save reorder. Refreshing...");
     },
   });
 
@@ -443,10 +452,17 @@ const Page = () => {
     const [moved] = reordered.splice(fromIdx, 1);
     reordered.splice(toIdx, 0, moved);
     const updates = reordered.map((c, i) => ({ id: c._id, position: i + 1 }));
+    // Optimistic update: immediately reflect in cache
     queryClient.setQueryData(["categories"], () =>
       reordered.map((c, i) => ({ ...c, position: i + 1 })),
     );
-    reorderMutation.mutate(updates);
+    // Cancel any pending debounced reorder, schedule new one
+    if (debouncedReorderRef.current) debouncedReorderRef.current.cancel();
+    debouncedReorderRef.current = debounce(
+      () => reorderMutation.mutate(updates),
+      REORDER_DEBOUNCE_MS,
+    );
+    debouncedReorderRef.current();
     setDragId(null);
     setDragOverId(null);
   };
