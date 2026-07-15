@@ -556,7 +556,7 @@ const ProductDetailPage: React.FC = () => {
                               )}
                             </div>
                             {/* Quantity stepper — visible only when selected */}
-                            {isSelected && (
+                            {/* {isSelected && (
                               <div onClick={(e) => e.stopPropagation()} className="max-w-28">
                                 <QuantityStepper
                                   value={itemQty}
@@ -571,7 +571,7 @@ const ProductDetailPage: React.FC = () => {
                                   }
                                 />
                               </div>
-                            )}
+                            )} */}
                           </div>
                         );
                       })}
