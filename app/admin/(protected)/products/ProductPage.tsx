@@ -8,7 +8,12 @@ import {
 } from "@/components/ui/FormComponents";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/api/useProducts";
 import { toast } from "sonner";
-import { ModifierGroupUI, ITEM_TYPES, ProductType, Product } from "@/types/products";
+import {
+  ModifierGroupUI,
+  ITEM_TYPES,
+  ProductType,
+  Product,
+} from "@/types/products";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useRouter } from "next/navigation";
 import { categories_api, subcategories_api } from "../categories/hooks/api";
@@ -167,9 +172,12 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
             _id: group._id,
             templateId: group.templateId ?? null,
             name: group.name,
+            isMain: group.isMain ?? false,
+            linkedToGroupId: group.linkedToGroupId ?? null,
             required: group.required,
             minSelect: group.minSelect,
             maxSelect: group.maxSelect,
+            maxQty: group.maxQty ?? Math.max(group.minSelect, group.maxSelect),
             items,
           };
         }) || [];
@@ -300,9 +308,13 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
           ? modifierGroupsState.map((group) => ({
               templateId: group.templateId ?? null,
               name: group.name,
+              isMain: group.isMain ?? false,
+              linkedToGroupId: group.linkedToGroupId ?? null,
               required: group.required,
               minSelect: group.minSelect,
               maxSelect: group.maxSelect,
+              maxQty:
+                group.maxQty ?? Math.max(group.minSelect, group.maxSelect),
               items: group.items.map(
                 ({ product, label, price, _name, _price }) => ({
                   product,
