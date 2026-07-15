@@ -27,11 +27,15 @@ export type ModifierItemAggregate = {
 };
 
 export type ModifierGroupAggregate = {
-  _id?: string;
-  templateId?: string;
+  _id?: string | { toString: () => string };
+  templateId?: string | { toString: () => string };
   name: string;
+  isMain: boolean;
+  linkedToGroupId?: string | { toString: () => string } | null;
   required: boolean;
   minSelect: number;
   maxSelect: number;
+  maxQty: number;
+  position?: number;
   items: ModifierItemAggregate[];
 };

@@ -14,9 +14,12 @@ const ModifierItemSchema = new Schema({
 const ModifierGroupSchema = new Schema({
   templateId: { type: Schema.Types.ObjectId, ref: "ModifierGroupTemplate", default: null },
   name: { type: String, required: true },
+  isMain: { type: Boolean, default: false },
+  linkedToGroupId: { type: Schema.Types.ObjectId, default: null },
   required: { type: Boolean, default: true },
   minSelect: { type: Number, default: 1, min: 1 },
   maxSelect: { type: Number, default: 1, min: 1 },
+  maxQty: { type: Number, default: 1, min: 1 },
   position: { type: Number, default: 0 },
   items: { type: [ModifierItemSchema], default: [] },
 }, { _id: true });

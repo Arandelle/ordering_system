@@ -16,6 +16,7 @@ const ModifierGroupTemplateSchema = new Schema({
   required: { type: Boolean, default: true },
   minSelect: { type: Number, default: 1, min: 1 },
   maxSelect: { type: Number, default: 1, min: 1 },
+  maxQty: { type: Number, default: 1, min: 1 },
   items: { type: [ModifierTemplateItemSchema], default: [] },
 }, { timestamps: true });
 

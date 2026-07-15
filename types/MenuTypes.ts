@@ -21,9 +21,12 @@ export interface ModifierSelectionItem {
 export interface ModifierSelection {
   groupId: string;
   groupName: string;
+  isMain: boolean;
+  linkedToGroupId: string | null;
   required: boolean;
   minSelect: number;
   maxSelect: number;
+  maxQty: number;
   items: ModifierSelectionItem[];
 }
 

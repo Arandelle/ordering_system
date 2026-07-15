@@ -17,9 +17,12 @@ const ModifierSelectionSchema = new Schema(
   {
     groupId: { type: String, required: true },
     groupName: { type: String, required: true },
+    isMain: { type: Boolean, default: false },
+    linkedToGroupId: { type: String, default: null },
     required: { type: Boolean, default: true },
     minSelect: { type: Number, default: 1, min: 1 },
     maxSelect: { type: Number, default: 1, min: 1 },
+    maxQty: { type: Number, default: 1, min: 1 },
     items: { type: [ModifierSelectionItemSchema], default: [] },
   },
   { _id: false },

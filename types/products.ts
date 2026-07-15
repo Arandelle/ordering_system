@@ -38,9 +38,12 @@ export interface ModifierGroup {
   _id?: string;
   templateId?: string | null;
   name: string;
+  isMain: boolean;
+  linkedToGroupId?: string | null;
   required: boolean;
   minSelect: number;
   maxSelect: number;
+  maxQty: number;
   position?: number;
   items: ModifierItem[];
 }
@@ -50,9 +53,12 @@ export interface ModifierGroupUI {
   _id?: string;
   templateId?: string | null;
   name: string;
+  isMain: boolean;
+  linkedToGroupId?: string | null;
   required: boolean;
   minSelect: number;
   maxSelect: number;
+  maxQty: number;
   position?: number;
   items: ModifierItemUI[];
 }
@@ -74,6 +80,7 @@ export interface ModifierGroupTemplate {
   required: boolean;
   minSelect: number;
   maxSelect: number;
+  maxQty: number;
   items: ModifierGroupTemplateItem[];
   /** Number of products that reference this template via modifierGroups.templateId */
   productCount?: number;
@@ -86,6 +93,7 @@ export interface ModifierGroupTemplatePayload {
   required?: boolean;
   minSelect?: number;
   maxSelect?: number;
+  maxQty?: number;
   items: ModifierGroupTemplateItem[];
 }
 

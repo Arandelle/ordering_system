@@ -20,9 +20,12 @@ export const modifierGroupSchema = z.object({
   _id: z.string().optional(),
   templateId: z.string().nullable().optional(),
   name: z.string().min(1, "Group name is required"),
+  isMain: z.boolean().default(false),
+  linkedToGroupId: z.string().nullable().optional(),
   required: z.boolean().default(true),
   minSelect: z.coerce.number().int().min(1).default(1),
   maxSelect: z.coerce.number().int().min(1).default(1),
+  maxQty: z.coerce.number().int().min(1).default(1),
   position: z.coerce.number().int().min(0).optional(),
   items: z.array(modifierItemSchema).min(1, "Group must have at least one item"),
 });

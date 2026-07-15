@@ -111,6 +111,63 @@ const ProductDetailPage: React.FC = () => {
   const isCombo = product?.productType === ITEM_TYPES.COMBO;
   const isSet = product?.productType === ITEM_TYPES.SET;
 
+  // ── Effective group settings (linked groups derive from main at runtime) ────
+  const effectiveGroupSettings = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        required: boolean;
+        minSelect: number;
+        maxSelect: number;
+        maxQty: number;
+        isLinked: boolean;
+      }
+    >();
+
+    // Find the main group
+    const mainGroup = populatedGroups.find((g) => g.isMain);
+    const mainGroupId = mainGroup?._id ?? "";
+    const mainQtyMap = modifierQuantities.get(mainGroupId);
+    const mainTotalQty = mainQtyMap
+      ? [...mainQtyMap.values()].reduce(
+          (sum, q) => sum + Math.max(0, q),
+          0,
+        )
+      : 0;
+    const mainSelectedCount = mainQtyMap
+      ? [...mainQtyMap.values()].filter((q) => q > 0).length
+      : 0;
+
+    for (const group of populatedGroups) {
+      const gid = group._id ?? "";
+
+      if (group.linkedToGroupId && mainGroup) {
+        // Fully derived from main group at runtime
+        map.set(gid, {
+          // Required only when main group has items selected
+          required: mainTotalQty > 0,
+          // Distinct items must match main's distinct items
+          minSelect: mainSelectedCount,
+          maxSelect: mainSelectedCount,
+          // Total qty must match main's total qty
+          maxQty: mainTotalQty,
+          isLinked: true,
+        });
+      } else {
+        // Standalone or main group — use own settings
+        map.set(gid, {
+          required: group.required,
+          minSelect: group.minSelect,
+          maxSelect: group.maxSelect,
+          maxQty: group.maxQty,
+          isLinked: false,
+        });
+      }
+    }
+
+    return map;
+  }, [populatedGroups, modifierQuantities]);
+
   // ── Computed: upgrade pricing ──────────────────────────────────────────────
   const upgradeTotal = useMemo(() => {
     if (!hasModifierGroups) return 0;
@@ -119,9 +176,11 @@ const ProductDetailPage: React.FC = () => {
       const groupQtyMap = modifierQuantities.get(group._id ?? "");
       if (!groupQtyMap) continue;
       for (const modItem of group.items) {
-        const qty = groupQtyMap.get(modItem.product._id) ?? 0;
+        const productId = typeof modItem.product === "object" ? modItem.product._id : "";
+        const qty = groupQtyMap.get(productId) ?? 0;
         if (qty > 0) {
-          const upgradePrice = modItem.price ?? modItem.product.price ?? 0;
+          const itemPrice = typeof modItem.product === "object" ? modItem.product.price : null;
+          const upgradePrice = Number(modItem.price ?? itemPrice ?? 0) || 0;
           sum += upgradePrice * qty;
         }
       }
@@ -140,22 +199,38 @@ const ProductDetailPage: React.FC = () => {
       : basePrice;
   const total = multiplyMoney(displayUnitPrice, mainQty);
 
-  // ── Modifier validation ──────────────────────────────────────────────────────
+  // ── Modifier validation (uses effective settings for linked groups) ─────────
   const modifierValidationErrors = useMemo(() => {
     if (!hasModifierGroups) return [];
     const errors: string[] = [];
     for (const group of populatedGroups) {
-      const groupQtyMap = modifierQuantities.get(group._id ?? "");
-      // Count how many distinct items have quantity > 0
+      const gid = group._id ?? "";
+      const eff = effectiveGroupSettings.get(gid);
+      if (!eff) continue;
+
+      const groupQtyMap = modifierQuantities.get(gid);
       const selectedCount = groupQtyMap
         ? [...groupQtyMap.values()].filter((q) => q > 0).length
         : 0;
-      if (group.required && selectedCount < group.minSelect) {
-        errors.push(`${group.name}: select at least ${group.minSelect}`);
+      const totalQty = groupQtyMap
+        ? [...groupQtyMap.values()].reduce((sum, q) => sum + q, 0)
+        : 0;
+
+      // Check minimum distinct items
+      if (eff.required && selectedCount < eff.minSelect) {
+        errors.push(
+          `${group.name}: select at least ${eff.minSelect} item${eff.minSelect > 1 ? "s" : ""}`,
+        );
+      }
+      // Check total quantity meets linked group requirement
+      if (eff.required && eff.isLinked && totalQty < eff.maxQty) {
+        errors.push(
+          `${group.name}: total quantity must be ${eff.maxQty} (follows main group)`,
+        );
       }
     }
     return errors;
-  }, [hasModifierGroups, populatedGroups, modifierQuantities]);
+  }, [hasModifierGroups, populatedGroups, modifierQuantities, effectiveGroupSettings]);
 
   const canAddToCart = modifierValidationErrors.length === 0;
 
@@ -185,7 +260,7 @@ const ProductDetailPage: React.FC = () => {
   const setModifierItemQty = (
     groupId: string,
     productId: string,
-    maxSelect: number,
+    settings: { maxSelect: number; maxQty: number },
     newQty: number,
   ) => {
     setModifierQuantities((prev) => {
@@ -201,8 +276,11 @@ const ProductDetailPage: React.FC = () => {
           (q) => q > 0,
         ).length;
         // If this is a new selection (was 0 or absent), ensure we don't exceed maxSelect
-        if (!groupMap.has(productId) && currentSelectedCount >= maxSelect) {
-          if (maxSelect === 1) {
+        if (
+          (groupMap.get(productId) ?? 0) === 0 &&
+          currentSelectedCount >= settings.maxSelect
+        ) {
+          if (settings.maxSelect === 1) {
             // Radio-style group: switch selection instead of blocking
             groupMap.clear();
           } else {
@@ -210,6 +288,19 @@ const ProductDetailPage: React.FC = () => {
             return prev; // no change — already at max
           }
         }
+
+        // Enforce maxQty: total quantity across all items in this group
+        const currentTotalQty = [...groupMap.values()].reduce(
+          (sum, q) => sum + q,
+          0,
+        );
+        const currentQtyForThisItem = groupMap.get(productId) ?? 0;
+        const newTotalQty =
+          currentTotalQty - currentQtyForThisItem + newQty;
+        if (newTotalQty > settings.maxQty) {
+          return prev; // block — total qty limit reached
+        }
+
         groupMap.set(productId, newQty);
       }
 
@@ -259,9 +350,12 @@ const ProductDetailPage: React.FC = () => {
             return {
               groupId: group._id ?? "",
               groupName: group.name,
+              isMain: group.isMain,
+              linkedToGroupId: group.linkedToGroupId ?? null,
               required: group.required,
               minSelect: group.minSelect,
               maxSelect: group.maxSelect,
+              maxQty: group.maxQty,
               items,
             };
           })
@@ -435,21 +529,45 @@ const ProductDetailPage: React.FC = () => {
             {hasModifierGroups &&
               populatedGroups.map((group) => {
                 const groupId = group._id ?? "";
+                const eff = effectiveGroupSettings.get(groupId) ?? {
+                  required: group.required,
+                  minSelect: group.minSelect,
+                  maxSelect: group.maxSelect,
+                  maxQty: group.maxQty,
+                  isLinked: false,
+                };
                 const groupQtyMap = modifierQuantities.get(groupId);
-                const isRadio = group.maxSelect === 1;
+                const currentTotalQty = groupQtyMap
+                  ? [...groupQtyMap.values()].reduce((s, q) => s + q, 0)
+                  : 0;
+                const isRadio = eff.maxSelect === 1;
 
                 return (
                   <div
                     key={groupId}
-                    className="border border-gray-200 rounded-lg p-4"
+                    className={`border rounded-lg p-4 ${
+                      eff.isLinked
+                        ? "border-purple-200 bg-purple-50/30"
+                        : "border-gray-200"
+                    }`}
                   >
                     {/* Group header */}
                     <div className="mb-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-sm font-bold text-gray-900">
                           {group.name}
                         </h3>
-                        {group.required && (
+                        {group.isMain && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                            Main
+                          </span>
+                        )}
+                        {eff.isLinked && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                            Linked
+                          </span>
+                        )}
+                        {eff.required && (
                           <span className="text-[10px] font-bold uppercase tracking-wider text-brand-color-500">
                             Required
                           </span>
@@ -458,22 +576,27 @@ const ProductDetailPage: React.FC = () => {
                       <p className="text-xs text-gray-400 mt-0.5">
                         {isRadio
                           ? "Choose 1"
-                          : `Choose up to ${group.maxSelect}`}
-                        {group.required &&
-                          group.minSelect > 1 &&
-                          ` (at least ${group.minSelect})`}
+                          : `Choose up to ${eff.maxSelect} item${eff.maxSelect > 1 ? "s" : ""}`}
+                        {eff.required &&
+                          eff.minSelect > 1 &&
+                          ` (at least ${eff.minSelect})`}
+                      </p>
+                      {/* Total quantity indicator */}
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        Qty: {currentTotalQty} / {eff.maxQty}
                       </p>
                     </div>
 
                     {/* Items list */}
                     <div className="space-y-2">
                       {group.items.map((modItem) => {
-                        const modProductId = modItem.product._id;
+                        const isPopulated = typeof modItem.product === "object" && modItem.product !== null;
+                        const modProductId = isPopulated ? modItem.product._id : "";
                         const itemQty = groupQtyMap?.get(modProductId) ?? 0;
                         const isSelected = itemQty > 0;
-                        const upgradePrice =
-                          modItem.price ?? modItem.product.price ?? 0;
-                        const soloPrice = modItem.product.price ?? 0;
+                        const productPrice = isPopulated ? (modItem.product.price ?? 0) : 0;
+                        const upgradePrice = Number(modItem.price ?? productPrice) || 0;
+                        const soloPrice = productPrice;
                         const hasDiscount =
                           modItem.price !== null &&
                           modItem.price !== undefined &&
@@ -492,7 +615,7 @@ const ProductDetailPage: React.FC = () => {
                               setModifierItemQty(
                                 groupId,
                                 modProductId,
-                                group.maxSelect,
+                                { maxSelect: eff.maxSelect, maxQty: eff.maxQty },
                                 isSelected ? 0 : 1,
                               )
                             }
@@ -503,7 +626,7 @@ const ProductDetailPage: React.FC = () => {
                                 setModifierItemQty(
                                   groupId,
                                   modProductId,
-                                  group.maxSelect,
+                                  { maxSelect: eff.maxSelect, maxQty: eff.maxQty },
                                   isSelected ? 0 : 1,
                                 );
                               }
@@ -533,9 +656,10 @@ const ProductDetailPage: React.FC = () => {
                             {/* Item info */}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-start text-gray-900 truncate">
-                                {modItem.label ?? modItem.product.name}
+                                {modItem.label ?? (isPopulated ? modItem.product.name : "Unavailable")}
                               </p>
                               {modItem.label &&
+                                isPopulated &&
                                 modItem.label !== modItem.product.name && (
                                   <p className="text-[10px] text-gray-400 truncate">
                                     {modItem.product.name}
@@ -556,22 +680,26 @@ const ProductDetailPage: React.FC = () => {
                               )}
                             </div>
                             {/* Quantity stepper — visible only when selected */}
-                            {/* {isSelected && (
+                            {isSelected && (
                               <div onClick={(e) => e.stopPropagation()} className="max-w-28">
                                 <QuantityStepper
                                   value={itemQty}
                                   min={1}
+                                  max={Math.max(
+                                    1,
+                                    (Number(eff.maxQty) || 1) - currentTotalQty + itemQty,
+                                  )}
                                   onChange={(val) =>
                                     setModifierItemQty(
                                       groupId,
                                       modProductId,
-                                      group.maxSelect,
+                                      { maxSelect: eff.maxSelect, maxQty: Number(eff.maxQty) || 1 },
                                       val,
                                     )
                                   }
                                 />
                               </div>
-                            )} */}
+                            )}
                           </div>
                         );
                       })}

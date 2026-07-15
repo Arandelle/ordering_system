@@ -61,9 +61,13 @@ export async function GET(
               _id: "$$group._id",
               templateId: "$$group.templateId",
               name: "$$group.name",
+              isMain: "$$group.isMain",
+              linkedToGroupId: "$$group.linkedToGroupId",
               required: "$$group.required",
               minSelect: "$$group.minSelect",
               maxSelect: "$$group.maxSelect",
+              maxQty: "$$group.maxQty",
+              position: "$$group.position",
               items: {
                 $map: {
                   input: { $ifNull: ["$$group.items", []] },
@@ -274,9 +278,12 @@ export async function PUT(
             ? (modifierGroups ?? []).map((group: any) => ({
                 templateId: group.templateId ?? null,
                 name: group.name,
+                isMain: group.isMain ?? false,
+                linkedToGroupId: group.linkedToGroupId ?? null,
                 required: group.required ?? true,
                 minSelect: group.minSelect ?? 1,
                 maxSelect: group.maxSelect ?? 1,
+                maxQty: group.maxQty ?? Math.max(group.minSelect ?? 1, group.maxSelect ?? 1),
                 items: (group.items ?? []).map((item: any) => ({
                   product: item.product,
                   label: item.label ?? null,
