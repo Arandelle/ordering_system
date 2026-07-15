@@ -150,9 +150,12 @@ const ModifierGroupsSection = ({
         _id: undefined,
         templateId: null,
         name: "",
+        isMain: false,
+        linkedToGroupId: null,
         required: true,
         minSelect: 1,
         maxSelect: 1,
+        maxQty: 1,
         position: prev.length + 1,
         items: [],
       },
@@ -193,9 +196,12 @@ const ModifierGroupsSection = ({
         _id: undefined,
         templateId: template._id,
         name: template.name,
+        isMain: false,
+        linkedToGroupId: null,
         required: template.required,
         minSelect: template.minSelect,
         maxSelect: template.maxSelect,
+        maxQty: template.maxQty ?? Math.max(template.minSelect, template.maxSelect),
         position: prev.length + 1,
         items: templateItems,
       },
@@ -255,12 +261,14 @@ const ModifierGroupsSection = ({
 
       setModifierGroups((prev) => {
         const groups = [...prev];
+        const syncedMaxQty = template.maxQty ?? Math.max(template.minSelect, template.maxSelect);
         groups[groupIndex] = {
           ...groups[groupIndex],
           name: template.name,
           required: template.required,
           minSelect: template.minSelect,
           maxSelect: template.maxSelect,
+          maxQty: syncedMaxQty,
           items: syncedItems,
         };
         return groups;
@@ -328,7 +336,7 @@ const ModifierGroupsSection = ({
     setDragOverItemKey(null);
   };
 
-  /** Update a group-level field (name, required, minSelect, maxSelect) */
+  /** Update a group-level field (name, required, minSelect, maxSelect, maxQty) */
   const updateModifierGroup = (
     groupIndex: number,
     field: keyof ModifierGroupUI,
@@ -336,7 +344,18 @@ const ModifierGroupsSection = ({
   ) => {
     setModifierGroups((prev) => {
       const groups = [...prev];
-      groups[groupIndex] = { ...groups[groupIndex], [field]: value };
+      const updated = { ...groups[groupIndex], [field]: value };
+
+      // Auto-bump maxQty so it never falls below minSelect (avoids conflicting constraints)
+      if (field === "minSelect" && typeof value === "number") {
+        if (updated.maxQty < value) updated.maxQty = value;
+      }
+      // Auto-bump minSelect ceiling — maxQty must always be >= maxSelect too
+      if (field === "maxSelect" && typeof value === "number") {
+        if (updated.maxQty < value) updated.maxQty = value;
+      }
+
+      groups[groupIndex] = updated;
       return groups;
     });
   };
@@ -369,6 +388,37 @@ const ModifierGroupsSection = ({
       groups[groupIndex] = { ...groups[groupIndex], items };
       return groups;
     });
+  };
+
+  // ── Main / Linked group helpers ─────────────────────────────────────────────
+
+  /** The _id of the group currently marked as main (if any) */
+  const mainGroupId =
+    modifierGroups.find((g) => g.isMain)?._id ?? null;
+
+  /** Mark a group as the main source group — unsets any previous main */
+  const setAsMain = (groupIndex: number, value: boolean) => {
+    setModifierGroups((prev) =>
+      prev.map((g, i) => ({
+        ...g,
+        // Only one group can be main; clear linkedToGroupId on the new main
+        isMain: i === groupIndex ? value : false,
+        linkedToGroupId:
+          i === groupIndex && value ? null : g.linkedToGroupId,
+      })),
+    );
+  };
+
+  /** Link a group to the main group (or unlink with null) */
+  const linkToGroup = (groupIndex: number, targetGroupId: string | null) => {
+    setModifierGroups((prev) =>
+      prev.map((g, i) => ({
+        ...g,
+        // A linked group cannot also be main
+        isMain: i === groupIndex && targetGroupId ? false : g.isMain,
+        linkedToGroupId: i === groupIndex ? targetGroupId : g.linkedToGroupId,
+      })),
+    );
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -484,49 +534,121 @@ const ModifierGroupsSection = ({
             </div>
           )}
 
-          {/* Group settings row */}
-          <div className="grid grid-cols-[2fr_5fr_5fr] gap-3">
-            <div className="self-center">
-              <ToggleButton
-                label="Required"
-                checked={group.required}
-                onCheckedChange={(value) =>
-                  updateModifierGroup(groupIndex, "required", value)
+          {/* ── Main / Linked group controls ──────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Main toggle — exactly one group per product can be "main" */}
+            <ToggleButton
+              label="Main"
+              checked={group.isMain}
+              onCheckedChange={(value) => setAsMain(groupIndex, value)}
+            />
+            {/* Link-to-group dropdown — each linked group follows ONE main */}
+            {modifierGroups.length > 1 && (
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">
+                  Link to group
+                </label>
+                <select
+                  value={group.linkedToGroupId ?? ""}
+                  onChange={(e) =>
+                    linkToGroup(groupIndex, e.target.value || null)
+                  }
+                  disabled={group.isMain}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-color-500 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">Not linked</option>
+                  {/* Only the main group can be a link target */}
+                  {modifierGroups
+                    .filter(
+                      (g, i) =>
+                        i !== groupIndex && g._id && g.isMain,
+                    )
+                    .map((g) => (
+                      <option key={g._id} value={g._id!}>
+                        {g.name || "Unnamed group"}
+                      </option>
+                    ))}
+                </select>
+                {modifierGroups.length > 1 &&
+                  !modifierGroups.some((g) => g.isMain) && (
+                    <p className="text-[10px] text-amber-500 mt-0.5">
+                      Mark a group as Main first to enable linking
+                    </p>
+                  )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Group settings (hidden for linked groups — derived from main) ── */}
+          {group.linkedToGroupId ? (
+            <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-xs">
+              <DynamicIcon name="Link" size={14} className="text-purple-500" />
+              <span className="text-purple-600 font-semibold">
+                Linked group
+              </span>
+              <span className="text-purple-400">
+                — settings derived from main group at runtime
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="self-center">
+                <ToggleButton
+                  label="Required"
+                  checked={group.required}
+                  onCheckedChange={(value) =>
+                    updateModifierGroup(groupIndex, "required", value)
+                  }
+                />
+              </div>
+              {/* Max qty — total quantity across the whole group */}
+              <InputField
+                label="Max quantity"
+                type="number"
+                min={Math.max(group.minSelect, group.maxSelect)}
+                max={99}
+                value={group.maxQty}
+                onChange={(e) =>
+                  updateModifierGroup(
+                    groupIndex,
+                    "maxQty",
+                    parseInt(e.target.value) || 1,
+                  )
+                }
+              />
+              {/* Min select — minimum distinct items */}
+              <InputField
+                type="number"
+                placeholder="Min"
+                label="Min items to select"
+                min={1}
+                max={group.items.length || 1}
+                value={group.minSelect}
+                onChange={(e) =>
+                  updateModifierGroup(
+                    groupIndex,
+                    "minSelect",
+                    parseInt(e.target.value) || 1,
+                  )
+                }
+              />
+              {/* Max select — maximum distinct items */}
+              <InputField
+                label="Max items to select"
+                type="number"
+                min={group.minSelect}
+                max={group.items.length || 1}
+                value={group.maxSelect}
+                onChange={(e) =>
+                  updateModifierGroup(
+                    groupIndex,
+                    "maxSelect",
+                    parseInt(e.target.value) || 1,
+                  )
                 }
               />
             </div>
-            {/* Min select */}
-            <InputField
-              type="number"
-              placeholder="Min"
-              label="Minimum to add"
-              min={1}
-              max={group.items.length || 1}
-              value={group.minSelect}
-              onChange={(e) =>
-                updateModifierGroup(
-                  groupIndex,
-                  "minSelect",
-                  parseInt(e.target.value) || 1,
-                )
-              }
-            />
-            {/* Max select */}
-            <InputField
-              label="Maximum to add"
-              type="number"
-              min={group.minSelect}
-              max={group.items.length || 1}
-              value={group.maxSelect}
-              onChange={(e) =>
-                updateModifierGroup(
-                  groupIndex,
-                  "maxSelect",
-                  parseInt(e.target.value) || 1,
-                )
-              }
-            />
-          </div>
+          )}
 
           {/* Select products button */}
           <IconButton
