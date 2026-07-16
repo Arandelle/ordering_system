@@ -71,7 +71,42 @@ const mockOrder: OrderType = {
       image: "",
     },
     { productId: "p002", name: "Crispy Pata", price: 680, quantity: 1, image: "" },
-    { productId: "p003", name: "Java Rice ×3", price: 45, quantity: 3, image: "" },
+    {
+      productId: "p003",
+      name: "Combo Meal A",
+      price: 295,
+      quantity: 1,
+      image: "",
+      modifierSelections: [
+        {
+          groupId: "g1",
+          groupName: "Main Dish",
+          isMain: true,
+          linkedToGroupId: null,
+          required: true,
+          minSelect: 1,
+          maxSelect: 1,
+          maxQty: 1,
+          items: [
+            { productId: "mp1", name: "Chicken Inasal", label: "Chicken Inasal", upgradePrice: 0, quantity: 1 },
+          ],
+        },
+        {
+          groupId: "g2",
+          groupName: "Drinks",
+          isMain: false,
+          linkedToGroupId: null,
+          required: true,
+          minSelect: 1,
+          maxSelect: 2,
+          maxQty: 2,
+          items: [
+            { productId: "dp1", name: "Coke", label: "Coke", upgradePrice: 0, quantity: 1 },
+            { productId: "dp2", name: "Iced Tea", label: "Iced Tea", upgradePrice: 25, quantity: 1 },
+          ],
+        },
+      ],
+    },
     { productId: "p004", name: "Mango Shake", price: 110, quantity: 2, image: "" },
   ],
   paymentInfo: {
@@ -252,23 +287,51 @@ const OrderSummaryEmail = ({ order = mockOrder }: OrderSummaryEmailProps) => {
                 </Column>
               </Row>
 
-              {items.map((item, i) => (
-                <Row key={i} className="border-b border-gray-100">
-                  <Column className="py-2.5">
-                    <Text className="text-sm text-black m-0">{item.name}</Text>
-                  </Column>
-                  <Column className="w-12.5 text-center">
-                    <Text className="text-sm text-gray-500 m-0">
-                      {item.quantity}
-                    </Text>
-                  </Column>
-                  <Column className="w-22.5 text-right">
-                    <Text className="text-sm text-black m-0">
-                      {formatCurrency((item.price ?? 0) * item.quantity)}
-                    </Text>
-                  </Column>
-                </Row>
-              ))}
+              {items.map((item, i) => {
+                const modifiers = item.modifierSelections ?? [];
+                const hasModifiers = modifiers.length > 0;
+
+                return (
+                  <Row key={i} className="border-b border-gray-100">
+                    <Column className="py-2.5">
+                      <Text className="text-sm text-black m-0">{item.name}</Text>
+                      {/* Modifier breakdown for combo/set products */}
+                      {hasModifiers &&
+                        modifiers.map((group, gi) => (
+                          <Section key={gi} className="mt-1 ml-2">
+                            <Text className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide m-0">
+                              {group.groupName}
+                            </Text>
+                            {group.items.map((modItem, mi) => (
+                              <Text
+                                key={mi}
+                                className="text-[11px] text-gray-400 m-0 ml-2"
+                              >
+                                {modItem.label ?? modItem.name}
+                                {modItem.quantity > 1
+                                  ? ` (×${modItem.quantity})`
+                                  : ""}
+                                {modItem.upgradePrice > 0
+                                  ? ` +${formatCurrency(modItem.upgradePrice * modItem.quantity)}`
+                                  : ""}
+                              </Text>
+                            ))}
+                          </Section>
+                        ))}
+                    </Column>
+                    <Column className="w-12.5 text-center">
+                      <Text className="text-sm text-gray-500 m-0">
+                        {item.quantity}
+                      </Text>
+                    </Column>
+                    <Column className="w-22.5 text-right">
+                      <Text className="text-sm text-black m-0">
+                        {formatCurrency((item.price ?? 0) * item.quantity)}
+                      </Text>
+                    </Column>
+                  </Row>
+                );
+              })}
             </Section>
 
             {/* ── Totals ── */}

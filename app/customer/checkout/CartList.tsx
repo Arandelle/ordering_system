@@ -510,7 +510,14 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       voucherAmount: parsedVoucherAmount,
       items: cartItems
         .filter((item) => item.quantity > 0)
-        .map((item) => ({ _id: item._id, quantity: item.quantity })),
+        .map((item) => ({
+          _id: item._id,
+          quantity: item.quantity,
+          // Include modifier selections for combo/set products so they persist on the order
+          ...(item.modifierSelections && item.modifierSelections.length > 0
+            ? { modifierSelections: item.modifierSelections }
+            : {}),
+        })),
       ...(isDelivery && {
         shippingAddress: {
           line1,

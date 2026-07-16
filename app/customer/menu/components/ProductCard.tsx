@@ -186,25 +186,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {item.name}
           </h3>
 
-          {hasModifierGroups && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {modifierGroupNames.slice(0, 4).map((name, index) => (
-                <span
-                  key={index}
-                  className="rounded-full bg-gray-100 px-2 py-1 text-[10px] text-gray-600"
-                >
-                  {name}
-                </span>
-              ))}
-
-              {modifierGroupNames.length > 4 && (
-                <span className="rounded-full bg-gray-200 px-2 py-1 text-[10px] font-medium text-gray-700">
-                  +{modifierGroupNames.length - 4}
-                </span>
-              )}
-            </div>
-          )}
-
           {item.description && (
             <p className="line-clamp-3 text-xs leading-5 text-gray-500">
               {item.description}

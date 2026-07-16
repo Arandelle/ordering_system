@@ -486,29 +486,66 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
             onToggle={toggleSection}
           >
             <div className="flex flex-col gap-3">
-              {items.map((item, index) => (
-                <div key={index} className="flex items-center gap-3 py-1">
-                  {item.image && (
-                    <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 ring-1 ring-gray-100">
-                      <OrderItemImage image={item.image} name={item.name} />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="uppercase font-semibold text-gray-800 truncate">
-                      {item.name}
-                    </p>
-                    <div className="max-w-60 text-wrap">
-                      <p className="text-xs font-thin italic text-gray-500">
-                        {item.description ?? "No description"}
-                      </p>
+              {items.map((item, index) => {
+                const modifiers = item.modifierSelections ?? [];
+                const hasModifiers = modifiers.length > 0;
+
+                return (
+                  <div key={index} className="flex gap-3 py-1">
+                    {item.image && (
+                      <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 ring-1 ring-gray-100">
+                        <OrderItemImage image={item.image} name={item.name} />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="uppercase font-semibold text-gray-800 truncate">
+                          {item.name}
+                        </p>
+                        <p className="font-semibold text-gray-700 shrink-0 mr-2">
+                          {item.quantity} <span className="text-gray-500">×</span> ₱
+                          {item.price.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="max-w-60 text-wrap">
+                        <p className="text-xs font-thin italic text-gray-500">
+                          {item.description ?? "No description"}
+                        </p>
+                      </div>
+
+                      {/* Modifier breakdown for combo/set products */}
+                      {hasModifiers && (
+                        <div className="mt-2 space-y-1.5 border-l-2 border-orange-200 pl-3">
+                          {modifiers.map((group, gi) => (
+                            <div key={gi}>
+                              <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                                {group.groupName}
+                              </p>
+                              {group.items.map((modItem, mi) => (
+                                <div
+                                  key={mi}
+                                  className="flex justify-between text-xs ml-1"
+                                >
+                                  <span className="text-gray-500">
+                                    {modItem.label ?? modItem.name}
+                                    {modItem.quantity > 1 &&
+                                      ` (×${modItem.quantity})`}
+                                  </span>
+                                  <span className="text-gray-400 shrink-0 ml-2">
+                                    {modItem.upgradePrice > 0
+                                      ? `+₱${(modItem.upgradePrice * modItem.quantity).toLocaleString()}`
+                                      : "Included"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <p className="font-semibold text-gray-700 shrink-0 mr-4">
-                    {item.quantity} <span className="text-gray-500">×</span> ₱
-                    {item.price.toLocaleString()}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </SectionCard>
 
