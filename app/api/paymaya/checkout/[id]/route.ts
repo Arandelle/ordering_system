@@ -62,52 +62,110 @@ export async function POST(
 
     const referenceNumber = paymentInfo?.referenceNumber;
 
-    const productItems = order.items.map((item: any) => ({
-      name: item.name,
-      quantity: item.quantity,
-      code: String(item.productId ?? item._id),
-      description: item.description ?? "",
-      amount: {
-        value: roundMoney(item.price),
-      },
-      totalAmount: {
-        value: multiplyMoney(item.price, item.quantity),
-        currency: "PHP",
-      },
-    }));
+    // Split each order item into parent product (base price) + modifier upgrade line items.
+    // The stored item.price = base price + all upgrade prices, so we compute base by subtracting.
+    const productItems: any[] = [];
+    for (const item of order.items as any[]) {
+      const modifierSelections: any[] = item.modifierSelections ?? [];
 
-    // Delivery fee line items: show original fee as ₱0 when free delivery was
-    // applied (PayMaya rejects negative totalAmount values), or the regular fee.
-    const deliveryItems =
-      order.total.freeDeliveryApplied && order.total.rawDeliveryFee
-        ? [
-            {
-              name: `Delivery Fee (FREE)`,
-              quantity: 1,
-              code: "DELIVERY_FEE_FREE",
-              description: `Free delivery — originally ₱${order.total.rawDeliveryFee}`,
-              amount: { value: order.total.rawDeliveryFee },
+      // Compute total upgrade cost per unit
+      const upgradePerUnit = modifierSelections.reduce(
+        (sum: number, group: any) =>
+          sum +
+          group.items.reduce(
+            (gSum: number, mi: any) =>
+              gSum + multiplyMoney(mi.upgradePrice, mi.quantity),
+            0,
+          ),
+        0,
+      );
+      const basePrice = item.price - upgradePerUnit;
+
+      // Parent product line item — handle zero-price (free promo items) with nominal amount
+      const isFreeProduct = basePrice === 0;
+      productItems.push({
+        name: isFreeProduct ? `${item.name} (FREE)` : item.name,
+        quantity: item.quantity,
+        code: String(item.productId ?? item._id),
+        description: isFreeProduct
+          ? `Free item — ${item.description ?? ""}`.trim()
+          : item.description ?? "",
+        amount: { value: isFreeProduct ? 1 : roundMoney(basePrice) },
+        totalAmount: {
+          value: multiplyMoney(basePrice, item.quantity),
+          currency: "PHP",
+        },
+      });
+
+      // Each modifier upgrade as its own line item (including zero-price as "Included")
+      for (const group of modifierSelections) {
+        for (const mi of group.items as any[]) {
+          const qty = mi.quantity * item.quantity;
+          if (mi.upgradePrice > 0) {
+            const modLineTotal = multiplyMoney(mi.upgradePrice, qty);
+            productItems.push({
+              name: mi.label ?? mi.name,
+              quantity: qty,
+              code: `UPGRADE-${mi.productId}`,
+              description: `Upgrade for ${item.name} — ${group.groupName}`,
+              amount: { value: mi.upgradePrice },
+              totalAmount: {
+                value: modLineTotal,
+                currency: "PHP",
+              },
+            });
+          } else {
+            // Zero-price upgrade: nominal amount so Maya renders it, totalAmount = 0
+            productItems.push({
+              name: `${mi.label ?? mi.name} (Included)`,
+              quantity: qty,
+              code: `UPGRADE-${mi.productId}`,
+              description: `Included with ${item.name} — ${group.groupName}`,
+              amount: { value: 1 },
               totalAmount: {
                 value: 0,
                 currency: "PHP",
               },
+            });
+          }
+        }
+      }
+    }
+
+    // Delivery fee line items: show as FREE when free delivery was applied
+    // (use nominal amount if rawDeliveryFee is 0 so Maya still renders the line),
+    // or show the regular distance-based fee.
+    const deliveryItems = order.total.freeDeliveryApplied
+      ? [
+          {
+            name: "Delivery Fee (FREE)",
+            quantity: 1,
+            code: "DELIVERY_FEE_FREE",
+            description: order.total.rawDeliveryFee
+              ? `Free delivery — originally ₱${order.total.rawDeliveryFee}`
+              : "Free delivery",
+            amount: { value: order.total.rawDeliveryFee || 1 },
+            totalAmount: {
+              value: 0,
+              currency: "PHP",
+            },
+          },
+        ]
+      : order.total.deliveryFeeAmount > 0
+        ? [
+            {
+              name: "Delivery Fee",
+              quantity: 1,
+              code: "DELIVERY_FEE",
+              description: "Distance-based delivery fee",
+              amount: { value: order.total.deliveryFeeAmount },
+              totalAmount: {
+                value: order.total.deliveryFeeAmount,
+                currency: "PHP",
+              },
             },
           ]
-        : order.total.deliveryFeeAmount > 0
-          ? [
-              {
-                name: "Delivery Fee",
-                quantity: 1,
-                code: "DELIVERY_FEE",
-                description: "Distance-based delivery fee",
-                amount: { value: order.total.deliveryFeeAmount },
-                totalAmount: {
-                  value: order.total.deliveryFeeAmount,
-                  currency: "PHP",
-                },
-              },
-            ]
-          : [];
+        : [];
 
     const payload = {
       totalAmount: {

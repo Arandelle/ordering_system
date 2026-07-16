@@ -3,15 +3,19 @@
 // ---------------------------------------------------------------------------
 
 import { CreateOrderPayload } from "@/types/OrderTypes";
+import { MayaModifierLineItem } from "../checkout/checkoutInventory.service";
 import { ResolvedCartItem } from "../checkout/checkoutInventory.service";
 import { TaxBreakdown } from "../checkout/checkoutPricing.service";
 import { getMayaCheckoutUrl } from "@/lib/mayaConfig";
 import { getAuthHeader } from "@/lib/getAuthHeader";
 import { addMoney } from "@/lib/money";
 
+/** Union type covering both parent product items and modifier upgrade items */
+type MayaLineItem = ResolvedCartItem["mayaItem"] | MayaModifierLineItem;
+
 export function buildMayaPayload(
   body: CreateOrderPayload,
-  mayaItems: ResolvedCartItem["mayaItem"][],
+  mayaItems: MayaLineItem[],
   tax: TaxBreakdown,
   referenceNumber: string,
 ) {
@@ -32,14 +36,17 @@ export function buildMayaPayload(
   // When free delivery applies, show the original fee as a line item at 0
   // so the receipt says "Delivery Fee (FREE)". PayMaya rejects negative totalAmount
   // values, so the savings are communicated via the line item description only.
-  const freeDeliveryItems = freeDeliveryApplied && rawDeliveryFee
+  // Use nominal amount (1) when rawDeliveryFee is 0 so Maya still renders the line.
+  const freeDeliveryItems = freeDeliveryApplied
     ? [
         {
           name: "Delivery Fee (FREE)",
           quantity: 1,
           code: "DELIVERY_FEE_FREE",
-          description: `Free delivery — originally ₱${rawDeliveryFee}`,
-          amount: { value: rawDeliveryFee },
+          description: rawDeliveryFee
+            ? `Free delivery — originally ₱${rawDeliveryFee}`
+            : "Free delivery",
+          amount: { value: rawDeliveryFee || 1 },
           totalAmount: {
             value: 0,
             currency: "PHP",
