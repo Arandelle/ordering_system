@@ -8,8 +8,18 @@ import { useOrderBase } from "@/hooks/api/shared/useOrdersBase";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { useState } from "react";
 import { DynamicIcon } from "./ui/DynamicIcon";
-import { OrderType } from "@/types/OrderTypes";
+import { OrderItem, OrderType } from "@/types/OrderTypes";
 import { buildEmbedUrl } from "@/lib/google-maps";
+import { IconButton } from "./ui/buttons";
+import { formatCurrency } from "@/helper/formatCurrency";
+import {
+  addMoney,
+  multiplyMoney,
+  roundMoney,
+  subtractMoney,
+} from "@/lib/money";
+import { cn } from "@/lib/utils";
+import { formatDate } from "@/helper/formatDate";
 
 interface OrderDetailsProps {
   orderId: string;
@@ -43,6 +53,18 @@ const paymentMethodBadge = {
   cash: "bg-orange-100 text-orange-700",
 } as const;
 
+// Human-readable labels for timeline keys
+const timelineLabelMap: Record<string, string> = {
+  paidAt: "Paid",
+  preparingAt: "Preparing",
+  dispatchedAt: "Out for delivery",
+  readyAt: "Ready for pickup",
+  completedAt: "Completed",
+  cancelledAt: "Cancelled",
+  failedAt: "Failed",
+  expiredAt: "Expired",
+};
+
 const paymentStatusBadge = {
   paid: {
     wrapper: "border-green-200 bg-green-50 text-green-700",
@@ -71,67 +93,45 @@ const PaymentStatusPill = ({
   const s = paymentStatusBadge[variant];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${s.wrapper}`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+        s.wrapper,
+      )}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
       {s.label}
     </span>
   );
 };
 
-/** Collapsible toggle button for a section */
-const SectionToggle = ({
-  section,
-  title,
-  badge,
-  expanded,
-  onToggle,
-}: {
-  section: string;
-  title: string;
-  badge?: string;
-  expanded: boolean;
-  onToggle: (section: string) => void;
-}) => (
-  <button
-    onClick={() => onToggle(section)}
-    className="w-full flex items-center justify-between px-2 py-3 hover:bg-gray-50/80 transition-colors cursor-pointer"
-  >
-    <div className="flex items-center gap-2.5">
-      <span className="text-sm font-semibold text-gray-800">{title}</span>
-      {badge && <span className="ml-2 font-light text-gray-500">{badge}</span>}
-    </div>
-    {expanded ? (
-      <DynamicIcon name="ChevronUp" size={16} className="text-gray-400" />
-    ) : (
-      <DynamicIcon name="ChevronDown" size={16} className="text-gray-400" />
-    )}
-  </button>
-);
-
 /** Collapsible card with toggle header and expandable content */
 const SectionCard = ({
   section,
   title,
-  badge,
   expanded,
   onToggle,
   children,
 }: {
   section: string;
   title: string;
-  badge?: string;
   expanded: boolean;
   onToggle: (section: string) => void;
   children: React.ReactNode;
 }) => (
   <div className="bg-white">
-    <SectionToggle
-      section={section}
-      title={title}
-      badge={badge}
-      expanded={expanded}
-      onToggle={onToggle}
+    <IconButton
+      onClick={() => onToggle(section)}
+      text={title}
+      icon={{
+        name: expanded ? "ChevronUp" : "ChevronDown",
+        size: 16,
+        position: "right",
+      }}
+      variant="ghost"
+      className={cn(
+        "w-full flex justify-start",
+        expanded && "text-brand-color-500",
+      )}
     />
     {expanded && (
       <div className="border-t border-gray-100 py-3 px-2">{children}</div>
@@ -139,19 +139,163 @@ const SectionCard = ({
   </div>
 );
 
+/** Timeline event dot with label and date */
+const TimelineEntry = ({ label, date }: { label: string; date: string }) => (
+  <div className="relative flex items-center gap-3">
+    <div className="w-3.5 h-3.5 rounded-full bg-gray-200 border-2 border-white shrink-0 z-1" />
+    <div className="flex-1 min-w-0">
+      <p className="text-xs font-medium text-gray-600">{label}</p>
+      <p className="text-[11px] text-gray-300">{formatDate(date)}</p>
+    </div>
+  </div>
+);
+
 /** Simple label-value row for details */
 const InfoRow = ({
   label,
   value,
+  labelClassName,
+  valueClassName,
+  className,
 }: {
-  label: React.ReactNode;
-  value: React.ReactNode;
+  label: React.ReactNode | string;
+  value: React.ReactNode | string;
+  labelClassName?: string;
+  valueClassName?: string;
+  className?: string;
 }) => (
-  <div className="flex justify-between items-start py-1.5">
-    <span className="text-xs text-gray-400">{label}</span>
-    <span className="text-sm text-gray-700 text-right">{value}</span>
+  <div className={cn("flex justify-between items-start py-1.5", className)}>
+    <span className={cn("text-xs text-gray-400", labelClassName)}>{label}</span>
+    <span className={cn("text-sm text-gray-700 text-right", valueClassName)}>{value}</span>
   </div>
 );
+
+/** Order item row with image, quantity badge, modifiers, and price breakdown */
+const OrderItemRow = ({ item }: { item: OrderItem }) => {
+  const modifiers = item.modifierSelections ?? [];
+  const hasModifiers = modifiers.length > 0;
+
+  // Compute upgrade total and base price for combo/set items (mirrors CartDrawer logic)
+  const upgradeTotal = hasModifiers
+    ? roundMoney(
+        modifiers.reduce(
+          (sum, group) =>
+            addMoney(
+              sum,
+              group.items.reduce(
+                (gSum, modItem) =>
+                  addMoney(
+                    gSum,
+                    multiplyMoney(modItem.upgradePrice, modItem.quantity),
+                  ),
+                0,
+              ),
+            ),
+          0,
+        ),
+      )
+    : 0;
+  const basePrice = hasModifiers
+    ? subtractMoney(item.price, upgradeTotal)
+    : item.price;
+
+  return (
+    <div className="flex gap-3 py-1">
+      {item.image && (
+        <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 ring-1 ring-gray-100">
+          <OrderItemImage image={item.image} name={item.name} />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <p className="uppercase font-semibold text-gray-800 truncate">
+            {item.name}
+          </p>
+          <div className="flex items-center gap-2 shrink-0 mr-2">
+            {item.quantity > 1 && (
+              <div className="flex flex-col items-center">
+                <span className="inline-flex items-center justify-center bg-gray-100 text-gray-600 text-xs font-bold rounded-md px-1.5 py-0.5 min-w-[24px]">
+                  ×{item.quantity}
+                </span>
+                {hasModifiers && (
+                  <span className="text-[10px] text-gray-400 mt-0.5 whitespace-nowrap">
+                    {item.quantity} sets ordered
+                  </span>
+                )}
+              </div>
+            )}
+            <div className="text-right">
+              <p className="font-bold text-gray-800">
+                {formatCurrency(multiplyMoney(item.price, item.quantity))}
+              </p>
+              {item.quantity > 1 && (
+                <p className="text-[11px] text-gray-400">
+                  {formatCurrency(item.price)} each
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="max-w-60 text-wrap">
+          <p className="text-xs font-thin italic text-gray-500">
+            {item.description ?? "No description"}
+          </p>
+        </div>
+
+        {/* Combo/set: modifier selections + price breakdown */}
+        {hasModifiers && (
+          <div className="mt-2">
+            <div className="space-y-1.5 border-l-2 border-orange-200 pl-3">
+              {modifiers.map((group, gi) => (
+                <div key={gi}>
+                  <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                    {group.groupName}
+                  </p>
+                  {group.items.map((modItem, mi) => (
+                    <div
+                      key={mi}
+                      className="flex justify-between text-xs ml-1"
+                    >
+                      <span className="text-gray-500">
+                        {modItem.label ?? modItem.name}
+                        <span className="text-gray-400">
+                          {" "}(×{modItem.quantity})
+                        </span>
+                      </span>
+                      <span className="text-gray-400 shrink-0 ml-2">
+                        {modItem.upgradePrice > 0
+                          ? `+${formatCurrency(multiplyMoney(modItem.upgradePrice, modItem.quantity))}`
+                          : "Included in price"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Price breakdown: base + upgrades = unit price */}
+            <div className="mt-2 bg-gray-50 rounded-lg p-2 space-y-1">
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Base price</span>
+                <span>{formatCurrency(basePrice)}</span>
+              </div>
+              {upgradeTotal > 0 && (
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Upgrades</span>
+                  <span>+{formatCurrency(upgradeTotal)}</span>
+                </div>
+              )}
+              <div className="border-t border-gray-200 pt-1 flex justify-between text-xs font-semibold text-gray-700">
+                <span>Unit price</span>
+                <span>{formatCurrency(item.price)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 /** Customer info card */
 const CustomerCard = ({
@@ -335,7 +479,7 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
     Record<string, boolean>
   >({
     items: true,
-    totals: false,
+    totals: true,
     payment: true,
     timeline: false,
   });
@@ -430,7 +574,9 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
           </div>
 
           {/* ── Actions (customer / guest only) ── */}
-          {(role === "guest" || role === "customer") && <OrderActions order={orderToView} />}
+          {(role === "guest" || role === "customer") && (
+            <OrderActions order={orderToView} />
+          )}
 
           {/* Map iframe: branch location for pickup (customer only), shipping address for delivery (admin only) */}
           {(() => {
@@ -443,8 +589,12 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
 
             const branchCoords =
               orderToView?.branchSnapshot?.location?.coordinates;
-            const lat = isPickup ? branchCoords?.[1] : shippingAddress?.coordinates?.lat;
-            const lng = isPickup ? branchCoords?.[0] : shippingAddress?.coordinates?.lng;
+            const lat = isPickup
+              ? branchCoords?.[1]
+              : shippingAddress?.coordinates?.lat;
+            const lng = isPickup
+              ? branchCoords?.[0]
+              : shippingAddress?.coordinates?.lng;
 
             return lat && lng ? (
               <iframe
@@ -480,72 +630,14 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
           {/* ── Order Items ── */}
           <SectionCard
             section="items"
-            title="Order items"
-            badge={String(items.length)}
+            title={`Order items (${items.reduce((sum, i) => sum + i.quantity, 0)})`}
             expanded={expandedSections.items}
             onToggle={toggleSection}
           >
             <div className="flex flex-col gap-3">
-              {items.map((item, index) => {
-                const modifiers = item.modifierSelections ?? [];
-                const hasModifiers = modifiers.length > 0;
-
-                return (
-                  <div key={index} className="flex gap-3 py-1">
-                    {item.image && (
-                      <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 ring-1 ring-gray-100">
-                        <OrderItemImage image={item.image} name={item.name} />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="uppercase font-semibold text-gray-800 truncate">
-                          {item.name}
-                        </p>
-                        <p className="font-semibold text-gray-700 shrink-0 mr-2">
-                          {item.quantity} <span className="text-gray-500">×</span> ₱
-                          {item.price.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="max-w-60 text-wrap">
-                        <p className="text-xs font-thin italic text-gray-500">
-                          {item.description ?? "No description"}
-                        </p>
-                      </div>
-
-                      {/* Modifier breakdown for combo/set products */}
-                      {hasModifiers && (
-                        <div className="mt-2 space-y-1.5 border-l-2 border-orange-200 pl-3">
-                          {modifiers.map((group, gi) => (
-                            <div key={gi}>
-                              <p className="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
-                                {group.groupName}
-                              </p>
-                              {group.items.map((modItem, mi) => (
-                                <div
-                                  key={mi}
-                                  className="flex justify-between text-xs ml-1"
-                                >
-                                  <span className="text-gray-500">
-                                    {modItem.label ?? modItem.name}
-                                    {modItem.quantity > 1 &&
-                                      ` (×${modItem.quantity})`}
-                                  </span>
-                                  <span className="text-gray-400 shrink-0 ml-2">
-                                    {modItem.upgradePrice > 0
-                                      ? `+₱${(modItem.upgradePrice * modItem.quantity).toLocaleString()}`
-                                      : "Included"}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {items.map((item, index) => (
+                <OrderItemRow key={index} item={item} />
+              ))}
             </div>
           </SectionCard>
 
@@ -556,134 +648,112 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
             expanded={expandedSections.totals}
             onToggle={toggleSection}
           >
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
+              {/* Itemized line totals — shows where the subtotal comes from */}
+              {items.map((item, i) => (
+                <InfoRow
+                  key={i}
+                  label={`${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ""}`}
+                  value={formatCurrency(multiplyMoney(item.price, item.quantity))}
+                  className="py-1"
+                />
+              ))}
+
+              {/* Subtotal */}
               <InfoRow
                 label="Subtotal"
-                value={`₱${vatableSales.toLocaleString()}`}
+                value={formatCurrency(vatableSales)}
+                labelClassName="font-medium text-gray-600"
+                valueClassName="font-medium text-gray-700"
+                className="border-t border-gray-100 mt-1 pt-2"
               />
+
+              {/* Delivery fee */}
               {!isPickup && deliveryFeeAmount > 0 && (
                 <InfoRow
-                  label={
-                    <span>
-                      Delivery Fee
-                      {deliveryDistanceKm != null && (
-                        <span className="text-[10px] text-gray-300 ml-1">
-                          ({deliveryDistanceKm.toFixed(1)} km)
-                        </span>
-                      )}
-                    </span>
-                  }
-                  value={`₱${deliveryFeeAmount.toLocaleString()}`}
+                  label={`Delivery Fee${deliveryDistanceKm != null ? ` (${deliveryDistanceKm.toFixed(1)} km)` : ""}`}
+                  value={formatCurrency(deliveryFeeAmount)}
                 />
               )}
               {!isPickup && deliveryFeeAmount === 0 && freeDeliveryApplied && (
                 <InfoRow
-                  label={
-                    <span>
-                      Delivery Fee
-                      {deliveryDistanceKm != null && (
-                        <span className="text-[10px] text-gray-300 ml-1">
-                          ({deliveryDistanceKm.toFixed(1)} km)
-                        </span>
-                      )}
-                    </span>
-                  }
-                  value={<span className="text-green-600 font-bold">FREE</span>}
-                />
-              )}
-              {discountAmount > 0 && (
-                <InfoRow
-                  label="Discount"
-                  value={
-                    <span className="text-green-600 font-medium">
-                      -₱{discountAmount.toLocaleString()}
-                    </span>
-                  }
+                  label={`Delivery Fee${deliveryDistanceKm != null ? ` (${deliveryDistanceKm.toFixed(1)} km)` : ""}`}
+                  value="FREE"
+                  valueClassName="text-green-600 font-bold"
                 />
               )}
 
+              {/* Discounts */}
+              {discountAmount > 0 && (
+                <InfoRow
+                  label="Discount"
+                  value={`-${formatCurrency(discountAmount)}`}
+                  valueClassName="text-green-600 font-medium"
+                />
+              )}
+
+              {/* Detailed discount breakdown (when expanded) */}
               {expandedSections.totals && (
-                <div className="mt-2 pt-2 border-t border-gray-100 flex flex-col gap-1.5">
+                <>
                   {voucherDiscountAmount > 0 && (
                     <InfoRow
                       label="Voucher Discount"
-                      value={
-                        <span className="text-green-600 text-xs">
-                          -₱{voucherDiscountAmount.toLocaleString()}
-                        </span>
-                      }
+                      value={`-${formatCurrency(voucherDiscountAmount)}`}
+                      valueClassName="text-green-600 text-xs"
                     />
                   )}
                   {productDiscountPromotions.length > 0 && (
                     <>
-                      <span className="text-[10px] font-semibold text-gray-300 uppercase tracking-wider mt-1">
+                      <p className="text-[10px] font-semibold text-gray-300 uppercase tracking-wider mt-2">
                         Item Promos
-                      </span>
+                      </p>
                       {productDiscountPromotions.map((p, i) => (
                         <InfoRow
                           key={i}
-                          label={
-                            <span className="text-xs">
-                              {p.productName}
-                              <span className="text-gray-300 ml-1">
-                                ({p.name})
-                              </span>
-                            </span>
-                          }
-                          value={
-                            <span className="text-green-600 text-xs">
-                              -₱{p.discountAmount?.toLocaleString()}
-                            </span>
-                          }
+                          label={`${p.productName} (${p.name})`}
+                          value={`-${formatCurrency(p.discountAmount)}`}
+                          labelClassName="text-xs"
+                          valueClassName="text-green-600 text-xs"
                         />
                       ))}
                     </>
                   )}
                   {orderDiscountPromotionName && (
                     <InfoRow
-                      label={
-                        <span className="text-xs">
-                          Promo: {orderDiscountPromotionName}
-                        </span>
-                      }
-                      value={
-                        <span className="text-green-600 text-xs">
-                          -₱{orderDiscountAmount.toLocaleString()}
-                        </span>
-                      }
+                      label={`Promo: ${orderDiscountPromotionName}`}
+                      value={`-${formatCurrency(orderDiscountAmount)}`}
+                      labelClassName="text-xs"
+                      valueClassName="text-green-600 text-xs"
                     />
                   )}
                   {discountCode && (
                     <InfoRow
                       label="Discount Code"
-                      value={
-                        <span className="font-mono text-xs text-gray-400">
-                          {discountCode}
-                        </span>
-                      }
+                      value={discountCode}
+                      valueClassName="font-mono text-xs text-gray-400"
                     />
                   )}
-                  {vatAmount > 0 && (
-                    <InfoRow
-                      label="VAT"
-                      value={
-                        <span className="text-xs text-gray-400">
-                          ₱{vatAmount.toLocaleString()}
-                        </span>
-                      }
-                    />
-                  )}
-                </div>
+                </>
               )}
 
-              <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-100">
-                <span className="text-sm font-semibold text-gray-800">
-                  Total
-                </span>
-                <span className="text-lg font-bold text-gray-900">
-                  ₱{totalAmount.toLocaleString()}
-                </span>
-              </div>
+              {/* VAT */}
+              {vatAmount > 0 && (
+                <InfoRow
+                  label="VAT (12%)"
+                  value={formatCurrency(vatAmount)}
+                  valueClassName="text-xs text-gray-500"
+                  className="border-t border-gray-100 mt-1 pt-2"
+                />
+              )}
+
+              {/* Grand total */}
+              <InfoRow
+                label="Total"
+                value={formatCurrency(totalAmount)}
+                labelClassName="text-sm font-semibold text-gray-800"
+                valueClassName="text-lg font-bold text-gray-900"
+                className="border-t border-gray-200 mt-1 pt-2"
+              />
             </div>
           </SectionCard>
 
@@ -698,116 +768,74 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
               <InfoRow
                 label="Method"
                 value={
-                  <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      isMaya ? paymentMethodBadge.maya : paymentMethodBadge.cash
-                    }`}
-                  >
-                    {isMaya
-                      ? "Maya"
-                      : isPickup
-                        ? "Cash on Pickup"
-                        : "Cash on Delivery"}
-                  </span>
+                  isMaya ? "Maya" : isPickup ? "Cash on Pickup" : "Cash on Delivery"
                 }
+                valueClassName={cn(
+                  "text-xs font-semibold px-2 py-0.5 rounded-full",
+                  isMaya ? paymentMethodBadge.maya : paymentMethodBadge.cash,
+                )}
               />
               {paymentMethod && (
                 <InfoRow
                   label="Card"
-                  value={
-                    <span className="font-medium capitalize">
-                      {paymentMethod.scheme}{" "}
-                      {paymentMethod.last4 && (
-                        <span className="font-mono text-gray-400">
-                          ••••{paymentMethod.last4}
-                        </span>
-                      )}
-                    </span>
-                  }
+                  value={`${paymentMethod.scheme}${paymentMethod.last4 ? ` ••••${paymentMethod.last4}` : ""}`}
+                  valueClassName="font-medium capitalize"
                 />
               )}
               <InfoRow
                 label="Reference"
-                value={
-                  <span className="font-mono text-xs text-gray-500">
-                    {referenceNumber}
-                  </span>
-                }
+                value={referenceNumber}
+                valueClassName="font-mono text-xs text-gray-500"
               />
               {paymentId && role === "admin" && (
                 <InfoRow
                   label="Payment ID"
-                  value={
-                    <span
-                      className="font-mono text-xs text-gray-500 truncate max-w-45 block"
-                      title={paymentId}
-                    >
-                      {paymentId}
-                    </span>
-                  }
+                  value={paymentId}
+                  valueClassName="font-mono text-xs text-gray-500 truncate max-w-45 block"
                 />
               )}
               <InfoRow
                 label="Status"
-                value={
-                  <span className="font-mono text-xs text-gray-500">
-                    {paymentStatus}
-                  </span>
-                }
+                value={paymentStatus}
+                valueClassName="font-mono text-xs text-gray-500"
               />
               <InfoRow
                 label="Paid At"
-                value={
-                  <span className="text-xs text-gray-500">
-                    {paidAt ? new Date(paidAt).toLocaleString() : "—"}
-                  </span>
-                }
+                value={formatDate(paidAt)}
+                valueClassName="text-xs text-gray-500"
               />
             </div>
           </SectionCard>
 
           {/* ── Timeline ── */}
-          {(timeline && Object.keys(timeline).length > 0) || orderToView?.createdAt && (
-            <SectionCard
-              section="timeline"
-              title="Timeline"
-              expanded={expandedSections.timeline}
-              onToggle={toggleSection}
-            >
-              <div className="relative flex flex-col gap-3 pl-4">
-                <div className="absolute left-1.75 top-2 bottom-2 w-px bg-gray-100" />
+          {(timeline && Object.keys(timeline).length > 0) ||
+            (orderToView?.createdAt && (
+              <SectionCard
+                section="timeline"
+                title="Timeline"
+                expanded={expandedSections.timeline}
+                onToggle={toggleSection}
+              >
+                <div className="relative flex flex-col gap-3 pl-4">
+                  <div className="absolute left-1.75 top-2 bottom-2 w-px bg-gray-100" />
 
-                {/* Placed entry — always the first event */}
-                {orderToView?.createdAt && (
-                  <div className="relative flex items-center gap-3">
-                    <div className="w-3.5 h-3.5 rounded-full bg-gray-200 border-2 border-white shrink-0 z-1" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-600">Placed</p>
-                      <p className="text-[11px] text-gray-300">
-                        {new Date(orderToView.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  {/* Placed entry — always the first event */}
+                  {orderToView?.createdAt && (
+                    <TimelineEntry label="Placed" date={orderToView.createdAt} />
+                  )}
 
-                {Object.entries(timeline ?? {})
-                  .filter(([_, value]) => value)
-                  .map(([key, value]) => (
-                    <div key={key} className="relative flex items-center gap-3">
-                      <div className="w-3.5 h-3.5 rounded-full bg-gray-200 border-2 border-white shrink-0 z-1" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-600 capitalize">
-                          {key.replace("At", "")}
-                        </p>
-                        <p className="text-[11px] text-gray-300">
-                          {new Date(value as string).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </SectionCard>
-          )}
+                  {Object.entries(timeline ?? {})
+                    .filter(([_, value]) => value)
+                    .map(([key, value]) => (
+                      <TimelineEntry
+                        key={key}
+                        label={timelineLabelMap[key] ?? key.replace("At", "")}
+                        date={value as string}
+                      />
+                    ))}
+                </div>
+              </SectionCard>
+            ))}
 
           {/* ── Note ── */}
           {notes && (
