@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   InputField,
   SelectField,
@@ -17,7 +17,6 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { AppImage } from "@/components/AppImage";
 import ProductSelectionModal from "../ProductSelectionModal";
 import ModifierTemplateSelector from "./ModifierTemplateSelector";
-import ComboPricePreview from "./ComboPricePreview";
 import { ProductSectionCard } from "./ProductSectionCard";
 import { apiClient } from "@/lib/apiClient";
 import { IconButton } from "@/components/ui/buttons";
@@ -36,12 +35,12 @@ export interface ModifierGroupsState {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ModifierGroupsSectionProps {
-  /** Base product price — used by ComboPricePreview */
-  price: string;
   /** Pre-populated groups when editing an existing product */
   initialModifierGroups?: ModifierGroupUI[];
   /** Callback fired whenever the modifier groups state changes */
   onModifierGroupsChange: (groups: ModifierGroupUI[]) => void;
+  /** External group order from the reorder panel — array of original indices in desired display order */
+  groupOrder?: number[];
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -53,24 +52,21 @@ interface ModifierGroupsSectionProps {
  * Reports group changes back to parent via `onModifierGroupsChange`.
  */
 const ModifierGroupsSection = ({
-  price,
   initialModifierGroups = [],
   onModifierGroupsChange,
+  groupOrder,
 }: ModifierGroupsSectionProps) => {
   // Tracks which modifier group rows have their action menu (sync/detach/delete) expanded,
   // keyed by groupIndex — supports multiple rows independently since state is a Set, not a single boolean.
   const { isOpen, toggle, close } = useToggleSet<number>();
 
+  // Tracks which groups have their full item list expanded (show more / show less).
+  // Groups with many items are collapsed by default; toggling adds them to this set.
+  const { isOpen: isExpanded, toggle: toggleExpanded } = useToggleSet<number>();
+
   // ── Modifier groups internal state ──────────────────────────────────────────
   const [modifierGroups, setModifierGroups] = useState<ModifierGroupUI[]>(
     initialModifierGroups,
-  );
-
-  // ── Drag-and-drop state (group-level) ───────────────────────────────────────
-
-  const [dragGroupIndex, setDragGroupIndex] = useState<number | null>(null);
-  const [dragOverGroupIndex, setDragOverGroupIndex] = useState<number | null>(
-    null,
   );
 
   // ── Drag-and-drop state (item-level, scoped within a single group) ──────────
@@ -92,13 +88,37 @@ const ModifierGroupsSection = ({
   const [templates, setTemplates] = useState<ModifierGroupTemplate[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
 
-  const [viewPreview, setViewPreview] = useState(false);
+  // ── Sync external group order from the reorder panel ─────────────────────────
+  // Tracks the last applied order to avoid re-applying the same reorder and causing loops.
+  const lastAppliedOrderRef = useRef<string>("");
 
   // ── Report state changes to parent ──────────────────────────────────────────
 
   useEffect(() => {
     onModifierGroupsChange(modifierGroups);
+    // Reset the applied order tracker when group count changes (add/remove),
+    // so the next reorder from the right panel applies cleanly.
+    lastAppliedOrderRef.current = "";
   }, [modifierGroups, onModifierGroupsChange]);
+
+  useEffect(() => {
+    if (!groupOrder || groupOrder.length === 0) return;
+
+    // Serialize to compare — skip if same order was already applied
+    const orderKey = groupOrder.join(",");
+    if (orderKey === lastAppliedOrderRef.current) return;
+    lastAppliedOrderRef.current = orderKey;
+
+    // Reorder internal state: groupOrder[i] = original index that should now be at position i
+    setModifierGroups((prev) => {
+      if (groupOrder.length !== prev.length) return prev; // length mismatch — skip
+      const reordered = groupOrder
+        .map((originalIdx) => prev[originalIdx])
+        .filter(Boolean);
+      if (reordered.length !== prev.length) return prev; // safety check
+      return reordered.map((g, i) => ({ ...g, position: i + 1 }));
+    });
+  }, [groupOrder]);
 
   /** Fetch all modifier group templates for the template selector */
   const fetchTemplates = async () => {
@@ -321,19 +341,6 @@ const ModifierGroupsSection = ({
     );
   };
 
-  /** Reorder modifier groups via drag-and-drop */
-  const handleGroupDrop = (targetGroupIndex: number) => {
-    if (dragGroupIndex === null || dragGroupIndex === targetGroupIndex) return;
-    setModifierGroups((prev) => {
-      const reordered = [...prev];
-      const [moved] = reordered.splice(dragGroupIndex, 1);
-      reordered.splice(targetGroupIndex, 0, moved);
-      return reordered.map((g, i) => ({ ...g, position: i + 1 }));
-    });
-    setDragGroupIndex(null);
-    setDragOverGroupIndex(null);
-  };
-
   /** Reorder items within a group via drag-and-drop */
   const handleItemDrop = (groupIndex: number, targetItemIndex: number) => {
     const key = `${groupIndex}-${targetItemIndex}`;
@@ -440,20 +447,6 @@ const ModifierGroupsSection = ({
 
   return (
     <ProductSectionCard title="Modifier Groups" iconName="ListChecks">
-      {/* Price preview calculator */}
-      {modifierGroups.length > 0 && price && (
-        <>
-          <IconButton
-            text={viewPreview ? "Hide Preview" : "View Preview"}
-            onClick={() => setViewPreview(!viewPreview)}
-            variant="underline"
-            className="underline-offset-4"
-          />
-          {viewPreview && (
-            <ComboPricePreview price={price} modifierGroups={modifierGroups} />
-          )}
-        </>
-      )}
       {/* Empty state */}
       {modifierGroups.length === 0 && (
         <p className="text-xs text-gray-400">
@@ -464,49 +457,18 @@ const ModifierGroupsSection = ({
 
       {/* Group list */}
       {modifierGroups.map((group, groupIndex) => (
-        <div
-          key={group._id ?? groupIndex}
-          draggable
-          onDragStart={(e) => {
-            setDragGroupIndex(groupIndex);
-            setDragOverGroupIndex(null);
-          }}
-          onDragOver={(e) => {
-            // Only respond to group-level drag (not item drag)
-            if (dragGroupIndex !== null) {
-              e.preventDefault();
-              setDragOverGroupIndex(groupIndex);
-            }
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            // Only handle group-level drops
-            if (dragGroupIndex !== null) {
-              handleGroupDrop(groupIndex);
-            }
-          }}
-          className={`transition-all duration-150 select-none
-            ${dragGroupIndex === groupIndex ? "opacity-40" : ""}
-            ${dragOverGroupIndex === groupIndex ? "ring-2 ring-brand-color-500" : ""}`}
-        >
+        <div key={group._id ?? groupIndex}>
           <ProductSectionCard
             title={modifierGroups[groupIndex].name || `Group ${groupIndex + 1}`}
             iconName="Utensils"
             className="space-y-3"
           >
-            {/* Drag handle + group header */}
+            {/* Group header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
-                <div className="flex gap-2">
-                  <DynamicIcon
-                    name="GripVertical"
-                    className="text-gray-400 cursor-grab active:cursor-grabbing shrink-0"
-                    size={18}
-                  />
-                  <span className="text-xs font-mono text-gray-500 shrink-0">
-                    {group.position ?? groupIndex + 1}
-                  </span>
-                </div>
+                <span className="text-xs font-mono text-gray-500 shrink-0">
+                  {group.position ?? groupIndex + 1}
+                </span>
 
                 {/* Main toggle — exactly one group per product can be "main" */}
                 <ToggleButton
@@ -701,139 +663,169 @@ const ModifierGroupsSection = ({
             />
 
             {/* Items in this group */}
-            {group.items.length > 0 && (
-              <div className="space-y-2">
-                {group.items.map((item, itemIndex) => {
-                  const upgradePrice = item.price ?? item._price ?? 0;
-                  const soloPrice = item._price ?? 0;
-                  const isDiscountedUpgrade =
-                    upgradePrice < soloPrice && soloPrice > 0;
-                  const itemKey = `${groupIndex}-${itemIndex}`;
-                  const isDraggingItem = dragItemKey === itemKey;
-                  const isDragOverItem = dragOverItemKey === itemKey;
+            {group.items.length > 0 &&
+              (() => {
+                const COLLAPSE_THRESHOLD = 3;
+                const hasManyItems = group.items.length > COLLAPSE_THRESHOLD;
+                const expanded = isExpanded(groupIndex);
+                const visibleItems =
+                  hasManyItems && !expanded
+                    ? group.items.slice(0, COLLAPSE_THRESHOLD)
+                    : group.items;
 
-                  return (
-                    <div
-                      key={itemIndex}
-                      draggable
-                      onDragStart={(e) => {
-                        e.stopPropagation(); // prevent group-level drag
-                        setDragItemKey(itemKey);
-                        setDragOverItemKey(null);
-                      }}
-                      onDragOver={(e) => {
-                        // Only respond to item-level drag within same group
-                        if (
-                          dragItemKey !== null &&
-                          dragItemKey.startsWith(`${groupIndex}-`)
-                        ) {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDragOverItemKey(itemKey);
-                        }
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation(); // prevent group-level drop
-                        if (
-                          dragItemKey !== null &&
-                          dragItemKey.startsWith(`${groupIndex}-`)
-                        ) {
-                          handleItemDrop(groupIndex, itemIndex);
-                        }
-                      }}
-                      className={`flex gap-4 p-3 bg-gray-50 border border-gray-200 rounded-lg relative transition-all duration-150 select-none
+                return (
+                  <>
+                    <div className="space-y-2">
+                      {visibleItems.map((item, itemIndex) => {
+                        const upgradePrice = item.price ?? item._price ?? 0;
+                        const soloPrice = item._price ?? 0;
+                        const isDiscountedUpgrade =
+                          upgradePrice < soloPrice && soloPrice > 0;
+                        const itemKey = `${groupIndex}-${itemIndex}`;
+                        const isDraggingItem = dragItemKey === itemKey;
+                        const isDragOverItem = dragOverItemKey === itemKey;
+
+                        return (
+                          <div
+                            key={itemIndex}
+                            draggable
+                            onDragStart={(e) => {
+                              e.stopPropagation(); // prevent group-level drag
+                              setDragItemKey(itemKey);
+                              setDragOverItemKey(null);
+                            }}
+                            onDragOver={(e) => {
+                              // Only respond to item-level drag within same group
+                              if (
+                                dragItemKey !== null &&
+                                dragItemKey.startsWith(`${groupIndex}-`)
+                              ) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDragOverItemKey(itemKey);
+                              }
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation(); // prevent group-level drop
+                              if (
+                                dragItemKey !== null &&
+                                dragItemKey.startsWith(`${groupIndex}-`)
+                              ) {
+                                handleItemDrop(groupIndex, itemIndex);
+                              }
+                            }}
+                            className={`flex gap-4 p-3 bg-gray-50 border border-gray-200 rounded-lg relative transition-all duration-150 select-none
                       ${isDraggingItem ? "opacity-40" : ""}
                       ${isDragOverItem ? "border-t-2 border-t-brand-color-500" : ""}`}
-                    >
-                      {/* Drag handle */}
-                      <div className="flex flex-col items-center justify-center shrink-0 gap-1">
-                        <DynamicIcon
-                          name="GripVertical"
-                          className="text-gray-400 cursor-grab active:cursor-grabbing"
-                          size={16}
-                        />
-                      </div>
-                      <IconButton
-                        type="button"
-                        onClick={() =>
-                          removeItemFromGroup(groupIndex, itemIndex)
-                        }
-                        title="Delete this product"
-                        icon={{ name: "Trash2" }}
-                        className="absolute right-2 top-2 rounded-full opacity-80"
-                        variant="danger"
-                      />
-                      {/* Image — left, full height */}
-                      <div className="flex flex-col items-center justify-center bg-gray-100 p-3 gap-2 flex-1 max-w-52">
-                        <div className="w-11 h-11 rounded-md shrink-0 border border-gray-200 overflow-hidden">
-                          <AppImage
-                            src={item._imageUrl ?? ""}
-                            alt={item._name}
-                          />
-                        </div>
-                        <p className="text-sm font-semibold text-gray-800">
-                          {item._name || item.product}
-                        </p>
-                      </div>
+                          >
+                            {/* Drag handle */}
+                            <div className="flex flex-col items-center justify-center shrink-0 gap-1">
+                              <DynamicIcon
+                                name="GripVertical"
+                                className="text-gray-400 cursor-grab active:cursor-grabbing"
+                                size={16}
+                              />
+                            </div>
+                            <IconButton
+                              type="button"
+                              onClick={() =>
+                                removeItemFromGroup(groupIndex, itemIndex)
+                              }
+                              title="Delete this product"
+                              icon={{ name: "Trash2" }}
+                              className="absolute right-2 top-2 rounded-full opacity-80"
+                              variant="danger"
+                            />
+                            {/* Image — left, full height */}
+                            <div className="flex flex-col items-center justify-center bg-gray-100 p-3 gap-2 flex-1 max-w-52">
+                              <div className="w-11 h-11 rounded-md shrink-0 border border-gray-200 overflow-hidden">
+                                <AppImage
+                                  src={item._imageUrl ?? ""}
+                                  alt={item._name}
+                                />
+                              </div>
+                              <p className="text-sm font-semibold text-gray-800">
+                                {item._name || item.product}
+                              </p>
+                            </div>
 
-                      {/* Right column — everything else, compact */}
-                      <div className="flex-1 min-w-0 gap-4 flex flex-col">
-                        {/* Price info */}
-                        <div>
-                          {soloPrice > 0 && (
-                            <span className="text-xs text-gray-400 shrink-0">
-                              Solo:{" "}
-                              <span className="line-through">₱{soloPrice}</span>
-                            </span>
-                          )}
-                          {isDiscountedUpgrade && (
-                            <span className="text-xs text-green-600 font-semibold shrink-0">
-                              ↓ saves ₱{(soloPrice - upgradePrice).toFixed(0)}
-                            </span>
-                          )}
-                        </div>
+                            {/* Right column — everything else, compact */}
+                            <div className="flex-1 min-w-0 gap-4 flex flex-col">
+                              {/* Price info */}
+                              <div>
+                                {soloPrice > 0 && (
+                                  <span className="text-xs text-gray-400 shrink-0">
+                                    Solo:{" "}
+                                    <span className="line-through">
+                                      ₱{soloPrice}
+                                    </span>
+                                  </span>
+                                )}
+                                {isDiscountedUpgrade && (
+                                  <span className="text-xs text-green-600 font-semibold shrink-0">
+                                    ↓ saves ₱
+                                    {(soloPrice - upgradePrice).toFixed(0)}
+                                  </span>
+                                )}
+                              </div>
 
-                        <div className="flex items-center gap-2">
-                          <InputField
-                            label="Label"
-                            type="text"
-                            placeholder="Display name"
-                            value={item.label || ""}
-                            onChange={(e) =>
-                              updateItemInGroup(
-                                groupIndex,
-                                itemIndex,
-                                "label",
-                                e.target.value || null,
-                              )
-                            }
-                          />
-                          <InputField
-                            label="Upgrade ₱"
-                            type="number"
-                            min={0}
-                            step="1"
-                            placeholder={item._price?.toString() ?? "0"}
-                            value={item.price ?? ""}
-                            onChange={(e) =>
-                              updateItemInGroup(
-                                groupIndex,
-                                itemIndex,
-                                "price",
-                                e.target.value
-                                  ? parseFloat(e.target.value)
-                                  : null,
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
+                              <div className="flex items-center gap-2">
+                                <InputField
+                                  label="Label"
+                                  type="text"
+                                  placeholder="Display name"
+                                  value={item.label || ""}
+                                  onChange={(e) =>
+                                    updateItemInGroup(
+                                      groupIndex,
+                                      itemIndex,
+                                      "label",
+                                      e.target.value || null,
+                                    )
+                                  }
+                                />
+                                <InputField
+                                  label="Upgrade ₱"
+                                  type="number"
+                                  min={0}
+                                  step="1"
+                                  placeholder={item._price?.toString() ?? "0"}
+                                  value={item.price ?? ""}
+                                  onChange={(e) =>
+                                    updateItemInGroup(
+                                      groupIndex,
+                                      itemIndex,
+                                      "price",
+                                      e.target.value
+                                        ? parseFloat(e.target.value)
+                                        : null,
+                                    )
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+
+                    {/* Show more / show less toggle for groups with many items */}
+                    {hasManyItems && (
+                      <IconButton
+                        onClick={() => toggleExpanded(groupIndex)}
+                        text={
+                          expanded
+                            ? `Show less (${group.items.length - COLLAPSE_THRESHOLD} hidden)`
+                            : `Show ${group.items.length - COLLAPSE_THRESHOLD} more items`
+                        }
+                        variant="underline"
+                        className="text-center w-full"
+                      />
+                    )}
+                  </>
+                );
+              })()}
             {group.items.length === 0 && (
               <p className="text-xs text-gray-400">
                 No items in this group. Click the button above to select
@@ -845,9 +837,9 @@ const ModifierGroupsSection = ({
       ))}
 
       {/* Reorder hint */}
-      {modifierGroups.length > 1 && (
+      {modifierGroups.some((g) => g.items.length > 1) && (
         <p className="text-xs text-gray-500 text-center">
-          Drag ⠿ to reorder groups and items
+          Drag ⠿ to reorder items within a group
         </p>
       )}
 

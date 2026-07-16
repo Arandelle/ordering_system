@@ -28,6 +28,8 @@ import CategorySection, {
   CategorySelectionState,
 } from "./components/CategorySection";
 import ModifierGroupsSection from "./components/ModifierGroupsSection";
+import ComboPricePreview from "./components/ComboPricePreview";
+import GroupReorderPanel from "./components/GroupReorderPanel";
 
 interface ProductFormData {
   name: string;
@@ -119,6 +121,10 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   const [modifierGroupsState, setModifierGroupsState] = useState<
     ModifierGroupUI[]
   >([]);
+
+  // Group display order for the right-column reorder panel — array of original indices.
+  // Only used when product is combo/set and has 2+ groups.
+  const [groupOrder, setGroupOrder] = useState<number[]>([]);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
 
@@ -463,9 +469,9 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                 {/* ── Modifier Groups (combo / set) ── */}
                 {isComboOrSet && (
                   <ModifierGroupsSection
-                    price={formData.price}
                     initialModifierGroups={modifierGroupsState}
                     onModifierGroupsChange={setModifierGroupsState}
+                    groupOrder={groupOrder}
                   />
                 )}
 
@@ -482,31 +488,40 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
               <div className="space-y-6">
                 {/* ── Pricing & Tax ── */}
                 <ProductSectionCard title="Pricing" iconName="Tag">
-                  <div>
-                    <InputField
-                      label="Selling Price (₱)"
-                      id="price"
-                      name="price"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      leftIcon={<DynamicIcon name="DollarSign" />}
-                      value={formData.price}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+                  <InputField
+                    label="Selling Price (₱)"
+                    id="price"
+                    name="price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    leftIcon={<DynamicIcon name="DollarSign" />}
+                    value={formData.price}
+                    onChange={handleChange}
+                    required
+                  />
+
                   <TaxBreakdown price={formData.price} />
-                  <p className="flex items-start gap-1.5 text-[11px] text-gray-400 leading-relaxed">
-                    <DynamicIcon
-                      name="Info"
-                      size={11}
-                      className="mt-0.5 shrink-0"
-                    />
-                    Selling price is VAT-inclusive. Tax is back-computed at 12%.
-                  </p>
                 </ProductSectionCard>
+
+                {/* ── Combo Price Preview (combo / set only) ── */}
+                {isComboOrSet &&
+                  modifierGroupsState.length > 0 &&
+                  formData.price && (
+                    <ComboPricePreview
+                      price={formData.price}
+                      modifierGroups={modifierGroupsState}
+                    />
+                  )}
+
+                {/* ── Group Reorder Panel (combo / set, 2+ groups) ── */}
+                {isComboOrSet && modifierGroupsState.length >= 2 && (
+                  <GroupReorderPanel
+                    groups={modifierGroupsState}
+                    onOrderChange={setGroupOrder}
+                  />
+                )}
 
                 {/* ── Pax Count (set only) ── */}
                 {formData.productType === "set" && (
