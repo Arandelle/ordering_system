@@ -9,12 +9,45 @@ import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { model, models, Schema } from "mongoose";
 
 // ============================================
+// MODIFIER SELECTION SCHEMAS (Embedded)
+// ============================================
+
+/** Snapshot of a single modifier item within a group, stored on the order */
+const OrderModifierSelectionItemSchema = new Schema(
+  {
+    productId: { type: String, required: true },
+    name: { type: String, required: true },
+    label: { type: String, default: null },
+    upgradePrice: { type: Number, required: true, default: 0 },
+    quantity: { type: Number, required: true, default: 1, min: 1 },
+  },
+  { _id: false },
+);
+
+/** Snapshot of a modifier group selection, stored on the order item */
+const OrderModifierSelectionSchema = new Schema(
+  {
+    groupId: { type: String, required: true },
+    groupName: { type: String, required: true },
+    isMain: { type: Boolean, default: false },
+    linkedToGroupId: { type: String, default: null },
+    required: { type: Boolean, default: true },
+    minSelect: { type: Number, default: 1, min: 1 },
+    maxSelect: { type: Number, default: 1, min: 1 },
+    maxQty: { type: Number, default: 1, min: 1 },
+    items: { type: [OrderModifierSelectionItemSchema], default: [] },
+  },
+  { _id: false },
+);
+
+// ============================================
 // ORDER ITEM SCHEMA (Embedded)
 // ============================================
 
 /**
  * Embedded cart item snapshot
- * Captures product state at time of order
+ * Captures product state at time of order, including modifier selections
+ * for combo/set products so they show in order history, receipt, and Maya
  */
 export const OrderItemSchema = new Schema(
   {
@@ -34,6 +67,11 @@ export const OrderItemSchema = new Schema(
       ref: "Category",
     },
     quantity: { type: Number, required: true, min: 1 },
+    /** Modifier group selections for combo/set products — empty for solo items */
+    modifierSelections: {
+      type: [OrderModifierSelectionSchema],
+      default: [],
+    },
   },
   { _id: false },
 );

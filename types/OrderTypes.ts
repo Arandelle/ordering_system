@@ -1,4 +1,4 @@
-import { CartItem } from "./MenuTypes";
+import { CartItem, ModifierSelection } from "./MenuTypes";
 import { FulfillmentType, OrderStatus } from "./orderConstants";
 
 /**
@@ -8,7 +8,28 @@ import { FulfillmentType, OrderStatus } from "./orderConstants";
  * to ensure type consistency across the app
  */
 
-// Add this new interface
+/** Snapshot of a single modifier item within a group, stored on the order */
+export interface OrderModifierSelectionItem {
+  productId: string;
+  name: string;
+  label: string | null;
+  upgradePrice: number;
+  quantity: number;
+}
+
+/** Snapshot of a modifier group selection, stored on the order item */
+export interface OrderModifierSelection {
+  groupId: string;
+  groupName: string;
+  isMain: boolean;
+  linkedToGroupId: string | null;
+  required: boolean;
+  minSelect: number;
+  maxSelect: number;
+  maxQty: number;
+  items: OrderModifierSelectionItem[];
+}
+
 export interface OrderItem {
   productId: string; // ref to Product — this is what you use for reviews
   name: string;
@@ -17,6 +38,8 @@ export interface OrderItem {
   image?: string;
   category?: string; // ObjectId as string
   quantity: number;
+  /** Modifier group selections for combo/set products — empty for solo items */
+  modifierSelections?: OrderModifierSelection[];
   // no _id — your schema has _id: false
 }
 
@@ -171,6 +194,8 @@ export interface CreateOrderPayload {
   items: {
     _id: string;
     quantity: number;
+    /** Modifier selections for combo/set products — omitted for solo items */
+    modifierSelections?: ModifierSelection[];
   }[];
 
   paymentMethod: string;
