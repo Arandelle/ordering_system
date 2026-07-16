@@ -688,12 +688,6 @@ const ModifierGroupsSection = ({
                         return (
                           <div
                             key={itemIndex}
-                            draggable
-                            onDragStart={(e) => {
-                              e.stopPropagation(); // prevent group-level drag
-                              setDragItemKey(itemKey);
-                              setDragOverItemKey(null);
-                            }}
                             onDragOver={(e) => {
                               // Only respond to item-level drag within same group
                               if (
@@ -705,6 +699,9 @@ const ModifierGroupsSection = ({
                                 setDragOverItemKey(itemKey);
                               }
                             }}
+                            onDragLeave={() => {
+                              setDragOverItemKey(null);
+                            }}
                             onDrop={(e) => {
                               e.preventDefault();
                               e.stopPropagation(); // prevent group-level drop
@@ -714,13 +711,23 @@ const ModifierGroupsSection = ({
                               ) {
                                 handleItemDrop(groupIndex, itemIndex);
                               }
+                              setDragItemKey(null);
+                              setDragOverItemKey(null);
                             }}
                             className={`flex gap-4 p-3 bg-gray-50 border border-gray-200 rounded-lg relative transition-all duration-150 select-none
-                      ${isDraggingItem ? "opacity-40" : ""}
-                      ${isDragOverItem ? "border-t-2 border-t-brand-color-500" : ""}`}
+                             ${isDraggingItem ? "opacity-40" : ""}
+                             ${isDragOverItem ? "border-brand-color-500 bg-brand-color-50 ring-1 ring-brand-color-500" : ""}`}
                           >
                             {/* Drag handle */}
-                            <div className="flex flex-col items-center justify-center shrink-0 gap-1">
+                            <div
+                              draggable
+                              onDragStart={(e) => {
+                                e.stopPropagation(); // prevent group-level drag
+                                setDragItemKey(itemKey);
+                                setDragOverItemKey(null);
+                              }}
+                              className="flex flex-col items-center justify-center shrink-0 gap-1"
+                            >
                               <DynamicIcon
                                 name="GripVertical"
                                 className="text-gray-400 cursor-grab active:cursor-grabbing"
