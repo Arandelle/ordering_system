@@ -1,16 +1,20 @@
 "use client";
 
 import BrandLogo from "@/components/BrandLogo";
-import { InputField } from "@/components/ui/FormComponents/InputField";
+import { InputField } from "@/components/ui/FormComponents";
 import { PasswordChangePromptModal } from "@/components/ui/PasswordChangePromptModal";
 import { isPasswordSecure } from "@/lib/validations";
 import { apiClient } from "@/lib/apiClient";
-import { ADMIN_EMAIL_DOMAINS, isAllowedAdminDomain } from "@/lib/isAllowedEmails";
+import { isAllowedAdminDomain } from "@/lib/isAllowedEmails";
 import { STAFF_ROLES } from "@/types/staff";
-import { Loader2, Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, useState } from "react";
 import { toast } from "sonner";
+import { IconButton } from "@/components/ui/buttons";
+import Link from "next/link";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { useSettings } from "@/hooks/api/useSettings";
+import packageJson from "@/package.json";
 
 /** localStorage key to track if the admin has already skipped the password prompt. */
 const ADMIN_PASSWORD_PROMPT_SKIPPED_KEY = "admin_password_prompt_skipped";
@@ -32,6 +36,10 @@ type AdminLoginRespose = {
 
 const LoginPage = () => {
   const route = useRouter();
+  const { data: operationSettings } = useSettings();
+
+  const contact = operationSettings?.contact ?? {};
+
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,10 +61,12 @@ const LoginPage = () => {
   const validate = (): CredentialErrors => {
     const error: CredentialErrors = {};
     if (!credentials.email.trim()) error.email = "Email is required";
-    else if (!/\S+@\S+\.\S+$/.test(credentials.email))
+    else if (
+      !/\S+@\S+\.\S+$/.test(credentials.email) ||
+      !isAllowedAdminDomain(credentials.email)
+    )
       error.email = "Enter valid email";
-    else if (!isAllowedAdminDomain(credentials.email))
-      error.email = `Only @${ADMIN_EMAIL_DOMAINS.join(" or @")} email addresses are accepted`;
+
     if (!credentials.password.trim()) error.password = "Password is required!";
 
     return error;
@@ -98,7 +108,10 @@ const LoginPage = () => {
         route.push(path);
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Login failed. Please try again.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Login failed. Please try again.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -161,7 +174,8 @@ const LoginPage = () => {
               with ease.
             </h1>
             <p className="text-base max-w-sm text-gray-200">
-              Branches, staff, inventory, and orders — all in one place.
+              Products, Branches, Staff, Inventory, Promotions, Orders, and
+              others — all in one place.
             </p>
           </div>
 
@@ -181,23 +195,24 @@ const LoginPage = () => {
         </div>
 
         {/* Right panel — form */}
-        <div className="flex flex-col items-center justify-center w-full px-8 py-12 bg-white">
-          {/* Mobile logo */}
-          <div className="lg:hidden mb-10">
-            <BrandLogo />
-          </div>
-
-          <div className="w-full max-w-xl">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col h-full bg-white">
+          <div className="flex flex-col flex-1 items-center justify-center px-8 py-12">
+            {/* Mobile logo */}
+            <div className="lg:hidden mb-10">
+              <BrandLogo />
+            </div>
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-4 w-full max-w-xl"
+            >
               <InputField
                 label="Email address"
-                placeholder="you@jpfoodlab.com"
-                subLabel={`Only @${ADMIN_EMAIL_DOMAINS.join(" or @")} addresses`}
+                placeholder="you@emailprovider.com"
                 type="email"
                 name="email"
                 value={credentials.email}
                 onChange={handleChange}
-                leftIcon={<Mail size={14} />}
+                leftIcon={<DynamicIcon name="Mail" size={14} />}
                 error={errors.email}
               />
               <InputField
@@ -207,39 +222,61 @@ const LoginPage = () => {
                 name="password"
                 value={credentials.password}
                 onChange={handleChange}
-                leftIcon={<Lock size={14} />}
+                leftIcon={<DynamicIcon name="Lock" size={14} />}
                 rightElement={
-                  <button
-                    type="button"
+                  <IconButton
                     onClick={() => setShowPass(!showPass)}
-                    className="cursor-pointer text-xs hover:text-brand-color-500"
-                  >
-                    {showPass ? "Hide" : "Show"}
-                  </button>
+                    text={showPass ? "Hide" : "Show"}
+                    variant="ghost"
+                    className="text-xs hover:bg-transparent hover:text-brand-color-500"
+                  />
                 }
                 error={errors.password}
               />
-
-              <button
+              <IconButton
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold bg-brand-color-500 hover:bg-brand-color-600 text-white mt-2 transition-all duration-150 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign in"
-                )}
-              </button>
+                text={loading ? "Signing in..." : "Sign in"}
+                icon={{
+                  name: loading ? "Loader2" : null,
+                  className: "animate-spin",
+                }}
+                className="p-3 rounded-lg"
+              />
+              <p className="text-center text-sm text-gray-600">
+                By continuing, you agree to our{" "}
+                <Link
+                  href="/policies/terms-of-use"
+                  target="_blank"
+                  className="text-brand-color-500 hover:underline"
+                >
+                  Terms of Use
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/policies/privacy-policy"
+                  target="_blank"
+                  className="text-brand-color-500 hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+              </p>
+              <p className="text-xs text-center text-gray-400">
+                © {new Date().getFullYear()} House of Inasal & BBQ. All rights
+                reserved.
+              </p>
             </form>
+          </div>
 
-            <p className="text-xs text-center text-gray-400 mt-8">
-              © {new Date().getFullYear()} House of Inasal & BBQ. All rights
-              reserved.
-            </p>
+          <div className="max-w-xl w-full flex items-center justify-between mx-auto py-12 px-8">
+            <div className="text-start text-sm text-gray-500">
+              <p className="text-slate-900 font-semibold">Contact us:</p>
+              <p>
+                {contact?.email ?? "info@jpfoodlab.com"} -{" "}
+                {contact?.phone ?? "09687080780"}
+              </p>
+            </div>
+            <p className="text-slate-900 text-sm">v{packageJson.version}</p>
           </div>
         </div>
       </main>

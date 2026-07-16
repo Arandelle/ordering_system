@@ -6,7 +6,7 @@ type IconPosition = "left" | "right";
 
 export interface IconButtonProps extends ComponentPropsWithoutRef<"button"> {
   icon?: {
-    name: string;
+    name: string | null;
     size?: number;
     className?: string;
     position?: IconPosition; // default "left"
@@ -96,7 +96,7 @@ const IconButton = ({
               className="animate-spin"
             />
           )}
-          {!isLoading && icon && iconPosition === "left" && (
+          {!isLoading && icon && iconPosition === "left" && icon.name &&(
             <DynamicIcon
               name={icon.name}
               size={icon.size ?? 14}
@@ -104,7 +104,7 @@ const IconButton = ({
             />
           )}
           {text && <span>{text}</span>}
-          {!isLoading && icon && iconPosition === "right" && (
+          {!isLoading && icon && iconPosition === "right" && icon.name && (
             <DynamicIcon
               name={icon.name}
               size={icon.size ?? 14}
