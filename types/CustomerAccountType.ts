@@ -6,6 +6,8 @@ export type Customer = {
   email: string;
   password: string;
   isActive: boolean;
+  banned?: boolean;
+  emailVerified?: boolean;
   createdAt?: string;
   image: string;
 };
@@ -35,4 +37,15 @@ export type CustomersListResponse = {
     hasNext: boolean;
     hasPrev: boolean;
   };
+  summary: {
+    totalCustomers: number;
+    newCustomers: number;
+    vipCustomers: number;
+  };
 };
+
+/** Sorting options for the customer list */
+export type CustomerSortBy = "newest" | "oldest" | "highest_spent" | "most_orders" | "name_asc" | "name_desc";
+
+/** Filter tabs for the customer list */
+export type CustomerFilter = "all" | "active" | "banned" | "new" | "vip";

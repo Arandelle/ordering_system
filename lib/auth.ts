@@ -39,6 +39,11 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
+      banned: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
     },
   },
 
@@ -147,7 +152,7 @@ export const auth = betterAuth({
         }
       }
 
-      // Validate email domain on customer email login
+      // Validate email domain on customer email login + block banned accounts
       if (ctx.path === "/sign-in/email") {
         const body = ctx.body as { email?: string };
         const email = body.email?.trim().toLowerCase();
@@ -156,6 +161,14 @@ export const auth = betterAuth({
           if (domain !== GMAIL_DOMAIN) {
             throw new APIError("BAD_REQUEST", {
               message: `Only @${GMAIL_DOMAIN} email addresses are accepted`,
+            });
+          }
+
+          // Block login for banned customer accounts
+          const existingUser = await ctx.context.internalAdapter.findUserByEmail(email) as (Record<string, unknown> | null);
+          if (existingUser && existingUser.banned === true) {
+            throw new APIError("FORBIDDEN", {
+              message: "Your account has been suspended. Please contact support.",
             });
           }
         }

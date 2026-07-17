@@ -29,6 +29,9 @@ const UserSchema = new Schema(
     // ISO timestamp of when the user accepted Terms of Use & Privacy Policy
     termsAcceptedAt: { type: String, required: false, default: null },
 
+    // Whether the customer account is banned/suspended
+    banned: { type: Boolean, default: false },
+
     // Default shipping address saved on profile
     shippingAddress: {
       type: ShippingAddressSchema,
