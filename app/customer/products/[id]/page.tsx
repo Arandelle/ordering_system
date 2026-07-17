@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, Suspense } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { multiplyMoney, roundMoney } from "@/lib/money";
 import { trackViewContent, trackAddToCart } from "@/lib/metaPixel";
 import { useCart } from "@/contexts/CartContext";
@@ -14,7 +14,7 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useProductReviews } from "@/hooks/api/customers/useProductReviews";
 import { apiClient } from "@/lib/apiClient";
 import { BranchProduct } from "@/hooks/api/useBranchProductInfinite";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import { QuantityStepper } from "../../menu/components/QuantityStepper";
 import { useQuery } from "@tanstack/react-query";

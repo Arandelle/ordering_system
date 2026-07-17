@@ -4,7 +4,7 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { TextareaField } from "@/components/ui/FormComponents";
 import Pagination from "@/components/ui/Pagination";
 import StarRatingDisplay from "@/components/ui/StarRating";
-import { formatDate } from "@/helper/formatDate";
+import { formatDate } from "@/helper/formatter";
 import {
   useEditReview,
   useHelpfulVote,

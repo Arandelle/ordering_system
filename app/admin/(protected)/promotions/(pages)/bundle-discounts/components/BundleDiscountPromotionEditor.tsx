@@ -2,7 +2,7 @@
 
 import { InputField } from "@/components/ui/FormComponents/InputField";
 import { SelectField } from "@/components/ui/FormComponents/SelectField";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import {
   BUNDLE_TYPE,
   DEFAULT_BUNDLE_PROMOTION_DISCOUNT,
@@ -29,10 +29,10 @@ import {
 import { toggleDay } from "../../../helpers/toggleDay";
 import { buildInitialPromotionForm } from "../helpers/buildInitialPromotionForm";
 import { buildPromotionPayload } from "../helpers/buildPromotionPayload";
-import {
-  BundleDiscountPromotion,
-  BundleDiscountPromotionForm,
-} from "../type";
+import { BundleDiscountPromotion, BundleDiscountPromotionForm } from "../type";
+import { Checkbox } from "@/components/ui/FormComponents";
+import { IconButton } from "@/components/ui/buttons";
+import { AppImage } from "@/components/AppImage";
 
 type BundleDiscountPromotionEditorProps = {
   promotion: BundleDiscountPromotion | BundleDiscountPromotionConfig;
@@ -150,20 +150,17 @@ export default function BundleDiscountPromotionEditor({
               schedule.
             </p>
           </div>
-          <label className="flex items-center gap-3 text-sm font-semibold text-stone-700">
-            <input
-              type="checkbox"
-              checked={form.enabled}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  enabled: event.target.checked,
-                }))
-              }
-              className="h-4 w-4 accent-brand-color-500"
-            />
-            Enabled
-          </label>
+          <Checkbox
+            label="Enabled"
+            type="checkbox"
+            checked={form.enabled}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                enabled: event.target.checked,
+              }))
+            }
+          />
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
@@ -257,7 +254,7 @@ export default function BundleDiscountPromotionEditor({
               </p>
               <div className="flex flex-wrap gap-2">
                 {PERCENTAGE_PRESETS.map((preset) => (
-                  <button
+                  <IconButton
                     key={preset}
                     type="button"
                     onClick={() =>
@@ -266,14 +263,14 @@ export default function BundleDiscountPromotionEditor({
                         discountValue: String(preset),
                       }))
                     }
-                    className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
+                    variant={
                       form.discountValue === String(preset)
-                        ? "border-brand-color-500 bg-brand-color-500 text-white"
-                        : "border-stone-200 text-stone-600 hover:border-brand-color-500"
-                    }`}
-                  >
-                    {preset}%
-                  </button>
+                        ? "primary"
+                        : "secondary"
+                    }
+                    text={`${preset}%`}
+                    className="rounded-lg"
+                  />
                 ))}
               </div>
             </div>
@@ -336,52 +333,39 @@ export default function BundleDiscountPromotionEditor({
                   className="rounded-lg border border-stone-200"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 p-3">
-                    <label
-                      className={`flex items-center gap-3 ${
+                    <Checkbox
+                      type="checkbox"
+                      checked={allSelected}
+                      disabled={isSameItemBundle}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          ...toggleCategoryProducts({
+                            category,
+                            checked: event.target.checked,
+                            productIds: current.productIds,
+                            categoryIds: current.categoryIds,
+                          }),
+                        }))
+                      }
+                      label={category.name}
+                      subLabel={
                         isSameItemBundle
-                          ? "cursor-not-allowed opacity-60"
-                          : "cursor-pointer"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        disabled={isSameItemBundle}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            ...toggleCategoryProducts({
-                              category,
-                              checked: event.target.checked,
-                              productIds: current.productIds,
-                              categoryIds: current.categoryIds,
-                            }),
-                          }))
-                        }
-                        className="h-4 w-4 accent-brand-color-500"
-                      />
-                      <span>
-                        <span className="block text-sm font-bold text-stone-800">
-                          {category.name}
-                        </span>
-                        <span className="block text-xs text-stone-500">
-                          {isSameItemBundle
-                            ? "Select one item below"
-                            : `${selectedCount} / ${category.products.length} selected`}
-                        </span>
-                      </span>
-                    </label>
-                    <button
+                          ? "Select one item below"
+                          : `${selectedCount} / ${category.products.length} selected`
+                      }
+                    />
+                    <IconButton
                       type="button"
                       onClick={() =>
                         setExpandedCategoryIds((current) =>
                           toggleCategoryExpansion(current, category._id),
                         )
                       }
-                      className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
-                    >
-                      {isExpanded ? "Hide items" : "Show items"}
-                    </button>
+                      variant="ghost"
+                      text={isExpanded ? "Hide items" : "Show items"}
+                      className="text-xs"
+                    />
                   </div>
 
                   {isExpanded && (
@@ -394,48 +378,47 @@ export default function BundleDiscountPromotionEditor({
                         return (
                           <div
                             key={product._id}
-                            className="rounded-lg border border-stone-100 p-3 hover:border-brand-color-500"
+                            className="flex gap-4 rounded-lg border border-stone-100 p-3 hover:border-brand-color-500"
                           >
-                            <label className="flex cursor-pointer items-center gap-3">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() =>
-                                  setForm((current) => ({
-                                    ...current,
-                                    productIds: isSameItemBundle
-                                      ? isSelected
-                                        ? []
-                                        : [product._id]
-                                      : toggleProduct(
-                                          current.productIds,
-                                          product._id,
-                                        ),
-                                    categoryIds: isSameItemBundle
+                            <Checkbox
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() =>
+                                setForm((current) => ({
+                                  ...current,
+                                  productIds: isSameItemBundle
+                                    ? isSelected
                                       ? []
-                                      : current.categoryIds,
-                                  }))
-                                }
-                                className="h-4 w-4 accent-brand-color-500"
-                              />
-                              {product.imageUrl ? (
-                                <img
+                                      : [product._id]
+                                    : toggleProduct(
+                                        current.productIds,
+                                        product._id,
+                                      ),
+                                  categoryIds: isSameItemBundle
+                                    ? []
+                                    : current.categoryIds,
+                                }))
+                              }
+                            />
+
+                            {product.imageUrl ? (
+                              <div className="h-12 w-12 rounded-md object-cover">
+                                <AppImage
                                   src={product.imageUrl}
                                   alt={product.name}
-                                  className="h-12 w-12 rounded-md object-cover"
                                 />
-                              ) : (
-                                <div className="h-12 w-12 rounded-md bg-stone-100" />
-                              )}
-                              <span className="min-w-0">
-                                <span className="block truncate text-sm font-bold text-stone-800">
-                                  {product.name}
-                                </span>
-                                <span className="block text-xs text-stone-500">
-                                  {formatCurrency(product.price) ?? "--"}
-                                </span>
+                              </div>
+                            ) : (
+                              <div className="h-12 w-12 rounded-md bg-stone-100" />
+                            )}
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-bold text-stone-800">
+                                {product.name}
                               </span>
-                            </label>
+                              <span className="block text-xs text-stone-500">
+                                {formatCurrency(product.price) ?? "--"}
+                              </span>
+                            </span>
 
                             {isComboBundle && isSelected && (
                               <div className="mt-3">
@@ -589,7 +572,7 @@ export default function BundleDiscountPromotionEditor({
                 const isSelected = form.days.includes(day);
 
                 return (
-                  <button
+                  <IconButton
                     key={day}
                     type="button"
                     onClick={() =>
@@ -598,14 +581,10 @@ export default function BundleDiscountPromotionEditor({
                         days: toggleDay(current.days, day),
                       }))
                     }
-                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
-                      isSelected
-                        ? "border-brand-color-500 bg-brand-color-500 text-white"
-                        : "border-stone-200 text-stone-600 hover:border-brand-color-500"
-                    }`}
-                  >
-                    {day}
-                  </button>
+                    variant={isSelected ? "primary" : "secondary"}
+                    text={day}
+                    className="text-xs rounded-lg px-4"
+                  />
                 );
               })}
             </div>

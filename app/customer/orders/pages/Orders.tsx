@@ -18,11 +18,10 @@ import {
   useCustomerOrderSummary,
 } from "@/hooks/api/customers/useCustomerOrders";
 import Pagination from "@/components/ui/Pagination";
-import { formatDate } from "@/helper/formatDate";
+import { formatDate,formatCurrency } from "@/helper/formatter";
 import { useOrderState, CustomerPaymentKey } from "../hooks/useOrderState";
 import { OrderActions } from "../components/OrderActions";
 import { OrderType } from "@/types/OrderTypes";
-import { formatCurrency } from "@/helper/formatCurrency";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {

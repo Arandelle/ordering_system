@@ -1,7 +1,7 @@
 "use client";
 
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter/";
 import type { ActivePromotion } from "@/types/promotions.type";
 import { useState } from "react";
 import { useActivePromotions } from "../hooks/useActivePromotions";

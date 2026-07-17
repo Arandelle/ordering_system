@@ -2,7 +2,7 @@
 
 import { InputField } from "@/components/ui/FormComponents/InputField";
 import { SelectField } from "@/components/ui/FormComponents/SelectField";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import { DEFAULT_PRODUCT_DISCOUNT_PROMOTION } from "@/types/promotions/product-discount.type";
 import {
   PROMOTION_DISCOUNT_DAYS,
@@ -26,6 +26,9 @@ import {
   toggleCategoryProducts,
   toggleProduct,
 } from "../../../helpers/productSelection";
+import { Checkbox } from "@/components/ui/FormComponents";
+import { IconButton } from "@/components/ui/buttons";
+import { AppImage } from "@/components/AppImage";
 
 type ProductDiscountPromotionEditorProps = {
   promotion: ProductDiscountPromotion | ProductDiscountPromotionConfig;
@@ -69,20 +72,17 @@ export function ProductDiscountPromotionEditor({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-xl border border-stone-100 bg-white p-6 shadow-sm">
-        <label className="flex items-center gap-3 text-sm font-semibold text-stone-700 mb-8">
-          <input
-            type="checkbox"
-            checked={form.enabled}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                enabled: event.target.checked,
-              }))
-            }
-            className="h-4 w-4 accent-brand-color-500"
-          />
-          Enabled
-        </label>
+        <Checkbox
+          type="checkbox"
+          checked={form.enabled}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              enabled: event.target.checked,
+            }))
+          }
+          label="Enabled"
+        />
 
         <div className="grid gap-4 md:grid-cols-2">
           <InputField
@@ -141,7 +141,7 @@ export function ProductDiscountPromotionEditor({
               </p>
               <div className="flex flex-wrap gap-2">
                 {PERCENTAGE_PRESETS.map((preset) => (
-                  <button
+                  <IconButton
                     key={preset}
                     type="button"
                     onClick={() =>
@@ -150,14 +150,14 @@ export function ProductDiscountPromotionEditor({
                         discountValue: String(preset),
                       }))
                     }
-                    className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
+                    text={`${preset}%`}
+                    variant={
                       form.discountValue === String(preset)
-                        ? "border-brand-color-500 bg-brand-color-500 text-white"
-                        : "border-stone-200 text-stone-600 hover:border-brand-color-500"
-                    }`}
-                  >
-                    {preset}%
-                  </button>
+                        ? "primary"
+                        : "secondary"
+                    }
+                    className="rounded-lg"
+                  />
                 ))}
               </div>
             </div>
@@ -200,53 +200,44 @@ export function ProductDiscountPromotionEditor({
                   className="rounded-lg border border-stone-200"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 p-3">
-                    <label className="flex cursor-pointer items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            ...toggleCategoryProducts({
-                              category,
-                              checked: event.target.checked,
-                              productIds: current.productIds,
-                              categoryIds: current.categoryIds,
-                            }),
-                          }))
-                        }
-                        className="h-4 w-4 accent-brand-color-500"
-                      />
-                      <span>
-                        <span className="block text-sm font-bold text-stone-800">
-                          {category.name}
-                        </span>
-                        <span className="block text-xs text-stone-500">
-                          {selectedCount} / {category.products.length} selected
-                        </span>
-                      </span>
-                    </label>
-                    <button
+                    <Checkbox
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          ...toggleCategoryProducts({
+                            category,
+                            checked: event.target.checked,
+                            productIds: current.productIds,
+                            categoryIds: current.categoryIds,
+                          }),
+                        }))
+                      }
+                      label={category.name}
+                      subLabel={`${selectedCount} / ${category.products.length} selected`}
+                    />
+                    <IconButton
                       type="button"
                       onClick={() =>
                         setExpandedCategoryIds((current) =>
                           toggleCategoryExpansion(current, category._id),
                         )
                       }
-                      className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
-                    >
-                      {isExpanded ? "Hide items" : "Show items"}
-                    </button>
+                      variant={isExpanded ? "secondary" : "ghost"}
+                      text={isExpanded ? "Hide items" : "Show items"}
+                      className="text-xs"
+                    />
                   </div>
 
                   {isExpanded && (
                     <div className="grid gap-3 border-t border-stone-100 p-3 md:grid-cols-2 xl:grid-cols-3">
                       {category.products.map((product) => (
-                        <label
+                        <div
                           key={product._id}
-                          className="flex cursor-pointer items-center gap-3 rounded-lg border border-stone-100 p-3 hover:border-brand-color-500"
+                          className="flex gap-4 rounded-lg border border-stone-100 p-3 hover:border-brand-color-500"
                         >
-                          <input
+                          <Checkbox
                             type="checkbox"
                             checked={form.productIds.includes(product._id)}
                             onChange={() =>
@@ -258,14 +249,14 @@ export function ProductDiscountPromotionEditor({
                                 ),
                               }))
                             }
-                            className="h-4 w-4 accent-brand-color-500"
                           />
                           {product.imageUrl ? (
-                            <img
-                              src={product.imageUrl}
-                              alt={product.name}
-                              className="h-12 w-12 rounded-md object-cover"
-                            />
+                            <div className="h-12 w-12 rounded-md object-cover">
+                              <AppImage
+                                src={product.imageUrl}
+                                alt={product.name}
+                              />
+                            </div>
                           ) : (
                             <div className="h-12 w-12 rounded-md bg-stone-100" />
                           )}
@@ -277,7 +268,7 @@ export function ProductDiscountPromotionEditor({
                               {formatCurrency(product.price) ?? "--"}
                             </span>
                           </span>
-                        </label>
+                        </div>
                       ))}
                     </div>
                   )}

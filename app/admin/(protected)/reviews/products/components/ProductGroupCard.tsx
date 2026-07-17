@@ -1,11 +1,11 @@
 /* ── Product Group Card ──────────────────────────────────────────────────── */
 
-import { OrderItemImage } from "@/app/customer/components/OrderItemImage";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import StarRatingDisplay from "@/components/ui/StarRating";
 import { useMemo, useState } from "react";
-import { formatDate } from "@/helper/formatDate";
+import { formatDate } from "@/helper/formatter";
 import { ProductGroup } from "../types/product-review.types";
+import { AppImage } from "@/components/AppImage";
 
 /** Card showing one product with aggregated ratings and expandable preview of recent reviews */
 export const ProductGroupCard = ({
@@ -35,7 +35,7 @@ export const ProductGroupCard = ({
         {/* ── Product header: image + name + rating ────────────────────────── */}
         <div className="px-5 pt-5 pb-3 flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl object-cover border border-gray-100 shrink-0">
-            <OrderItemImage image={group.image ?? ""} name={group.name} />
+            <AppImage src={group.image ?? ""} alt={group.name} />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">

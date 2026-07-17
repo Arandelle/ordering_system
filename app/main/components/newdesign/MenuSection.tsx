@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import { useProducts } from "@/hooks/api/useProducts";
 import { useSubdomainPath } from "@/hooks/useSubdomainUrl";
 import Link from "next/link";

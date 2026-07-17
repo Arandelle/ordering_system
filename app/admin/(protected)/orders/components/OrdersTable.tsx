@@ -13,7 +13,7 @@ import { OrderType } from "@/types/OrderTypes";
 import { OrderActionButton } from "./OrderActionButton";
 import PermissionGuard from "@/lib/PermissionGuard";
 import LoadingPage from "@/components/ui/LoadingPage";
-import { formatDate } from "@/helper/formatDate";
+import { formatDate } from "@/helper/formatter/formatDate";
 import { useRouter } from "next/navigation";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 
@@ -100,13 +100,17 @@ export default function OrdersTable({
                 const isMaya = order.paymentInfo.paymentMethod === "maya";
                 const isMayaPaid = order.paymentInfo.paymentConfirmed === true;
                 const isNewPaidOrder =
-                  isMaya && isMayaPaid && order.status === ORDER_STATUSES.PENDING;
+                  isMaya &&
+                  isMayaPaid &&
+                  order.status === ORDER_STATUSES.PENDING;
 
                 return (
                   <TableRow
                     key={order._id}
                     className={`relative transition-colors ${
-                      isNewPaidOrder ? "bg-brand-color-50 hover:bg-brand-color-100" : "hover:bg-stone-50"
+                      isNewPaidOrder
+                        ? "bg-brand-color-50 hover:bg-brand-color-100"
+                        : "hover:bg-stone-50"
                     }`}
                   >
                     <TableCell className="px-6 py-4">

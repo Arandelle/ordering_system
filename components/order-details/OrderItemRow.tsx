@@ -6,7 +6,7 @@ import {
 } from "@/lib/money";
 import { OrderItem } from "@/types/OrderTypes";
 import { AppImage } from "../AppImage";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 
 /** Order item row with image, quantity badge, modifiers, and price breakdown */
 export const OrderItemRow = ({ item }: { item: OrderItem }) => {

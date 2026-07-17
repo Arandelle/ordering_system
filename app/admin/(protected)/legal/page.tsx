@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import SectionHeader from "../../components/SectionHeader";
-import { POLICY_SLUGS, PolicyData } from "@/data/policyData";
+import { POLICY_SLUGS } from "@/data/policyData";
 import {
   useAdminPolicies,
   useSeedPolicies,
   useUpdatePolicy,
 } from "@/hooks/api/admin/useAdminPolicies";
-import { formatDateOnly } from "@/helper/formatDate";
+import { formatDateOnly } from "@/helper/formatter";
 import {
   InputField,
   MarkdownEditorField,
@@ -16,6 +16,7 @@ import {
 import type { PolicySection } from "@/hooks/api/usePolicies";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import LoadingPage from "@/components/ui/LoadingPage";
+import { IconButton } from "@/components/ui/buttons";
 
 /** Human-readable labels for each policy slug */
 const SLUG_LABELS: Record<string, string> = {
@@ -103,16 +104,22 @@ const PoliciesPage = () => {
       JSON.stringify({
         title: activeForm.title,
         subtitle: activeForm.subtitle,
-        sections: activeForm.sections,
+        sections: activeForm.sections.map((s) => ({
+          heading: s.heading,
+          content: s.content,
+        })),
       }) !==
       JSON.stringify({
         title: activePolicy.title,
         subtitle: activePolicy.subtitle,
-        sections: activePolicy.sections,
+        sections: activePolicy.sections.map((s) => ({
+          heading: s.heading,
+          content: s.content,
+        })),
       })
     );
   })();
-
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
@@ -257,18 +264,14 @@ const PoliciesPage = () => {
         <div className="border border-gray-200 rounded-xl shadow">
           <div className="flex border-b border-gray-200 overflow-x-auto">
             {POLICY_SLUGS.map((slug) => (
-              <button
+              <IconButton
                 key={slug}
                 type="button"
                 onClick={() => setActiveSlug(slug)}
-                className={`px-6 py-3 text-sm font-semibold whitespace-nowrap transition-colors ${
-                  activeSlug === slug
-                    ? "border-b-2 border-brand-color-500 text-brand-color-500 bg-brand-color-500/5"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {SLUG_LABELS[slug]}
-              </button>
+                text={SLUG_LABELS[slug]}
+                variant={activeSlug === slug ? "primary" : "ghost"}
+                className="px-6 whitespace-nowrap"
+              />
             ))}
           </div>
 
@@ -345,37 +348,39 @@ const PoliciesPage = () => {
                     </span>
                     <div className="flex items-center gap-1">
                       {/** move up the section */}
-                      <button
+                      <IconButton
                         type="button"
                         onClick={() => moveSection(index, "up")}
                         disabled={index === 0 || !seeded}
-                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        variant="ghost"
                         title="Move up"
-                      >
-                        <DynamicIcon name="ChevronUp" size={16} />
-                      </button>
+                        icon={{ name: "ChevronUp", size: 16 }}
+                      />
                       {/**move down the section */}
-                      <button
+                      <IconButton
                         type="button"
                         onClick={() => moveSection(index, "down")}
                         disabled={
                           index === activeForm.sections.length - 1 || !seeded
                         }
-                        className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        variant="ghost"
                         title="Move down"
-                      >
-                        <DynamicIcon name="ChevronDown" size={16} />
-                      </button>
+                        icon={{ name: "ChevronDown", size: 16 }}
+                      />
                       {/** remove the section */}
-                      <button
+                      <IconButton
                         type="button"
                         onClick={() => removeSection(index)}
-                        className="p-1.5 rounded hover:bg-red-50 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 text-red-500 transition-colors"
-                        title="Remove section"
                         disabled={!seeded}
-                      >
-                        <DynamicIcon name="Trash2" size={16} />
-                      </button>
+                        variant="danger"
+                        title="Remove section"
+                        icon={{
+                          name: "Trash2",
+                          size: 16,
+                          className: "text-red-500",
+                        }}
+                        className="bg-transparent hover:bg-red-50 rounded-lg"
+                      />
                     </div>
                   </div>
                   {/** Input fields for new sections */}
@@ -403,30 +408,28 @@ const PoliciesPage = () => {
                   />
                 </div>
               ))}
-
-              <button
+              <IconButton
                 type="button"
                 onClick={addSection}
                 disabled={!seeded}
-                className="px-4 py-2 text-sm font-semibold text-brand-color-500 border border-brand-color-500 rounded-lg hover:bg-brand-color-500/10 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-400 flex items-center gap-1 my-4"
-              >
-                <DynamicIcon name="Plus" size={16} />
-                Add Section
-              </button>
+                variant="primary"
+                title="Add Section"
+                icon={{ name: "Plus", size: 16 }}
+                text="Add Section"
+                className="px-4 rounded-lg"
+              />
             </div>
             {/* Action buttons */}
             <div className="flex gap-4 pt-4 border-t border-gray-200">
-              <button
-                type="button"
+              <IconButton
                 onClick={handleReset}
                 disabled={!hasChanges || !seeded}
-                className={`px-8 py-3 rounded-xl border border-stone-200 text-stone-600 font-semibold hover:bg-stone-100 transition-colors ${
-                  !hasChanges && "opacity-40 pointer-events-none"
-                }`}
-              >
-                Reset
-              </button>
-              <button
+                variant={!hasChanges ? "ghost" : "secondary"}
+                title="Reset to last saved data"
+                text="Reset"
+                className="rounded-lg px-8"
+              />
+              <IconButton
                 type="submit"
                 disabled={
                   updatePolicy.isPending ||
@@ -434,12 +437,11 @@ const PoliciesPage = () => {
                   activeForm.sections.length === 0 ||
                   !seeded
                 }
-                className={`flex-1 px-8 py-3 rounded-xl bg-brand-color-500 text-white font-semibold hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-60 disabled:pointer-events-none ${
-                  !hasChanges && "cursor-not-allowed"
-                }`}
-              >
-                {updatePolicy.isPending ? "Saving..." : "Save Changes"}
-              </button>
+                variant={!hasChanges ? "secondary" : "primary"}
+                title="Reset to last saved data"
+                text={updatePolicy.isPending ? `Saving...` : "Save changes"}
+                className="rounded-lg px-8"
+              />
             </div>
           </form>
         </div>

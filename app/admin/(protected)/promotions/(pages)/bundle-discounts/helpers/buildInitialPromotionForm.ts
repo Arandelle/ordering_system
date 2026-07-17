@@ -1,4 +1,4 @@
-import { formatDateInputValue } from "@/helper/formatDateInputValue";
+import { formatDateInputValue } from "@/helper/formatter";
 import {
   BUNDLE_TYPE,
   type BundleDiscountPromotionConfig,

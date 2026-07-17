@@ -11,8 +11,7 @@ import {
 } from "@/hooks/api/useSettings";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { TextareaField } from "@/components/ui/FormComponents/TextAreaField";
-import { formatTime } from "@/helper/formatTime";
-import { formatDays } from "@/helper/formatDays";
+import { formatTime,formatDays } from "@/helper/formatter/";
 
 type Action =
   | { type: "SET_STORE_NAME"; value: string }

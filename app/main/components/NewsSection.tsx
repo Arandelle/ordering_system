@@ -7,7 +7,7 @@ import {
 } from "@/hooks/utils/useIntersectionAnimation";
 import { Calendar, ChevronDown } from "lucide-react";
 import React, { useState } from "react";
-import { formatDate } from "@/helper/formatDate";
+import { formatDate } from "@/helper/formatter/";
 
 interface NewsArticle {
   id: number;

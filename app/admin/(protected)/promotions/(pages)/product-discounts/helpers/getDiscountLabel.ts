@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter/";
 
 type PromotionDiscountSummary = {
   discountType: "fixed" | "percentage";

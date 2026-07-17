@@ -44,7 +44,7 @@ import { FREE_DELIVERY_ENABLED } from "@/lib/deliveryFee";
 import { getCheckoutActionMode } from "./checkoutAction";
 import { useBranchCapacity } from "@/hooks/api/useBranchCapacity";
 import { AppImage } from "@/components/AppImage";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter/";
 import { InputField } from "@/components/ui/FormComponents";
 
 const createCodOrder = async (payload: CreateOrderPayload) => {

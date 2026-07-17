@@ -2,7 +2,8 @@
 
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { computeTax } from "../helper/computeTax";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
+import { SummaryRow } from "@/components/ui/SummaryRow";
 
 export const TaxBreakdown = ({ price }: { price: string }) => {
   const { taxable, tax, total } = computeTax(price);
@@ -28,33 +29,29 @@ export const TaxBreakdown = ({ price }: { price: string }) => {
           VAT Breakdown (12%)
         </div>
         <div className="px-4 py-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Taxable Amount</span>
-            <span
-              className={`text-sm font-bold  ${hasValue ? "text-gray-700" : "text-gray-300"}`}
-            >
-              {hasValue ? formatCurrency(taxable) : "₱ 0.00"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">VAT (12%)</span>
-            <span
-              className={`text-sm font-bold ${hasValue ? "text-brand-color-500" : "text-gray-300"}`}
-            >
-              {hasValue ? formatCurrency(tax) : "₱ 0.00"}
-            </span>
-          </div>
-          <div
-            className={`h-px my-1 ${hasValue ? "bg-brand-color-500/15" : "bg-gray-100"}`}
+          <SummaryRow
+            title="Taxable Amount"
+            subTitle={hasValue ? formatCurrency(taxable) : "₱ 0.00"}
+            className={{
+              subTitle: hasValue ? "text-gray-700" : "text-gray-300",
+            }}
           />
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-600">Total Price</span>
-            <span
-              className={`font-black ${hasValue ? "text-gray-800" : "text-gray-300"}`}
-            >
-              {hasValue ? formatCurrency(total) : "₱ 0.00"}
-            </span>
-          </div>
+          <SummaryRow
+            title="VAT (12%)"
+            subTitle={hasValue ? formatCurrency(tax) : "₱ 0.00"}
+            className={{
+              subTitle: hasValue ? "text-brand-color-500" : "text-gray-300",
+            }}
+          />
+          <SummaryRow
+            title="Total Price"
+            subTitle={hasValue ? formatCurrency(total) : "₱ 0.00"}
+            className={{
+              parent: "border-t border-t-brand-color-500/15 py-2",
+              title: "font-semibold",
+              subTitle: hasValue ? "text-gray-800 font-bold" : "text-gray-300",
+            }}
+          />
         </div>
       </div>
       <p className="flex items-start gap-1.5 text-[11px] text-gray-400 leading-relaxed">

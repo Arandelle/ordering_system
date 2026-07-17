@@ -13,9 +13,9 @@ import type {
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { formatCurrency } from "@/helper/formatCurrency";
-import { formatTimeAgo } from "@/helper/formatTimeAgo";
-import { OrderItemImage } from "@/app/customer/components/OrderItemImage";
+import { formatCurrency, formatTimeAgo } from "@/helper/formatter";
+import { IconButton } from "@/components/ui/buttons";
+import { AppImage } from "@/components/AppImage";
 
 type SectionKey = "pendingOrders" | "lowStock" | "newCustomers";
 
@@ -54,29 +54,32 @@ function ActivitySection({
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
       {/* Header — clickable to toggle */}
-      <button
+      <IconButton
+        variant="ghost"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-stone-50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-8 h-8 rounded-lg flex items-center justify-center ${config.color}`}
-          >
-            <DynamicIcon name={config.icon} size={16} />
+        className="w-full"
+        children={
+          <div className="w-full flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${config.color}`}
+              >
+                <DynamicIcon name={config.icon} size={16} />
+              </div>
+              <span className="text-sm font-semibold text-stone-800">
+                {config.label}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <DynamicIcon
+                name={expanded ? "ChevronUp" : "ChevronDown"}
+                size={16}
+                className="text-stone-400"
+              />
+            </div>
           </div>
-          <span className="text-sm font-semibold text-stone-800">
-            {config.label}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <DynamicIcon
-            name={expanded ? "ChevronUp" : "ChevronDown"}
-            size={16}
-            className="text-stone-400"
-          />
-        </div>
-      </button>
+        }
+      />
 
       {/* Content */}
       {expanded && (
@@ -129,11 +132,7 @@ function LowStockRow({ item }: { item: LowStockItem }) {
     >
       {item.image ? (
         <div className="w-8 h-8 rounded-lg">
-          <OrderItemImage
-            image={item.image}
-            name={item.name}
-            className="object-cover"
-          />
+          <AppImage src={item.image} alt={item.name} className="object-cover" />
         </div>
       ) : (
         <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center">
@@ -270,9 +269,7 @@ export default function DashboardActivityAside() {
   return (
     <div className="space-y-4">
       {/* ── Pending Orders ── */}
-      <ActivitySection
-        sectionKey="pendingOrders"
-      >
+      <ActivitySection sectionKey="pendingOrders">
         {activity.pendingOrders.length > 0
           ? activity.pendingOrders.map((order) => (
               <PendingOrderRow key={order._id} order={order} />
@@ -281,9 +278,7 @@ export default function DashboardActivityAside() {
       </ActivitySection>
 
       {/* ── Low Stock Alert ── */}
-      <ActivitySection
-        sectionKey="lowStock"
-      >
+      <ActivitySection sectionKey="lowStock">
         {activity.lowStockItems.length > 0
           ? activity.lowStockItems.map((item) => (
               <LowStockRow key={item.productId} item={item} />
@@ -292,9 +287,7 @@ export default function DashboardActivityAside() {
       </ActivitySection>
 
       {/* ── New Customers ── */}
-      <ActivitySection
-        sectionKey="newCustomers"
-      >
+      <ActivitySection sectionKey="newCustomers">
         {activity.newCustomers.length > 0
           ? activity.newCustomers.map((customer, idx) => (
               <NewCustomerRow

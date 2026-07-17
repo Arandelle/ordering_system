@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import { OrderDiscountPromotion } from "../types";
 
 export function getDiscountLabel(promotion: OrderDiscountPromotion) {

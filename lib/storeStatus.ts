@@ -1,4 +1,4 @@
-import { formatTime } from "@/helper/formatTime";
+import { formatTime } from "@/helper/formatter";
 import { Days, SettingsType } from "@/hooks/api/useSettings";
 
 const DAYS: Days[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];

@@ -1,8 +1,6 @@
 "use client";
 
-import { formatDays } from "@/helper/formatDays";
-import { formatTime } from "@/helper/formatTime";
-import { formatToViberNumber } from "@/helper/formatToViberNumber";
+import { formatDays,formatTime, formatToViberNumber } from "@/helper/formatter/";
 import { useSettings } from "@/hooks/api/useSettings";
 
 const BookYourTable = () => {

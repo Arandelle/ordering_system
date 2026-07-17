@@ -2,14 +2,14 @@
 
 import { useToggleReviewVisibility } from "@/hooks/api/admin/useAdminReviews";
 import Modal from "@/components/ui/Modal";
-import { OrderItemImage } from "@/app/customer/components/OrderItemImage";
 import StarRatingDisplay, {
   RatingDistributionBar,
 } from "@/components/ui/StarRating";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
-import { formatDate } from "@/helper/formatDate";
+import { formatDate } from "@/helper/formatter/";
 import PermissionGuard from "@/lib/PermissionGuard";
 import { ProductGroup } from "../types/product-review.types";
+import { AppImage } from "@/components/AppImage";
 
 /** Modal showing all review entries for a specific product */
 export const ProductViewDetailsModal = ({
@@ -41,7 +41,7 @@ export const ProductViewDetailsModal = ({
         <div className="px-6 py-5">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 rounded-xl object-cover border border-gray-100 shrink-0">
-              <OrderItemImage image={group.image ?? ""} name={group.name} />
+              <AppImage src={group.image ?? ""} alt={group.name} />
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-800">

@@ -1,4 +1,4 @@
-import { formatDateInputValue } from "@/helper/formatDateInputValue";
+import { formatDateInputValue } from "@/helper/formatter";
 import {
   DEFAULT_PROMO_CARD_DISCOUNT_RULES,
   DEFAULT_PROMO_CARD_VALIDITY_RULE,

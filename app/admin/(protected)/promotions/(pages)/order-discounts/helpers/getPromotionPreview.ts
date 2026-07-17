@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import { DEFAULT_ORDER_DISCOUNT_PROMOTION } from "@/types/promotions/order-discount.type";
 import { OrderDiscountPromotionForm, PromotionPreview } from "../types";
 import { formatPreviewDateTime } from "./formatPreviewDateTime";

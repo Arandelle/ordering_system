@@ -7,8 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency } from "@/helper/formatCurrency";
-import { formatDate, formatDateOnly } from "@/helper/formatDate";
+import { formatDate, formatDateOnly, formatCurrency, formatTime} from "@/helper/formatter";
 import { useRouter } from "next/navigation";
 import { useDeleteOrderDiscountPromotion } from "../../../hooks/useOrderDiscountPromotions";
 import { getDiscountLabel } from "../helpers/getDiscountLabel";
@@ -18,7 +17,6 @@ import {
   promotionStatusStyles,
 } from "../helpers/getPromotionStatus";
 import { OrderDiscountPromotion } from "../types";
-import { formatTime } from "@/helper/formatTime";
 import { getCreatorName } from "../../../helpers/getCreatorName";
 
 type PromotionListProps = {

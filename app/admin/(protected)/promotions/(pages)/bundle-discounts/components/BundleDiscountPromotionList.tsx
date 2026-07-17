@@ -7,8 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDate, formatDateOnly } from "@/helper/formatDate";
-import { formatTime } from "@/helper/formatTime";
+import { formatDate, formatDateOnly, formatTime } from "@/helper/formatter";
 import { Fragment, useState } from "react";
 import { getDiscountLabel } from "../../product-discounts/helpers/getDiscountLabel";
 import {

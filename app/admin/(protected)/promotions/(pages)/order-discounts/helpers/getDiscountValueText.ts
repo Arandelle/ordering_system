@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import { OrderDiscountPromotionForm } from "../types";
 
 export function getDiscountValueText(form: OrderDiscountPromotionForm) {

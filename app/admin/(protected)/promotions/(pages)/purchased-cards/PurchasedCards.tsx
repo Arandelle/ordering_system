@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDate } from "@/helper/formatDate";
+import { formatDate } from "@/helper/formatter/";
 import { usePromoCards } from "../../hooks/usePromoCards";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { PromoCardPurchaseStatus } from "../../types/promo-card.type";

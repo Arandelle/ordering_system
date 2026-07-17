@@ -14,6 +14,7 @@ import { ORDER_STATUSES } from "@/types/orderConstants";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import { Types } from "mongoose";
 import { STAFF_ROLES, StaffRole } from "@/types/staff";
+import { getValidObjectId } from "@/helper/getValidObjectIds";
 
 /**
  * The time period the dashboard filters by.
@@ -89,12 +90,12 @@ export function resolveDashboardFilters(
   return { branchId: admin.branch };
 }
 
-const buildBranchMatch = (filters: DashboardFilters = {}) => {
+export const buildBranchMatch = (filters: DashboardFilters = {}) => {
   if (!filters.branchId) return {};
 
   const branchId = filters.branchId.toString();
 
-  if (!Types.ObjectId.isValid(branchId)) {
+  if (!getValidObjectId(branchId)) {
     throw new Error("Invalid branch id");
   }
 

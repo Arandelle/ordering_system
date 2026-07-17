@@ -1,4 +1,4 @@
-import { formatDate, formatDateOnly } from "@/helper/formatDate";
+import { formatDateOnly } from "@/helper/formatter";
 import type { PolicyData } from "@/hooks/api/usePolicies";
 import { marked } from "marked";
 

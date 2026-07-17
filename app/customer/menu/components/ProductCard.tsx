@@ -5,7 +5,7 @@ import { STOCK_STATUSES } from "@/types/inventory_types";
 import ProductDetailModal from "./ProductDetailsModal";
 import { toast } from "sonner";
 import { ITEM_TYPES } from "@/types/products";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter/";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useProductReviews } from "@/hooks/api/customers/useProductReviews";
 import { IconButton } from "@/components/ui/buttons";

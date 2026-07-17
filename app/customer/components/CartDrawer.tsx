@@ -25,7 +25,7 @@ import {
   roundMoney,
   subtractMoney,
 } from "@/lib/money";
-import { formatCurrency } from "@/helper/formatCurrency";
+import { formatCurrency } from "@/helper/formatter";
 import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
 import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";

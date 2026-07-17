@@ -1,4 +1,4 @@
-import { formatDateInputValue } from "@/helper/formatDateInputValue";
+import { formatDateInputValue } from "@/helper/formatter";
 import type { ProductDiscountPromotionConfig } from "@/types/promotions/product-discount.type";
 import {
   ProductDiscountPromotion,
