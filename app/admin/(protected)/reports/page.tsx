@@ -24,7 +24,7 @@ import type { DashboardPeriod } from "@/services/admin/dashboard.service";
 import type { ReportsData } from "@/services/admin/reports.service";
 import { buildDashboardQuery as buildReportsQuery } from "../dashboard/helper/buildDashboardQuery";
 import DashboardFilter from "../dashboard/components/DashboardFilter";
-import { NoDataFound } from "../(components)/dashboard/NoDataFound";
+import { NoDataFound } from "../../components/dashboard/NoDataFound";
 import { formatCurrency } from "@/helper/formatter";
 
 // ============================================

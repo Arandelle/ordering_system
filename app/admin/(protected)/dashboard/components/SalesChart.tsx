@@ -20,7 +20,7 @@ import {
   YAxis,
 } from "recharts";
 import { buildDashboardQuery } from "../helper/buildDashboardQuery";
-import { NoDataFound } from "../../(components)/dashboard/NoDataFound";
+import { NoDataFound } from "../../../components/dashboard/NoDataFound";
 
 type SalesChartResponse = {
   salesData: SalesData[];
