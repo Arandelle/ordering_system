@@ -41,6 +41,10 @@ export type AuthenticatedAdmin = {
   phone?: string;
   role: StaffRole;
   branch?: Types.ObjectId;
+  image?: {
+    url: string;
+    public_id?: string;
+  };
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;

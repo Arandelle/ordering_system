@@ -1,37 +1,30 @@
-import cloudinary from "@/lib/cloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { getAPIError } from "@/lib/getApiError";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * POST /api/customer/upload-avatar
+ * Uploads a customer's profile avatar to Cloudinary under the customer_profile folder.
+ * Accepts a base64-encoded imageFile and an optional oldPublicId to destroy the previous image.
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { imageFile, oldPublicId } = body;
 
     if (!imageFile) {
-      return NextResponse.json(
-        { error: "Image file is required!" },
-        { status: 400 },
-      );
+      return getAPIError("Image file is required", 400);
     }
 
-    if(oldPublicId){
-        await cloudinary.uploader.destroy(oldPublicId);
-    }
-
-    const uploadResult = await cloudinary.uploader.upload(imageFile, {
+    const image = await uploadToCloudinary(imageFile, {
       folder: "customer_profile",
+      oldPublicId,
     });
 
-    const secure_url = uploadResult.secure_url;
-    const public_id = uploadResult.public_id
-
-    return NextResponse.json({ secure_url, public_id}, { status: 201 }); // response as object
+    return NextResponse.json(image, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to upload image",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to upload image",
+    });
   }
 }
