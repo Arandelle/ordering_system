@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import BrandLogo from "../../../components/BrandLogo";
-import { useLogoutAdmin } from "@/hooks/api/useLogout";
-import LogoutModal from "../../../components/ui/LogoutModal";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
 import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
@@ -12,6 +10,7 @@ import { ORDER_STATUSES } from "@/types/orderConstants";
 import AdminBranchSelector from "./AdminBranchSelector";
 import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
 import { IconButton } from "@/components/ui/buttons";
+import packageJson from "@/package.json";
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -151,12 +150,6 @@ const navSections: NavSection[] = [
         permission: "customers.read",
       },
       {
-        name: "Activity Logs",
-        path: "/activity-logs",
-        icon: "ScrollText",
-        permission: "activity-logs.read",
-      },
-      {
         name: "Store Management",
         path: "/stores",
         icon: "Store",
@@ -167,12 +160,6 @@ const navSections: NavSection[] = [
         path: "/staff",
         icon: "UserRoundCog",
         permission: "staff.read",
-      },
-      {
-        name: "Legal Policies",
-        path: "/legal",
-        icon: "Scale",
-        permission: "legal.read",
       },
       {
         name: "Settings",
@@ -211,15 +198,11 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
     branchId: selectedBranchId === "all" ? undefined : selectedBranchId,
   });
 
-  const logout = useLogoutAdmin();
   const [expandedItemKey, setExpandedItemKey] = useState<string | null>(() =>
     getActiveParentKey(pathname),
   );
 
   const pendingCount = placedOrders?.pagination?.total ?? 0;
-  // const lowProductStock = products.filter((order) => order.stock <= 10).length;
-
-  const [logoutModal, setLogoutModal] = useState(false);
 
   useEffect(() => {
     setExpandedItemKey(getActiveParentKey(pathname));
@@ -248,9 +231,9 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
         <div className="h-20 flex items-center justify-between px-4 border-b border-gray-200">
           <BrandLogo />
           {/** Mobile close button */}
-          <IconButton 
+          <IconButton
             onClick={onClose}
-            icon={{name: "X", size: 20}}
+            icon={{ name: "X", size: 20 }}
             className="lg:hidden"
             variant="ghost"
           />
@@ -376,25 +359,13 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
           })}
         </nav>
 
-        {/** Logout */}
-        <div className="shrink-0 border-t border-stone-200">
-          <button
-            onClick={() => setLogoutModal(true)}
-            className="w-full flex items-center gap-3 px-6 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 font-semibold text-sm cursor-pointer"
-          >
-            <DynamicIcon name="LogOut" size={16} />
-            <span>Exit Portal</span>
-          </button>
+        {/** Version info */}
+        <div className="shrink-0 border-t border-stone-200 px-6 py-3">
+          <p data-tooltip-id="app-tooltip" data-tooltip-content="View what's changed" className="text-xs text-gray-400 font-medium text-center">
+            v{packageJson.version}
+          </p>
         </div>
       </aside>
-
-      {logoutModal && (
-        <LogoutModal
-          onClose={() => setLogoutModal(false)}
-          onConfirm={() => logout.mutate()}
-          isLoading={logout.isPending}
-        />
-      )}
     </>
   );
 };

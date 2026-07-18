@@ -64,6 +64,8 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "modifier-groups.create",
     "modifier-groups.update",
     "modifier-groups.delete",
+
+    "profile.read",
   ]),
 
   admin: new Set([
@@ -97,7 +99,26 @@ export const adminPermission: Record<StaffRole, Set<string>> = {
     "reviews.update",
 
     "modifier-groups.read",
+    "profile.read",
   ]),
 
-  cashier: new Set(["orders.read", "orders.update", "reviews.read", "reviews.update"]),
+  cashier: new Set([
+    "dashboard.read",
+
+    "orders.read",
+    "orders.update",
+
+    "reports.read",
+
+    "customers.read",
+
+    "reviews.read",
+    "reviews.update",
+
+    "profile.read",
+
+    "inventories.read",
+    "inventories.create",
+    "inventories.update",
+  ]),
 };
