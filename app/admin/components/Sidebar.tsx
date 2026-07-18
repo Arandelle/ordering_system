@@ -364,6 +364,9 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
           <Link
             href="/changelog"
             onClick={onClose}
+            data-tooltip-id="app-tooltip"
+            data-tooltip-content={"See what's changed."}
+            data-tooptip-is-open={true}
             className="block text-xs text-gray-400 hover:text-brand-color-500 font-medium text-center transition-colors cursor-pointer"
           >
             v{packageJson.version}

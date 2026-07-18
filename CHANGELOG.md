@@ -1,6 +1,178 @@
 # Changelog
 
 
+## 1.11.0 - Admin Profile, Cloudinary Centralization & Changelog Page - 2026-07-18
+**Release Focus:** Staff model expansion with image support, admin self-service profile page with avatar upload and password change, centralized Cloudinary upload utility, role-based access control refactor, and a changelog page rendered from Markdown.
+
+### Added
+- Staff model fields: `image` (nested `{ url, public_id }`) aligned with Product/Category/Bundle pattern
+- Admin profile page (`/profile`) with editable name, phone, avatar upload, and change password
+- Centralized Cloudinary upload utility (`lib/cloudinaryUpload.ts`) with `uploadToCloudinary()` and `destroyCloudinaryImage()` helpers
+- Changelog page (`/changelog`) that reads `CHANGELOG.md` and renders it via `react-markdown`
+- Sidebar version display now links to the changelog page
+- `updateProfileSchema` Zod validation for admin self-service profile updates
+- API routes: `PUT /api/staff/profile` (self-update), `POST /api/staff/upload-avatar` (admin avatar upload)
+- React Query hooks: `useUpdateProfile`, `useUploadAdminAvatar`, `useChangeAdminPassword`
+- AdminHeader floating dropdown menu with View Profile, Legal Policies, and Logout options
+- Logout moved from sidebar to the header dropdown
+
+### Improved
+- Refactored role-based access control to resource-centric definition with action shorthands (`R`, `RU`, `RCU`, `FULL`)
+- All three Cloudinary upload routes (`/api/upload`, `/api/staff/upload-avatar`, `/api/customer/upload-avatar`) now use the centralized helper
+- Preview-first avatar upload flow: local preview on file select, Cloudinary upload deferred to save
+- Old avatar automatically destroyed on Cloudinary when replaced (via `public_id`)
+- Replaced `marked` + `dangerouslySetInnerHTML` with `react-markdown` in policy rendering (eliminates XSS vector)
+- Removed unused `IconButton` and `LogoutModal` imports from Sidebar
+
+### Removed
+- `marked` and `@types/marked` dependencies (replaced by `react-markdown`)
+- Sidebar "Exit Portal" logout button (now in header dropdown)
+- Stale `avatar`, `avatarPublicId`, `bio` fields from Staff model and types
+
+
+## 1.10.0 - Modifier Group Management Overhaul - 2026-07-14
+**Release Focus:** Complete rework of modifier group management with drag-and-drop repositioning, debounce protection, and improved UX for quantity and selection handling.
+
+### Added
+- Drag-and-drop repositioning for modifier groups and items under templates and products
+- Debounce utility for API routes to prevent spam requests
+- Reorder position handling for modifier categories, modifier templates, and subcategories
+
+### Improved
+- MaxSelect logic: when maxSelect is 1, selecting another modifier auto-clears the previous; when greater than 1, user must deselect n items before selecting a new one
+- Modifier items no longer have independent quantity — quantity is computed from the modified order
+- Removed product quantity field, centralized modifier types and Zod validation
+- Price preview for modifier and reorder placed on right side for readability
+- "See more" action button for modifier groups when items exceed 3
+- Uniform card heights regardless of content length
+- Removed modifier group names from display
+
+
+## 1.9.4 - Customer Management, Reports & Dashboard Improvements - 2026-07-11
+**Release Focus:** Dynamic customer list with filtering and account management, comprehensive reports with revenue/trends/retention analytics, responsive dashboard, and order details modal refinements.
+
+### Added
+- Dynamic customers list page with filtering, searching, and a modal to update customer accounts
+- Customer detail view: account status, total orders, total spent, average spent per day
+- Ban/unban API and boolean `banned` attribute on customer accounts
+- Reports aggregation API: total revenue, orders, average orders, customer retention
+- Reports page: revenue trend, orders trend, category breakdown, peak hours analysis
+- Reusable "No Data Found" component shared across reports and dashboard
+- Responsive dashboard card and layout
+
+### Improved
+- Order details modal: properly lists combo/set product details, renders full order summary with each product placed
+- Date and formatter utilities consolidated into a single file
+- Component separation across reports and dashboard sections
+
+### Refactored
+- Moved "No Data Found" component out of the protected folder to the shared components directory
+
+
+## 1.9.3 - Modifier Selections on Orders - 2026-07-09
+**Release Focus:** Modifier selections are now recorded on orders with proper unit price computation.
+
+### Added
+- Modifier selections included on order types to record included items
+- Unit price computation for modifier items with proper zero-price rendering on Maya payment
+
+
+## 1.9.2 - Modifier Groups UI Refinement - 2026-07-08
+**Release Focus:** Polished modifier group management UI with better layouts, reusable action buttons, and drag-and-drop fixes.
+
+### Added
+- Reusable "See More" action button for multiple-item sections
+- Option to set a modifier group as main and link other groups to it
+- `maxQty` attribute for overall quantity limit on modifier items
+- Clamp utility for constraining values between min and max
+- Version display and contact info on login page
+
+### Improved
+- Modifier group layout: better button positioning with sync, detach, and delete actions
+- Price preview for modifier and reorder placed on right side for readability
+- Drag-and-drop fix: only the drag handle moves instead of the whole card when dropping on the same item key
+- Removed allowed email hint from registration flow
+
+### Fixed
+- Correct payload passing of `isMain`, `linkedToGroupId`, and `maxQty` attributes for customer product modifier
+
+
+## 1.9.1 - Store Hours Messaging, Markdown Editor & Dashboard Activity - 2026-07-06
+**Release Focus:** Store closed/open messaging for customers, markdown editor for legal policies, dashboard aside activity feed, and review editing.
+
+### Added
+- Store operation hours floating hint: shows title, message, and suggestion when the store is closed
+- Dashboard aside activity feed: pending orders, low stock products, new user accounts (last 7 days)
+- Markdown editor (`@uiw/react-md-editor`) for legal policies — no more manual Markdown writing
+- Tailwind Typography plugin (`@tailwindcss/typography`) for proper prose rendering of policy content
+- Customer review editing on specific orders
+- Dynamic loading text across the admin panel
+- Disabled button styling support
+- AI agent skill configuration (`.qwen`)
+
+### Improved
+- Admin policies: cannot edit static fallback data until seeded into database
+- API error helper (`getAPIError`) now accepts options for extra messages and fallback text
+- Order actions accept variant argument for dynamic rendering on order page vs modal
+- Shows "View Review" / "Edit Review" button based on whether the order has been reviewed
+
+### Fixed
+- Menu page: observer callback fires immediately when data changes; customers can add to cart without selecting a branch first
+- Prose heading typo corrections in policy rendering
+
+
+## 1.9.0 - Review System Overhaul - 2026-07-04
+**Release Focus:** Complete product and order review system with star ratings, helpful votes, anonymous reviews, admin replies, and review management for admins.
+
+### Added
+- Product reviews page: list all products with reviews, grouped by product, with star rating display and distribution
+- Order reviews page: sections card, filtering, and admin actions (hide, reply, view details)
+- Reusable metric card component for stats across admin sections
+- Reusable sections stats card for review pages
+- Star rating component with percentage-based fill
+- React Tooltip provider for hover hints
+- Anonymous review option for customers
+- Helpful votes system: customers can cast votes on review comments
+- Admin reply functionality on reviews
+- Shared review data: star options, types, and filtering constants
+- Total average reviews shown in product details modal
+- Review editing by admin for specific or multiple products
+
+### Improved
+- Product details modal shows star icon and review count with "View Review" tooltip
+- Order item image: properly handles loading and error icon states
+- Delivery base fare increased to ₱65 (from ₱49)
+
+### Fixed
+- Delivery current location: validates coordinate accuracy — returns error if device accuracy exceeds 5km
+- Meta Pixel script corrections
+- Admin token cleared when admin record not found in database
+
+### Chores
+- Installed `react-tooltip` for tooltip support
+
+
+## 1.8.1 - Order Status Filtering & Terms Acceptance - 2026-07-03
+**Release Focus:** Order list filtering by status with tab counts, customer terms acceptance tracking, and UI polish.
+
+### Added
+- Order status filtering with tab counts based on filter parameters
+- Customer terms acceptance: customers must accept terms before account creation
+- Terms acceptance timestamp stored on customer account (including first Google Auth login)
+- Backend validation ensuring terms were accepted at registration
+- New order highlight on the orders list
+- Improved pending order counter on sidebar
+
+### Improved
+- Simplified search bar with sub-label support on select fields
+- Updated customer-facing banner
+- Tailwind merge support for class composition
+- Terms label clarity
+
+### Fixed
+- Order fetching now filters by status and excludes unpaid orders from certain status views
+
+
 ## 1.8.0 - Branch Capacity Management, Meta Pixel Analytics & Legal Policies - 2026-07-03
 **Release Focus:** Smarter order fulfillment control (branch capacity/busy status with pickup fallback), full Meta Pixel/Conversions tracking across the customer journey, and a centralized legal policies system.
 
