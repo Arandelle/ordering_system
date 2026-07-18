@@ -361,9 +361,13 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 
         {/** Version info */}
         <div className="shrink-0 border-t border-stone-200 px-6 py-3">
-          <p data-tooltip-id="app-tooltip" data-tooltip-content="View what's changed" className="text-xs text-gray-400 font-medium text-center">
+          <Link
+            href="/changelog"
+            onClick={onClose}
+            className="block text-xs text-gray-400 hover:text-brand-color-500 font-medium text-center transition-colors cursor-pointer"
+          >
             v{packageJson.version}
-          </p>
+          </Link>
         </div>
       </aside>
     </>

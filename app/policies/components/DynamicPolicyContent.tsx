@@ -1,19 +1,14 @@
 import { formatDateOnly } from "@/helper/formatter";
 import type { PolicyData } from "@/hooks/api/usePolicies";
-import { marked } from "marked";
-
-/** Configure marked for clean HTML output */
-marked.setOptions({
-  breaks: true,
-  gfm: true,
-});
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 /**
  * Renders a policy document dynamically from structured data.
- * Each section's content is Markdown that gets converted to HTML
- * and rendered inside a Tailwind prose container.
+ * Each section's content is Markdown rendered as React elements
+ * inside a Tailwind prose container.
  */
-
 const DynamicPolicyContent = ({ policy }: { policy: PolicyData }) => {
   const lastUpdated = policy.updatedAt
     ? formatDateOnly(policy.updatedAt)
@@ -44,10 +39,13 @@ const DynamicPolicyContent = ({ policy }: { policy: PolicyData }) => {
     prose-ul:list-disc prose-ul:pl-6 prose-ul:space-y-2
     prose-li:leading-relaxed
     prose-strong:font-bold prose-strong:text-gray-800"
-            dangerouslySetInnerHTML={{
-              __html: marked.parse(section.content) as string,
-            }}
-          />
+          >
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+            >
+              {section.content}
+            </ReactMarkdown>
+          </div>
         </div>
       ))}
     </article>
