@@ -21,6 +21,9 @@ The project uses:
 ## General Rules
 
 * Add proper comments what the function does or why
+* Use AppImage from the /components, getAPIError for Api return error from lib, use IconButton and other necessary components.
+* Use formatter from the helper/formatter if neccessary,
+* If a page uses almost same style, and you found your self repeating it,find a component for that, if no found create one.
 * Do not rewrite large files unless necessary.
 * Prefer small, safe, incremental changes.
 * Preserve the existing project structure.
@@ -33,7 +36,7 @@ The project uses:
 * Prefer environment variables for config.
 * Keep code readable and maintainable.
 * Check some components if there is needed to be reused
-* Use the apiClient for fetching apis, use components to be reused for styling, 
+* Use the apiClient for fetching apis
 * Don't repeat your self, create centralized file if multiple files uses the same thing
 
 ## Development Priorities
