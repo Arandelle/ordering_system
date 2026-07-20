@@ -1,3 +1,5 @@
+import { getValidObjectId } from "@/helper/getValidObjectIds";
+import { getAPIError } from "@/lib/getApiError";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { updateStaffSchema } from "@/lib/validations";
@@ -11,21 +13,22 @@ export async function PATCH(
 ) {
   try {
     await connectDB();
-    await requireSuperAdmin(request);
+    const admin = await requireSuperAdmin(request);
 
     const { id } = await context.params;
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "Staff id is required!" },
-        { status: 400 },
-      );
+    if (!id || !getValidObjectId(id)) {
+      return getAPIError("Valid staff id is required", 400);
+    }
+
+    if(admin._id.toString() === id){
+      return getAPIError("You cannot update your own status", 400)
     }
 
     const staff = await Staff.findById(id);
 
     if (!staff) {
-      return NextResponse.json({ error: "Staff not found!" }, { status: 404 });
+      return getAPIError("Staff not found!", 404);
     }
 
     staff.isActive = !staff.isActive;
@@ -33,10 +36,9 @@ export async function PATCH(
 
     return NextResponse.json(staff);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update staff status" },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to update staffs status",
+    });
   }
 }
 
@@ -46,24 +48,19 @@ export async function PUT(
 ) {
   try {
     await connectDB();
-    await requireSuperAdmin(request)
+    await requireSuperAdmin(request);
 
     const { id } = await context.params;
     const body = await request.json();
 
     if (!id) {
-      return NextResponse.json(
-        {
-          error: "Staff id is required!",
-        },
-        { status: 400 },
-      );
+      return getAPIError("Staff id is required", 400);
     }
 
     const parsed = updateStaffSchema.safeParse(body);
     if (!parsed.success) {
       const firstError = parsed.error.issues[0]?.message ?? "Invalid input.";
-      return NextResponse.json({ error: firstError }, { status: 400 });
+      return getAPIError(firstError, 400);
     }
 
     const { firstName, lastName, email, password, phone, role, branch } =
@@ -71,17 +68,14 @@ export async function PUT(
 
     const existing = await Staff.findById(id);
     if (!existing) {
-      return NextResponse.json({ error: "Staff not found." }, { status: 404 });
+      return getAPIError("Staff not found!", 404);
     }
 
     if (email && email !== existing.email) {
       const emailTaken = await Staff.findOne({ email, _id: { $ne: id } });
 
       if (emailTaken) {
-        return NextResponse.json(
-          { error: "A staff account with this email already exists." },
-          { status: 409 },
-        );
+        return getAPIError("Email already exists. Try another email.", 409);
       }
     }
 
@@ -111,11 +105,9 @@ export async function PUT(
     const { password: _, ...staff } = updated as any;
 
     return NextResponse.json(staff, { status: 200 });
-
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to update staff's details" },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to update staff's details",
+    });
   }
 }
