@@ -3,6 +3,7 @@
 import { InputField } from "@/components/ui/FormComponents/InputField";
 import LoadingPage from "@/components/ui/LoadingPage";
 import Modal from "@/components/ui/Modal";
+import Pagination from "@/components/ui/Pagination";
 import {
   Table,
   TableBody,
@@ -11,21 +12,104 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useBranchInventories } from "@/hooks/api/useBranchInventory";
-import { useUpdateInventory } from "@/hooks/api/useBranchInventory";
-import { useBulkUpdateInventory } from "@/hooks/api/useBranchInventory";
+import {
+  useBranchInventories,
+  useUpdateInventory,
+  useBulkUpdateInventory,
+  InventoryQueryParams,
+} from "@/hooks/api/useBranchInventory";
 import {
   InventoryItem,
   STOCK_STATUSES,
   StockStatus,
 } from "@/types/inventory_types";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
+import InventorySummaryCards from "./InventorySummaryCards";
 import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import {
+  Checkbox,
+  SelectField,
+  ToggleButton,
+} from "@/components/ui/FormComponents";
+import { IconButton } from "@/components/ui/buttons";
+import { AppImage } from "@/components/AppImage";
+
+// ── Sort options available in the toolbar ─────────────────────────────────────
+const SORT_OPTIONS = [
+  { value: "name:asc", label: "Name (A–Z)" },
+  { value: "name:desc", label: "Name (Z–A)" },
+  { value: "price:asc", label: "Price (Low → High)" },
+  { value: "price:desc", label: "Price (High → Low)" },
+  { value: "quantity:asc", label: "Stock (Low → High)" },
+  { value: "quantity:desc", label: "Stock (High → Low)" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: STOCK_STATUSES.IN_STOCK, label: "In Stock" },
+  { value: STOCK_STATUSES.LOW_STOCK, label: "Low Stock" },
+  { value: STOCK_STATUSES.OUT_OF_STOCK, label: "Out of Stock" },
+];
 
 const InventoryTable = () => {
   const { selectedBranchId } = useAdminBranchContext();
-  const { data: inventoryData = [], isPending } = useBranchInventories();
+
   const isAllBranches = selectedBranchId === "all";
+
+  // ── Query params (search, filter, sort, pagination) ───────────────────────
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sort, setSort] = useState("quantity:asc");
+
+  // Debounce search input so we don't fire a request on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset page when filters change
+  const handleStatusFilter = useCallback((value: string) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const handleSort = useCallback((value: string) => {
+    setSort(value);
+    setPage(1);
+  }, []);
+
+  // Build query params for the hook
+  const queryParams: InventoryQueryParams = {
+    page,
+    limit,
+    sort,
+    ...(selectedBranchId && selectedBranchId !== "all"
+      ? { branchId: selectedBranchId }
+      : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(statusFilter ? { status: statusFilter } : {}),
+  };
+
+  const { data, isPending } = useBranchInventories(
+    selectedBranchId ? queryParams : undefined,
+  );
+
+  const inventoryData = data?.data ?? [];
+  const pagination = data?.pagination;
+  const counts = data?.counts ?? {
+    inStock: 0,
+    lowStock: 0,
+    outOfStock: 0,
+    total: 0,
+  };
+
   const {
     mutate: updateInventory,
     isPending: isUpdating,
@@ -116,7 +200,11 @@ const InventoryTable = () => {
     e.preventDefault();
     if (!productToEdit) return;
     updateInventory(
-      { id: productToEdit.id, payload: inventoryStocks },
+      {
+        id: productToEdit.id,
+        payload: inventoryStocks,
+        branchId: selectedBranchId !== "all" ? selectedBranchId : undefined,
+      },
       { onSuccess: () => setIsEditStock(false) },
     );
   };
@@ -136,7 +224,11 @@ const InventoryTable = () => {
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -162,6 +254,14 @@ const InventoryTable = () => {
     }));
   };
 
+  const handleBulkToggleChange =
+    (name: keyof typeof bulkValues) => (value: boolean) => {
+      setBulkValues((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    };
+
   const handleBulkSave = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -173,234 +273,295 @@ const InventoryTable = () => {
       }),
     }));
 
-    bulkUpdate(items, {
-      onSuccess: () => {
-        setIsBulkModalOpen(false);
-        exitBulkMode();
+    bulkUpdate(
+      {
+        items,
+        branchId: selectedBranchId !== "all" ? selectedBranchId : undefined,
       },
-    });
+      {
+        onSuccess: () => {
+          setIsBulkModalOpen(false);
+          exitBulkMode();
+        },
+      },
+    );
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  if (isPending) return <LoadingPage />;
+  if (!selectedBranchId && isPending) return <LoadingPage />;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-        <p className="text-sm text-slate-500">
-          {isBulkMode
-            ? `${selectedIds.size} of ${inventoryData.length} selected`
-            : `${inventoryData.length} items`}
-        </p>
+    <div className="space-y-5">
+      {/* Summary cards */}
+      <InventorySummaryCards counts={counts} />
 
-        <div className="flex items-center gap-2">
-          {isBulkMode ? (
-            <>
-              <button
+      {/* Toolbar: branch selector, search, filters, sort */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
+          <div className="flex gap-2 w-full max-w-lg">
+            <SelectField
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              options={[
+                ...STATUS_OPTIONS.map((s) => ({
+                  label: s.label,
+                  value: s.value,
+                })),
+              ]}
+            />
+            <SelectField
+              value={sort}
+              onChange={(e) => handleSort(e.target.value)}
+              options={[
+                ...SORT_OPTIONS.map((s) => ({
+                  label: s.label,
+                  value: s.value,
+                })),
+              ]}
+            />
+          </div>
+          {/* Search */}
+          <InputField
+            type="text"
+            placeholder="Search by product name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            rightElement={<DynamicIcon name="Search" />}
+          />
+
+          {/* Sub-toolbar: item count + bulk actions */}
+
+          <div className="flex items-stretch whitespace-nowrap  gap-2">
+            {isBulkMode ? (
+              <>
+                <IconButton
+                  type="button"
+                  onClick={exitBulkMode}
+                  disabled={isBulkUpdating}
+                  variant="secondary"
+                  text="Cancel"
+                  className="rounded-lg px-4"
+                />
+                <IconButton
+                  type="button"
+                  onClick={openBulkModal}
+                  disabled={selectedIds.size === 0}
+                  text={`Save (${selectedIds.size})`}
+                  className="rounded-lg px-4"
+                />
+              </>
+            ) : (
+              <IconButton
                 type="button"
-                onClick={exitBulkMode}
-                disabled={isBulkUpdating}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={openBulkModal}
-                disabled={selectedIds.size === 0}
-                className="px-4 py-2 text-sm font-medium text-white bg-brand-color-500 hover:bg-brand-color-600 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Save ({selectedIds.size})
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={enterBulkMode}
-              disabled={isAllBranches}
-              title={
-                isAllBranches
-                  ? "Bulk edit is not available in All Branches view — select a specific branch"
-                  : undefined
-              }
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Edit Bulk
-            </button>
-          )}
+                onClick={enterBulkMode}
+                disabled={isAllBranches}
+                title={
+                  isAllBranches
+                    ? "Bulk edit is not available in All Branches view — select a specific branch"
+                    : undefined
+                }
+                text="Edit Bulk"
+                variant={isAllBranches ? "disabled" : "primary"}
+                className="rounded-lg px-4"
+              />
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="overflow-y-auto max-h-[70vh]">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50">
-              {isBulkMode && !isAllBranches && (
-                <TableHead className="w-10 text-center">
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedIds.size === inventoryData.length &&
-                      inventoryData.length > 0
-                    }
-                    onChange={toggleSelectAll}
-                    className="cursor-pointer accent-brand-color-500"
-                  />
-                </TableHead>
-              )}
-              {inventoryHeader
-                .filter((h) => !(isBulkMode && h === "Action"))
-                .map((item, index) => (
-                  <TableHead
-                    key={index}
-                    className="text-center font-semibold text-slate-700"
-                  >
-                    {item}
+        {/* Table */}
+        <div className="overflow-y-auto max-h-[65vh]">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                {isBulkMode && !isAllBranches && (
+                  <TableHead className="w-10 text-center">
+                    <Checkbox
+                      type="checkbox"
+                      checked={
+                        selectedIds.size === inventoryData.length &&
+                        inventoryData.length > 0
+                      }
+                      onChange={toggleSelectAll}
+                    />
                   </TableHead>
-                ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {inventoryData.map((item, index) => {
-              const status = getStockStatus(item.status);
-              const isSelected = selectedIds.has(item.id);
-              return (
-                <TableRow
-                  key={`${item.id}-${index * Math.random()}`}
-                  onClick={() => isBulkMode && toggleSelect(item.id)}
-                  className={`border-b border-slate-100 transition-colors ${
-                    isBulkMode
-                      ? isSelected
-                        ? "bg-brand-color-50 cursor-pointer"
-                        : "hover:bg-slate-50 cursor-pointer"
-                      : "hover:bg-slate-50"
-                  }`}
-                >
-                  {isBulkMode && !isAllBranches && (
-                    <TableCell
-                      className="text-center"
-                      onClick={(e) => e.stopPropagation()}
+                )}
+                {inventoryHeader
+                  .filter((h) => !(isBulkMode && h === "Action"))
+                  .map((item, index) => (
+                    <TableHead
+                      key={index}
+                      className="text-center font-semibold text-slate-700"
                     >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelect(item.id)}
-                        className="cursor-pointer accent-brand-color-500"
-                      />
-                    </TableCell>
-                  )}
-                  <TableCell className="text-center py-3">
-                    <div className="flex justify-center">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100">
-                        <img
-                          src={item.image.url}
-                          alt={item.name}
-                          width={48}
-                          height={48}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
+                      {item}
+                    </TableHead>
+                  ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isPending ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={inventoryHeader.length + (isBulkMode ? 1 : 0)}
+                    className="text-center py-12 text-slate-400"
+                  >
+                    Loading...
                   </TableCell>
-                  <TableCell className="font-medium text-slate-900">
-                    {item.name}
-                  </TableCell>
-                  <TableCell className="text-sm text-slate-600">
-                    {item.category}
-                  </TableCell>
-                  <TableCell className="text-center text-slate-900 font-medium">
-                    ₱{item.price}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="font-semibold text-slate-900">
-                      {item.quantity}
-                    </span>
-                    <span className="text-xs text-slate-500 block">
-                      Reorder: {item.reorderLevel}
-                    </span>
-                  </TableCell>
-
-                  {/* Incoming Orders — amber, draws attention */}
-                  <TableCell className="text-center">
-                    {(item.reserved || 0) > 0 ? (
-                      <span className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-sm">
-                        <span>⏳</span>
-                        {item.reserved}
-                      </span>
-                    ) : (
-                      <span className="font-semibold text-slate-400">—</span>
-                    )}
-                  </TableCell>
-
-                  {/* Sellable — green/amber/red based on level */}
-                  <TableCell className="text-center">
-                    {item.available === 0 ? (
-                      <span  className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-red-600`}>
-                        <span>✕</span> 0
-                      </span>
-                    ) : (item.available || 0) <= item.reorderLevel ? (
-                      <span  className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-amber-600`}>
-                        <span>⚠️</span>
-                        {item.available}
-                      </span>
-                    ) : (
-                      <span  className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-green-600`}>
-                        <span>✓</span>
-                        {item.available}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${status.className}`}
-                    >
-                      {status.label}
-                    </span>
-                  </TableCell>
-                  {/* Branch column — only visible when viewing all branches */}
-                  {isAllBranches && (
-                    <TableCell className="text-center">
-                      {item.branch ? (
-                        <div className="flex flex-col items-center">
-                          <span
-                            style={{ fontFamily: "'DM Mono', monospace" }}
-                            className="text-xs bg-gray-500 py-0.5 px-2 rounded-md text-white"
-                          >
-                            {item.branch.code}
-                          </span>
-                          <span className="text-xs text-gray-600 mt-0.5">
-                            {item.branch.name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400">All</span>
-                      )}
-                    </TableCell>
-                  )}
-                  {!isBulkMode && (
-                    <TableCell className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleProductToEdit(item)}
-                        className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                    </TableCell>
-                  )}
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              ) : inventoryData.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={inventoryHeader.length + (isBulkMode ? 1 : 0)}
+                    className="text-center py-12 text-slate-500"
+                  >
+                    No inventory items found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                inventoryData.map((item, index) => {
+                  const status = getStockStatus(item.status as StockStatus);
+                  const isSelected = selectedIds.has(item.id);
+                  return (
+                    <TableRow
+                      key={`${item.id}-${index}`}
+                      onClick={() => isBulkMode && toggleSelect(item.id)}
+                      className={`border-b border-slate-100 transition-colors ${
+                        isBulkMode
+                          ? isSelected
+                            ? "bg-brand-color-50 cursor-pointer"
+                            : "hover:bg-slate-50 cursor-pointer"
+                          : "hover:bg-slate-50"
+                      }`}
+                    >
+                      {isBulkMode && !isAllBranches && (
+                        <TableCell
+                          className="text-center"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Checkbox
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(item.id)}
+                          />
+                        </TableCell>
+                      )}
+                      <TableCell className="text-center py-3">
+                        <div className="flex justify-center">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100">
+                            <AppImage src={item.image.url} alt={item.name} />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-900">
+                        {item.name}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">
+                        {item.category}
+                      </TableCell>
+                      <TableCell className="text-center text-slate-900 font-medium">
+                        ₱{item.price}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-semibold text-slate-900">
+                          {item.quantity}
+                        </span>
+                        <span className="text-xs text-slate-500 block">
+                          Reorder: {item.reorderLevel}
+                        </span>
+                      </TableCell>
+
+                      {/* Incoming Orders — amber, draws attention */}
+                      <TableCell className="text-center">
+                        {(item.reserved || 0) > 0 ? (
+                          <span className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-sm">
+                            <span>⏳</span>
+                            {item.reserved}
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-slate-400">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* Sellable — green/amber/red based on level */}
+                      <TableCell className="text-center">
+                        {item.available === 0 ? (
+                          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-red-600">
+                            <span>✕</span> 0
+                          </span>
+                        ) : (item.available || 0) <= item.reorderLevel ? (
+                          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-amber-600">
+                            <span>⚠️</span>
+                            {item.available}
+                          </span>
+                        ) : (
+                          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-green-600">
+                            <span>✓</span>
+                            {item.available}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${status.className}`}
+                        >
+                          {status.label}
+                        </span>
+                      </TableCell>
+                      {/* Branch column — only visible when viewing all branches */}
+                      {isAllBranches && (
+                        <TableCell className="text-center">
+                          {item.branch ? (
+                            <div className="flex flex-col items-center">
+                              <span
+                                style={{ fontFamily: "'DM Mono', monospace" }}
+                                className="text-xs bg-gray-500 py-0.5 px-2 rounded-md text-white"
+                              >
+                                {item.branch.code}
+                              </span>
+                              <span className="text-xs text-gray-600 mt-0.5">
+                                {item.branch.name}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">All</span>
+                          )}
+                        </TableCell>
+                      )}
+                      {!isBulkMode && (
+                        <TableCell className="text-center">
+                          <IconButton
+                            type="button"
+                            onClick={() => handleProductToEdit(item)}
+                            text="Edit"
+                            variant="underline"
+                            className="text-blue-500 hover:text-blue-600"
+                          />
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      {inventoryData.length === 0 && (
-        <div className="p-8 text-center text-slate-500">
-          <p>No inventory items found</p>
-        </div>
+      {/* Pagination */}
+      {pagination && (
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          limit={pagination.limit}
+          onPageChange={setPage}
+          onLimitChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+        />
       )}
 
       {/* Single edit modal */}
@@ -435,21 +596,21 @@ const InventoryTable = () => {
               </p>
             )}
             <div className="flex justify-end gap-2 pt-2">
-              <button
+              <IconButton
                 type="button"
                 onClick={() => setIsEditStock(false)}
                 disabled={isUpdating}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
+                variant="secondary"
+                text="Cancel"
+                className="px-4 rounded-lg"
+              />
+
+              <IconButton
                 type="submit"
                 disabled={isUpdating}
-                className="px-4 py-2 text-sm font-medium text-white bg-brand-color-500 hover:bg-brand-color-600 rounded-lg transition-colors disabled:opacity-60 cursor-pointer"
-              >
-                {isUpdating ? "Saving..." : "Save changes"}
-              </button>
+                text={isUpdating ? "Saving..." : "Save Changes"}
+                className="px-4 rounded-lg"
+              />
             </div>
           </form>
         </Modal>
@@ -475,20 +636,13 @@ const InventoryTable = () => {
 
             {/* Reorder level toggle */}
             <div className="flex items-center gap-2">
-              <input
+              <ToggleButton
                 id="applyReorderLevel"
-                type="checkbox"
                 name="applyReorderLevel"
                 checked={bulkValues.applyReorderLevel}
-                onChange={handleBulkChange}
-                className="cursor-pointer accent-brand-color-500"
+                onCheckedChange={handleBulkToggleChange("applyReorderLevel")}
+                label="Apply same reorder level to all"
               />
-              <label
-                htmlFor="applyReorderLevel"
-                className="text-sm text-slate-600 cursor-pointer select-none"
-              >
-                Apply same reorder level to all
-              </label>
             </div>
 
             {bulkValues.applyReorderLevel && (
@@ -511,23 +665,25 @@ const InventoryTable = () => {
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <button
+              <IconButton
                 type="button"
                 onClick={() => setIsBulkModalOpen(false)}
                 disabled={isBulkUpdating}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
+                variant="secondary"
+                text="Cancel"
+                className="rounded-lg px-4"
+              />
+
+              <IconButton
                 type="submit"
                 disabled={isBulkUpdating}
-                className="px-4 py-2 text-sm font-medium text-white bg-brand-color-500 hover:bg-brand-color-600 rounded-lg transition-colors disabled:opacity-60 cursor-pointer"
-              >
-                {isBulkUpdating
-                  ? "Saving..."
-                  : `Update ${selectedIds.size} item${selectedIds.size > 1 ? "s" : ""}`}
-              </button>
+                text={
+                  isBulkUpdating
+                    ? "Saving..."
+                    : `Update ${selectedIds.size} item${selectedIds.size > 1 ? "s" : ""}`
+                }
+                className="px-4 rounded-lg"
+              />
             </div>
           </form>
         </Modal>
