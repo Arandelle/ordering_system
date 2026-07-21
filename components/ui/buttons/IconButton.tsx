@@ -55,7 +55,8 @@ const variantClasses: Record<
   success:
     "bg-green-500 text-white disabled:bg-green-500 disabled:text-white disabled:opacity-100 disabled:cursor-default",
   disabled: DEFAULT_DISABLED,
-  underline: "text-brand-color-500 hover:text-brand-color-600 underline",
+  underline:
+    "text-brand-color-500 hover:text-brand-color-600 underline disabled:text-gray-500 disabled:cursor-not-allowed",
 };
 
 const IconButton = ({
@@ -96,7 +97,7 @@ const IconButton = ({
               className="animate-spin"
             />
           )}
-          {!isLoading && icon && iconPosition === "left" && icon.name &&(
+          {!isLoading && icon && iconPosition === "left" && icon.name && (
             <DynamicIcon
               name={icon.name}
               size={icon.size ?? 14}

@@ -222,19 +222,9 @@ export default function OrdersTable({
                           variant="underline"
                           className="text-blue-500 hover:text-blue-600 text-xs"
                         />
-
                         <PermissionGuard permission="orders.update">
                           <OrderActionButton
-                            orderId={order._id}
-                            status={order.status}
-                            paymentMethod={order.paymentInfo.paymentMethod}
-                            paymentConfirmed={
-                              order.paymentInfo.paymentConfirmed
-                            }
-                            fulfillmentType={order.fulfillmentType}
-                            reservationScheduledAt={
-                              order.reservation?.scheduledAt
-                            }
+                            order={order}
                             role="admin"
                           />
                         </PermissionGuard>
