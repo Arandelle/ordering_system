@@ -142,6 +142,7 @@ export interface OrderType {
   // Additional tracking info
   timeline?: {
     paidAt?: string;
+    confirmedAt?: string;
     preparingAt?: string;
     readyAt?: string;
     completedAt?: string;

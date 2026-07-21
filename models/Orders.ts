@@ -92,6 +92,9 @@ const TimelineSchema = new Schema(
     failedAt: Date,
     expiredAt: Date,
 
+    // Reservation confirmation
+    confirmedAt: Date,
+
     // Preparation events
     preparingAt: Date,
     readyAt: Date,
