@@ -20,6 +20,7 @@ export type FulfillmentType = (typeof FULFILLMENT_TYPE)[keyof typeof FULFILLMENT
 export const ORDER_STATUSES = {
   PENDING_PAYMENT: "pending_payment",
   PENDING: "pending",
+  CONFIRMED: "confirmed",
   PREPARING: "preparing",
   DISPATCH: "dispatch",
   READY_FOR_PICKUP: "ready_for_pickup",
@@ -39,6 +40,7 @@ export type OrderStatus = (typeof ORDER_STATUSES)[keyof typeof ORDER_STATUSES];
 export const ORDER_STATUS_FILTER_LIST = [
   ORDER_STATUSES.PENDING_PAYMENT,
   ORDER_STATUSES.PENDING,
+  ORDER_STATUSES.CONFIRMED,
   ORDER_STATUSES.PREPARING,
   ORDER_STATUSES.DISPATCH,
   ORDER_STATUSES.READY_FOR_PICKUP,
@@ -50,7 +52,7 @@ export const ORDER_STATUS_FILTER_LIST = [
 
 export const ORDER_STATUS_OPTIONS = ORDER_STATUS_FILTER_LIST.map((status) => ({
   value: status,
-  label: status.charAt(0).toUpperCase() + status.slice(1),
+  label: status.charAt(0).toUpperCase() + status.slice(1).replace("_", " "),
 }));
 
 // ============================================
@@ -67,13 +69,14 @@ export const ORDER_STATUS_OPTIONS = ORDER_STATUS_FILTER_LIST.map((status) => ({
 export const STATUS_PRIORITY: Record<OrderStatus, number> = {
   [ORDER_STATUSES.PENDING_PAYMENT]: 1, // Awaiting external payment
   [ORDER_STATUSES.PENDING]: 2, // Awaiting staff action
-  [ORDER_STATUSES.PREPARING]: 3, // In kitchen
-  [ORDER_STATUSES.DISPATCH]: 4, // Out for delivery
-  [ORDER_STATUSES.READY_FOR_PICKUP]: 4, // Ready at counter
-  [ORDER_STATUSES.COMPLETED]: 5, // Done
-  [ORDER_STATUSES.CANCELLED]: 6, // Cancelled
-  [ORDER_STATUSES.FAILED]: 7, // Payment failed
-  [ORDER_STATUSES.EXPIRED]: 8, // Expired
+  [ORDER_STATUSES.CONFIRMED]: 3, // Reservation confirmed, awaiting day-of
+  [ORDER_STATUSES.PREPARING]: 4, // In kitchen
+  [ORDER_STATUSES.DISPATCH]: 5, // Out for delivery
+  [ORDER_STATUSES.READY_FOR_PICKUP]: 5, // Ready at counter
+  [ORDER_STATUSES.COMPLETED]: 6, // Done
+  [ORDER_STATUSES.CANCELLED]: 7, // Cancelled
+  [ORDER_STATUSES.FAILED]: 8, // Payment failed
+  [ORDER_STATUSES.EXPIRED]: 9, // Expired
 };
 
 // ============================================
@@ -98,6 +101,10 @@ export const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[] | null> = {
     ORDER_STATUSES.PREPARING,
     ORDER_STATUSES.CANCELLED,
   ], // Accept order for cod
+  [ORDER_STATUSES.CONFIRMED]: [
+    ORDER_STATUSES.PREPARING,
+    ORDER_STATUSES.CANCELLED,
+  ], // Reservation confirmed → start preparing on day-of
   [ORDER_STATUSES.PREPARING]: [
     ORDER_STATUSES.DISPATCH,
     ORDER_STATUSES.READY_FOR_PICKUP,
@@ -158,6 +165,21 @@ export const ORDER_ACTION_CONFIG: Record<
     },
   },
 
+  [ORDER_STATUSES.CONFIRMED]: {
+    [ORDER_STATUSES.PREPARING]: {
+      label: "Start Preparing",
+      variant: "text-[#ef4501] hover:text-[#c13500]",
+      roles: ["admin"],
+      paymentMethods: ["cod", "maya"],
+    },
+
+    [ORDER_STATUSES.CANCELLED]: {
+      label: "Cancel Reservation",
+      variant: "text-red-600 hover:text-red-700",
+      roles: ["customer"],
+    },
+  },
+
   [ORDER_STATUSES.PREPARING]: {
     [ORDER_STATUSES.DISPATCH]: {
       label: "Dispatch",
@@ -204,6 +226,7 @@ export const ORDER_ACTION_CONFIG: Record<
 export const TIMELINE_FIELD_MAP: Record<
   OrderStatus,
   | "paidAt"
+  | "confirmedAt"
   | "preparingAt"
   | "dispatchedAt"
   | "readyAt"
@@ -215,6 +238,7 @@ export const TIMELINE_FIELD_MAP: Record<
 > = {
   [ORDER_STATUSES.PENDING]: null, // No timestamp on pending
   [ORDER_STATUSES.PENDING_PAYMENT]: null, // No timestamp until terminal/paid
+  [ORDER_STATUSES.CONFIRMED]: "confirmedAt",
   [ORDER_STATUSES.PREPARING]: "preparingAt",
   [ORDER_STATUSES.DISPATCH]: "dispatchedAt",
   [ORDER_STATUSES.READY_FOR_PICKUP]: "readyAt",
