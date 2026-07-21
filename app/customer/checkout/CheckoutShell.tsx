@@ -7,6 +7,7 @@ import CartList from "./CartList";
 import BranchSelector from "./BranchSelector";
 import { CheckoutStep, useCheckout } from "@/contexts/CheckoutContext";
 import { FulfillmentSelector } from "./FulfillmentSelector";
+import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 
 const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
   const {
@@ -18,7 +19,8 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
 
   const pathname = usePathname();
   const details = pathname === CheckoutStep.DETAILS;
-  const isPickup = orderDetails.fulfillmentType === "pickup";
+  const isPickup = orderDetails.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
+  const isDineIn = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
 
   return (
     <div className={`${syne.className} min-h-screen bg-slate-50`}>
@@ -32,16 +34,20 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
               <h2 className="text-base font-semibold text-slate-900">
                 {details
                   ? "Your details"
-                  : isPickup
-                    ? "Pickup details"
-                    : "Shipping address"}
+                  : isDineIn
+                    ? "Reservation details"
+                    : isPickup
+                      ? "Pickup details"
+                      : "Shipping address"}
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
                 {details
                   ? "We'll use this to process and contact you about your order."
-                  : isPickup
-                    ? "Review where you will collect your order."
-                    : "Where should we deliver your order?"}
+                  : isDineIn
+                    ? "Confirm your reservation at the selected branch."
+                    : isPickup
+                      ? "Review where you will collect your order."
+                      : "Where should we deliver your order?"}
               </p>
             </div>
 

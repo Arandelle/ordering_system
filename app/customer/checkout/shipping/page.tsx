@@ -1,12 +1,14 @@
-'use client'
+"use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import ShippingAddress from "./ShippingAddress";
 import { useCheckoutContext } from "@/contexts/CheckoutContext";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import { ShippingFormSkeleton } from "../CheckoutFormSkeleton";
+import { useRouter } from "next/navigation";
 
 const page = () => {
+  const router = useRouter();
   const {
     session,
     orderDetails,
@@ -31,24 +33,25 @@ const page = () => {
     validateField("shippingAddress", "coordinates", coordinates);
   };
 
+  // Pickup and dine-in don't need a shipping address — redirect if user
+  // manually navigates here (e.g. typing the URL directly)
+  const needsRedirect =
+    orderDetails.fulfillmentType === FULFILLMENT_TYPE.PICKUP ||
+    orderDetails.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+
+  useEffect(() => {
+    if (isReady && needsRedirect) {
+      router.replace("/checkout/details");
+    }
+  }, [isReady, needsRedirect, router]);
+
   if (!isReady) {
     return <ShippingFormSkeleton />;
   }
 
-  if (orderDetails.fulfillmentType === FULFILLMENT_TYPE.PICKUP) {
-    return (
-      <div className="space-y-4 py-6">
-        <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-          <p className="text-sm font-semibold text-green-800">
-            Pickup selected
-          </p>
-          <p className="mt-1 text-sm leading-6 text-green-700">
-            No shipping address is required. We will use your personal details
-            to contact you when the order is ready for pickup.
-          </p>
-        </div>
-      </div>
-    );
+  // Render nothing while redirecting — prevents flash of shipping form
+  if (needsRedirect) {
+    return null;
   }
 
   return (

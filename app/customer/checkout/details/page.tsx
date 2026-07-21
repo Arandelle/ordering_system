@@ -7,30 +7,39 @@ import { useCart } from "@/contexts/CartContext";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import { DetailsFormSkeleton } from "../CheckoutFormSkeleton";
 import { trackInitiateCheckout } from "@/lib/metaPixel";
+import { ReservationPicker } from "../ReservationPicker";
 
 const page = () => {
   const {
     session,
     orderDetails,
     customerErrors,
+    reservationErrors,
     shouldShowSyncProfileDetails,
     syncCheckoutDetailsFromProfile,
     handleStateChange,
+    handleReservationChange,
     validateField,
     isReady,
   } = useCheckoutContext();
 
   const { cartItems, totalItems, totalPrice } = useCart();
   const hasTrackedRef = useRef(false);
+  const isDineIn = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
 
   // Fire InitiateCheckout once when the checkout details page mounts
   useEffect(() => {
     if (isReady && !hasTrackedRef.current) {
       hasTrackedRef.current = true;
+      const contentCategory = isDineIn
+        ? "Dine In"
+        : orderDetails.fulfillmentType === FULFILLMENT_TYPE.DELIVERY
+          ? "Delivery"
+          : "Pickup";
       trackInitiateCheckout({
         content_ids: cartItems.map((item) => item._id),
         content_type: "product",
-        content_category: orderDetails.fulfillmentType === FULFILLMENT_TYPE.DELIVERY ? "Delivery" : "Pickup",
+        content_category: contentCategory,
         currency: "PHP",
         num_items: totalItems,
         value: totalPrice,
@@ -43,16 +52,27 @@ const page = () => {
   }
 
   return (
-    <CustomerDetails
-      customerData={orderDetails.customer}
-      errors={customerErrors}
-      isAuthenticated={Boolean(session?.user)}
-      isDelivery={orderDetails.fulfillmentType === FULFILLMENT_TYPE.DELIVERY}
-      shouldShowSyncProfileDetails={shouldShowSyncProfileDetails}
-      onSyncProfileDetails={syncCheckoutDetailsFromProfile}
-      onChange={handleStateChange}
-      onBlur={(field, value) => validateField("customer", field, value)}
-    />
+    <>
+      <CustomerDetails
+        customerData={orderDetails.customer}
+        errors={customerErrors}
+        isAuthenticated={Boolean(session?.user)}
+        isDelivery={orderDetails.fulfillmentType === FULFILLMENT_TYPE.DELIVERY}
+        shouldShowSyncProfileDetails={shouldShowSyncProfileDetails}
+        onSyncProfileDetails={syncCheckoutDetailsFromProfile}
+        onChange={handleStateChange}
+        onBlur={(field, value) => validateField("customer", field, value)}
+      />
+
+      {/* Show reservation picker for dine-in orders */}
+      {isDineIn && (
+        <ReservationPicker
+          value={orderDetails.reservation}
+          onChange={handleReservationChange}
+          errors={reservationErrors}
+        />
+      )}
+    </>
   );
 };
 

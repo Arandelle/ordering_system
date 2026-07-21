@@ -46,6 +46,7 @@ import { useBranchCapacity } from "@/hooks/api/useBranchCapacity";
 import { AppImage } from "@/components/AppImage";
 import { formatCurrency } from "@/helper/formatter/";
 import { InputField } from "@/components/ui/FormComponents";
+import { ReservationSchema } from "./FormSchema";
 
 const createCodOrder = async (payload: CreateOrderPayload) => {
   const response = await apiClient.post<{
@@ -235,6 +236,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   const isDetails = pathname === CheckoutStep.DETAILS;
   const isShipping = pathname === CheckoutStep.SHIPPING;
   const isDelivery = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DELIVERY;
+  const isDineIn = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
   const checkoutActionMode = getCheckoutActionMode({
     pathname,
     fulfillmentType: orderDetails.fulfillmentType,
@@ -439,12 +441,14 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   const isShippingIncomplete =
     isDelivery &&
     !ShippingSchema.safeParse(orderDetails.shippingAddress).success;
+  const isReservationIncomplete =
+    isDineIn && !ReservationSchema.safeParse(orderDetails.reservation).success;
 
   const isNextDisabled =
     isStoreClosed ||
     !selectedBranch ||
     isAtCapacity ||
-    (isDetails && isDetailsIncomplete) ||
+    (isDetails && (isDetailsIncomplete || isReservationIncomplete)) ||
     (isShipping &&
       (isShippingIncomplete ||
         (isDelivery && (isDeliveryFeeLoading || isDeliveryFeeError))));
@@ -529,6 +533,12 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           landmark,
           coordinates,
           placeName,
+        },
+      }),
+      ...(isDineIn && {
+        reservation: {
+          scheduledAt: orderDetails.reservation.scheduledAt,
+          partySize: orderDetails.reservation.partySize,
         },
       }),
     };
@@ -805,6 +815,11 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
               Placing order…
               <DynamicIcon name="Loader" size={14} className="animate-spin" />
             </span>
+          ) : isSubmitStep && isDineIn ? (
+            <span className="flex items-center gap-2 justify-center">
+              Place Dine-In Order
+              <DynamicIcon name="UtensilsCrossed" size={14} />
+            </span>
           ) : isSubmitStep && !isDelivery ? (
             <span className="flex items-center gap-2 justify-center">
               Place Pickup Order
@@ -817,7 +832,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
             </span>
           ) : (
             <span className="flex items-center gap-2 justify-center">
-              Next — {isDelivery ? "Shipping details" : "Pickup details"}
+              Next — {isDelivery ? "Shipping details" : isDineIn ? "Reservation details" : "Pickup details"}
               <DynamicIcon name="ArrowRight" size={14} />
             </span>
           )}
@@ -903,11 +918,11 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
               />
               <PaymentButton
                 id="cod"
-                label={isDelivery ? "Cash on Delivery" : "Cash on Pickup"}
+                label={isDelivery ? "Cash on Delivery" : isDineIn ? "Pay at Branch" : "Cash on Pickup"}
                 description="Pay when your order arrives"
                 badge="No fee"
                 imageSrc="/images/cod-icon.png"
-                imageAlt={isDelivery ? "Cash on Delivery" : "Cash on Pickup"}
+                imageAlt={isDelivery ? "Cash on Delivery" : isDineIn ? "Pay at Branch" : "Cash on Pickup"}
                 selectedPayment={selectedPayment}
                 setSelectedPayment={setSelectedPayment}
               />

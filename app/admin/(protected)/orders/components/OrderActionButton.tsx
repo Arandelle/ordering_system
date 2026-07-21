@@ -1,5 +1,6 @@
 "use client";
 
+import { IconButton } from "@/components/ui/buttons";
 import { useAdminUpdateOrder } from "@/hooks/api/admin/useAdminOrders";
 import {
   canTransitionTo,
@@ -77,14 +78,15 @@ export function OrderActionButton({
         if (isMayaUnpaid) return null;
 
         return (
-          <button
+          <IconButton
             key={nextStatus}
             onClick={() => handleClick(nextStatus)}
             disabled={isPending}
-            className={`text-xs rounded-full font-bold py-2 px-4 cursor-pointer text-nowrap disabled:opacity-60 disabled:cursor-not-allowed ${actionConfig.variant}`}
-          >
-            {isPending ? "Updating..." : actionConfig.label}
-          </button>
+            text={isPending ? "Updating..." : actionConfig.label}
+            icon={{name: isPending ? "Loader2" : null, className: "animate-spin"}}
+            variant="underline"
+            className={`text-xs ${actionConfig.variant}`}
+          />
         );
       })}
     </div>

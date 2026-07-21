@@ -16,6 +16,7 @@ import LoadingPage from "@/components/ui/LoadingPage";
 import { formatDate } from "@/helper/formatter/formatDate";
 import { useRouter } from "next/navigation";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
+import { IconButton } from "@/components/ui/buttons";
 
 export default function OrdersTable({
   orders,
@@ -104,6 +105,25 @@ export default function OrdersTable({
                   isMayaPaid &&
                   order.status === ORDER_STATUSES.PENDING;
 
+                const isPickup =
+                  order?.fulfillmentType &&
+                  order.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
+                const isDineIn =
+                  order?.fulfillmentType &&
+                  order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+
+                const fulfillmentLabel = isDineIn
+                  ? "Dine In"
+                  : isPickup
+                    ? "Pickup"
+                    : "Delivery";
+
+                const fulfillmentStyle = isDineIn
+                  ? "text-emerald-500"
+                  : isPickup
+                    ? "text-blue-500"
+                    : "text-brand-color-500";
+
                 return (
                   <TableRow
                     key={order._id}
@@ -157,12 +177,14 @@ export default function OrdersTable({
                         {isMaya ? "Maya" : "Cash on Delivery"}
                       </span>
                     </TableCell>
-                    <TableCell className={`text-xs font-semibold`}>
-                      <span
-                        className={`text-xs font-semibold ${order.fulfillmentType === FULFILLMENT_TYPE.PICKUP ? "text-blue-500" : "text-brand-color-500"}`}
+                    <TableCell
+                      className={`text-xs font-semibold gap-2 flex flex-col`}
+                    >
+                      <p
+                        className={`text-xs font-semibold ${fulfillmentStyle}`}
                       >
-                        {order.fulfillmentType}
-                      </span>
+                        {fulfillmentLabel}
+                      </p>
                       <p className="text-nowrap">
                         {order.branchSnapshot?.name}
                       </p>
@@ -194,12 +216,12 @@ export default function OrdersTable({
 
                     <TableCell className="px-6 py-4">
                       <div className="flex flex-col lg:flex-row items-center justify-center">
-                        <button
+                        <IconButton
                           onClick={() => router.push(`/orders/${order._id}`)}
-                          className="text-xs font-bold py-2 px-2 text-blue-500 hover:text-blue-600 cursor-pointer text-nowrap"
-                        >
-                          Details
-                        </button>
+                          text="Details"
+                          variant="underline"
+                          className="text-blue-500 hover:text-blue-600 text-xs"
+                        />
 
                         <PermissionGuard permission="orders.update">
                           <OrderActionButton
