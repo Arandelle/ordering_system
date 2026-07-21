@@ -8,7 +8,19 @@ import {
 import { calculateDeliveryFeeFromCoordinates } from "../../lib/deliveryFee";
 import type { CreateOrderPayload } from "../../types/OrderTypes";
 import { isBranchCoordinates } from "../branch/branch.service";
+import { Settings } from "@/models/Setting";
+import type { ClientSession } from "mongoose";
+import type { Days } from "@/hooks/api/useSettings";
 
+/** Maps JS Date.getDay() (Sun=0) to the DAYS labels used by operating hours (Mon=0) */
+const DAY_LABELS: Days[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const getDayLabel = (date: Date): Days => DAY_LABELS[(date.getDay() + 6) % 7];
+
+/** Parses "HH:MM" to total minutes since midnight */
+const toMinutes = (time: string): number => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
 
 type FulfillmentPayload = {
   fulfillmentType?: FulfillmentType;
@@ -40,10 +52,15 @@ export function normalizeFulfillmentType(
   return "delivery";
 }
 
-/** Validates that reservation fields are present and valid for dine-in orders */
-function validateReservationPayload(
-  reservation?: CreateOrderPayload["reservation"],
-): void {
+/**
+ * Validates that reservation fields are present, valid, and aligned
+ * with the store's operating hours (day must be open, time must be
+ * within hours with a 1-hour buffer before closing).
+ */
+async function validateReservationPayload(
+  reservation: CreateOrderPayload["reservation"],
+  session: ClientSession,
+): Promise<void> {
   if (!reservation) {
     throw new Error("Reservation details are required for dine-in orders.");
   }
@@ -68,20 +85,61 @@ function validateReservationPayload(
   if (reservation.partySize > 50) {
     throw new Error("Maximum 50 guests per reservation.");
   }
+
+  // Validate against operating hours
+  const settings = await Settings.findOne().session(session);
+  const operatingHours = settings?.operatingHours;
+
+  if (!operatingHours) {
+    throw new Error("Store operating hours are not configured.");
+  }
+
+  if (operatingHours.isClosed) {
+    throw new Error("Store is currently closed and not accepting reservations.");
+  }
+
+  if (!operatingHours.openTime || !operatingHours.closeTime) {
+    throw new Error("Store operating hours are not properly configured.");
+  }
+
+  // Check that the reservation day is an operating day
+  const dayLabel = getDayLabel(scheduledDate);
+  if (!operatingHours.days.includes(dayLabel)) {
+    throw new Error(`Store is closed on ${dayLabel}. Please select an operating day.`);
+  }
+
+  // Check that the reservation time is within operating hours (with 1hr buffer before close)
+  const reservationMinutes = scheduledDate.getHours() * 60 + scheduledDate.getMinutes();
+  const openMinutes = toMinutes(operatingHours.openTime);
+  const closeMinutes = toMinutes(operatingHours.closeTime);
+  const lastReservationMinutes = closeMinutes - 60; // 1hr before closing
+
+  if (reservationMinutes < openMinutes) {
+    throw new Error(`Reservation time must be at or after ${operatingHours.openTime}.`);
+  }
+
+  if (reservationMinutes > lastReservationMinutes) {
+    throw new Error(
+      `Last reservation must be at least 1 hour before closing (${operatingHours.closeTime}).`,
+    );
+  }
 }
 
 // Validates fulfillment-specific checkout requirements before pricing/persisting.
-export function validateFulfillmentPayload({
+export async function validateFulfillmentPayload({
   fulfillmentType,
   shippingAddress,
   reservation,
-}: FulfillmentPayload): void {
+}: FulfillmentPayload, session?: ClientSession): Promise<void> {
   const normalizedFulfillmentType = normalizeFulfillmentType(fulfillmentType);
 
   if (normalizedFulfillmentType === FULFILLMENT_TYPE.PICKUP) return;
 
   if (normalizedFulfillmentType === FULFILLMENT_TYPE.DINE_IN) {
-    validateReservationPayload(reservation);
+    if (!session) {
+      throw new Error("Session is required for dine-in reservation validation.");
+    }
+    await validateReservationPayload(reservation, session);
     return;
   }
 
@@ -110,12 +168,16 @@ export function validateFulfillmentPayload({
 // eligibility is NOT resolved here because the item subtotal is unknown at
 // this point in the checkout flow — it is computed separately in the checkout
 // routes after cart resolution.
-export function resolveCheckoutFulfillment({
+export async function resolveCheckoutFulfillment({
   fulfillmentType,
   branch,
   shippingAddress,
   reservation,
-}: FulfillmentPayload & { branch: BranchWithCoordinates }) {
+  session,
+}: FulfillmentPayload & {
+  branch: BranchWithCoordinates;
+  session?: ClientSession;
+}) {
   const normalizedFulfillmentType = normalizeFulfillmentType(fulfillmentType);
 
   if (normalizedFulfillmentType === FULFILLMENT_TYPE.PICKUP) {
@@ -128,9 +190,12 @@ export function resolveCheckoutFulfillment({
     };
   }
 
-  // Dine-in: no delivery fee, no shipping address — just validate reservation
+  // Dine-in: no delivery fee, no shipping address — validate reservation against operating hours
   if (normalizedFulfillmentType === FULFILLMENT_TYPE.DINE_IN) {
-    validateReservationPayload(reservation);
+    if (!session) {
+      throw new Error("Session is required for dine-in reservation validation.");
+    }
+    await validateReservationPayload(reservation, session);
     return {
       fulfillmentType: normalizedFulfillmentType,
       shippingAddress: undefined,
@@ -140,7 +205,7 @@ export function resolveCheckoutFulfillment({
     };
   }
 
-  validateFulfillmentPayload({
+  await validateFulfillmentPayload({
     fulfillmentType: normalizedFulfillmentType,
     shippingAddress,
   });

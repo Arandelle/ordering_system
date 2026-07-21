@@ -31,14 +31,14 @@ const restrictedCityAddress = {
 };
 
 describe("Checkout Fulfillment", () => {
-  test("pickup checkout does not require shipping address and returns zero delivery fee", () => {
-    validateFulfillmentPayload({
+  test("pickup checkout does not require shipping address and returns zero delivery fee", async () => {
+    await validateFulfillmentPayload({
       fulfillmentType: FULFILLMENT_TYPE.PICKUP,
       shippingAddress: undefined,
     });
 
     assert.deepEqual(
-      resolveCheckoutFulfillment({
+      await resolveCheckoutFulfillment({
         fulfillmentType: FULFILLMENT_TYPE.PICKUP,
         branch: { location: { coordinates: [120.9842, 14.5995] } },
         shippingAddress: undefined,
@@ -53,8 +53,8 @@ describe("Checkout Fulfillment", () => {
     );
   });
 
-  test("delivery checkout requires a delivery pin", () => {
-    assert.throws(
+  test("delivery checkout requires a delivery pin", async () => {
+    await assert.rejects(
       () =>
         validateFulfillmentPayload({
           fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
@@ -64,8 +64,8 @@ describe("Checkout Fulfillment", () => {
     );
   });
 
-  test("delivery checkout rejects address outside the polygon", () => {
-    assert.throws(
+  test("delivery checkout rejects address outside the polygon", async () => {
+    await assert.rejects(
       () =>
         validateFulfillmentPayload({
           fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
@@ -78,8 +78,8 @@ describe("Checkout Fulfillment", () => {
     );
   });
 
-  test("delivery checkout rejects address in polygon but not in allowed cities", () => {
-    assert.throws(
+  test("delivery checkout rejects address in polygon but not in allowed cities", async () => {
+    await assert.rejects(
       () =>
         validateFulfillmentPayload({
           fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
@@ -89,9 +89,9 @@ describe("Checkout Fulfillment", () => {
     );
   });
 
-  test("delivery checkout accepts address in polygon AND in allowed cities", () => {
+  test("delivery checkout accepts address in polygon AND in allowed cities", async () => {
     // Should not throw — Makati is in both polygon and allowed cities
-    validateFulfillmentPayload({
+    await validateFulfillmentPayload({
       fulfillmentType: FULFILLMENT_TYPE.DELIVERY,
       shippingAddress: deliveryAddress,
     });

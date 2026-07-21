@@ -82,7 +82,7 @@ export async function assertBranchCanAcceptOrders(
   }
 }
 
-export function assertValidPayload(body: CreateOrderPayload): void {
+export async function assertValidPayload(body: CreateOrderPayload, session?: ClientSession): Promise<void> {
   const { branchId, firstName, lastName, customerPhone, items } = body;
 
   if (!branchId) throw new Error("Branch is required.");
@@ -90,7 +90,7 @@ export function assertValidPayload(body: CreateOrderPayload): void {
     throw new Error("Customer details are required.");
   if (!items || !Array.isArray(items) || items.length === 0)
     throw new Error("Cart is empty.");
-  validateFulfillmentPayload(body);
+  await validateFulfillmentPayload(body, session);
 }
 
 export async function assertCanUsePromoCardDiscount(

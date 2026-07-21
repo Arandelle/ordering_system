@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Parse & validate body early so we have branchId for capacity check
     const body: CreateOrderPayload = await request.json();
-    assertValidPayload(body);
+    await assertValidPayload(body, session);
     if (body.paymentMethod !== "maya") {
       throw new Error("Invalid payment method for Maya checkout.");
     }
@@ -85,11 +85,12 @@ export async function POST(request: NextRequest) {
     // 4. Resolve branch
     const branch = await fetchBranch(body.branchId, session);
 
-    const fulfillment = resolveCheckoutFulfillment({
+    const fulfillment = await resolveCheckoutFulfillment({
       fulfillmentType: body.fulfillmentType,
       branch,
       shippingAddress: body.shippingAddress,
       reservation: body.reservation,
+      session,
     });
 
     // 5. Resolve cart items + reserve inventory
