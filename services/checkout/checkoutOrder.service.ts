@@ -31,6 +31,7 @@ export async function persistOrder(
     customerPhone,
     paymentMethod,
     notes,
+    reservation,
   } = body;
   const fulfillmentType = fulfillment?.fulfillmentType ?? FULFILLMENT_TYPE.DELIVERY;
   const shippingAddress = fulfillment?.shippingAddress ?? body.shippingAddress;
@@ -72,6 +73,13 @@ export async function persistOrder(
             : ORDER_STATUSES.PENDING,
         fulfillmentType,
         items: orderItems,
+        // Include reservation details for dine-in orders
+        ...(fulfillmentType === FULFILLMENT_TYPE.DINE_IN && reservation && {
+          reservation: {
+            scheduledAt: new Date(reservation.scheduledAt),
+            partySize: reservation.partySize,
+          },
+        }),
         paymentInfo: {
           checkoutId,
           referenceNumber,

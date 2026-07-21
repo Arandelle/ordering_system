@@ -39,9 +39,14 @@ export function OrderActionButton({
 
   const allowedStatuses = nextStatuses.filter((nextStatus) => {
     if (!canTransitionTo(status, nextStatus, role)) return false;
-    if (fulfillmentType === FULFILLMENT_TYPE.PICKUP) {
+    // Pickup and dine-in orders cannot be dispatched — they go to ready_for_pickup
+    if (
+      fulfillmentType === FULFILLMENT_TYPE.PICKUP ||
+      fulfillmentType === FULFILLMENT_TYPE.DINE_IN
+    ) {
       return nextStatus !== ORDER_STATUSES.DISPATCH;
     }
+    // Delivery orders cannot be marked ready_for_pickup — they go to dispatch
     return nextStatus !== ORDER_STATUSES.READY_FOR_PICKUP;
   });
 

@@ -187,6 +187,11 @@ const OrderSchema = new Schema(
       required: true,
       index: true,
     },
+    /** Reservation details — only populated for dine-in orders */
+    reservation: {
+      scheduledAt: { type: Date },
+      partySize: { type: Number, min: 1, max: 50 },
+    },
     items: {
       type: [OrderItemSchema],
       required: true,
@@ -316,5 +321,6 @@ OrderSchema.index({ isReviewed: 1, reviewedAt: -1 });
 
 OrderSchema.index({ branchId: 1, status: 1, createdAt: -1 });
 OrderSchema.index({ branchId: 1, isReviewed: 1 });
+OrderSchema.index({ fulfillmentType: 1, "reservation.scheduledAt": 1 });
 
 export const Order = models.Order || model("Order", OrderSchema);

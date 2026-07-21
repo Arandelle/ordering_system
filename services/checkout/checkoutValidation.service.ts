@@ -20,7 +20,7 @@ export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
 
 /**
  * Guard: check that a branch can accept new orders based on capacity.
- * Pickup orders only check the manual isBusy override — no rider-based counting.
+ * Pickup and dine-in orders only check the manual isBusy override — no rider-based counting.
  * Delivery orders are subject to full capacity counting.
  */
 export async function assertBranchCanAcceptOrders(
@@ -38,8 +38,11 @@ export async function assertBranchCanAcceptOrders(
     );
   }
 
-  // Pickup: only isBusy matters — no rider-based capacity counting
-  if (fulfillmentType === FULFILLMENT_TYPE.PICKUP) return;
+  // Pickup and dine-in: only isBusy matters — no rider-based capacity counting
+  if (
+    fulfillmentType === FULFILLMENT_TYPE.PICKUP ||
+    fulfillmentType === FULFILLMENT_TYPE.DINE_IN
+  ) return;
 
   // Determine the effective limit: branch-specific > global fallback > no limit
   const settings = await Settings.findOne().session(session);

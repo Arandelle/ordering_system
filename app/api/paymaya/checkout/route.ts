@@ -20,9 +20,7 @@ import {
   assertStoreIsOpen,
   assertValidPayload,
 } from "@/services/checkout/checkoutValidation.service";
-import {
-  computeTax,
-} from "@/services/checkout/checkoutPricing.service";
+import { computeTax } from "@/services/checkout/checkoutPricing.service";
 import { resolveCheckoutFulfillment } from "@/services/checkout/checkoutFulfillment.service";
 import { isFreeDeliveryEligible } from "@/lib/deliveryFee";
 import {
@@ -40,6 +38,7 @@ import {
 } from "@/services/checkout/checkoutOrder.service";
 import { fetchBranch } from "@/services/branch/branch.service";
 import { logOrderCreated } from "@/services/activityLog.service";
+import { getAPIError } from "@/lib/getApiError";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -68,17 +67,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Guard: branch capacity — blocks checkout (and payment) if at limit
-    await assertBranchCanAcceptOrders(body.branchId, body.fulfillmentType, session);
+    await assertBranchCanAcceptOrders(
+      body.branchId,
+      body.fulfillmentType,
+      session,
+    );
 
     // 4. Auth (optional customer)
     const customer = await requireBetterAuth(request);
     const customerId = customer?._id ?? null;
 
     const shouldApplyPromoCardDiscount = body.applyPromoCardDiscount === true;
-    const promoCardDiscount =
-      shouldApplyPromoCardDiscount
-        ? await assertCanUsePromoCardDiscount(customerId, session)
-        : null;
+    const promoCardDiscount = shouldApplyPromoCardDiscount
+      ? await assertCanUsePromoCardDiscount(customerId, session)
+      : null;
 
     // 4. Resolve branch
     const branch = await fetchBranch(body.branchId, session);
@@ -87,6 +89,7 @@ export async function POST(request: NextRequest) {
       fulfillmentType: body.fulfillmentType,
       branch,
       shippingAddress: body.shippingAddress,
+      reservation: body.reservation,
     });
 
     // 5. Resolve cart items + reserve inventory
@@ -218,10 +221,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     await session.abortTransaction();
 
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to checkout!" },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failded to paymaya checkout!",
+    });
   } finally {
     await session.endSession();
   }

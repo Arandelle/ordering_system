@@ -22,6 +22,12 @@ const options = [
     description: "Collect the order from the selected branch.",
     icon: "Store",
   },
+  {
+    value: FULFILLMENT_TYPE.DINE_IN,
+    label: "Dine In",
+    description: "Reserve a table and dine at the branch.",
+    icon: "UtensilsCrossed",
+  },
 ];
 
 export function FulfillmentSelector({
@@ -29,7 +35,7 @@ export function FulfillmentSelector({
   onChange,
 }: FulfillmentSelectorProps) {
   return (
-    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
       {options.map((option) => {
         const isSelected = value === option.value;
 

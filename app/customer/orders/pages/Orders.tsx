@@ -172,6 +172,16 @@ function OrderCard({
 
   const isPickup =
     order?.fulfillmentType && order.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
+  const isDineIn =
+    order?.fulfillmentType && order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+
+  const fulfillmentLabel = isDineIn ? "Dine In" : isPickup ? "Pickup" : "Delivery";
+  const fulfillmentIcon = isDineIn ? "UtensilsCrossed" : isPickup ? "Store" : "Truck";
+  const fulfillmentStyle = isDineIn
+    ? "bg-emerald-50 text-emerald-600"
+    : isPickup
+      ? "bg-blue-50 text-blue-600"
+      : "bg-orange-50 text-orange-600";
 
   return (
     <div
@@ -213,14 +223,10 @@ function OrderCard({
               </span>
               {order.fulfillmentType && (
                 <span
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium ${
-                    isPickup
-                      ? "bg-blue-50 text-blue-600"
-                      : "bg-orange-50 text-orange-600"
-                  }`}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium ${fulfillmentStyle}`}
                 >
-                  <DynamicIcon name={isPickup ? "Store" : "Truck"} size={12} />
-                  {isPickup ? "Pickup" : "Delivery"}
+                  <DynamicIcon name={fulfillmentIcon} size={12} />
+                  {fulfillmentLabel}
                 </span>
               )}
               {order.branchSnapshot?.name && (
@@ -253,7 +259,7 @@ function OrderCard({
         </button>
       </div>
     </div>
-  );
+  ); 
 }
 
 const ITEM_PER_PAGE = 10;

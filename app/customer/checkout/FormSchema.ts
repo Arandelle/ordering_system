@@ -27,7 +27,26 @@ const CoordinatesSchema = z.object({
   lng: z.number().min(-180).max(180),
 });
 
-export const FulfillmentSchema = z.enum([FULFILLMENT_TYPE.DELIVERY, FULFILLMENT_TYPE.PICKUP]);
+export const FulfillmentSchema = z.enum([
+  FULFILLMENT_TYPE.DELIVERY,
+  FULFILLMENT_TYPE.PICKUP,
+  FULFILLMENT_TYPE.DINE_IN,
+]);
+
+/** Reservation schema — required for dine-in orders */
+export const ReservationSchema = z.object({
+  scheduledAt: z
+    .string()
+    .min(1, "Reservation date and time is required")
+    .refine((val) => {
+      const date = new Date(val);
+      return !isNaN(date.getTime());
+    }, "Invalid date format"),
+  partySize: z
+    .number()
+    .min(1, "At least 1 guest is required")
+    .max(20, "Maximum 20 guests"),
+});
 
 const ShippingFieldsSchema = z.object({
   line1: z.string().min(1, "Please provide your house no."),
@@ -70,21 +89,32 @@ const DeliveryOrderFormSchema = z.object({
   fulfillmentType: z.literal(FULFILLMENT_TYPE.DELIVERY),
   customer: CustomerSchema,
   shippingAddress: ShippingSchema,
+  reservation: z.unknown().optional(),
 });
 
 const PickupOrderFormSchema = z.object({
   fulfillmentType: z.literal(FULFILLMENT_TYPE.PICKUP),
   customer: CustomerSchema,
   shippingAddress: z.unknown(),
+  reservation: z.unknown().optional(),
+});
+
+const DineInOrderFormSchema = z.object({
+  fulfillmentType: z.literal(FULFILLMENT_TYPE.DINE_IN),
+  customer: CustomerSchema,
+  shippingAddress: z.unknown(),
+  reservation: ReservationSchema,
 });
 
 export const OrderFormSchema = z.discriminatedUnion("fulfillmentType", [
   DeliveryOrderFormSchema,
   PickupOrderFormSchema,
+  DineInOrderFormSchema,
 ]);
 
 export type OrderFormState = {
   fulfillmentType: z.infer<typeof FulfillmentSchema>;
   customer: z.infer<typeof CustomerSchema>;
   shippingAddress: z.infer<typeof ShippingFieldsSchema>;
+  reservation: z.infer<typeof ReservationSchema>;
 };

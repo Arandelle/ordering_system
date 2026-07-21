@@ -36,6 +36,7 @@ import {
 } from "@/services/checkout/checkoutOrder.service";
 import { fetchBranch } from "@/services/branch/branch.service";
 import { logOrderCreated } from "@/services/activityLog.service";
+import { getAPIError } from "@/lib/getApiError";
 
 const MINIMUM_AMOUNT = 100;
 
@@ -70,11 +71,12 @@ export async function POST(request: NextRequest) {
     // 4. Resolve branch
     const branch = await fetchBranch(body.branchId, session);
 
-    // 4.1 Resolve final delivery/pickup details server-side.
+    // 4.1 Resolve final delivery/pickup/dine-in details server-side.
     const fulfillment = resolveCheckoutFulfillment({
       fulfillmentType: body.fulfillmentType,
       branch,
       shippingAddress: body.shippingAddress,
+      reservation: body.reservation,
     });
 
     // 5. Resolve cart items + reserve inventory
@@ -203,12 +205,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     await session.abortTransaction();
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to checkout!",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {fallbackMessage: "Failed to checkout!"});
   } finally {
     await session.endSession();
   }

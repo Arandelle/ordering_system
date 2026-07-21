@@ -64,6 +64,12 @@ export interface OrderType {
     };
   };
 
+  /** Reservation details — only present for dine-in orders */
+  reservation?: {
+    scheduledAt?: string;
+    partySize?: number;
+  };
+
   items: OrderItem[];
   paymentInfo: {
     checkoutId?: string;
@@ -201,6 +207,12 @@ export interface CreateOrderPayload {
   paymentMethod: string;
   applyPromoCardDiscount?: boolean;
   voucherAmount?: number;
+
+  /** Reservation details — required when fulfillmentType is "dine_in" */
+  reservation?: {
+    scheduledAt: string; // ISO date string
+    partySize: number;
+  };
 
   shippingAddress?: {
     line1: string;

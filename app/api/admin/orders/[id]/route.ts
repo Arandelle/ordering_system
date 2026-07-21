@@ -12,7 +12,6 @@ import {
   OrderStatus,
   STATUS_TRANSITIONS,
   isValidOrderStatus,
-  TIMELINE_FIELD_MAP,
   ORDER_STATUSES,
   canTransitionTo,
   getNextStatus,
@@ -24,7 +23,6 @@ import { STAFF_ROLES } from "@/types/staff";
 import { EMAIL_FROM, resend } from "@/lib/resend";
 import { getStatusSubject } from "@/app/api/paymaya/webhook/route";
 import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
-import { OrderType } from "@/types/OrderTypes";
 import { PAYMENT_STATUSES, PaymentStatus } from "@/types/paymentConstants";
 import { Inventory } from "@/models/Inventory";
 import mongoose, { ClientSession } from "mongoose";
@@ -34,6 +32,8 @@ import {
 } from "@/services/promoCardBenefits";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { logOrderStatusChange } from "@/services/activityLog.service";
+import { getAPIError } from "@/lib/getApiError";
+import { getValidObjectId } from "@/helper/getValidObjectIds";
 
 // ============================================
 // GET /api/orders/[id]
@@ -51,34 +51,29 @@ export async function GET(
     await connectDB();
     const staff = await requireAdmin(request);
     if (!canAccess(staff.role, "orders.read")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return getAPIError("Forbidden", 403);
     }
 
     const { id } = await context.params;
 
     // Validate MongoDB ObjectId format
-    if (!id || id.length !== 24) {
-      return NextResponse.json(
-        { error: "Invalid order ID format" },
-        { status: 400 },
-      );
+    if (!id || !getValidObjectId(id)) {
+      return getAPIError("Invalid order ID format");
     }
 
     const order = await Order.findById(id).lean();
 
     if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      return getAPIError("Ordre not found", 404);
     }
 
     // Check if staff is authorized for this order's branch
     if (
-      staff.role !== STAFF_ROLES.SUPERADMIN &&
-      staff.role !== STAFF_ROLES.CASHIER &&
+      staff.role === STAFF_ROLES.ADMIN &&
       order.branchId?.toString() !== staff.branch?.toString()
     ) {
-      return NextResponse.json(
-        { error: "Access denied. This order does not belong to your branch." },
-        { status: 403 },
+      return getAPIError(
+        "Access denied. This order does not belong to  your branch",
       );
     }
 
@@ -96,12 +91,9 @@ export async function GET(
     });
   } catch (error: any) {
     console.error("GET /api/orders/[id] error:", error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Failed to fetch order",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to fetch order. Please try again",
+    });
   }
 }
 
@@ -160,36 +152,30 @@ export async function PATCH(
 
   const { id } = await context.params;
 
-  if (!id || id.length !== 24) {
-    return NextResponse.json(
-      { error: "Invalid order ID format" },
-      { status: 400 },
-    );
+  if (!id || !getValidObjectId(id)) {
+    return getAPIError("Invalid order ID format");
   }
 
   const staff = await requireAdmin(request);
   if (!canAccess(staff.role, "orders.update")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return getAPIError("Forbidden", 403);
   }
 
   const body = await request.json();
   const { status: newStatus } = body;
 
   if (!newStatus) {
-    return NextResponse.json(
-      { error: "Status is required", example: { status: "preparing" } },
-      { status: 400 },
-    );
+    return getAPIError("Status is required", 400, {
+      extra: { status: "preparing" },
+    });
   }
 
   if (!isValidOrderStatus(newStatus)) {
-    return NextResponse.json(
-      {
-        error: `Invalid status: "${newStatus}"`,
+    return getAPIError(`Invalid status "${newStatus}`, 400, {
+      extra: {
         validStatuses: Object.values(STATUS_TRANSITIONS).flat().filter(Boolean),
       },
-      { status: 400 },
-    );
+    });
   }
 
   // ============================================
@@ -201,17 +187,16 @@ export async function PATCH(
   const order = await Order.findById(id);
 
   if (!order) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    return getAPIError("Order not found", 404);
   }
 
   if (
-    staff.role !== STAFF_ROLES.SUPERADMIN &&
-    staff.role !== STAFF_ROLES.CASHIER &&
+    staff.role === STAFF_ROLES.ADMIN &&
     order.branchId?.toString() !== staff.branch?.toString()
   ) {
-    return NextResponse.json(
-      { error: "Access denied. This order does not belong to your branch." },
-      { status: 403 },
+    return getAPIError(
+      "Access denied. This order does not belong to your branch",
+      403,
     );
   }
 
@@ -220,14 +205,10 @@ export async function PATCH(
   const paymentStatus = order.paymentInfo?.paymentStatus as PaymentStatus;
 
   if (currentStatus === ORDER_STATUSES.PENDING_PAYMENT) {
-    return NextResponse.json(
-      {
-        error:
-          "Maya orders awaiting payment cannot be updated by admin. Wait for payment confirmation or automatic expiry.",
-        currentStatus,
-        paymentMethod,
-      },
-      { status: 400 },
+    return getAPIError(
+      "Maya orders awaiting payment cannot be updated by admin. Wait for payment confirmation or automatic expiry",
+      400,
+      { extra: { currentStatus, paymentMethod } },
     );
   }
 
@@ -235,50 +216,52 @@ export async function PATCH(
     paymentMethod === "maya" &&
     currentStatus === ORDER_STATUSES.PENDING &&
     newStatus === ORDER_STATUSES.PREPARING &&
-    (paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS || !order.paymentInfo?.paymentId)
+    (paymentStatus !== PAYMENT_STATUSES.PAYMENT_SUCCESS ||
+      !order.paymentInfo?.paymentId)
   ) {
-    return NextResponse.json(
+    return getAPIError(
+      "Maya orders cannot be accepted while payment is still pending. Wait for payment confirmation first.",
+      400,
       {
-        error:
-          "Maya orders cannot be accepted while payment is still pending. Wait for payment confirmation first.",
-        currentStatus,
-        paymentMethod,
-        requiredStatus: PAYMENT_STATUSES.PAYMENT_SUCCESS,
+        extra: {
+          currentStatus,
+          paymentMethod,
+          requiredStatus: PAYMENT_STATUSES.PAYMENT_SUCCESS,
+        },
       },
-      { status: 400 },
     );
   }
 
   if (!canTransitionTo(currentStatus, newStatus, "admin")) {
-    return NextResponse.json(
+    return getAPIError(
+      `Cannot transition from "${currentStatus}" to "${newStatus}"`,
+      400,
       {
-        error: `Cannot transition from "${currentStatus}" to "${newStatus}"`,
-        currentStatus,
-        allowedNextStatus:
-          getNextStatus(currentStatus) ?? "no transitions allowed",
+        extra: {
+          currentStatus,
+          allowedNextStatus:
+            getNextStatus(currentStatus) ?? "no transitions allowed",
+        },
       },
-      { status: 400 },
     );
   }
 
   if (
-    order.fulfillmentType === FULFILLMENT_TYPE.PICKUP &&
+    (order.fulfillmentType === FULFILLMENT_TYPE.PICKUP ||
+      order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN) &&
     newStatus === ORDER_STATUSES.DISPATCH
   ) {
-    return NextResponse.json(
-      { error: "Pickup orders should be marked ready for pickup." },
-      { status: 400 },
+    return getAPIError(
+      "Pickup and dine-in orders should be marked ready for pickup",
+      400,
     );
   }
 
   if (
-    order.fulfillmentType !== FULFILLMENT_TYPE.PICKUP &&
+    order.fulfillmentType === FULFILLMENT_TYPE.DELIVERY &&
     newStatus === ORDER_STATUSES.READY_FOR_PICKUP
   ) {
-    return NextResponse.json(
-      { error: "Delivery orders should be dispatched." },
-      { status: 400 },
-    );
+    return getAPIError("Delivery orders should be dispatched", 400);
   }
 
   // ============================================
@@ -356,27 +339,9 @@ export async function PATCH(
   } catch (error: any) {
     console.error("PATCH /api/orders/[id] error:", error);
 
-    if (error.name === "ValidationError") {
-      return NextResponse.json(
-        { error: "Invalid order data", details: error.message },
-        { status: 400 },
-      );
-    }
-
-    if (error.name === "CastError") {
-      return NextResponse.json(
-        { error: "Invalid order ID format" },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to update order",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to update order",
+    });
   } finally {
     await session.endSession();
   }

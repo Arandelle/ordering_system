@@ -8,7 +8,8 @@
 
 export const FULFILLMENT_TYPE = {
   DELIVERY: "delivery",
-  PICKUP: "pickup"
+  PICKUP: "pickup",
+  DINE_IN: "dine_in",
 } as const;
 
 export type FulfillmentType = (typeof FULFILLMENT_TYPE)[keyof typeof FULFILLMENT_TYPE];
