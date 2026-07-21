@@ -1,7 +1,7 @@
 import { OrderType } from "@/types/OrderTypes";
 import { DynamicIcon } from "../ui/DynamicIcon";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
-import { formatDate } from "@/helper/formatter";
+import { formatDateWithDay } from "@/helper/formatter";
 
 // ─── Style Maps ───────────────────────────────────────────────────────────────
 
@@ -105,7 +105,7 @@ export const FulfillmentCard = ({
             <div className="flex items-center gap-2">
               <DynamicIcon name="CalendarClock" size={14} className="text-emerald-500" />
               <span className="font-medium text-gray-700">
-                {formatDate(reservation.scheduledAt)}
+                {formatDateWithDay(reservation.scheduledAt)}
               </span>
             </div>
           )}
