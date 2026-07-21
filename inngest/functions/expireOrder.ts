@@ -48,6 +48,19 @@ export const expireOrder = inngest.createFunction(
         };
       }
 
+      // Skip dine-in reservations with a future scheduled date — these are
+      // advance bookings that should not be expired while waiting for the day
+      if (
+        order.fulfillmentType === "dine_in" &&
+        order.reservation?.scheduledAt &&
+        new Date(order.reservation.scheduledAt) > new Date()
+      ) {
+        return {
+          skipped: true,
+          reason: `Dine-in reservation scheduled for ${order.reservation.scheduledAt} — future bookings are not subject to expiry`,
+        };
+      }
+
       // Determine expiration reason for logging before we mutate anything
       const expirationReason = resolveExpirationReason(order);
 
