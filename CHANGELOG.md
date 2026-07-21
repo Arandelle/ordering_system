@@ -1,6 +1,65 @@
 # Changelog
 
 
+## 1.12.0 - Dine-In Reservations - 2026-07-21
+**Release Focus:** New `dine_in` fulfillment type allowing customers to place advance orders with a reservation (date, time, party size), aligned to store operating hours with server-side enforcement.
+
+### Added
+- `dine_in` fulfillment type in `FULFILLMENT_TYPE` constants alongside `delivery` and `pickup`
+- `reservation` subdocument on Order model (`scheduledAt: Date`, `partySize: Number`)
+- `ReservationPicker` checkout component: date picker, time slot grid (30-min intervals), and party size stepper
+- Time slots generated dynamically from store operating hours (`openTime` to `closeTime - 1hr`)
+- Closed-day detection: warns when selected date falls on a non-operating day
+- Store globally closed guard: shows "Reservations unavailable" when `isClosed` is true
+- Server-side reservation validation: checks operating day, time within hours, 1hr buffer before closing, future date, party size (1–50)
+- Admin order views show reservation date/time and party size in FulfillmentCard (emerald-themed)
+- Purple/emerald "Dine In" badges in admin OrdersTable and customer order cards
+- "Pay at Branch" COD label for dine-in orders
+- Compound index on `fulfillmentType + reservation.scheduledAt` for future calendar queries
+
+### Improved
+- FulfillmentSelector expanded to 3-column grid for delivery/pickup/dine-in
+- Checkout flow: dine-in skips shipping step entirely, submits directly from details page
+- Auto-redirect to details page when switching to pickup/dine-in from shipping page (prevents dead-end)
+- Shipping page now redirects (via `router.replace` in `useEffect`) instead of showing static banners for non-delivery types
+- Timezone handling: all date comparisons use local time (`getLocalDate` helper) instead of UTC `toISOString()` — fixes PH timezone drift
+- Reused existing `formatTime` and `formatDateWithDay` formatters instead of local duplicates
+- Dine-in orders follow pickup status flow: `pending` → `preparing` → `ready_for_pickup` → `completed` (no dispatch step)
+- Admin OrderActionButton hides "Dispatch" for dine-in orders; `ready_for_pickup` hidden for delivery
+- Delivery fee section hidden for dine-in orders in OrderDetailsModal
+- Map in OrderDetailsModal shows branch location for dine-in (customer view)
+
+### Changed
+- `validateFulfillmentPayload` and `resolveCheckoutFulfillment` are now async to support server-side settings lookup for reservation validation
+- `assertValidPayload` is now async (passes session through to fulfillment validation)
+- COD and Maya checkout routes updated to pass `session` and `await` fulfillment resolution
+- `assertBranchCanAcceptOrders` treats dine-in like pickup (only `isBusy` check, no capacity counting)
+- `OrderFormState` now includes `reservation` field with `ReservationSchema` (Zod)
+
+### Fixed
+- CheckoutContext `handleFulfillmentTypeChange` now redirects to details page when user switches to pickup/dine-in while on shipping step
+- Shipping page guard uses `useEffect` + `router.replace` instead of calling `router.push` during render (prevents React side-effect warnings and hydration mismatches)
+- Date/time derivation uses local date methods instead of UTC to prevent timezone drift in PH (UTC+8)
+
+
+## 1.11.1 - Inventory Management, Mobile UX & Bug Fixes - 2026-07-18
+**Release Focus:** Inventory list overhaul with sort, filter, search, and pagination; mobile category selection dropdown; admin safety guard; and order quantity/modifier fixes.
+
+### Added
+- Inventory list: sorting, filtering, searching, and pagination with card layout
+- Orphaned inventory record cleanup
+
+### Improved
+- Global stats card refactored for reuse across all admin sections
+- Categories selection converted to dropdown on mobile view
+- Removed third-party food delivery platform references
+
+### Fixed
+- Prevent admin from deactivating their own account
+- Admin can now fully erase quantity inputs; empty string submission guarded to minimum of 1
+- Customers can freely choose different items on side/linked modifier items (e.g. 1 coke + 1 beer) instead of being forced to mirror the main group's item distribution
+
+
 ## 1.11.0 - Admin Profile, Cloudinary Centralization & Changelog Page - 2026-07-18
 **Release Focus:** Staff model expansion with image support, admin self-service profile page with avatar upload and password change, centralized Cloudinary upload utility, role-based access control refactor, and a changelog page rendered from Markdown.
 
