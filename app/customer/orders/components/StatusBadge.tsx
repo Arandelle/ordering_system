@@ -6,6 +6,7 @@ import {
   Hamburger,
   CheckCircle,
   Ban,
+  CalendarCheck,
 } from "lucide-react";
 
 export function StatusBadge({ status }: { status: OrderStatus }) {
@@ -22,6 +23,11 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
       label: "Pending",
       color: "bg-yellow-100 text-yellow-700 border border-yellow-200",
       icon: <CreditCard size={14} />,
+    },
+    confirmed: {
+      label: "Reservation Confirmed",
+      color: "bg-indigo-100 text-indigo-700 border border-indigo-200",
+      icon: <CalendarCheck size={14} />,
     },
     preparing: {
       label: "Preparing Order",

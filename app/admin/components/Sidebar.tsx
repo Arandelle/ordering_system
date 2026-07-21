@@ -54,6 +54,12 @@ const navSections: NavSection[] = [
         permission: "orders.read",
       },
       {
+        name: "Reservations",
+        path: "/reservations",
+        icon: "CalendarDays",
+        permission: "orders.read",
+      },
+      {
         name: "Reports",
         path: "/reports",
         icon: "ChartLine",
@@ -198,11 +204,18 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
     branchId: selectedBranchId === "all" ? undefined : selectedBranchId,
   });
 
+  const { data: todaysReservations } = useAdminOrders({
+    status: ORDER_STATUSES.CONFIRMED,
+    limit: 1,
+    branchId: selectedBranchId === "all" ? undefined : selectedBranchId,
+  });
+
   const [expandedItemKey, setExpandedItemKey] = useState<string | null>(() =>
     getActiveParentKey(pathname),
   );
 
   const pendingCount = placedOrders?.pagination?.total ?? 0;
+  const reservationCount = todaysReservations?.pagination?.total ?? 0;
 
   useEffect(() => {
     setExpandedItemKey(getActiveParentKey(pathname));
@@ -327,6 +340,12 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
                           {item.path === "/orders" && pendingCount > 0 && (
                             <div className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 text-sm bg-red-600 border text-white rounded-full">
                               {pendingCount}
+                            </div>
+                          )}
+                          {/** Reservation indicator */}
+                          {item.path === "/reservations" && reservationCount > 0 && (
+                            <div className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 text-sm bg-indigo-600 border text-white rounded-full">
+                              {reservationCount}
                             </div>
                           )}
                         </div>

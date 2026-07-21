@@ -9,15 +9,16 @@ import type {
   LowStockItem,
   NewCustomerItem,
   PendingOrderItem,
+  UpcomingReservationItem,
 } from "../dashboard.types";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { formatCurrency, formatTimeAgo } from "@/helper/formatter";
+import { formatCurrency, formatDate, formatTimeAgo } from "@/helper/formatter";
 import { IconButton } from "@/components/ui/buttons";
 import { AppImage } from "@/components/AppImage";
 
-type SectionKey = "pendingOrders" | "lowStock" | "newCustomers";
+type SectionKey = "pendingOrders" | "upcomingReservations" | "lowStock" | "newCustomers";
 
 const SECTION_CONFIG: Record<
   SectionKey,
@@ -27,6 +28,11 @@ const SECTION_CONFIG: Record<
     icon: "ClockAlert",
     label: "Pending Orders",
     color: "text-orange-600 bg-orange-50",
+  },
+  upcomingReservations: {
+    icon: "CalendarDays",
+    label: "Upcoming Reservations",
+    color: "text-indigo-600 bg-indigo-50",
   },
   lowStock: {
     icon: "TriangleAlert",
@@ -110,6 +116,42 @@ function PendingOrderRow({ order }: { order: PendingOrderItem }) {
         </p>
         <p className="text-xs text-stone-400">
           {formatTimeAgo(order.createdAt)}
+        </p>
+      </div>
+      <DynamicIcon
+        name="ChevronRight"
+        size={14}
+        className="text-stone-300 group-hover:text-brand-color-500 transition-colors"
+      />
+    </Link>
+  );
+}
+
+/* ── Reservation row ── */
+function ReservationRow({
+  reservation,
+}: {
+  reservation: UpcomingReservationItem;
+}) {
+  return (
+    <Link
+      href={`/orders/${reservation._id}`}
+      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-stone-50 transition-colors group"
+    >
+      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+        <DynamicIcon name="CalendarDays" size={14} className="text-indigo-600" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-stone-800 truncate group-hover:text-brand-color-500">
+          {reservation.customerName || "Guest"}
+        </p>
+        <p className="text-xs text-stone-400">
+          {reservation.partySize} {reservation.partySize === 1 ? "guest" : "guests"} · {formatCurrency(reservation.totalAmount)}
+        </p>
+      </div>
+      <div className="text-right">
+        <p className="text-xs font-semibold text-indigo-700">
+          {formatDate(reservation.scheduledAt, "TBD")}
         </p>
       </div>
       <DynamicIcon
@@ -275,6 +317,18 @@ export default function DashboardActivityAside() {
               <PendingOrderRow key={order._id} order={order} />
             ))
           : renderEmptyState("CheckCircle", "No pending orders right now")}
+      </ActivitySection>
+
+      {/* ── Upcoming Reservations ── */}
+      <ActivitySection sectionKey="upcomingReservations">
+        {activity.upcomingReservations.length > 0
+          ? activity.upcomingReservations.map((reservation) => (
+              <ReservationRow
+                key={reservation._id}
+                reservation={reservation}
+              />
+            ))
+          : renderEmptyState("CalendarDays", "No upcoming reservations")}
       </ActivitySection>
 
       {/* ── Low Stock Alert ── */}

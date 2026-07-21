@@ -43,6 +43,11 @@ const ORDER_FILTER_OPTIONS: {
     statuses: ORDER_STATUSES.PENDING,
   },
   {
+    key: ORDER_STATUSES.CONFIRMED,
+    label: "Confirmed",
+    statuses: ORDER_STATUSES.CONFIRMED,
+  },
+  {
     key: ORDER_STATUSES.PREPARING,
     label: "Preparing",
     statuses: ORDER_STATUSES.PREPARING,

@@ -817,8 +817,8 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
             </span>
           ) : isSubmitStep && isDineIn ? (
             <span className="flex items-center gap-2 justify-center">
-              Place Dine-In Order
-              <DynamicIcon name="UtensilsCrossed" size={14} />
+              Confirm Reservation
+              <DynamicIcon name="CalendarCheck" size={14} />
             </span>
           ) : isSubmitStep && !isDelivery ? (
             <span className="flex items-center gap-2 justify-center">

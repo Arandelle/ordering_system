@@ -24,8 +24,8 @@ const options = [
   },
   {
     value: FULFILLMENT_TYPE.DINE_IN,
-    label: "Dine In",
-    description: "Reserve a table and dine at the branch.",
+    label: "Reserve a Table",
+    description: "Pre-order and book a table for your visit.",
     icon: "UtensilsCrossed",
   },
 ];

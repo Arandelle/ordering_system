@@ -10,6 +10,15 @@ export interface PendingOrderItem {
   itemsCount: number;
 }
 
+export interface UpcomingReservationItem {
+  _id: string;
+  customerName: string;
+  scheduledAt: string;
+  partySize: number;
+  totalAmount: number;
+  branchName: string;
+}
+
 export interface LowStockItem {
   productId: string;
   name: string;
@@ -29,6 +38,7 @@ export interface NewCustomerItem {
 
 export interface DashboardActivity {
   pendingOrders: PendingOrderItem[];
+  upcomingReservations: UpcomingReservationItem[];
   lowStockItems: LowStockItem[];
   newCustomers: NewCustomerItem[];
   newCustomersCount: number;

@@ -38,6 +38,11 @@ const TABS: Tab[] = [
     label: "Pending",
     statuses: [ORDER_STATUSES.PENDING_PAYMENT, ORDER_STATUSES.PENDING],
   },
+  {
+    key: ORDER_STATUSES.CONFIRMED,
+    label: "Confirmed",
+    statuses: [ORDER_STATUSES.CONFIRMED],
+  },
   { key: ORDER_STATUSES.PREPARING, label: "Preparing" },
   {
     key: ORDER_STATUSES.DISPATCH,
@@ -60,6 +65,7 @@ const TABS: Tab[] = [
 const STATUS_STYLES: Record<string, string> = {
   [ORDER_STATUSES.PENDING_PAYMENT]: "bg-amber-50 text-amber-800",
   [ORDER_STATUSES.PENDING]: "bg-amber-50 text-amber-800",
+  [ORDER_STATUSES.CONFIRMED]: "bg-indigo-50 text-indigo-800",
   [ORDER_STATUSES.PREPARING]: "bg-blue-50 text-blue-800",
   [ORDER_STATUSES.DISPATCH]: "bg-purple-50 text-purple-800",
   [ORDER_STATUSES.READY_FOR_PICKUP]: "bg-green-50 text-green-800",
@@ -72,6 +78,7 @@ const STATUS_STYLES: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   [ORDER_STATUSES.PENDING_PAYMENT]: "Pending",
   [ORDER_STATUSES.PENDING]: "Pending",
+  [ORDER_STATUSES.CONFIRMED]: "Confirmed",
   [ORDER_STATUSES.PREPARING]: "Preparing",
   [ORDER_STATUSES.DISPATCH]: "Dispatched / To Receive",
   [ORDER_STATUSES.READY_FOR_PICKUP]: "Ready for Pickup",
@@ -175,7 +182,7 @@ function OrderCard({
   const isDineIn =
     order?.fulfillmentType && order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
 
-  const fulfillmentLabel = isDineIn ? "Dine In" : isPickup ? "Pickup" : "Delivery";
+  const fulfillmentLabel = isDineIn ? "Reservation" : isPickup ? "Pickup" : "Delivery";
   const fulfillmentIcon = isDineIn ? "UtensilsCrossed" : isPickup ? "Store" : "Truck";
   const fulfillmentStyle = isDineIn
     ? "bg-emerald-50 text-emerald-600"

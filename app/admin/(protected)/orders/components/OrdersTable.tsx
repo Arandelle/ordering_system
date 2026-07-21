@@ -113,7 +113,7 @@ export default function OrdersTable({
                   order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
 
                 const fulfillmentLabel = isDineIn
-                  ? "Dine In"
+                  ? "Reservation"
                   : isPickup
                     ? "Pickup"
                     : "Delivery";
@@ -232,6 +232,9 @@ export default function OrdersTable({
                               order.paymentInfo.paymentConfirmed
                             }
                             fulfillmentType={order.fulfillmentType}
+                            reservationScheduledAt={
+                              order.reservation?.scheduledAt
+                            }
                             role="admin"
                           />
                         </PermissionGuard>

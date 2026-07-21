@@ -36,6 +36,7 @@ const resourcePermissions: Record<
   "modifier-groups":{ superadmin: FULL, admin: R },
   profile:          { superadmin: R,    admin: R,    cashier: R },
   changelog:        { superadmin: R,    admin: R,    cashier: R },
+  reservations:     { superadmin: R,    admin: R,    cashier: R },
 };
 
 /** Build the "resource.action" string sets from the resource-centric definition above */

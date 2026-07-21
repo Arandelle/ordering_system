@@ -33,6 +33,7 @@ const paymentMethodBadge = {
 // Human-readable labels for timeline keys
 const timelineLabelMap: Record<string, string> = {
   paidAt: "Paid",
+  confirmedAt: "Reservation Confirmed",
   preparingAt: "Preparing",
   dispatchedAt: "Out for delivery",
   readyAt: "Ready for pickup",

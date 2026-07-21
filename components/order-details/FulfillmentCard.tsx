@@ -51,7 +51,7 @@ export const FulfillmentCard = ({
       ? "pickup"
       : "delivery";
   const theme = fulfillmentTheme[themeKey];
-  const label = isDineIn ? "Dine In" : isPickup ? "Pickup" : "Delivery";
+  const label = isDineIn ? "Reservation" : isPickup ? "Pickup" : "Delivery";
 
   const { branchSnapshot, paymentInfo, reservation } = order;
 

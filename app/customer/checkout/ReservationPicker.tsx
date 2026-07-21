@@ -184,7 +184,7 @@ export function ReservationPicker({
       </div>
 
       <p className="text-xs text-slate-400">
-        Select when you&apos;d like to dine in and how many guests.
+        Select when you&apos;d like to visit and how many guests.
       </p>
 
       {/* Date picker */}

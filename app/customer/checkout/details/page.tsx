@@ -34,7 +34,7 @@ const page = () => {
     if (isReady && !hasTrackedRef.current) {
       hasTrackedRef.current = true;
       const contentCategory = isDineIn
-        ? "Dine In"
+        ? "Reservation"
         : orderDetails.fulfillmentType === FULFILLMENT_TYPE.DELIVERY
           ? "Delivery"
           : "Pickup";

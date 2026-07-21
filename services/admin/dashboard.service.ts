@@ -8,9 +8,10 @@ import {
   LowStockItem,
   NewCustomerItem,
   PendingOrderItem,
+  UpcomingReservationItem,
 } from "@/app/admin/(protected)/dashboard/dashboard.types";
 import { SalesData, TopProduct } from "@/types/adminType";
-import { ORDER_STATUSES } from "@/types/orderConstants";
+import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import { Types } from "mongoose";
 import { STAFF_ROLES, StaffRole } from "@/types/staff";
@@ -288,6 +289,32 @@ export async function getDashboardActivity(
     itemsCount: o.items?.length ?? 0,
   }));
 
+  // --- Upcoming Reservations (confirmed dine-in orders, sorted by scheduledAt) ---
+  const reservationsRaw = await Order.find({
+    ...branchMatch,
+    status: ORDER_STATUSES.CONFIRMED,
+    fulfillmentType: FULFILLMENT_TYPE.DINE_IN,
+    "reservation.scheduledAt": { $gte: new Date() },
+  })
+    .sort({ "reservation.scheduledAt": 1 })
+    .limit(5)
+    .select(
+      "_id paymentInfo.firstName paymentInfo.lastName total.totalAmount branchSnapshot.name reservation",
+    )
+    .lean();
+
+  const upcomingReservations: UpcomingReservationItem[] = reservationsRaw.map(
+    (o) => ({
+      _id: o._id.toString(),
+      customerName:
+        `${o.paymentInfo?.firstName ?? ""} ${o.paymentInfo?.lastName ?? ""}`.trim(),
+      scheduledAt: o.reservation?.scheduledAt,
+      partySize: o.reservation?.partySize ?? 1,
+      totalAmount: o.total?.totalAmount ?? 0,
+      branchName: o.branchSnapshot?.name ?? "",
+    }),
+  );
+
   // --- Low / Out-of-Stock Items (max 5) ---
   const inventoriesRaw = await Inventory.find(branchMatch).lean();
 
@@ -365,6 +392,7 @@ export async function getDashboardActivity(
 
   return {
     pendingOrders,
+    upcomingReservations,
     lowStockItems,
     newCustomers,
     newCustomersCount,
