@@ -72,6 +72,7 @@ export async function queryOrders(options: OrderQueryOptions) {
     branchSnapshot: order.branchSnapshot,
     status: order.status,
     fulfillmentType: order.fulfillmentType ?? FULFILLMENT_TYPE.DELIVERY,
+    reservation: order.reservation,
     items: order.items,
     total: order.total,
     paymentInfo: {
