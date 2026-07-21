@@ -75,6 +75,16 @@ export async function GET(request: NextRequest) {
           },
         ];
       }
+      // For CONFIRMED status: same payment verification (defense-in-depth)
+      if (match.status === ORDER_STATUSES.CONFIRMED) {
+        paymentOr = [
+          { "paymentInfo.paymentMethod": { $ne: "maya" } },
+          {
+            "paymentInfo.paymentStatus": PAYMENT_STATUSES.PAYMENT_SUCCESS,
+            "paymentInfo.paymentId": { $exists: true, $nin: [null, ""] },
+          },
+        ];
+      }
       // Other single statuses or $in groups: no additional payment filter
     } else if (paymentFilter === "unpaid") {
       // "Unpaid" tab: Maya orders where payment is NOT confirmed, excluding PENDING_PAYMENT
@@ -203,6 +213,7 @@ export async function GET(request: NextRequest) {
       [ORDER_STATUSES.CONFIRMED]: {
         ...branchFilter,
         status: ORDER_STATUSES.CONFIRMED,
+        $or: confirmedPaymentOr,
       },
       [ORDER_STATUSES.PREPARING]: {
         ...branchFilter,

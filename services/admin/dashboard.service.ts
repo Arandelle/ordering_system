@@ -16,6 +16,7 @@ import { STOCK_STATUSES } from "@/types/inventory_types";
 import { Types } from "mongoose";
 import { STAFF_ROLES, StaffRole } from "@/types/staff";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
+import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 
 /**
  * The time period the dashboard filters by.
@@ -290,11 +291,23 @@ export async function getDashboardActivity(
   }));
 
   // --- Upcoming Reservations (confirmed dine-in orders, sorted by scheduledAt) ---
+  // Note: `confirmed` status already implies valid payment — Maya webhook only
+  // sets confirmed on PAYMENT_SUCCESS, and COD dine-in goes directly to confirmed.
+  // The paymentInfo check below is defense-in-depth against manual DB tampering.
   const reservationsRaw = await Order.find({
     ...branchMatch,
     status: ORDER_STATUSES.CONFIRMED,
     fulfillmentType: FULFILLMENT_TYPE.DINE_IN,
     "reservation.scheduledAt": { $gte: new Date() },
+    $or: [
+      // COD orders — no payment verification needed
+      { "paymentInfo.paymentMethod": { $ne: "maya" } },
+      // Maya orders — must have confirmed payment
+      {
+        "paymentInfo.paymentStatus": PAYMENT_STATUSES.PAYMENT_SUCCESS,
+        "paymentInfo.paymentId": { $exists: true, $nin: [null, ""] },
+      },
+    ],
   })
     .sort({ "reservation.scheduledAt": 1 })
     .limit(5)
