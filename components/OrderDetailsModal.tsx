@@ -134,6 +134,8 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
   const isMaya = paymentInfo?.paymentMethod === "maya";
   const isMayaPaid = paymentInfo?.paymentConfirmed === true;
   const isPickup = orderToView?.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
+  const isDineIn = orderToView?.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+  const isNonDelivery = isPickup || isDineIn;
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -187,21 +189,21 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
             <OrderActions order={orderToView} />
           )}
 
-          {/* Map iframe: branch location for pickup (customer only), shipping address for delivery (admin only) */}
+          {/* Map iframe: branch location for pickup/dine-in (customer only), shipping address for delivery (admin only) */}
           {(() => {
             const isAdmin = role === "admin";
 
-            // Pickup: customer needs directions to branch; admin already knows their own branch
+            // Pickup/dine-in: customer needs directions to branch; admin already knows their own branch
             // Delivery: admin needs to see shipping location; customer knows their own address
-            if (isPickup && isAdmin) return null;
-            if (!isPickup && !isAdmin) return null;
+            if (isNonDelivery && isAdmin) return null;
+            if (!isNonDelivery && !isAdmin) return null;
 
             const branchCoords =
               orderToView?.branchSnapshot?.location?.coordinates;
-            const lat = isPickup
+            const lat = isNonDelivery
               ? branchCoords?.[1]
               : shippingAddress?.coordinates?.lat;
-            const lng = isPickup
+            const lng = isNonDelivery
               ? branchCoords?.[0]
               : shippingAddress?.coordinates?.lng;
 
@@ -280,13 +282,13 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
               />
 
               {/* Delivery fee */}
-              {!isPickup && deliveryFeeAmount > 0 && (
+              {!isNonDelivery && deliveryFeeAmount > 0 && (
                 <InfoRow
                   label={`Delivery Fee${deliveryDistanceKm != null ? ` (${deliveryDistanceKm.toFixed(1)} km)` : ""}`}
                   value={formatCurrency(deliveryFeeAmount)}
                 />
               )}
-              {!isPickup && deliveryFeeAmount === 0 && freeDeliveryApplied && (
+              {!isNonDelivery && deliveryFeeAmount === 0 && freeDeliveryApplied && (
                 <InfoRow
                   label={`Delivery Fee${deliveryDistanceKm != null ? ` (${deliveryDistanceKm.toFixed(1)} km)` : ""}`}
                   value="FREE"
@@ -383,7 +385,9 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
                     ? "Maya"
                     : isPickup
                       ? "Cash on Pickup"
-                      : "Cash on Delivery"
+                      : isDineIn
+                        ? "Pay at Branch"
+                        : "Cash on Delivery"
                 }
                 valueClassName={cn(
                   "text-xs font-semibold px-2 py-0.5 rounded-full",

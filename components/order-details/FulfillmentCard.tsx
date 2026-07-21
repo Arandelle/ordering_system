@@ -1,5 +1,7 @@
 import { OrderType } from "@/types/OrderTypes";
 import { DynamicIcon } from "../ui/DynamicIcon";
+import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { formatDate } from "@/helper/formatter";
 
 // ─── Style Maps ───────────────────────────────────────────────────────────────
 
@@ -20,9 +22,19 @@ const fulfillmentTheme = {
     label: "text-orange-500",
     badge: "bg-orange-500 text-white",
   },
+  dine_in: {
+    card: "border-emerald-200 bg-emerald-50/40",
+    iconWrapper: "bg-emerald-100",
+    icon: "text-emerald-600",
+    iconName: "UtensilsCrossed",
+    label: "text-emerald-500",
+    badge: "bg-emerald-500 text-white",
+  },
 } as const;
 
-/** Fulfillment (pickup/delivery) card with themed styles */
+type FulfillmentThemeKey = keyof typeof fulfillmentTheme;
+
+/** Fulfillment (pickup/delivery/dine-in) card with themed styles */
 export const FulfillmentCard = ({
   isPickup,
   isAdmin,
@@ -32,10 +44,16 @@ export const FulfillmentCard = ({
   isAdmin: boolean;
   order: OrderType;
 }) => {
-  const theme = fulfillmentTheme[isPickup ? "pickup" : "delivery"];
-  const label = isPickup ? "Pickup" : "Delivery";
+  const isDineIn = order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+  const themeKey: FulfillmentThemeKey = isDineIn
+    ? "dine_in"
+    : isPickup
+      ? "pickup"
+      : "delivery";
+  const theme = fulfillmentTheme[themeKey];
+  const label = isDineIn ? "Dine In" : isPickup ? "Pickup" : "Delivery";
 
-  const { branchSnapshot, paymentInfo } = order;
+  const { branchSnapshot, paymentInfo, reservation } = order;
 
   return (
     <div
@@ -80,8 +98,30 @@ export const FulfillmentCard = ({
         </div>
       )}
 
+      {/* Dine-in: show reservation details */}
+      {isDineIn && reservation && (
+        <div className="flex flex-col gap-1.5 text-sm text-gray-600 mb-1">
+          {reservation.scheduledAt && (
+            <div className="flex items-center gap-2">
+              <DynamicIcon name="CalendarClock" size={14} className="text-emerald-500" />
+              <span className="font-medium text-gray-700">
+                {formatDate(reservation.scheduledAt)}
+              </span>
+            </div>
+          )}
+          {reservation.partySize && (
+            <div className="flex items-center gap-2">
+              <DynamicIcon name="Users" size={14} className="text-emerald-500" />
+              <span className="font-medium text-gray-700">
+                {reservation.partySize} {reservation.partySize === 1 ? "guest" : "guests"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Delivery: full address + map link for admin; brief confirmation for customer */}
-      {!isPickup && paymentInfo?.shippingAddress && (
+      {!isPickup && !isDineIn && paymentInfo?.shippingAddress && (
         <div className="flex flex-col gap-1 text-sm text-gray-600 mb-1">
           {isAdmin ? (
             <>

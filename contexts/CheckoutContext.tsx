@@ -2,7 +2,7 @@
 
 import { useMyAddress } from "@/app/customer/hooks/useMyAddress";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -15,6 +15,7 @@ import {
 import { useBranch } from "./BranchContext";
 import { useModalQuery } from "@/hooks/utils/useModalQuery";
 import { OrderFormState } from "@/app/customer/checkout/FormSchema";
+import { ReservationSchema } from "@/app/customer/checkout/FormSchema";
 import useFormErrors from "@/app/customer/checkout/useFormErrors";
 import { NCR_REGION } from "@/lib/psgcAddress";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
@@ -30,12 +31,14 @@ type CheckoutContextType = {
   shouldShowSyncProfileDetails: boolean;
   customerErrors: ReturnType<typeof useFormErrors>["customerErrors"];
   shippingErrors: ReturnType<typeof useFormErrors>["shippingErrors"];
+  reservationErrors: Partial<Record<string, string>>;
   syncCheckoutDetailsFromProfile: () => void;
   handleStateChange: (
     type: keyof Omit<OrderFormState, "fulfillmentType">,
     field: string,
     value: string,
   ) => void;
+  handleReservationChange: (field: string, value: string | number) => void;
   handleShippingCoordinatesChange: (
     coordinates: OrderFormState["shippingAddress"]["coordinates"],
   ) => void;
@@ -84,6 +87,10 @@ const getDefaultOrderDetails = (): OrderFormState => ({
     placeName: "",
     coordinates: undefined,
   },
+  reservation: {
+    scheduledAt: "",
+    partySize: 2,
+  },
 });
 
 // Treat the untouched default as "no draft" so it cannot block profile prefill.
@@ -95,7 +102,9 @@ const isUntouchedOrderDetails = (orderDetails: OrderFormState) => {
       JSON.stringify(defaultOrderDetails.customer) &&
     orderDetails.fulfillmentType === defaultOrderDetails.fulfillmentType &&
     JSON.stringify(orderDetails.shippingAddress) ===
-      JSON.stringify(defaultOrderDetails.shippingAddress)
+      JSON.stringify(defaultOrderDetails.shippingAddress) &&
+    JSON.stringify(orderDetails.reservation) ===
+      JSON.stringify(defaultOrderDetails.reservation)
   );
 };
 
@@ -168,6 +177,7 @@ export const CheckoutProvider = ({
   const { shippingAddress } = myAddress ?? {};
 
   const router = useRouter();
+  const pathname = usePathname();
   const { selectedBranch } = useBranch();
   const { openModal } = useModalQuery();
 
@@ -181,6 +191,23 @@ export const CheckoutProvider = ({
 
   const { customerErrors, shippingErrors, validateField } =
     useFormErrors(orderDetails);
+
+  const [reservationErrors, setReservationErrors] = useState<
+    Partial<Record<string, string>>
+  >({});
+
+  // Validate reservation fields inline
+  const validateReservation = (reservation: OrderFormState["reservation"]) => {
+    const result = ReservationSchema.safeParse(reservation);
+    const errors: Partial<Record<string, string>> = {};
+    if (!result.success) {
+      result.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string;
+        errors[field] = issue.message;
+      });
+    }
+    setReservationErrors(errors);
+  };
 
 
   // Any direct input edit means the checkout draft should win over profile data.
@@ -221,6 +248,31 @@ export const CheckoutProvider = ({
       ...prev,
       fulfillmentType,
     }));
+
+    // If user is on the shipping step and switches to pickup or dine-in
+    // (which don't need a shipping address), redirect back to details
+    if (pathname === CheckoutStep.SHIPPING) {
+      if (
+        fulfillmentType === FULFILLMENT_TYPE.PICKUP ||
+        fulfillmentType === FULFILLMENT_TYPE.DINE_IN
+      ) {
+        router.push(CheckoutStep.DETAILS);
+      }
+    }
+  };
+
+  // Update a single reservation field (scheduledAt or partySize)
+  const handleReservationChange = (field: string, value: string | number) => {
+    hasUserEditedDraft.current = true;
+
+    setOrderDetails((prev) => {
+      const updated = {
+        ...prev,
+        reservation: { ...prev.reservation, [field]: value },
+      };
+      validateReservation(updated.reservation);
+      return updated;
+    });
   };
 
   const handleNext = () => {
@@ -355,8 +407,10 @@ export const CheckoutProvider = ({
         shouldShowSyncProfileDetails,
         customerErrors,
         shippingErrors,
+        reservationErrors,
         syncCheckoutDetailsFromProfile,
         handleStateChange,
+        handleReservationChange,
         handleShippingCoordinatesChange,
         handleFulfillmentTypeChange,
         handleNext,
