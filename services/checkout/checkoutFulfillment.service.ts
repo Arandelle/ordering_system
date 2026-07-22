@@ -10,22 +10,13 @@ import type { CreateOrderPayload } from "../../types/OrderTypes";
 import { isBranchCoordinates } from "../branch/branch.service";
 import { Settings } from "@/models/Setting";
 import type { ClientSession } from "mongoose";
-import type { Days } from "@/hooks/api/useSettings";
-
-/** Maps JS Date.getDay() (Sun=0) to the DAYS labels used by operating hours (Mon=0) */
-const DAY_LABELS: Days[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const getDayLabel = (date: Date): Days => DAY_LABELS[(date.getDay() + 6) % 7];
-
-/** Parses "HH:MM" to total minutes since midnight */
-const toMinutes = (time: string): number => {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-};
+import { getDayLabel, toMinutes } from "@/lib/operatingHours";
 
 type FulfillmentPayload = {
   fulfillmentType?: FulfillmentType;
   shippingAddress?: CreateOrderPayload["shippingAddress"];
   reservation?: CreateOrderPayload["reservation"];
+  pickupTime?: string;
 };
 
 type BranchWithCoordinates = {
@@ -125,15 +116,77 @@ async function validateReservationPayload(
   }
 }
 
+/**
+ * Validates that the declared pickup time is present, valid, a future date,
+ * and falls within the store's operating hours.
+ */
+async function validatePickupTimePayload(
+  pickupTime: string | undefined,
+  session: ClientSession,
+): Promise<void> {
+  if (!pickupTime) {
+    throw new Error("Pickup date and time is required.");
+  }
+
+  const pickupDate = new Date(pickupTime);
+  if (isNaN(pickupDate.getTime())) {
+    throw new Error("Invalid pickup date.");
+  }
+
+  if (pickupDate <= new Date()) {
+    throw new Error("Pickup time must be in the future.");
+  }
+
+  // Validate against operating hours
+  const settings = await Settings.findOne().session(session);
+  const operatingHours = settings?.operatingHours;
+
+  if (!operatingHours) {
+    throw new Error("Store operating hours are not configured.");
+  }
+
+  if (operatingHours.isClosed) {
+    throw new Error("Store is currently closed and not accepting pickup orders.");
+  }
+
+  if (!operatingHours.openTime || !operatingHours.closeTime) {
+    throw new Error("Store operating hours are not properly configured.");
+  }
+
+  const dayLabel = getDayLabel(pickupDate);
+  if (!operatingHours.days.includes(dayLabel)) {
+    throw new Error(`Store is closed on ${dayLabel}. Please select an operating day.`);
+  }
+
+  const pickupMinutes = pickupDate.getHours() * 60 + pickupDate.getMinutes();
+  const openMinutes = toMinutes(operatingHours.openTime);
+  const closeMinutes = toMinutes(operatingHours.closeTime);
+
+  if (pickupMinutes < openMinutes) {
+    throw new Error(`Pickup time must be at or after ${operatingHours.openTime}.`);
+  }
+
+  if (pickupMinutes > closeMinutes) {
+    throw new Error(`Pickup time must be at or before ${operatingHours.closeTime}.`);
+  }
+}
+
 // Validates fulfillment-specific checkout requirements before pricing/persisting.
 export async function validateFulfillmentPayload({
   fulfillmentType,
   shippingAddress,
   reservation,
+  pickupTime,
 }: FulfillmentPayload, session?: ClientSession): Promise<void> {
   const normalizedFulfillmentType = normalizeFulfillmentType(fulfillmentType);
 
-  if (normalizedFulfillmentType === FULFILLMENT_TYPE.PICKUP) return;
+  if (normalizedFulfillmentType === FULFILLMENT_TYPE.PICKUP) {
+    if (!session) {
+      throw new Error("Session is required for pickup time validation.");
+    }
+    await validatePickupTimePayload(pickupTime, session);
+    return;
+  }
 
   if (normalizedFulfillmentType === FULFILLMENT_TYPE.DINE_IN) {
     if (!session) {
@@ -173,6 +226,7 @@ export async function resolveCheckoutFulfillment({
   branch,
   shippingAddress,
   reservation,
+  pickupTime,
   session,
 }: FulfillmentPayload & {
   branch: BranchWithCoordinates;
@@ -181,12 +235,17 @@ export async function resolveCheckoutFulfillment({
   const normalizedFulfillmentType = normalizeFulfillmentType(fulfillmentType);
 
   if (normalizedFulfillmentType === FULFILLMENT_TYPE.PICKUP) {
+    if (!session) {
+      throw new Error("Session is required for pickup time validation.");
+    }
+    await validatePickupTimePayload(pickupTime, session);
     return {
       fulfillmentType: normalizedFulfillmentType,
       shippingAddress: undefined,
       deliveryFee: 0,
       distanceKm: 0,
       billableKm: 0,
+      pickupTime,
     };
   }
 

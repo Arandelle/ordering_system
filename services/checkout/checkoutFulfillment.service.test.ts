@@ -31,25 +31,26 @@ const restrictedCityAddress = {
 };
 
 describe("Checkout Fulfillment", () => {
-  test("pickup checkout does not require shipping address and returns zero delivery fee", async () => {
-    await validateFulfillmentPayload({
-      fulfillmentType: FULFILLMENT_TYPE.PICKUP,
-      shippingAddress: undefined,
-    });
+  test("pickup checkout requires a session for pickup time validation", async () => {
+    // Without a session, pickup validation should reject
+    await assert.rejects(
+      () =>
+        validateFulfillmentPayload({
+          fulfillmentType: FULFILLMENT_TYPE.PICKUP,
+          shippingAddress: undefined,
+        }),
+      /Session is required for pickup time validation/,
+    );
 
-    assert.deepEqual(
-      await resolveCheckoutFulfillment({
-        fulfillmentType: FULFILLMENT_TYPE.PICKUP,
-        branch: { location: { coordinates: [120.9842, 14.5995] } },
-        shippingAddress: undefined,
-      }),
-      {
-        fulfillmentType: FULFILLMENT_TYPE.PICKUP,
-        shippingAddress: undefined,
-        deliveryFee: 0,
-        distanceKm: 0,
-        billableKm: 0,
-      },
+    // resolveCheckoutFulfillment also requires a session for pickup
+    await assert.rejects(
+      () =>
+        resolveCheckoutFulfillment({
+          fulfillmentType: FULFILLMENT_TYPE.PICKUP,
+          branch: { location: { coordinates: [120.9842, 14.5995] } },
+          shippingAddress: undefined,
+        }),
+      /Session is required for pickup time validation/,
     );
   });
 

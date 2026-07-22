@@ -6,93 +6,20 @@ import { useMemo } from "react";
 import { InputField } from "@/components/ui/FormComponents";
 import { IconButton } from "@/components/ui/buttons";
 import { QuantityStepper } from "../menu/components/QuantityStepper";
-import { formatDate,formatTime } from "@/helper/formatter";
-import type { Days, SettingsType } from "@/hooks/api/useSettings";
-
-type OperatingHours = SettingsType["operatingHours"];
+import { formatDate, formatTime } from "@/helper/formatter";
+import {
+  generateTimeSlots,
+  getLocalDate,
+  fromMinutes,
+  isOperatingDay,
+  type OperatingHours,
+} from "@/lib/operatingHours";
 
 type ReservationPickerProps = {
   value: OrderFormState["reservation"];
   onChange: (field: string, value: string | number) => void;
   errors: Partial<Record<string, string>>;
   operatingHours: OperatingHours | null | undefined;
-};
-
-/** Maps JS Date.getDay() (Sun=0) to the DAYS labels used by operating hours (Mon=0) */
-const DAY_LABELS: Days[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const getDayLabel = (date: Date): Days => DAY_LABELS[(date.getDay() + 6) % 7];
-
-/** Returns "YYYY-MM-DD" using local time (avoids UTC timezone drift in PH) */
-const getLocalDate = (date: Date): string => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
-
-/** Parses "HH:MM" to total minutes since midnight */
-const toMinutes = (time: string): number => {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-};
-
-/** Formats total minutes back to "HH:MM" */
-const fromMinutes = (mins: number): string => {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-};
-
-/** Minimum time for today's reservations (1 hour from now, rounded to 30-min slots) */
-const getMinTimeToday = (): string => {
-  const now = new Date();
-  now.setHours(now.getHours() + 1);
-  now.setMinutes(Math.ceil(now.getMinutes() / 30) * 30, 0, 0);
-  return fromMinutes(now.getHours() * 60 + now.getMinutes());
-};
-
-/**
- * Generate time slots aligned to operating hours.
- * - Slots run from openTime to (closeTime - 1hr) in 30-min intervals.
- * - For today, past slots are filtered out (1hr minimum advance).
- * - Returns empty array if the store is closed on the selected day.
- */
-const generateTimeSlots = (
-  selectedDate: string,
-  operatingHours: OperatingHours | null | undefined,
-): string[] => {
-  const openMinutes = operatingHours?.openTime
-    ? toMinutes(operatingHours.openTime)
-    : toMinutes("08:00");
-  const closeMinutes = operatingHours?.closeTime
-    ? toMinutes(operatingHours.closeTime)
-    : toMinutes("22:00");
-
-  // Last reservation must be at least 1 hour before closing
-  const lastSlotMinutes = closeMinutes - 60;
-
-  // Guard: if close - 1hr is before or at open, no valid slots
-  if (lastSlotMinutes <= openMinutes) return [];
-
-  const slots: string[] = [];
-  for (let mins = openMinutes; mins <= lastSlotMinutes; mins += 30) {
-    slots.push(fromMinutes(mins));
-  }
-
-  // Check if selected day is an operating day
-  const date = new Date(`${selectedDate}T00:00`);
-  const dayLabel = getDayLabel(date);
-  const operatingDays = operatingHours?.days ?? [];
-  if (!operatingDays.includes(dayLabel)) return [];
-
-  // If the selected date is today, filter out past time slots
-  const today = getLocalDate(new Date());
-  if (selectedDate === today) {
-    const minTime = getMinTimeToday();
-    return slots.filter((slot) => slot >= minTime);
-  }
-
-  return slots;
 };
 
 export function ReservationPicker({
@@ -128,10 +55,7 @@ export function ReservationPicker({
   // Check if the selected date falls on a closed day
   const isClosedDay = useMemo(() => {
     if (!datePart) return false;
-    const date = new Date(`${datePart}T00:00`);
-    const dayLabel = getDayLabel(date);
-    const operatingDays = operatingHours?.days ?? [];
-    return !operatingDays.includes(dayLabel);
+    return !isOperatingDay(datePart, operatingHours);
   }, [datePart, operatingHours]);
 
   const handleDateChange = (date: string) => {
