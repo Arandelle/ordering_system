@@ -1,6 +1,59 @@
 # Changelog
 
 
+## 1.14.0 - Pickup Time, Reservation Acceptance Flow & Capacity Limits - 2026-07-22
+**Release Focus:** Customers with pickup orders must declare a pickup date and time during checkout. Dine-in reservations now require admin acceptance before confirmation. Per-branch reservation capacity limits (hourly/daily). Order expiry windows extended for both Maya and COD.
+
+### Added
+- **Pickup time declaration** — `pickupTime` field on Order model, `OrderType`, and `CreateOrderPayload`; customers must select a pickup date and time during checkout
+- `PickupTimePicker` checkout component — quick-select capsules (+30 min, +1 hr, +2 hr) and manual `<input type="time">` for custom times
+- `PickupTimeSchema` (Zod) — validates presence and date format for pickup orders in the discriminated union
+- `validatePickupTime()` shared validation — checks: not empty, valid date, ≥10 min from now, operating day, within operating hours, store not closed
+- `PICKUP_MIN_ADVANCE_MINUTES` constant (10) — single source for minimum advance requirement
+- `lib/operatingHours.ts` shared utility module — `getDayLabel`, `getLocalDate`, `toMinutes`, `fromMinutes`, `isOperatingDay`, `generateTimeSlots`, `validatePickupTime`
+- Server-side `validatePickupTimePayload` — validates pickup time against operating hours with session-based settings lookup
+- Pickup time display in FulfillmentCard (clock icon + formatted date/time), admin OrdersTable (blue sub-label), and OrderMessageEmail confirmation ("Scheduled pickup time")
+- **Admin reservation acceptance flow** — dine-in reservations now start as `pending`, requiring admin to "Accept" before transitioning to `confirmed`
+- `pending → confirmed` status transition added for reservation acceptance
+- "Accept Reservation" action button for pending dine-in orders (admin only)
+- **Per-branch reservation capacity limits** — `maxReservationsPerHour` and `maxReservationsPerDay` on Branch and Settings models
+- `assertReservationLimits` checkout guard — enforces daily and hourly reservation caps (branch override > global fallback > no limit)
+- Counts active reservation statuses: `pending_payment`, `pending`, `confirmed`, `preparing`, `ready_for_pickup` (excludes terminal states)
+- Admin settings page and BranchModal updated with reservation capacity fields
+- `utils/toPHDate.ts` — converts any Date to PH-local components for accurate day/hour boundary counting on UTC servers
+
+### Improved
+- **3-layer pickup time validation:** PickupTimePicker shows inline warnings, CartList disables the submit button, `handlePlaceOrder` toasts the error and returns early — no API call when pickup time is invalid
+- Server-side pickup validation remains as the final safety net for bypassed clients
+- Quick-select capsules are auto-disabled when the preset falls outside operating hours or on a closed day
+- `generateTimeSlots` is now parameterized with `closingBufferMinutes`, `advanceMinutes`, `intervalMinutes` — single function serves both reservation and pickup
+- Maya webhook no longer auto-confirms dine-in — all paid orders go to `pending` for admin acknowledgement
+- Webhook sends "Payment Received" email for dine-in (reservation confirmation email deferred to admin accept)
+- Expiry logic simplified: any paid order skips auto-expiry regardless of payment method
+- `formatDate` rewritten with options object (`weekday`, `date`, `time`, `fallback`) — more flexible formatting across the app
+
+### Changed
+- **Expiry windows:** Maya 30min → 6h (accounts for webhook retries + admin review), COD 4h → 8h
+- `ReservationPicker` — removed ~60 lines of duplicated helpers, imports from `lib/operatingHours`; date label now shows formatted weekday+date
+- Reservation defaults: `partySize` 2 → 1, `scheduledAt` empty → today's date
+- `checkoutFulfillment.service.ts` — removed inline `DAY_LABELS`, `getDayLabel`, `toMinutes`, imports from shared lib
+- `PickupOrderFormSchema` now requires `pickupTime` (validated by `PickupTimeSchema`)
+- `OrderFormState` now includes `pickupTime: string`
+- `CheckoutContext` tracks `pickupTime` in default state, exposes `handlePickupTimeChange` and `pickupTimeError`
+- `handleStateChange` type parameter excludes `pickupTime` (string, not an object)
+- `CustomerDetails` and `ShippingAddress` prop types updated to exclude `pickupTime` from `onChange` type
+- COD and Maya checkout routes pass `pickupTime` and call `assertReservationLimits` for dine-in
+- `persistOrder` includes `pickupTime` on the order document for pickup orders
+- `resolveCheckoutFulfillment` returns `pickupTime` in the fulfillment result for pickup orders
+- PH-local day/hour boundaries in reservation capacity use `toPHDate` — correct on both local dev and UTC servers (Vercel)
+- `lib/storeStatus.ts` refactored to use `toPHDate` utility
+
+### Fixed
+- Removed dine-in future-scheduled expiry exemption — no longer needed with the extended 6h/8h expiry windows
+- `checkoutFulfillment.service.test.ts` — updated pickup test to expect session requirement (was previously a no-op for pickup)
+- CartList error handling moved to hooks — removed redundant toast errors
+
+
 ## 1.13.0 - Confirmed Status, Reservation Management & Payment Guards - 2026-07-21
 **Release Focus:** New `confirmed` order status for paid reservations, dedicated reservations page with calendar view, defense-in-depth payment verification across all reservation touchpoints, and time-based guard preventing early preparation.
 
