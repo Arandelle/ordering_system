@@ -195,6 +195,8 @@ const OrderSchema = new Schema(
       scheduledAt: { type: Date },
       partySize: { type: Number, min: 1, max: 50 },
     },
+    /** Declared pickup time — only populated for pickup orders */
+    pickupTime: { type: Date },
     items: {
       type: [OrderItemSchema],
       required: true,

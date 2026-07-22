@@ -15,7 +15,7 @@ import {
 import { useBranch } from "./BranchContext";
 import { useModalQuery } from "@/hooks/utils/useModalQuery";
 import { OrderFormState } from "@/app/customer/checkout/FormSchema";
-import { ReservationSchema } from "@/app/customer/checkout/FormSchema";
+import { ReservationSchema, PickupTimeSchema } from "@/app/customer/checkout/FormSchema";
 import useFormErrors from "@/app/customer/checkout/useFormErrors";
 import { NCR_REGION } from "@/lib/psgcAddress";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
@@ -32,13 +32,15 @@ type CheckoutContextType = {
   customerErrors: ReturnType<typeof useFormErrors>["customerErrors"];
   shippingErrors: ReturnType<typeof useFormErrors>["shippingErrors"];
   reservationErrors: Partial<Record<string, string>>;
+  pickupTimeError: string | null;
   syncCheckoutDetailsFromProfile: () => void;
   handleStateChange: (
-    type: keyof Omit<OrderFormState, "fulfillmentType">,
+    type: keyof Omit<OrderFormState, "fulfillmentType" | "pickupTime">,
     field: string,
     value: string,
   ) => void;
   handleReservationChange: (field: string, value: string | number) => void;
+  handlePickupTimeChange: (value: string) => void;
   handleShippingCoordinatesChange: (
     coordinates: OrderFormState["shippingAddress"]["coordinates"],
   ) => void;
@@ -91,6 +93,7 @@ const getDefaultOrderDetails = (): OrderFormState => ({
     scheduledAt: String(new Date()),
     partySize: 1,
   },
+  pickupTime: String(new Date()),
 });
 
 // Treat the untouched default as "no draft" so it cannot block profile prefill.
@@ -104,7 +107,8 @@ const isUntouchedOrderDetails = (orderDetails: OrderFormState) => {
     JSON.stringify(orderDetails.shippingAddress) ===
       JSON.stringify(defaultOrderDetails.shippingAddress) &&
     JSON.stringify(orderDetails.reservation) ===
-      JSON.stringify(defaultOrderDetails.reservation)
+      JSON.stringify(defaultOrderDetails.reservation) &&
+    orderDetails.pickupTime === defaultOrderDetails.pickupTime
   );
 };
 
@@ -196,6 +200,8 @@ export const CheckoutProvider = ({
     Partial<Record<string, string>>
   >({});
 
+  const [pickupTimeError, setPickupTimeError] = useState<string | null>(null);
+
   // Validate reservation fields inline
   const validateReservation = (reservation: OrderFormState["reservation"]) => {
     const result = ReservationSchema.safeParse(reservation);
@@ -212,7 +218,7 @@ export const CheckoutProvider = ({
 
   // Any direct input edit means the checkout draft should win over profile data.
   const handleStateChange = (
-    type: keyof Omit<OrderFormState, "fulfillmentType">,
+    type: keyof Omit<OrderFormState, "fulfillmentType" | "pickupTime">,
     field: string,
     value: string,
   ) => {
@@ -273,6 +279,16 @@ export const CheckoutProvider = ({
       validateReservation(updated.reservation);
       return updated;
     });
+  };
+
+  // Update the declared pickup time and validate inline
+  const handlePickupTimeChange = (value: string) => {
+    hasUserEditedDraft.current = true;
+
+    setOrderDetails((prev) => ({ ...prev, pickupTime: value }));
+
+    const result = PickupTimeSchema.safeParse(value);
+    setPickupTimeError(result.success ? null : result.error.issues[0]?.message ?? "Invalid pickup time");
   };
 
   const handleNext = () => {
@@ -408,9 +424,11 @@ export const CheckoutProvider = ({
         customerErrors,
         shippingErrors,
         reservationErrors,
+        pickupTimeError,
         syncCheckoutDetailsFromProfile,
         handleStateChange,
         handleReservationChange,
+        handlePickupTimeChange,
         handleShippingCoordinatesChange,
         handleFulfillmentTypeChange,
         handleNext,

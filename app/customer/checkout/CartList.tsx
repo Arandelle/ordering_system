@@ -47,6 +47,7 @@ import { AppImage } from "@/components/AppImage";
 import { formatCurrency } from "@/helper/formatter/";
 import { Checkbox, InputField } from "@/components/ui/FormComponents";
 import { ReservationSchema } from "./FormSchema";
+import { validatePickupTime } from "@/lib/operatingHours";
 import { SummaryRow } from "@/components/ui/SummaryRow";
 
 const createCodOrder = async (payload: CreateOrderPayload) => {
@@ -238,6 +239,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
   const isShipping = pathname === CheckoutStep.SHIPPING;
   const isDelivery = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DELIVERY;
   const isDineIn = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+  const isPickup = orderDetails.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
   const checkoutActionMode = getCheckoutActionMode({
     pathname,
     fulfillmentType: orderDetails.fulfillmentType,
@@ -444,12 +446,15 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     !ShippingSchema.safeParse(orderDetails.shippingAddress).success;
   const isReservationIncomplete =
     isDineIn && !ReservationSchema.safeParse(orderDetails.reservation).success;
+  const pickupTimeValidationError =
+    isPickup ? validatePickupTime(orderDetails.pickupTime, settings?.operatingHours) : null;
+  const isPickupTimeIncomplete = isPickup && !!pickupTimeValidationError;
 
   const isNextDisabled =
     isStoreClosed ||
     !selectedBranch ||
     isAtCapacity ||
-    (isDetails && (isDetailsIncomplete || isReservationIncomplete)) ||
+    (isDetails && (isDetailsIncomplete || isReservationIncomplete || isPickupTimeIncomplete)) ||
     (isShipping &&
       (isShippingIncomplete ||
         (isDelivery && (isDeliveryFeeLoading || isDeliveryFeeError))));
@@ -484,6 +489,13 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       ].filter(Boolean);
 
       errors.map((error) => toast.error(error));
+      return;
+    }
+
+    // Frontend business-rule guard — catches issues before hitting the API.
+    // Server-side validation is the final safety net.
+    if (pickupTimeValidationError) {
+      toast.error(pickupTimeValidationError);
       return;
     }
 
@@ -541,6 +553,9 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           scheduledAt: orderDetails.reservation.scheduledAt,
           partySize: orderDetails.reservation.partySize,
         },
+      }),
+      ...(isPickup && {
+        pickupTime: orderDetails.pickupTime,
       }),
     };
 

@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
       branch,
       shippingAddress: body.shippingAddress,
       reservation: body.reservation,
+      pickupTime: body.pickupTime,
       session,
     });
 

@@ -48,6 +48,15 @@ export const ReservationSchema = z.object({
     .max(20, "Maximum 20 guests"),
 });
 
+/** Pickup time schema — required for pickup orders */
+export const PickupTimeSchema = z
+  .string()
+  .min(1, "Pickup date and time is required")
+  .refine((val) => {
+    const date = new Date(val);
+    return !isNaN(date.getTime());
+  }, "Invalid date format");
+
 const ShippingFieldsSchema = z.object({
   line1: z.string().min(1, "Please provide your house no."),
   line2: z.string().min(1, "Please provide brgy/village"),
@@ -90,6 +99,7 @@ const DeliveryOrderFormSchema = z.object({
   customer: CustomerSchema,
   shippingAddress: ShippingSchema,
   reservation: z.unknown().optional(),
+  pickupTime: z.unknown().optional(),
 });
 
 const PickupOrderFormSchema = z.object({
@@ -97,6 +107,7 @@ const PickupOrderFormSchema = z.object({
   customer: CustomerSchema,
   shippingAddress: z.unknown(),
   reservation: z.unknown().optional(),
+  pickupTime: PickupTimeSchema,
 });
 
 const DineInOrderFormSchema = z.object({
@@ -104,6 +115,7 @@ const DineInOrderFormSchema = z.object({
   customer: CustomerSchema,
   shippingAddress: z.unknown(),
   reservation: ReservationSchema,
+  pickupTime: z.unknown().optional(),
 });
 
 export const OrderFormSchema = z.discriminatedUnion("fulfillmentType", [
@@ -117,4 +129,5 @@ export type OrderFormState = {
   customer: z.infer<typeof CustomerSchema>;
   shippingAddress: z.infer<typeof ShippingFieldsSchema>;
   reservation: z.infer<typeof ReservationSchema>;
+  pickupTime: string;
 };

@@ -21,6 +21,7 @@ export async function persistOrder(
   fulfillment?: {
     fulfillmentType: FulfillmentType;
     shippingAddress?: CreateOrderPayload["shippingAddress"];
+    pickupTime?: string;
   },
 ) {
   const {
@@ -81,6 +82,10 @@ export async function persistOrder(
             scheduledAt: new Date(reservation.scheduledAt),
             partySize: reservation.partySize,
           },
+        }),
+        // Include declared pickup time for pickup orders
+        ...(fulfillmentType === FULFILLMENT_TYPE.PICKUP && fulfillment?.pickupTime && {
+          pickupTime: new Date(fulfillment.pickupTime),
         }),
         paymentInfo: {
           checkoutId,

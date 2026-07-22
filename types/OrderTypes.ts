@@ -70,6 +70,9 @@ export interface OrderType {
     partySize?: number;
   };
 
+  /** Declared pickup time — only present for pickup orders */
+  pickupTime?: string;
+
   items: OrderItem[];
   paymentInfo: {
     checkoutId?: string;
@@ -214,6 +217,9 @@ export interface CreateOrderPayload {
     scheduledAt: string; // ISO date string
     partySize: number;
   };
+
+  /** Declared pickup time — required when fulfillmentType is "pickup" (ISO date string) */
+  pickupTime?: string;
 
   shippingAddress?: {
     line1: string;

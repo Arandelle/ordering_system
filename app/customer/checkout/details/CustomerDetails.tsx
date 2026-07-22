@@ -14,7 +14,7 @@ type customerDataProps = {
   isDelivery: boolean;
   shouldShowSyncProfileDetails: boolean;
   onSyncProfileDetails: () => void;
-  onChange: (type: keyof Omit<OrderFormState, "fulfillmentType">, field: string, value: string) => void;
+  onChange: (type: keyof Omit<OrderFormState, "fulfillmentType" | "pickupTime">, field: string, value: string) => void;
   onBlur: (field: keyof CustomerErrors, value: string) => void
 };
 
