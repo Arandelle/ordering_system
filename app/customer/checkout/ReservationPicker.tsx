@@ -1,12 +1,12 @@
 "use client";
 
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
-import { OrderFormState, ReservationSchema } from "./FormSchema";
+import { OrderFormState } from "./FormSchema";
 import { useMemo } from "react";
 import { InputField } from "@/components/ui/FormComponents";
 import { IconButton } from "@/components/ui/buttons";
 import { QuantityStepper } from "../menu/components/QuantityStepper";
-import { formatTime } from "@/helper/formatter";
+import { formatDate,formatTime } from "@/helper/formatter";
 import type { Days, SettingsType } from "@/hooks/api/useSettings";
 
 type OperatingHours = SettingsType["operatingHours"];
@@ -189,7 +189,7 @@ export function ReservationPicker({
 
       {/* Date picker */}
       <InputField
-        label="Date"
+        label={`Date : ${value?.scheduledAt && formatDate(value.scheduledAt, {weekday: true, time: false})}`}
         type="date"
         min={minDate}
         max={maxDate}
@@ -246,8 +246,7 @@ export function ReservationPicker({
 
         <div className="grid grid-cols-2 items-center gap-3">
           <QuantityStepper
-            value={value?.partySize ?? 1}
-            min={1}
+            value={value?.partySize ?? ""}
             max={20}
             onChange={(val) => onChange("partySize", val)}
           />{" "}

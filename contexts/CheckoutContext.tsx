@@ -88,8 +88,8 @@ const getDefaultOrderDetails = (): OrderFormState => ({
     coordinates: undefined,
   },
   reservation: {
-    scheduledAt: "",
-    partySize: 2,
+    scheduledAt: String(new Date()),
+    partySize: 1,
   },
 });
 
