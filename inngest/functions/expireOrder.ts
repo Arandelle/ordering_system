@@ -10,8 +10,13 @@ import { ACTOR_TYPE, logActivity } from "@/services/activityLog.service";
 export const expireOrder = inngest.createFunction(
   { id: "expire-pending-order", triggers: { event: "order/created" } },
   async ({ event, step }) => {
-    const sleepDuration = event.data.paymentMethod === "maya" ? "30m" : "4h";
-    // Wait 30 minutes before doing anything
+    // Maya: 6h — webhook may fail/retry (Maya retries: immediate → 5m → 15m → 45m).
+    // The longer window gives admin time to notice and manually verify payment
+    // before a paid order is accidentally expired. If in doubt, admin can check
+    // the Maya dashboard and manually update the order.
+    // COD: 8h — gives admin time to review and manage manually.
+    const sleepDuration = event.data.paymentMethod === "maya" ? "6h" : "8h";
+
     await step.sleep("wait-for-payment-window", sleepDuration);
     // After the payment/order window, check and expire if still awaiting action.
     await step.run("check-and-expire-order", async () => {
@@ -35,31 +40,25 @@ export const expireOrder = inngest.createFunction(
         };
       }
 
-      // Check if Maya payment is genuinely confirmed
+      // ── PAID = SKIP EXPIRY ──────────────────────────────────────────
+      // As long as the order is paid, never auto-expire it.
+      // Paid orders in pending are waiting for admin to accept —
+      // admin manages them manually (accept, cancel, or refund).
       const isPaymentConfirmed =
-        order.paymentInfo?.paymentMethod === "maya" &&
         order.paymentInfo?.paymentStatus === PAYMENT_STATUSES.PAYMENT_SUCCESS &&
         !!order.paymentInfo?.paymentId;
 
       if (isPaymentConfirmed) {
         return {
           skipped: true,
-          reason: `Maya payment is confirmed (paymentId: ${order.paymentInfo?.paymentId}, status: ${order.paymentInfo?.paymentStatus}) — order is legitimately paid`,
+          reason: `Order is paid (paymentId: ${order.paymentInfo?.paymentId}) — paid orders are managed manually by admin, not auto-expired`,
         };
       }
 
-      // Skip dine-in reservations with a future scheduled date — these are
-      // advance bookings that should not be expired while waiting for the day
-      if (
-        order.fulfillmentType === "dine_in" &&
-        order.reservation?.scheduledAt &&
-        new Date(order.reservation.scheduledAt) > new Date()
-      ) {
-        return {
-          skipped: true,
-          reason: `Dine-in reservation scheduled for ${order.reservation.scheduledAt} — future bookings are not subject to expiry`,
-        };
-      }
+      // ── NOT PAID = EXPIRE ───────────────────────────────────────────
+      // Maya: payment was never completed → expire
+      // COD: no payment by design → expire after the extended window
+      // Reservation not paid (Maya stuck in pending_payment) → expire
 
       // Determine expiration reason for logging before we mutate anything
       const expirationReason = resolveExpirationReason(order);
@@ -107,37 +106,31 @@ export const expireOrder = inngest.createFunction(
 
 function resolveExpirationReason(order: {
   status: string;
+  fulfillmentType?: string;
   paymentInfo?: {
     paymentMethod?: string;
     paymentStatus?: string;
     paymentId?: string;
   };
 }): string {
+  const method = order.paymentInfo?.paymentMethod;
+  const isDineIn = order.fulfillmentType === "dine_in";
+
   if (order.status === ORDER_STATUSES.PENDING_PAYMENT) {
     return "Payment window elapsed — Maya payment was never completed";
   }
 
   if (order.status === ORDER_STATUSES.PENDING) {
-    const method = order.paymentInfo?.paymentMethod;
-
     if (method === "maya") {
-      const hasId = !!order.paymentInfo?.paymentId;
-      const hasSuccess =
-        order.paymentInfo?.paymentStatus === PAYMENT_STATUSES.PAYMENT_SUCCESS;
+      return "Maya order in pending without confirmed payment — webhook may have failed or payment was never completed";
+    }
 
-      if (!hasId && !hasSuccess) {
-        return "Order reached pending status without a confirmed Maya payment — possible bypass attempt";
-      }
-      if (!hasId) {
-        return "Payment status shows success but no paymentId recorded — treating as unconfirmed";
-      }
-      if (!hasSuccess) {
-        return "PaymentId exists but status is not success — payment likely failed or is still processing";
-      }
+    if (method === "cod" && isDineIn) {
+      return "COD reservation exceeded the expiry window without being accepted by admin";
     }
 
     if (method === "cod") {
-      return "COD order exceeded the confirmation window without being accepted by staff";
+      return "COD order exceeded the expiry window without being accepted by staff";
     }
 
     return `Order in pending status exceeded expiration window (method: ${method ?? "unknown"})`;
