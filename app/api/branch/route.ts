@@ -1,6 +1,8 @@
+import { getAPIError } from "@/lib/getApiError";
 import { getAdminAuth, requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Branch } from "@/models/Branch";
+import { STAFF_ROLES } from "@/types/staff";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
@@ -10,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const user = await getAdminAuth(request).catch(() => null);
 
-    const filter = user?.role === "superadmin" ? {} : { isActive: true };
+    const filter = user?.role === STAFF_ROLES.SUPERADMIN ? {} : { isActive: true };
 
     const data = await Branch.find(filter).sort({ openingSoon: 1, createdAt: -1 }).lean();
 
@@ -18,12 +20,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("GET /api/branches error: ", error);
-    return NextResponse.json(
-      {
-        error: "Failed to fetch branches",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {fallbackMessage: "Failed to fetch branches"});
   }
 }
 
@@ -38,6 +35,8 @@ const branchSchema = z.object({
   openingSoon: z.boolean().default(false),
   isBusy: z.boolean().default(false),
   maxActiveOrders: z.number().min(1).nullable().default(null),
+  maxReservationsPerHour: z.number().min(1).nullable().default(null),
+  maxReservationsPerDay: z.number().min(1).nullable().default(null),
 });
 
 export async function POST(request: NextRequest) {
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, address, location, openingSoon, isBusy, maxActiveOrders } = parsed.data;
+    const { name, address, location, openingSoon, isBusy, maxActiveOrders, maxReservationsPerHour, maxReservationsPerDay } = parsed.data;
 
     // Generate unique branch code
     const count = await Branch.countDocuments();
@@ -72,17 +71,13 @@ export async function POST(request: NextRequest) {
       openingSoon,
       isBusy,
       maxActiveOrders,
+      maxReservationsPerHour,
+      maxReservationsPerDay,
     });
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error("POST /api/branches error:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to create branch",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {fallbackMessage: "Failed to create branch"});
   }
 }

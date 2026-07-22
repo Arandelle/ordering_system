@@ -17,6 +17,7 @@ import {
 import {
   assertCanUsePromoCardDiscount,
   assertBranchCanAcceptOrders,
+  assertReservationLimits,
   assertStoreIsOpen,
   assertValidPayload,
 } from "@/services/checkout/checkoutValidation.service";
@@ -37,6 +38,7 @@ import {
 import { fetchBranch } from "@/services/branch/branch.service";
 import { logOrderCreated } from "@/services/activityLog.service";
 import { getAPIError } from "@/lib/getApiError";
+import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 
 const MINIMUM_AMOUNT = 100;
 
@@ -58,6 +60,11 @@ export async function POST(request: NextRequest) {
 
     // 3. Guard: branch capacity — blocks checkout if at limit
     await assertBranchCanAcceptOrders(body.branchId, body.fulfillmentType, session);
+
+    // 3.1 Guard: reservation limits — blocks dine-in if hourly/daily cap reached
+    if (body.fulfillmentType === FULFILLMENT_TYPE.DINE_IN) {
+      await assertReservationLimits(body.branchId, body.reservation, session);
+    }
 
     // 4. Auth (optional customer)
     const customer = await requireBetterAuth(request);

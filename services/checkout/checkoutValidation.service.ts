@@ -9,13 +9,136 @@ import { ClientSession } from "mongoose";
 import { getPaidPromoCardBenefit } from "../promoCardBenefits";
 import { validateFulfillmentPayload } from "./checkoutFulfillment.service";
 import { Branch } from "@/models/Branch";
+import { toPHDate } from "@/utils/toPHDate";
+
+/**
+ * Guard:  check that a branch has not reached its reservation capacity
+ * for the requested date/time slot. Only applies to dine-in orders.
+ *
+ * Checks two limits (branch-specific > global fallback> no limit):
+ * - maxReservationsPerDay: total reservations on the same date
+ * - maxReservationsPerHour : reservationsin the same hour slot
+ *
+ *  Counted statuses : pending, confirmed, preparing (anything not terminal).
+ *  Cancelled/completed/failed/expired orders are excluded.
+ *
+ * @param branchId
+ * @param reservation
+ * @param session
+ * @returns
+ */
+
+export async function assertReservationLimits(
+  branchId: string,
+  reservation: CreateOrderPayload["reservation"] | undefined,
+  session: ClientSession,
+): Promise<void> {
+  if (!reservation?.scheduledAt) return;
+
+  const branch = await Branch.findById(branchId).session(session);
+  if (!branch) throw new Error("Branch not found.");
+
+  const settings = await Settings.findOne().session(session);
+
+  const maxPerDay =
+    branch.maxReservationsPerDay ??
+    settings?.globalMaxReservationsPerDay ??
+    null;
+  const maxPerHour =
+    branch.maxReservationsPerHour ??
+    settings?.globalMaxReservationsPerHour ??
+    null;
+
+  // No limits configured — allow all reservations
+  if (maxPerDay === null && maxPerHour === null) return;
+
+  const scheduledAt = new Date(reservation.scheduledAt);
+
+  // Reservation statuses that count toward capacity (active, non-terminal)
+  const activeReservationStatuses = [
+    ORDER_STATUSES.PENDING_PAYMENT,
+    ORDER_STATUSES.PENDING,
+    ORDER_STATUSES.CONFIRMED,
+    ORDER_STATUSES.PREPARING,
+    ORDER_STATUSES.READY_FOR_PICKUP,
+  ];
+
+
+  // Build the PH-local day boundaries in UTC using IANA timezone.
+  // toPHDate converts the stored UTC date to PH-local components,
+  // working correctly on both local dev machines and UTC servers (Vercel).
+  const phLocal = toPHDate(scheduledAt);
+  const localYear = phLocal.getFullYear();
+  const localMonth = phLocal.getMonth();
+  const localDay = phLocal.getDate();
+  const localHour = phLocal.getHours();
+
+  // Start/end of the PH day in UTC
+  // PH is UTC+8, so midnight PH = 4pm UTC previous day
+  const phOffsetMs = 8 * 60 * 60 * 1000;
+  const dayStartUTC = new Date(
+    Date.UTC(localYear, localMonth, localDay) - phOffsetMs,
+  );
+  const dayEndUTC = new Date(
+    Date.UTC(localYear, localMonth, localDay + 1) - phOffsetMs,
+  );
+
+  const baseQuery = {
+    branchId,
+    fulfillmentType: FULFILLMENT_TYPE.DINE_IN,
+    "reservation.scheduledAt": { $gte: dayStartUTC, $lt: dayEndUTC },
+    status: { $in: activeReservationStatuses },
+  };
+
+  // Daily limit check
+  if (maxPerDay !== null) {
+    const dailyCount = await Order.countDocuments(baseQuery, { session });
+    if (dailyCount >= maxPerDay) {
+      const dateStr = scheduledAt.toLocaleDateString("en-PH", {
+        dateStyle: "medium",
+        timeZone: "Asia/Manila",
+      });
+      throw new Error(
+        `This branch has reached its reservation limit for ${dateStr} (${maxPerDay} reservations/day). Please try a different date.`,
+      );
+    }
+  }
+
+  // Hourly limit check — count reservations in the same PH hour slot
+  if (maxPerHour !== null) {
+    const hourStartUTC = new Date(
+      Date.UTC(localYear, localMonth, localDay, localHour) - phOffsetMs,
+    );
+    const hourEndUTC = new Date(hourStartUTC.getTime() + 60 * 60 * 1000);
+
+    const hourlyCount = await Order.countDocuments(
+      {
+        ...baseQuery,
+        "reservation.scheduledAt": { $gte: hourStartUTC, $lt: hourEndUTC },
+      },
+      { session },
+    );
+
+    if (hourlyCount >= maxPerHour) {
+      const timeStr = scheduledAt.toLocaleTimeString("en-PH", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "Asia/Manila",
+      });
+      throw new Error(
+        `The ${timeStr} time slot is fully booked at this branch (${maxPerHour} reservations/hour). Please try a different time.`,
+      );
+    }
+  }
+}
 
 export async function assertStoreIsOpen(session: ClientSession): Promise<void> {
   const settings = await Settings.findOne().session(session);
   if (!settings) throw new Error("Store settings not found.");
 
   const storeStatus = getStoreStatus(settings.operatingHours);
-  if (!storeStatus.isOpen) throw new Error(`${storeStatus.title}: ${storeStatus.body}`);
+  if (!storeStatus.isOpen)
+    throw new Error(`${storeStatus.title}: ${storeStatus.body}`);
 }
 
 /**
@@ -42,7 +165,8 @@ export async function assertBranchCanAcceptOrders(
   if (
     fulfillmentType === FULFILLMENT_TYPE.PICKUP ||
     fulfillmentType === FULFILLMENT_TYPE.DINE_IN
-  ) return;
+  )
+    return;
 
   // Determine the effective limit: branch-specific > global fallback > no limit
   const settings = await Settings.findOne().session(session);
@@ -82,7 +206,10 @@ export async function assertBranchCanAcceptOrders(
   }
 }
 
-export async function assertValidPayload(body: CreateOrderPayload, session?: ClientSession): Promise<void> {
+export async function assertValidPayload(
+  body: CreateOrderPayload,
+  session?: ClientSession,
+): Promise<void> {
   const { branchId, firstName, lastName, customerPhone, items } = body;
 
   if (!branchId) throw new Error("Branch is required.");

@@ -23,6 +23,8 @@ export interface SettingsType {
   };
   globalMaxActiveOrders: number | null;
   isGlobalCapacityShared: boolean;
+  globalMaxReservationsPerHour: number | null;
+  globalMaxReservationsPerDay: number | null;
 }
 
 interface SettingsResponse {

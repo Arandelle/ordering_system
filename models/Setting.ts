@@ -52,6 +52,16 @@ const SettingsSchema = new Schema(
       default: null,
       min: 1,
     },
+    globalMaxReservationsPerHour: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+    globalMaxReservationsPerDay: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
     // When true, all branches share one global capacity pool.
     // Active orders across every branch are counted together
     // against globalMaxActiveOrders, so if one branch is full,

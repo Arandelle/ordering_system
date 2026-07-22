@@ -13,6 +13,8 @@ export type Branch = {
   isActive: boolean;
   openingSoon: boolean;
   maxActiveOrders: number | null;
+  maxReservationsPerHour: number | null;
+  maxReservationsPerDay: number | null;
   isBusy: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -28,6 +30,8 @@ export type BranchFormData = {
   openingSoon: boolean;
   isBusy: boolean;
   maxActiveOrders: number | null;
+  maxReservationsPerHour: number | null;
+  maxReservationsPerDay: number | null;
 };
 
 export type BranchFormErrors = Partial<Record<keyof BranchFormData | "location", string>>;

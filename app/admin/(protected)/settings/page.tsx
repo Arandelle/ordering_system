@@ -22,6 +22,8 @@ type Action =
   | { type: "SET_IS_CLOSED"; value: boolean }
   | { type: "SET_GLOBAL_MAX_ACTIVE_ORDERS"; value: number | null }
   | { type: "SET_IS_GLOBAL_CAPACITY_SHARED"; value: boolean }
+  | { type: "SET_GLOBAL_MAX_RESERVATIONS_PER_HOUR"; value: number | null }
+  | { type: "SET_GLOBAL_MAX_RESERVATIONS_PER_DAY"; value: number | null }
   | { type: "LOAD_SETTINGS"; payload: SettingsType }
   | { type: "RESET" };
 
@@ -37,6 +39,8 @@ const DEFAULT_STATE: SettingsType = {
   },
   globalMaxActiveOrders: null,
   isGlobalCapacityShared: false,
+  globalMaxReservationsPerHour: null,
+  globalMaxReservationsPerDay: null,
 };
 
 function settingsReducer(state: SettingsType, action: Action): SettingsType {
@@ -89,6 +93,12 @@ function settingsReducer(state: SettingsType, action: Action): SettingsType {
 
     case "SET_IS_GLOBAL_CAPACITY_SHARED":
       return { ...state, isGlobalCapacityShared: action.value };
+
+    case "SET_GLOBAL_MAX_RESERVATIONS_PER_HOUR":
+      return { ...state, globalMaxReservationsPerHour: action.value };
+
+    case "SET_GLOBAL_MAX_RESERVATIONS_PER_DAY":
+      return { ...state, globalMaxReservationsPerDay: action.value };
 
     case "LOAD_SETTINGS":
       return action.payload;
@@ -411,6 +421,54 @@ const SettingsPage = () => {
           <p className="text-xs text-stone-400">
             Active orders include: pending, preparing, dispatched, and ready for pickup.
             When a branch reaches this limit, new orders are blocked until an active order completes.
+          </p>
+        </div>
+
+        <h2 className="text-xl font-bold text-stone-800">Reservation Capacity</h2>
+
+        <div className="p-6 border border-gray-200 rounded-xl shadow space-y-4">
+          <p className="text-sm text-stone-600">
+            Set the global default for how many dine-in reservations a branch can accept.
+            Branches can override these with their own limits.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField
+              label="Max Reservations Per Hour"
+              id="global-max-reservations-per-hour"
+              type="number"
+              value={settings.globalMaxReservationsPerHour === null ? "" : String(settings.globalMaxReservationsPerHour)}
+              onChange={(e) => {
+                const val = e.target.value;
+                dispatch({
+                  type: "SET_GLOBAL_MAX_RESERVATIONS_PER_HOUR",
+                  value: val === "" ? null : Math.max(1, parseInt(val) || 1),
+                });
+              }}
+              placeholder="Leave empty for no limit"
+              className={fieldClassName}
+            />
+
+            <InputField
+              label="Max Reservations Per Day"
+              id="global-max-reservations-per-day"
+              type="number"
+              value={settings.globalMaxReservationsPerDay === null ? "" : String(settings.globalMaxReservationsPerDay)}
+              onChange={(e) => {
+                const val = e.target.value;
+                dispatch({
+                  type: "SET_GLOBAL_MAX_RESERVATIONS_PER_DAY",
+                  value: val === "" ? null : Math.max(1, parseInt(val) || 1),
+                });
+              }}
+              placeholder="Leave empty for no limit"
+              className={fieldClassName}
+            />
+          </div>
+
+          <p className="text-xs text-stone-400">
+            Counted reservations include: pending payment, pending, confirmed, preparing, and ready for pickup.
+            Cancelled and completed reservations free up slots automatically.
           </p>
         </div>
 

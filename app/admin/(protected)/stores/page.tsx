@@ -34,6 +34,8 @@ export const emptyForm: BranchFormData = {
   openingSoon: false,
   isBusy: false,
   maxActiveOrders: null,
+  maxReservationsPerHour: null,
+  maxReservationsPerDay: null,
 };
 
 export default function BranchManagement() {

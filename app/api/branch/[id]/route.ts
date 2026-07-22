@@ -1,3 +1,4 @@
+import { getAPIError } from "@/lib/getApiError";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Branch } from "@/models/Branch";
@@ -14,18 +15,13 @@ export async function PATCH(
     const { id } = await context.params;
 
     if (!id) {
-      return NextResponse.json(
-        {
-          error: "Branch id is required!",
-        },
-        { status: 400 },
-      );
+        return getAPIError("Branch id is required", 400);
     }
 
     const branch = await Branch.findById(id);
 
     if (!branch) {
-      return NextResponse.json({ error: "Branch not found." }, { status: 404 });
+      return getAPIError("Branch not found", 404);
     }
 
     branch.isActive = !branch.isActive;
@@ -35,15 +31,7 @@ export async function PATCH(
   } catch (error) {
     console.error("PATCH /api/branch/[id] error:", error);
 
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to update branch status",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {fallbackMessage: "Failed to update branch status"});
   }
 }
 
@@ -53,30 +41,29 @@ export async function PUT(
 ) {
   try {
     await connectDB();
-    await requireSuperAdmin(request)
+    await requireSuperAdmin(request);
 
     const { id } = await context.params;
     const body = await request.json();
 
     if (!id) {
-      return NextResponse.json(
-        {
-          error: "Branch id is required!",
-        },
-        { status: 400 },
-      );
+      return getAPIError("Branch id is required", 400);
     }
 
-    const { name, address, location, openingSoon, isBusy, maxActiveOrders } = body;
+    const {
+      name,
+      address,
+      location,
+      openingSoon,
+      isBusy,
+      maxActiveOrders,
+      maxReservationsPerHour,
+      maxReservationsPerDay,
+    } = body;
 
     // Validate required fields
     if (!name?.trim() || !address?.trim()) {
-      return NextResponse.json(
-        {
-          error: "Branch name and address are required",
-        },
-        { status: 400 },
-      );
+      return getAPIError("Branch name and address are required", 400);
     }
 
     // Validate location coordinates if provided
@@ -84,11 +71,9 @@ export async function PUT(
       location &&
       (!location.coordinates || location.coordinates.length !== 2)
     ) {
-      return NextResponse.json(
-        {
-          error: "Invalid location coordinates. Expected [longitude, latitude]",
-        },
-        { status: 400 },
+      return getAPIError(
+        "Invalid coordinates. Expected [longitude, latitude",
+        400,
       );
     }
 
@@ -99,7 +84,22 @@ export async function PUT(
       openingSoon: openingSoon ?? false,
       ...(isBusy !== undefined && { isBusy }),
       ...(maxActiveOrders !== undefined && {
-        maxActiveOrders: maxActiveOrders === null || maxActiveOrders === "" ? null : Math.max(1, Number(maxActiveOrders)),
+        maxActiveOrders:
+          maxActiveOrders === null || maxActiveOrders === ""
+            ? null
+            : Math.max(1, Number(maxActiveOrders)),
+      }),
+      ...(maxReservationsPerHour !== undefined && {
+        maxReservationsPerHour:
+          maxReservationsPerHour === null || maxReservationsPerHour === ""
+            ? null
+            : Math.max(1, Number(maxReservationsPerHour)),
+      }),
+      ...(maxReservationsPerDay !== undefined && {
+        maxReservationsPerDay:
+          maxReservationsPerDay === null || maxReservationsPerDay === ""
+            ? null
+            : Math.max(1, Number(maxReservationsPerDay)),
       }),
     };
 
@@ -117,18 +117,15 @@ export async function PUT(
     });
 
     if (!updated) {
-      return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+      return getAPIError("Branch not found", 404);
     }
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error) {
     console.error("PUT /api/branches/[id] error:", error);
-    return NextResponse.json(
-      {
-        error: "Faield to update branch",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to update branch",
+    });
   }
 }
 
@@ -138,23 +135,18 @@ export async function DELETE(
 ) {
   try {
     await connectDB();
-    await requireSuperAdmin(request)
+    await requireSuperAdmin(request);
 
     const { id } = await context.params;
 
     if (!id) {
-      return NextResponse.json(
-        {
-          error: "Branch id is required",
-        },
-        { status: 400 },
-      );
+      return getAPIError("Branch id is required", 400);
     }
 
     const deleted = await Branch.findByIdAndDelete(id);
 
     if (!deleted) {
-      return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+      return getAPIError("Branch not found", 404);
     }
 
     return NextResponse.json(
@@ -163,12 +155,8 @@ export async function DELETE(
     );
   } catch (error) {
     console.error("DELETE /api/branches/[id] error:", error);
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to delete branch",
-      },
-      { status: 500 },
-    );
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to delete branch",
+    });
   }
 }

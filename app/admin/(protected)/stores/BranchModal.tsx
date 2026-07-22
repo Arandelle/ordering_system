@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import MapParent from "./MapComponent/MapParent";
 import { ToggleButton, InputField } from "@/components/ui/FormComponents";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { IconButton } from "@/components/ui/buttons";
 
 type BranchModalProps = {
   form: BranchFormData;
@@ -126,9 +127,7 @@ const BranchModal = ({
       <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
         <div className="flex items-center gap-2 mb-3">
           <DynamicIcon name="Truck" size={18} className="text-amber-600" />
-          <p className="text-sm font-semibold text-amber-700">
-            Order Capacity
-          </p>
+          <p className="text-sm font-semibold text-amber-700">Order Capacity</p>
         </div>
 
         <ToggleButton
@@ -141,25 +140,87 @@ const BranchModal = ({
         />
 
         <div className="mt-3">
-          <label className="block text-xs font-medium text-slate-600 mb-1.5">
-            Max Active Orders
-          </label>
           <InputField
+            label="Max Active Orders"
+            subLabel=" Maximum concurrent orders this branch can handle. Leave empty to use
+              the global setting."
             type="number"
             name="maxActiveOrders"
-            value={form.maxActiveOrders === null ? "" : String(form.maxActiveOrders)}
+            value={
+              form.maxActiveOrders === null ? "" : String(form.maxActiveOrders)
+            }
             onChange={(e) => {
               const val = e.target.value;
               setForm((prev) => ({
                 ...prev,
-                maxActiveOrders: val === "" ? null : Math.max(1, parseInt(val) || 1),
+                maxActiveOrders:
+                  val === "" ? null : Math.max(1, parseInt(val) || 1),
               }));
             }}
             placeholder="Leave empty for no limit (uses global setting)"
+            className=""
           />
-          <p className="text-[11px] text-slate-500 mt-1">
-            Maximum concurrent orders this branch can handle. Leave empty to use the global setting.
+        </div>
+      </div>
+
+      {/* Reservation Capacity Controls */}
+      <div className="mb-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+        <div className="flex items-center gap-2 mb-3">
+          <DynamicIcon
+            name="CalendarClock"
+            size={18}
+            className="text-indigo-600"
+          />
+          <p className="text-sm font-semibold text-indigo-700">
+            Reservation Capacity
           </p>
+        </div>
+
+        <p className="text-[11px] text-slate-500 mb-3">
+          Limits for dine-in reservations. Leave empty for no limit (uses global
+          setting).
+        </p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <InputField
+            label="Max Per Hour"
+            type="number"
+            name="maxReservationsPerHour"
+            value={
+              form.maxReservationsPerHour === null
+                ? ""
+                : String(form.maxReservationsPerHour)
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm((prev) => ({
+                ...prev,
+                maxReservationsPerHour:
+                  val === "" ? null : Math.max(1, parseInt(val) || 1),
+              }));
+            }}
+            placeholder="e.g., 10"
+          />
+
+          <InputField
+            label=" Max Per Day"
+            type="number"
+            name="maxReservationsPerDay"
+            value={
+              form.maxReservationsPerDay === null
+                ? ""
+                : String(form.maxReservationsPerDay)
+            }
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm((prev) => ({
+                ...prev,
+                maxReservationsPerDay:
+                  val === "" ? null : Math.max(1, parseInt(val) || 1),
+              }));
+            }}
+            placeholder="e.g., 50"
+          />
         </div>
       </div>
 
@@ -191,7 +252,11 @@ const BranchModal = ({
       {/* Coordinates Section */}
       <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
         <div className="flex items-center gap-2 mb-4">
-          <DynamicIcon name="MapPin" size={18} className="text-brand-color-600" />
+          <DynamicIcon
+            name="MapPin"
+            size={18}
+            className="text-brand-color-600"
+          />
           <p className="text-sm font-semibold text-slate-700">
             Location Coordinates
           </p>
@@ -199,80 +264,68 @@ const BranchModal = ({
 
         {/* Manual Coordinate Input */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">
-              Latitude
-            </label>
-            <div className="relative">
-              <InputField
-                type="text"
-                name="latitude"
-                value={form.location?.latitude || ""}
-                onChange={(e) => handleCoordinateChange(e, "latitude")}
-                placeholder="e.g., 14.5995"
-                className="pr-9"
-              />
-              {form.location?.latitude && (
-                <button
+          <InputField
+            label="Latitude"
+            type="text"
+            name="latitude"
+            value={form.location?.latitude || ""}
+            onChange={(e) => handleCoordinateChange(e, "latitude")}
+            placeholder="e.g., 14.5995"
+            className="pr-9"
+            rightElement={
+              form.location?.latitude && (
+                <IconButton
                   type="button"
                   onClick={() =>
                     copyToClipboard(form.location!.latitude, "lat")
                   }
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-200 rounded"
+                  variant="ghost"
                   title="Copy latitude"
-                >
-                  {copiedField === "lat" ? (
-                    <DynamicIcon name="Check" size={14} className="text-green-600" />
-                  ) : (
-                    <DynamicIcon name="Copy" size={14} className="text-slate-400" />
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
+                  icon={{
+                    name: copiedField === "lat" ? "Check" : "Copy",
+                    className: copiedField ? "text-green-600" : "text-gray-400",
+                  }}
+                />
+              )
+            }
+          />
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1.5">
-              Longitude
-            </label>
-            <div className="relative">
-              <InputField
-                type="text"
-                name="longitude"
-                value={form.location?.longitude || ""}
-                onChange={(e) => handleCoordinateChange(e, "longitude")}
-                placeholder="e.g., 120.9842"
-                className="pr-9"
-              />
-              {form.location?.longitude && (
-                <button
+          <InputField
+            label="Longitude"
+            type="text"
+            name="longitude"
+            value={form.location?.longitude || ""}
+            onChange={(e) => handleCoordinateChange(e, "longitude")}
+            placeholder="e.g., 120.9842"
+            className="pr-9"
+            rightElement={
+              form.location?.latitude && (
+                <IconButton
                   type="button"
                   onClick={() =>
                     copyToClipboard(form.location!.longitude, "lng")
                   }
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-200 rounded"
+                  variant="ghost"
                   title="Copy longitude"
-                >
-                  {copiedField === "lng" ? (
-                    <DynamicIcon name="Check" size={14} className="text-green-600" />
-                  ) : (
-                    <DynamicIcon name="Copy" size={14} className="text-slate-400" />
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
+                  icon={{
+                    name: copiedField === "lng" ? "Check" : "Copy",
+                    className: copiedField ? "text-green-600" : "text-gray-400",
+                  }}
+                />
+              )
+            }
+          />
         </div>
 
         {/* Map Selection Button */}
-        <button
-          type="button"
+        <IconButton
           onClick={() => setIsMapOpen(true)}
-          className="w-full py-2.5 px-3 rounded-lg border border-brand-color-400 bg-brand-color-500 hover:bg-brand-color-600 text-white font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <DynamicIcon name="MapPin" size={16} />
-          {hasCoordinates ? "Update Location on Map" : "Set Location on Map"}
-        </button>
+          icon={{ name: "MapPin", size: 16 }}
+          text={
+            hasCoordinates ? "Update Location on Map" : "Set Location on Map"
+          }
+          className="w-full rounded-lg py-4"
+        />
 
         {/* Coordinate Display */}
         {hasCoordinates && (
@@ -294,26 +347,31 @@ const BranchModal = ({
 
       {/* Action Buttons */}
       <div className="flex gap-2 justify-end">
-        <button
+        <IconButton
           onClick={() => setShowModal(false)}
-          className="py-1.5 px-3 rounded-lg border border-slate-500 text-slate-600 font-medium hover:text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
-        >
-          Cancel
-        </button>
-        <button
+          variant="outline"
+          text="Cancel"
+          className="rounded-lg px-4"
+        />
+        <IconButton
           onClick={handleSubmit}
           disabled={createBranch.isPending || updateBranch.isPending}
-          className="py-1.5 px-3 rounded-lg bg-brand-color-500 hover:bg-brand-color-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer transition-colors font-medium"
-        >
-          {(createBranch.isPending || updateBranch.isPending) && (
-            <DynamicIcon name="Loader2" size={14} className="animate-spin" />
-          )}
-          {createBranch.isPending || updateBranch.isPending
-            ? "Saving..."
-            : branchToUpdate
-              ? "Update Branch"
-              : "Create Branch"}
-        </button>
+          text={
+            createBranch.isPending || updateBranch.isPending
+              ? "Saving..."
+              : branchToUpdate
+                ? "Update Branch"
+                : "Create Branch"
+          }
+          className="rounded-lg px-4"
+          icon={{
+            name:
+              createBranch.isPending || updateBranch.isPending
+                ? "Loader2"
+                : null,
+            className: "animate-spin",
+          }}
+        />
       </div>
 
       {/* Map Modal */}

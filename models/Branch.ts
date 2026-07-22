@@ -47,6 +47,16 @@ const BranchSchema = new Schema(
       default: null,
       min: 1,
     },
+    maxReservationsPerHour: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+    maxReservationsPerDay: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
     isBusy: {
       type: Boolean,
       default: false,
