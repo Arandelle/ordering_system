@@ -146,6 +146,7 @@ async function getProductRanking(
   const matchStage: Record<string, unknown> = {
     ...buildBranchMatch(filters),
     status: ORDER_STATUSES.COMPLETED,
+    "refund.status": { $ne: "processed" },
   };
 
   if (period) {
@@ -177,6 +178,7 @@ export async function getDashboardStats(
   const completedMatch: Record<string, unknown> = {
     ...branchMatch,
     status: ORDER_STATUSES.COMPLETED,
+    "refund.status": { $ne: "processed" },
   };
 
   if (period) {
@@ -228,6 +230,7 @@ export async function getSalesData(
         ...branchMatch,
         createdAt: { $gt: start, $lte: end },
         status: "completed",
+        "refund.status": { $ne: "processed" },
       },
     },
     {

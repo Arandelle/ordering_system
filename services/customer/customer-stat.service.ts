@@ -3,7 +3,7 @@ import { ORDER_STATUSES } from "@/types/orderConstants";
 
 export async function getCustomerStats(emails: string[]) {
   const stats = await Order.aggregate([
-    { $match: { "paymentInfo.customerEmail": { $in: emails }, status: ORDER_STATUSES.COMPLETED }},
+    { $match: { "paymentInfo.customerEmail": { $in: emails }, status: ORDER_STATUSES.COMPLETED, "refund.status": { $ne: "processed" } }},
     {
       $group: {
         _id: "$paymentInfo.customerEmail",

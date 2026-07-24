@@ -84,6 +84,7 @@ function buildCompletedMatch(
   return {
     ...branchMatch,
     status: ORDER_STATUSES.COMPLETED,
+    "refund.status": { $ne: "processed" },
     createdAt: { $gte: start, $lte: end },
   };
 }
@@ -241,6 +242,7 @@ export async function getReportsTrend(
       $match: {
         ...branchMatch,
         status: ORDER_STATUSES.COMPLETED,
+        "refund.status": { $ne: "processed" },
         createdAt: { $gte: start, $lte: end },
       },
     },
@@ -275,6 +277,7 @@ export async function getReportsCategorySales(
       $match: {
         ...branchMatch,
         status: ORDER_STATUSES.COMPLETED,
+        "refund.status": { $ne: "processed" },
         createdAt: { $gte: start, $lte: end },
       },
     },
@@ -332,6 +335,7 @@ export async function getReportsPeakHours(
       $match: {
         ...branchMatch,
         status: ORDER_STATUSES.COMPLETED,
+        "refund.status": { $ne: "processed" },
         createdAt: { $gte: start, $lte: end },
       },
     },
