@@ -397,7 +397,7 @@ export function ProductDiscountPromotionEditor({
                 const isSelected = form.days.includes(day);
 
                 return (
-                  <button
+                  <IconButton
                     key={day}
                     type="button"
                     onClick={() =>
@@ -406,14 +406,9 @@ export function ProductDiscountPromotionEditor({
                         days: toggleDay(current.days, day),
                       }))
                     }
-                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
-                      isSelected
-                        ? "border-brand-color-500 bg-brand-color-500 text-white"
-                        : "border-stone-200 text-stone-600 hover:border-brand-color-500"
-                    }`}
-                  >
-                    {day}
-                  </button>
+                    variant={isSelected ? "primary" : "secondary"}
+                    text={day}
+                  />
                 );
               })}
             </div>
@@ -516,28 +511,29 @@ export function ProductDiscountPromotionEditor({
           the backend pricing flow before customers receive this discount.
         </p>
         <div className="flex gap-2">
-          <button
+          <IconButton
             type="button"
             onClick={goBackToList}
-            className="rounded-lg border border-stone-200 px-5 py-2.5 text-sm font-bold text-stone-700 transition-colors hover:border-brand-color-500"
-          >
-            Cancel
-          </button>
-          <button
+            variant="outline"
+            className="rounded-lg px-4"
+            text="Cancel"
+          />
+          <IconButton
             type="submit"
             disabled={
               savePromotion.isPending ||
               !hasChanges ||
               form.productIds.length === 0
             }
-            className="rounded-lg bg-brand-color-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500] disabled:cursor-not-allowed disabled:bg-stone-300"
-          >
-            {savePromotion.isPending
-              ? "Saving..."
-              : mode === "create"
-                ? "Create promotion"
-                : "Save changes"}
-          </button>
+            className="px-5 text-sm font-bold rounded-lg"
+            text={
+              savePromotion.isPending
+                ? "Saving..."
+                : mode === "create"
+                  ? "Create promotion"
+                  : "Save changes"
+            }
+          />
         </div>
       </div>
     </form>

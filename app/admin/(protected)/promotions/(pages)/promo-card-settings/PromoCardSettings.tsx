@@ -11,6 +11,8 @@ import {
 import { getActivePromoCardSettings } from "../../helpers/promoCardSettingsForm";
 import SectionHeader from "@/app/admin/components/SectionHeader";
 import LoadingPage from "@/components/ui/LoadingPage";
+import { Checkbox } from "@/components/ui/FormComponents";
+import { IconButton } from "@/components/ui/buttons";
 
 const PromoCardSettings = () => {
   const { data: response, isLoading, error } = usePromoCards();
@@ -87,23 +89,18 @@ const PromoCardSettings = () => {
             required
           />
           <div className="place-content-center">
-            <label className="flex cursor-pointer items-center place-self-start gap-3 px-3 py-2">
-              <input
-                type="checkbox"
-                checked={settingsForm.enabled}
-                onChange={(event) =>
-                  setSettingsForm((current) => ({
-                    ...current,
-                    enabled: event.target.checked,
-                  }))
-                }
-                disabled
-                className="h-4 w-4 accent-brand-color-500"
-              />
-              <span className="text-xs font-bold text-stone-800">
-                {settingsForm.enabled ? "Available" : "Unavailable"}
-              </span>
-            </label>
+            <Checkbox
+              type="checkbox"
+              checked={settingsForm.enabled}
+              onChange={(event) =>
+                setSettingsForm((current) => ({
+                  ...current,
+                  enabled: event.target.checked,
+                }))
+              }
+              disabled
+              label={settingsForm.enabled ? "Available" : "Unavailable"}
+            />
           </div>
         </div>
         <div className="mt-6">
@@ -191,7 +188,7 @@ const PromoCardSettings = () => {
                 Add up to 2 rules. A day can only belong to one rule.
               </p>
             </div>
-            <button
+            <IconButton
               type="button"
               disabled={settingsForm.discountRules.length >= 2}
               onClick={() =>
@@ -203,10 +200,9 @@ const PromoCardSettings = () => {
                   ],
                 }))
               }
-              className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 hover:border-brand-color-500 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Add discount
-            </button>
+              text="Add discount"
+              className="rounded-lg px-4"
+            />
           </div>
           <div
             className={`${settingsForm.discountRules.length > 1 && "grid xl:grid-cols-2 gap-4"}`}
@@ -225,7 +221,7 @@ const PromoCardSettings = () => {
                       Rule {ruleIndex + 1}
                     </p>
                     {settingsForm.discountRules.length > 1 && (
-                      <button
+                      <IconButton
                         type="button"
                         onClick={() =>
                           setSettingsForm((current) => ({
@@ -235,10 +231,10 @@ const PromoCardSettings = () => {
                             ),
                           }))
                         }
-                        className="text-xs font-semibold text-red-500 hover:bg-red-50 p-2 rounded-lg cursor-pointer"
-                      >
-                        Remove
-                      </button>
+                        variant="danger"
+                        text="Remove"
+                        className="text-xs font-semibold rounded-lg"
+                      />
                     )}
                   </div>
                   <div className="grid gap-3 md:grid-cols-[1fr_180px]">
@@ -247,19 +243,15 @@ const PromoCardSettings = () => {
                         const isSelected = rule.days.includes(day);
                         const isUnavailable = unavailableDays.includes(day);
                         return (
-                          <button
+                          <IconButton
                             key={day}
                             type="button"
                             disabled={isUnavailable}
                             onClick={() => toggleRuleDay(ruleIndex, day)}
-                            className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
-                              isSelected
-                                ? "border-brand-color-500 bg-brand-color-500 text-white"
-                                : "border-stone-200 text-stone-600 hover:border-brand-color-500"
-                            } disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-300`}
-                          >
-                            {day}
-                          </button>
+                            variant={isSelected ? "primary" : "secondary"}
+                            text={day}
+                            className="text-xs font-semibold rounded-lg"
+                          />
                         );
                       })}
                     </div>
@@ -294,25 +286,21 @@ const PromoCardSettings = () => {
           </div>
         </div>
         <div className="mt-6 rounded-lg border border-stone-200 p-4">
-          <label className="flex w-fit items-center gap-3">
-            <input
-              type="checkbox"
-              checked={settingsForm.voucherRule.enabled}
-              onChange={(event) =>
-                setSettingsForm((current) => ({
-                  ...current,
-                  voucherRule: {
-                    ...current.voucherRule,
-                    enabled: event.target.checked,
-                  },
-                }))
-              }
-              className="h-4 w-4 accent-brand-color-500"
-            />
-            <span className="text-sm font-bold text-stone-800">
-              Enable voucher earning
-            </span>
-          </label>
+          <Checkbox
+            type="checkbox"
+            checked={settingsForm.voucherRule.enabled}
+            onChange={(event) =>
+              setSettingsForm((current) => ({
+                ...current,
+                voucherRule: {
+                  ...current.voucherRule,
+                  enabled: event.target.checked,
+                },
+              }))
+            }
+            disabled
+            label="Enable voucher earning"
+          />
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <InputField
               label="Voucher amount"
@@ -449,14 +437,12 @@ const PromoCardSettings = () => {
           <p className="text-xs text-stone-400">
             Existing purchases keep their original amount and discount snapshot.
           </p>
-          <button
+          <IconButton
             type="submit"
             // disabled={saveSettings.isPending || !hasSettingsChanges}
             disabled
-            className="rounded-lg bg-brand-color-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500] disabled:cursor-not-allowed disabled:bg-stone-300"
-          >
-            {saveSettings.isPending ? "Saving..." : "Save settings"}
-          </button>
+            text={saveSettings.isPending ? "Saving..." : "Save settings"}
+          />
         </div>
       </form>
 

@@ -19,11 +19,12 @@ import {
 } from "../helpers/getPromotionStatus";
 import { ProductDiscountPromotion } from "../types";
 import { getCreatorName } from "../../../helpers/getCreatorName";
+import { IconButton } from "@/components/ui/buttons";
+import { AppImage } from "@/components/AppImage";
 
 type ProductDiscountPromotionListProps = {
   promotions: ProductDiscountPromotion[];
 };
-
 
 export function ProductDiscountPromotionList({
   promotions,
@@ -125,36 +126,35 @@ export function ProductDiscountPromotionList({
                       </td>
                       <td className="px-3 py-4">
                         <div className="flex justify-end gap-2">
-                          <button
+                          <IconButton
                             type="button"
                             onClick={() =>
                               setExpandedPromotionId(
                                 isExpanded ? null : promotion._id,
                               )
                             }
-                            className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
-                          >
-                            View
-                          </button>
-                          <button
+                            text="View"
+                            className="rounded-lg text-xs"
+                          />
+                          <IconButton
                             type="button"
                             onClick={() =>
                               router.push(
                                 `/promotions/product-discounts/${promotion._id}/edit`,
                               )
                             }
-                            className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
-                          >
-                            Edit
-                          </button>
-                          <button
+                            variant="success"
+                            text="Edit"
+                            className="rounded-lg text-xs"
+                          />
+                          <IconButton
                             type="button"
                             disabled={deletePromotion.isPending}
                             onClick={() => handleDelete(promotion)}
-                            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            Delete
-                          </button>
+                            variant="danger"
+                            text="Delete"
+                            className="rounded-lg text-xs"
+                          />
                         </div>
                       </td>
                     </tr>
@@ -167,15 +167,12 @@ export function ProductDiscountPromotionList({
                                 key={product.product}
                                 className="flex items-center gap-3 rounded-lg border border-stone-200 bg-white p-3"
                               >
-                                {product.imageUrl ? (
-                                  <img
-                                    src={product.imageUrl}
-                                    alt={product.name}
-                                    className="h-12 w-12 rounded-md object-cover"
-                                  />
-                                ) : (
-                                  <div className="h-12 w-12 rounded-md bg-stone-100" />
-                                )}
+                                <AppImage
+                                  src={product.imageUrl ?? ""}
+                                  alt={product.name}
+                                  className="h-12 w-12 rounded-md object-cover"
+                                />
+
                                 <div className="min-w-0">
                                   <p className="truncate text-sm font-bold text-stone-800">
                                     {product.name}

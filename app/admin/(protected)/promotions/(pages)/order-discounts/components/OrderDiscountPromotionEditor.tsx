@@ -1,7 +1,7 @@
 "use client";
 
-import { InputField } from "@/components/ui/FormComponents/InputField";
-import { SelectField } from "@/components/ui/FormComponents/SelectField";
+import { FormEvent, useMemo, useState } from "react";
+import { InputField,SelectField, Checkbox} from "@/components/ui/FormComponents";
 import {
   DEFAULT_ORDER_DISCOUNT_PROMOTION,
   type OrderDiscountPromotionConfig,
@@ -12,15 +12,12 @@ import {
   type PromotionDiscountType,
 } from "@/types/promotions/promotion-constant";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
 import { useSaveOrderDiscountPromotion } from "../../../hooks/useOrderDiscountPromotions";
 import { buildInitialPromotionForm } from "../helpers/buildInitialPromotionForm";
 import { buildPromotionPayload } from "../helpers/buildPromotionPayload";
 import { getPromotionPreview } from "../helpers/getPromotionPreview";
-import {
-  OrderDiscountPromotion,
-  OrderDiscountPromotionForm,
-} from "../types";
+import { OrderDiscountPromotion, OrderDiscountPromotionForm } from "../types";
+import { IconButton } from "@/components/ui/buttons";
 
 type OrderDiscountPromotionEditorProps = {
   promotion: OrderDiscountPromotion | OrderDiscountPromotionConfig;
@@ -85,20 +82,18 @@ export function OrderDiscountPromotionEditor({
               redemption limit.
             </p>
           </div>
-          <label className="flex items-center gap-3 text-sm font-semibold text-stone-700">
-            <input
-              type="checkbox"
-              checked={form.enabled}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  enabled: event.target.checked,
-                }))
-              }
-              className="h-4 w-4 accent-brand-color-500"
-            />
-            Enabled
-          </label>
+
+          <Checkbox
+            type="checkbox"
+            label="Enabled"
+            checked={form.enabled}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                enabled: event.target.checked,
+              }))
+            }
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -306,18 +301,14 @@ export function OrderDiscountPromotionEditor({
                 const isSelected = form.days.includes(day);
 
                 return (
-                  <button
+                  <IconButton
                     key={day}
                     type="button"
                     onClick={() => toggleDay(day)}
-                    className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
-                      isSelected
-                        ? "border-brand-color-500 bg-brand-color-500 text-white"
-                        : "border-stone-200 text-stone-600 hover:border-brand-color-500"
-                    }`}
-                  >
-                    {day}
-                  </button>
+                    text={day}
+                    variant={isSelected ? "primary" : "secondary"}
+                    className="px-4 rounded-lg text-xs"
+                  />
                 );
               })}
             </div>
@@ -418,24 +409,23 @@ export function OrderDiscountPromotionEditor({
           backend pricing step.
         </p>
         <div className="flex gap-2">
-          <button
+          <IconButton
             type="button"
             onClick={goBackToList}
-            className="rounded-lg border border-stone-200 px-5 py-2.5 text-sm font-bold text-stone-700 transition-colors hover:border-brand-color-500"
-          >
-            Cancel
-          </button>
-          <button
+            variant="outline"
+            text="Cancel"
+          />
+          <IconButton
             type="submit"
             disabled={savePromotion.isPending || !hasChanges}
-            className="rounded-lg bg-brand-color-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c13500] disabled:cursor-not-allowed disabled:bg-stone-300"
-          >
-            {savePromotion.isPending
-              ? "Saving..."
-              : mode === "create"
-                ? "Create promotion"
-                : "Save changes"}
-          </button>
+            text={
+              savePromotion.isPending
+                ? "Saving..."
+                : mode === "create"
+                  ? "Create promotion"
+                  : "Save changes"
+            }
+          />
         </div>
       </div>
     </form>

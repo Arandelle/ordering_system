@@ -7,7 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDate, formatDateOnly, formatCurrency, formatTime} from "@/helper/formatter";
+import {
+  formatDate,
+  formatCurrency,
+  formatTime,
+} from "@/helper/formatter";
 import { useRouter } from "next/navigation";
 import { useDeleteOrderDiscountPromotion } from "../../../hooks/useOrderDiscountPromotions";
 import { getDiscountLabel } from "../helpers/getDiscountLabel";
@@ -18,6 +22,7 @@ import {
 } from "../helpers/getPromotionStatus";
 import { OrderDiscountPromotion } from "../types";
 import { getCreatorName } from "../../../helpers/getCreatorName";
+import { IconButton } from "@/components/ui/buttons";
 
 type PromotionListProps = {
   promotions: OrderDiscountPromotion[];
@@ -77,9 +82,9 @@ export function PromotionList({ promotions }: PromotionListProps) {
                         {promotion.name}
                       </p>
                       <p className="text-xs text-stone-500">
-                        {formatDateOnly(promotion.startsAt)}{" "}
+                        {formatDate(promotion.startsAt)}{" "}
                         {formatTime(promotion.startTime)} -{" "}
-                        {formatDateOnly(promotion.endsAt, "No end Date")}{" "}
+                        {formatDate(promotion.endsAt)}{" "}
                         {formatTime(promotion.endTime)}
                       </p>
                     </td>
@@ -120,25 +125,25 @@ export function PromotionList({ promotions }: PromotionListProps) {
                     </td>
                     <td className="px-3 py-4">
                       <div className="flex justify-end gap-2">
-                        <button
+                        <IconButton
                           type="button"
                           onClick={() =>
                             router.push(
                               `/promotions/order-discounts/${promotion._id}/edit`,
                             )
                           }
-                          className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-bold text-stone-700 hover:border-brand-color-500"
-                        >
-                          Edit
-                        </button>
-                        <button
+                          variant="outline"
+                          className="text-xs font-bold px-4 rounded-lg"
+                          text="Edit"
+                        />
+                        <IconButton
                           type="button"
                           disabled={deletePromotion.isPending}
                           onClick={() => handleDelete(promotion)}
-                          className="rounded-lg border border-red-200 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Delete
-                        </button>
+                          variant="danger"
+                          className="text-xs font-bold px-4 rounded-lg"
+                          text="Delete"
+                        />
                       </div>
                     </td>
                   </tr>
