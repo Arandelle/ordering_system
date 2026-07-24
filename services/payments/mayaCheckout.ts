@@ -6,8 +6,8 @@ import { CreateOrderPayload } from "@/types/OrderTypes";
 import { MayaModifierLineItem } from "../checkout/checkoutInventory.service";
 import { ResolvedCartItem } from "../checkout/checkoutInventory.service";
 import { TaxBreakdown } from "../checkout/checkoutPricing.service";
-import { getMayaCheckoutUrl } from "@/lib/mayaConfig";
-import { getAuthHeader } from "@/lib/getAuthHeader";
+import { getMayaCheckoutUrl, getMayaQrUrl } from "@/lib/mayaConfig";
+import { getAuthHeader, getMayaQrAuthHeader } from "@/lib/getAuthHeader";
 import { addMoney } from "@/lib/money";
 
 /** Union type covering both parent product items and modifier upgrade items */
@@ -128,4 +128,67 @@ export async function createMayaCheckout(
   if (!response.ok) throw new Error(data.message ?? "Maya checkout failed");
 
   return data as { checkoutId: string; redirectUrl: string };
+}
+
+// ---------------------------------------------------------------------------
+// QR PH — direct QR code payment (skips the full payment method list)
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds a minimal payload for the Maya QR PH API.
+ * Unlike the Checkout API, QR PH only needs totalAmount, redirectUrl, and referenceNumber.
+ */
+export function buildMayaQrPayload(
+  totalAmount: number,
+  referenceNumber: string,
+) {
+  return {
+    totalAmount: {
+      value: totalAmount.toFixed(2),
+      currency: "PHP",
+    },
+    redirectUrl: {
+      success: `${process.env.NEXT_PUBLIC_URL}/payment/success?referenceNumber=${referenceNumber}`,
+      failure: `${process.env.NEXT_PUBLIC_URL}/payment/failed?referenceNumber=${referenceNumber}`,
+      cancel: `${process.env.NEXT_PUBLIC_URL}/payment/cancel?referenceNumber=${referenceNumber}`,
+    },
+    requestReferenceNumber: referenceNumber,
+  };
+}
+
+/**
+ * Calls the Maya QR PH API to generate a QR code payment.
+ * Returns paymentId (used as checkoutId), redirectUrl (Maya's QR page), and qrCodeBody (raw QR data).
+ */
+export async function createMayaQrPayment(
+  payload: ReturnType<typeof buildMayaQrPayload>,
+) {
+  if (!process.env.MAYA_PUBLIC_KEY) throw new Error("Maya key not configured");
+
+  const response = await fetch(getMayaQrUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: getMayaQrAuthHeader(), // QR PH uses "Pay with Maya" app keys
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  console.log("[Maya QR PH] URL:", getMayaQrUrl());
+  console.log("[Maya QR PH] Status:", response.status);
+  console.log("[Maya QR PH] Response:", JSON.stringify(data, null, 2));
+
+  if (!response.ok) {
+    const detail = data.message ?? data.error ?? JSON.stringify(data);
+    throw new Error(`Maya QR payment failed (${response.status}): ${detail}`);
+  }
+
+  return data as {
+    paymentId: string;
+    redirectUrl: string;
+    qrCodeBody: string;
+  };
 }
