@@ -293,6 +293,29 @@ const OrderSchema = new Schema(
 
     notes: String,
 
+    // Tracks WHY an order reached a terminal state (cancelled, expired, failed)
+    terminationDetails: {
+      reason: { type: String },
+      notes: { type: String },
+      changedBy: { type: Schema.Types.ObjectId },
+      changedByRole: { type: String, enum: ["admin", "customer", "system"] },
+      changedAt: { type: Date },
+    },
+
+    // Independent of order status — tracks refund lifecycle
+    refund: {
+      status: {
+        type: String,
+        enum: ["none", "requested", "processed"],
+        default: "none",
+      },
+      amount: { type: Number, default: 0 },
+      reason: { type: String },
+      notes: { type: String },
+      processedBy: { type: Schema.Types.ObjectId },
+      processedAt: { type: Date },
+    },
+
     isReviewed: {
       type: Boolean,
       default: false,

@@ -56,6 +56,51 @@ export const ORDER_STATUS_OPTIONS = ORDER_STATUS_FILTER_LIST.map((status) => ({
 }));
 
 // ============================================
+// TERMINATION & REFUND REASONS
+// ============================================
+
+/** Reasons admin can give when expiring an order */
+export const EXPIRE_REASONS = [
+  "Too long to pay",
+  "Customer requested cancellation",
+  "Suspected fraud",
+  "Other",
+] as const;
+
+/** Reasons admin can give when cancelling an order */
+export const ADMIN_CANCEL_REASONS = [
+  "Customer requested refund",
+  "Out of stock",
+  "Customer no-show",
+  "Duplicate order",
+  "Other",
+] as const;
+
+/** Reasons customer can give when cancelling their own order */
+export const CUSTOMER_CANCEL_REASONS = [
+  "Changed my mind",
+  "Ordered by mistake",
+  "Found a better option",
+  "Other",
+] as const;
+
+/** Reasons admin can give when processing a refund */
+export const REFUND_REASONS = [
+  "Damaged goods",
+  "Wrong items delivered",
+  "Customer complaint",
+  "Overcharged",
+  "Other",
+] as const;
+
+/** Statuses from which admin is allowed to cancel an order */
+export const ADMIN_CANCELLABLE_STATUSES: readonly OrderStatus[] = [
+  ORDER_STATUSES.PENDING_PAYMENT,
+  ORDER_STATUSES.PENDING,
+  ORDER_STATUSES.CONFIRMED,
+] as const;
+
+// ============================================
 // STATUS PRIORITY (for sorting)
 // ============================================
 
@@ -144,10 +189,15 @@ export const ORDER_ACTION_CONFIG: Record<
 > = {
   [ORDER_STATUSES.PENDING_PAYMENT]: {
     [ORDER_STATUSES.CANCELLED]: {
-      label: "Cancel",
+      label: "Cancel Order",
       variant: "text-red-600 hover:text-red-700",
-      roles: ["customer"],
+      roles: ["customer", "admin"],
       paymentMethods: ["maya"],
+    },
+    [ORDER_STATUSES.EXPIRED]: {
+      label: "Expire Order",
+      variant: "text-gray-600 hover:text-gray-700",
+      roles: ["admin"],
     },
   },
 
@@ -168,7 +218,7 @@ export const ORDER_ACTION_CONFIG: Record<
     [ORDER_STATUSES.CANCELLED]: {
       label: "Cancel Order",
       variant: "text-red-600 hover:text-red-700",
-      roles: ["customer"],
+      roles: ["customer", "admin"],
     },
   },
 
@@ -183,7 +233,7 @@ export const ORDER_ACTION_CONFIG: Record<
     [ORDER_STATUSES.CANCELLED]: {
       label: "Cancel Reservation",
       variant: "text-red-600 hover:text-red-700",
-      roles: ["customer"],
+      roles: ["customer", "admin"],
     },
   },
 
@@ -278,7 +328,11 @@ export function canTransitionTo(
   }
 
   if (role === "admin") {
-    return targetStatus !== ORDER_STATUSES.CANCELLED;
+    // Admin can cancel from pre-preparation statuses (pending_payment, pending, confirmed)
+    if (targetStatus === ORDER_STATUSES.CANCELLED) {
+      return ADMIN_CANCELLABLE_STATUSES.includes(currentStatus);
+    }
+    return true;
   }
 
   return false;

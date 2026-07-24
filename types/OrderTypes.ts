@@ -162,6 +162,25 @@ export interface OrderType {
   };
   notes?: string;
 
+  /** Why the order reached a terminal state (cancelled, expired, failed) */
+  terminationDetails?: {
+    reason?: string;
+    notes?: string;
+    changedBy?: string;
+    changedByRole?: "admin" | "customer" | "system";
+    changedAt?: string;
+  };
+
+  /** Refund lifecycle — independent of order status */
+  refund?: {
+    status: "none" | "requested" | "processed";
+    amount: number;
+    reason?: string;
+    notes?: string;
+    processedBy?: string;
+    processedAt?: string;
+  };
+
   isReviewed?: boolean;
   reviewedAt?: string;
 }
@@ -261,6 +280,10 @@ export interface CreateOrderResponse {
 
 export interface UpdateOrderPayLoad {
   status: OrderStatus;
+  /** Reason for terminal status changes (cancel, expire) */
+  reason?: string;
+  /** Optional free-text notes to accompany the reason */
+  notes?: string;
 }
 
 /**
