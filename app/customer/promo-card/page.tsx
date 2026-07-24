@@ -1,6 +1,9 @@
 "use client";
 
+import { IconButton } from "@/components/ui/buttons";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { InputField } from "@/components/ui/FormComponents";
+import { SummaryRow } from "@/components/ui/SummaryRow";
 import { formatCurrency } from "@/helper/formatter";
 import { formatDate } from "@/helper/formatter/";
 import { apiClient } from "@/lib/apiClient";
@@ -93,7 +96,6 @@ const statusStyles: Record<
   expired: "bg-red-100 text-red-700",
   cancelled: "bg-slate-100 text-slate-600",
 };
-
 
 function formatCardNumber(referenceNumber?: string) {
   const source = referenceNumber?.replace(/[^a-zA-Z0-9]/g, "") || "PENDINGCARD";
@@ -297,7 +299,9 @@ export default function PromoCardPage() {
                     Paid date
                   </p>
                   <p className="mt-1 text-sm font-semibold">
-                    {formatDate(currentPromoCard?.paidAt, "Not yet paid")}
+                    {currentPromoCard?.paidAt
+                      ? formatDate(currentPromoCard?.paidAt)
+                      : "Not Yet Paid"}
                   </p>
                 </div>
               </div>
@@ -369,25 +373,23 @@ export default function PromoCardPage() {
 
           {isAuthenticated && !hasActivePromoCard && isPromoCardEnabled && (
             <form onSubmit={handleSubmit} className="grid gap-3">
-              <input
+              <InputField
                 value={form.firstName}
                 onChange={(event) =>
                   updateField("firstName", event.target.value)
                 }
                 required
                 placeholder="First name"
-                className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
               />
-              <input
+              <InputField
                 value={form.lastName}
                 onChange={(event) =>
                   updateField("lastName", event.target.value)
                 }
                 required
                 placeholder="Last name"
-                className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
               />
-              <input
+              <InputField
                 type="email"
                 value={form.customerEmail}
                 onChange={(event) =>
@@ -395,41 +397,27 @@ export default function PromoCardPage() {
                 }
                 required
                 placeholder="Email address"
-                className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
               />
-              <input
+              <InputField
                 value={form.customerPhone}
                 onChange={(event) =>
                   updateField("customerPhone", event.target.value)
                 }
                 required
                 placeholder="Phone number"
-                className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-brand-color-500"
               />
-
-              <button
+              <IconButton
                 type="submit"
                 disabled={
                   isPending || isPromoCardStatusLoading || !canRequestPromoCard
                 }
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-color-500 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#c13500] disabled:cursor-not-allowed disabled:bg-slate-300"
-              >
-                {isPending ? (
-                  <>
-                    Creating payment
-                    <DynamicIcon
-                      name="Loader2"
-                      size={16}
-                      className="animate-spin"
-                    />
-                  </>
-                ) : (
-                  <>
-                    Pay with Maya
-                    <DynamicIcon name="ArrowRight" size={16} />
-                  </>
-                )}
-              </button>
+                icon={{
+                  name: isPending ? "Loader2" : null,
+                  size: 16,
+                  className: "animate-spin",
+                }}
+                text={isPending ? "Creating payment" : "Pay with Maya"}
+              />
             </form>
           )}
 
@@ -450,26 +438,18 @@ export default function PromoCardPage() {
 
           {isAuthenticated && hasActivePromoCard && (
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-                <span className="shrink-0 text-slate-500">
-                  Registered email
-                </span>
-                <span className="min-w-0 truncate font-semibold text-slate-800">
-                  {currentPromoCard?.customerEmail}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-                <span className="shrink-0 text-slate-500">Phone</span>
-                <span className="min-w-0 truncate font-semibold text-slate-800">
-                  {currentPromoCard?.customerPhone}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-                <span className="shrink-0 text-slate-500">Purchase price</span>
-                <span className="min-w-0 truncate font-semibold text-slate-800">
-                  {formatCurrency(currentPromoCard?.purchasePrice ?? 0)}
-                </span>
-              </div>
+              <SummaryRow
+                title="Registered email"
+                subTitle={currentPromoCard?.customerEmail}
+              />
+              <SummaryRow
+                title="Phone"
+                subTitle={currentPromoCard?.customerPhone}
+              />
+              <SummaryRow
+                title="Purchase price"
+                subTitle={formatCurrency(currentPromoCard?.purchasePrice)}
+              />
             </div>
           )}
         </aside>

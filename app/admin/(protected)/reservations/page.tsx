@@ -325,7 +325,7 @@ const ReservationsPage = () => {
                       {order.paymentInfo?.lastName}
                     </p>
                     <p className="text-xs text-stone-400">
-                      {formatDate(order.reservation?.scheduledAt ?? "", "TBD")}
+                      {formatDate(order.reservation?.scheduledAt)}
                       {" · "}
                       {order.reservation?.partySize ?? "?"} guest
                       {(order.reservation?.partySize ?? 1) !== 1 ? "s" : ""}

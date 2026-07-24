@@ -8,10 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDate } from "@/helper/formatter/";
+import { formatCurrency, formatDate } from "@/helper/formatter/";
 import { usePromoCards } from "../../hooks/usePromoCards";
 import LoadingPage from "@/components/ui/LoadingPage";
 import { PromoCardPurchaseStatus } from "../../types/promo-card.type";
+import { StatCard } from "@/components/ui/StatCard";
 
 const statusStyles: Record<PromoCardPurchaseStatus, string> = {
   pending: "bg-amber-100 text-amber-700",
@@ -34,6 +35,27 @@ const PurchasedCards = () => {
     pending: 0,
     paidRevenue: 0,
   };
+
+  const promoCardStats = [
+    {
+      label: "Total Request",
+      value: stats.total,
+    },
+    {
+      label: "Paid Cards",
+      value: stats.paid,
+    },
+    {
+      label: "Pending",
+      value: stats.pending,
+    },
+    {
+      label: "Paid Revenue",
+      value: stats.paidRevenue,
+      isCurrency: true,
+    },
+  ];
+
   return (
     <section className="space-y-6">
       <SectionHeader
@@ -42,57 +64,13 @@ const PurchasedCards = () => {
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-        <div className="rounded-xl border border-stone-100 bg-white p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-color-500 text-white">
-              <DynamicIcon name="BadgePercent" />
-            </div>
-            <div>
-              <p className="text-sm text-stone-500">Total Requests</p>
-              <p className="text-2xl font-bold text-stone-800">{stats.total}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-stone-100 bg-white p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 text-white">
-              <DynamicIcon name="Users" />
-            </div>
-            <div>
-              <p className="text-sm text-stone-500">Paid Cards</p>
-              <p className="text-2xl font-bold text-stone-800">{stats.paid}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-stone-100 bg-white p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500 text-white">
-              <DynamicIcon name="Hourglass" />
-            </div>
-            <div>
-              <p className="text-sm text-stone-500">Pending</p>
-              <p className="text-2xl font-bold text-stone-800">
-                {stats.pending}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-stone-100 bg-white p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white">
-              <DynamicIcon name="CreditCard" />
-            </div>
-            <div>
-              <p className="text-sm text-stone-500">Paid Revenue</p>
-              <p className="text-2xl font-bold text-stone-800">
-                ₱{stats.paidRevenue.toLocaleString("en-PH")}
-              </p>
-            </div>
-          </div>
-        </div>
+        {promoCardStats.map((stat) => (
+          <StatCard
+            label={stat.label}
+            value={stat.value}
+            isCurrency={stat.isCurrency}
+          />
+        ))}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-stone-100 bg-white shadow-sm">
@@ -149,10 +127,8 @@ const PurchasedCards = () => {
                         {purchase.status}
                       </span>
                     </TableCell>
-                    <TableCell>
-                      {formatDate(purchase.createdAt, "--")}
-                    </TableCell>
-                    <TableCell>{formatDate(purchase.paidAt, "--")}</TableCell>
+                    <TableCell>{formatDate(purchase.createdAt)}</TableCell>
+                    <TableCell>{formatDate(purchase.paidAt)}</TableCell>
                   </TableRow>
                 ))
               )}

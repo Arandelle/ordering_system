@@ -152,7 +152,7 @@ function ReservationRow({
       </div>
       <div className="text-right">
         <p className="text-xs font-semibold text-indigo-700">
-          {formatDate(reservation.scheduledAt, "TBD")}
+          {formatDate(reservation.scheduledAt)}
         </p>
       </div>
       <DynamicIcon
