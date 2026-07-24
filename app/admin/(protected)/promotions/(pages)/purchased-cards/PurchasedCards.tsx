@@ -66,6 +66,7 @@ const PurchasedCards = () => {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         {promoCardStats.map((stat) => (
           <StatCard
+            key={stat.label}
             label={stat.label}
             value={stat.value}
             isCurrency={stat.isCurrency}
