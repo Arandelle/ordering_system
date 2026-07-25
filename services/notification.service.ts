@@ -251,16 +251,19 @@ export function notifyNewOrder(params: {
   fulfillmentType?: string;
   paymentMethod?: string;
 }) {
+  const firstName = params.customerName?.split(" ")[0] ?? "Customer";
+
   return createNotification({
     type: "order",
-    title: "New order received",
-    message: `Order ${params.referenceNumber}${params.customerName ? ` from ${params.customerName}` : ""} — ₱${params.totalAmount.toLocaleString()}`,
+    title: `New ${params.fulfillmentType ?? ""} order`.trim(),
+    message: `Order #${params.referenceNumber}, ${firstName} (₱${params.totalAmount.toFixed(2)})`,
     priority: "high",
     refType: "Order",
     refId: params.orderId,
     branchId: params.branchId,
     metadata: {
       referenceNumber: params.referenceNumber,
+      customerName: params.customerName,
       totalAmount: params.totalAmount,
       fulfillmentType: params.fulfillmentType,
       paymentMethod: params.paymentMethod,

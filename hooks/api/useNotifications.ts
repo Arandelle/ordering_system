@@ -29,7 +29,7 @@ export type NotificationParams = {
 const NOTIFICATIONS_KEY = "admin-notifications";
 const UNREAD_COUNT_KEY = "admin-notifications-unread";
 
-export function useNotifications(params?: NotificationParams) {
+export function useNotifications(params?: NotificationParams, enabled = true) {
   return useInfiniteQuery<NotificationListResponse, Error>({
     queryKey: [NOTIFICATIONS_KEY, params],
     queryFn: ({ pageParam = 1 }) =>
@@ -41,6 +41,7 @@ export function useNotifications(params?: NotificationParams) {
       return page < totalPages ? page + 1 : undefined;
     },
     initialPageParam: 1,
+    enabled,
     staleTime: 10_000,
     retry: false,
     refetchOnWindowFocus: true,

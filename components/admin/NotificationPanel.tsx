@@ -89,7 +89,7 @@ export default function NotificationPanel() {
     refetch,
     fetchNextPage,
     hasNextPage,
-  } = useNotifications(params);
+  } = useNotifications(params, open);
   const { data: unreadData } = useUnreadCount(branchId);
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
@@ -312,7 +312,7 @@ function NotificationRow({
       onClick={() => onClick(notification)}
       className={cn(
         "w-full flex gap-3 px-5 py-3.5 text-left transition-colors border-b border-slate-50 last:border-b-0",
-        !isRead ? "bg-white" : "bg-brand-color-50",
+        isRead ? "bg-white" : "bg-brand-color-50",
         hasRoute ? "cursor-pointer hover:bg-slate-50" : "cursor-default",
       )}
     >
@@ -343,13 +343,6 @@ function NotificationRow({
           >
             {notification.title}
           </p>
-          {/* Priority dot */}
-          <span
-            className={cn(
-              "shrink-0 w-2 h-2 rounded-full mt-1.5",
-              PRIORITY_DOT[notification.priority] ?? PRIORITY_DOT.normal,
-            )}
-          />
         </div>
         <p className="text-xs text-slate-400 mt-0.5 leading-relaxed line-clamp-2">
           {notification.message}
