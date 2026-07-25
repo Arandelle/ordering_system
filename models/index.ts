@@ -11,6 +11,7 @@ export { Review } from "./Review";
 export { Settings } from "./Setting";
 export { Policy } from "./Policy";
 export { ActivityLog } from "./ActivityLog";
+export { Notification } from "./Notification";
 export { ProductDiscountPromotion } from "./ProductDiscountPromotion";
 export { OrderDiscountPromotion } from "./OrderDiscountPromotion";
 export { Bundle } from "./Bundle";

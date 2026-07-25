@@ -5,3 +5,4 @@ export { formatDays } from "./formatDays";
 export { formatTime, formatHour } from "./formatTime";
 export { formatTimeAgo } from "./formatTimeAgo";
 export { formatToViberNumber } from "./formatToViberNumber";
+export { groupByDate } from "./groupByDate";

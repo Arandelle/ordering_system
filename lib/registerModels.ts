@@ -1,4 +1,5 @@
 import "@/models/ActivityLog";
+import "@/models/Notification";
 import "@/models/Branch"
 import "@/models/Bundle"
 import "@/models/Category"
