@@ -1,6 +1,7 @@
 import "@/lib/registerModels";
 import { connectDB } from "@/lib/mongodb";
 import { ModifierGroupTemplate } from "@/models/ModifierGroupTemplate";
+import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/getAuth";
@@ -15,6 +16,7 @@ const templateCreateSchema = z.object({
   required: z.boolean().default(true),
   minSelect: z.coerce.number().int().min(1).default(1),
   maxSelect: z.coerce.number().int().min(1).default(1),
+  maxQty: z.coerce.number().int().min(1).optional(),
   items: z
     .array(modifierItemSchema)
     .min(1, "Template must have at least one item"),
@@ -38,19 +40,6 @@ export async function GET(request: NextRequest) {
 
     const templates = await ModifierGroupTemplate.aggregate([
       { $sort: { createdAt: -1 } },
-      {
-        $lookup: {
-          from: "products",
-          let: { templateId: "$_id" },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$modifierGroups.templateId", "$$templateId"] } } },
-            { $count: "total" },
-          ],
-          as: "_productCount",
-        },
-      },
-      { $addFields: { productCount: { $ifNull: [{ $arrayElemAt: ["$_productCount.total", 0] }, 0] } } },
-      { $unset: "_productCount" },
       {
         $lookup: {
           from: "products",
@@ -91,10 +80,26 @@ export async function GET(request: NextRequest) {
       { $unset: "_modifierProducts" },
     ]);
 
+    // Count products per template in a single query — avoids fragile $expr matching
+    // on nested array fields which can silently fail on type mismatches.
+    const productCounts = await Product.aggregate([
+      { $unwind: "$modifierGroups" },
+      { $match: { "modifierGroups.templateId": { $ne: null } } },
+      {
+        $group: {
+          _id: "$modifierGroups.templateId",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const countMap = new Map(
+      productCounts.map((c) => [c._id.toString(), c.count]),
+    );
+
     const normalized = templates.map((t) => ({
       ...t,
       _id: t._id?.toString(),
-      productCount: t.productCount ?? 0,
+      productCount: countMap.get(t._id?.toString()) ?? 0,
       items: t.items?.map((item: any) => ({
         ...item,
         product: item.product
@@ -144,6 +149,7 @@ export async function POST(request: NextRequest) {
       required: validated.required,
       minSelect: validated.minSelect,
       maxSelect: validated.maxSelect,
+      maxQty: validated.maxQty ?? Math.max(validated.minSelect, validated.maxSelect),
       items: validated.items.map((item, idx) => ({
         product: item.product,
         label: item.label ?? null,

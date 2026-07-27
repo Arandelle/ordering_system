@@ -18,6 +18,7 @@ const templateUpdateSchema = z.object({
   required: z.boolean().optional(),
   minSelect: z.coerce.number().int().min(1).optional(),
   maxSelect: z.coerce.number().int().min(1).optional(),
+  maxQty: z.coerce.number().int().min(1).optional(),
   items: z
     .array(modifierItemSchema)
     .min(1, "Template must have at least one item")
@@ -50,19 +51,6 @@ export async function GET(
 
     const [template] = await ModifierGroupTemplate.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(id)} },
-      {
-        $lookup: {
-          from: "products",
-          let: { templateId: "$_id" },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$modifierGroups.templateId", "$$templateId"] } } },
-            { $count: "total" },
-          ],
-          as: "_productCount",
-        },
-      },
-      { $addFields: { productCount: { $ifNull: [{ $arrayElemAt: ["$_productCount.total", 0] }, 0] } } },
-      { $unset: "_productCount" },
       {
         $lookup: {
           from: "products",
@@ -107,10 +95,16 @@ export async function GET(
       return getAPIError("Template not found", 404);
     }
 
+    // Count products referencing this template — separate query avoids
+    // fragile $expr matching on nested array fields.
+    const productCount = await Product.countDocuments({
+      "modifierGroups.templateId": new mongoose.Types.ObjectId(id),
+    });
+
     const normalized = {
       ...template,
       _id: template._id?.toString(),
-      productCount: template.productCount ?? 0,
+      productCount,
       items: template.items?.map((item: any) => ({
         ...item,
         product: item.product
@@ -171,6 +165,8 @@ export async function PUT(
       updateFields.minSelect = validated.minSelect;
     if (validated.maxSelect !== undefined)
       updateFields.maxSelect = validated.maxSelect;
+    if (validated.maxQty !== undefined)
+      updateFields.maxQty = validated.maxQty;
     if (validated.items !== undefined) {
       updateFields.items = validated.items.map((item) => ({
         product: item.product,

@@ -54,6 +54,17 @@ export function getForbiddenError() {
 }
 
 /** 400 — Array size out of bounds */
-export function getInvalidArraySizeError(field: string, min: number, max: number) {
-  return getAPIError(`${field} must contain between ${min} and ${max} items`, 400);
+export function getInvalidArraySizeError(
+  field: string,
+  min: number,
+  max: number,
+) {
+  return getAPIError(
+    `${field} must contain between ${min} and ${max} items`,
+    400,
+  );
+}
+/** 500 — Internal server error */
+export function getInternalServerError(error: any, fallbackMessage: string = "Internal Server Error.") {
+  return getAPIError(error, 500, { fallbackMessage });
 }
