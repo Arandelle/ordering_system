@@ -311,32 +311,71 @@ const DeliveryLocationPicker = ({
     setIsLocating(true);
     setLocationError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        if (accuracy > 5000) {
-          // 5km threshold  - tune as needed
-          setLocationError(
-            "We couldn't get a precise location from your device (signal too weak or GPS unavailbale). Please searach your address or tap your location on the map instead.",
-          );
-          setIsLocating(false);
-          return;
-        }
-        selectCoordinates({ lat: latitude, lng: longitude });
-        setIsLocating(false);
-      },
-      () => {
+    const handlePosition = (position: GeolocationPosition) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      if (accuracy > 50_000) {
+        // 50km threshold — desktops using IP geolocation report 10-30km
+        // accuracy. The user fine-tunes their pin on the map afterward,
+        // so a rough starting position is acceptable.
         setLocationError(
-          "Location access was denied or unavailable. Search your address or click the map instead.",
+          "We couldn't get a precise location from your device (signal too weak or GPS unavailable). Please search your address or tap your location on the map instead.",
         );
         setIsLocating(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10_000,
-        maximumAge: 0,
-      },
-    );
+        return;
+      }
+      selectCoordinates({ lat: latitude, lng: longitude });
+      setIsLocating(false);
+    };
+
+    const handleError = (error: GeolocationPositionError) => {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          setLocationError(
+            "Location access was denied. Please allow location access in your browser settings and try again.",
+          );
+          break;
+        case error.POSITION_UNAVAILABLE:
+          setLocationError(
+            "Your device could not determine its location. Search your address or click the map instead.",
+          );
+          break;
+        case error.TIMEOUT:
+          setLocationError(
+            "Location request timed out. Your device may not have a clear GPS signal. Search your address or try again.",
+          );
+          break;
+        default:
+          setLocationError(
+            "An unexpected error occurred while getting your location.",
+          );
+      }
+      setIsLocating(false);
+    };
+
+    // First attempt: high accuracy (GPS). If this times out or fails,
+    // fall back to low accuracy (Wi-Fi/IP-based) which is faster.
+    navigator.geolocation.getCurrentPosition(handlePosition, (highAccError) => {
+      if (highAccError.code === highAccError.PERMISSION_DENIED) {
+        // No point retrying — permission is blocked
+        handleError(highAccError);
+        return;
+      }
+
+      // Retry with low accuracy — uses Wi-Fi/IP geolocation instead of GPS
+      navigator.geolocation.getCurrentPosition(
+        handlePosition,
+        handleError,
+        {
+          enableHighAccuracy: false,
+          timeout: 15_000,
+          maximumAge: 60_000,
+        },
+      );
+    }, {
+      enableHighAccuracy: true,
+      timeout: 10_000,
+      maximumAge: 0,
+    });
   }, [selectCoordinates]);
 
   const handleResultSelect = (result: SearchResult) => {
