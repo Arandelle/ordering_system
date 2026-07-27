@@ -9,7 +9,11 @@ export function isGmail(email: string): boolean {
 
 
 /** Admin accounts must use one of these approved email domains. */
-export const ADMIN_EMAIL_DOMAINS = ["jpfoodlab.com", "jptechnologyph.ph"];
+export const ADMIN_EMAIL_DOMAINS = [
+  "jpfoodlab.com",
+  "jptechnologyph.com",
+  "harrisoninasalbbq.com",
+];
 
 export function isAllowedAdminDomain(email: string): boolean {
   const domain = email.trim().toLowerCase().split("@")[1];

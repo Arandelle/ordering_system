@@ -53,7 +53,8 @@ const staffSchema = new mongoose.Schema<IStaff>(
     phone: {
       type: String,
       trim: true,
-      match: [/^\+?[0-9]{10,15}$/, "Invalid phone number!"],
+      // PH format: +63 or 0 prefix followed by 10 digits — must match frontend & Zod
+      match: [/^(\+63|0)[0-9]{10}$/, "Invalid phone number! Use 09XXXXXXXXX or +639XXXXXXXXX."],
     },
     role: {
       type: String,
@@ -69,8 +70,8 @@ const staffSchema = new mongoose.Schema<IStaff>(
       },
     },
     image: {
-      url: { type: String, required: true },
-      public_id: { type: String, required: true, trim: true },
+      url: { type: String },
+      public_id: { type: String,trim: true },
     },
     isActive: {
       type: Boolean,

@@ -37,6 +37,7 @@ import {
 import { isPasswordSecure } from "@/lib/validations";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { IconButton } from "@/components/ui/buttons";
+import { AppImage } from "@/components/AppImage";
 
 const ROLES: { value: StaffRole; label: string }[] = [
   { value: STAFF_ROLES.SUPERADMIN, label: "Super Admin" },
@@ -159,6 +160,17 @@ export default function StaffManagement() {
     const { name, value } = e.target;
     setForm((prev) => {
       const updated = { ...prev, [name]: value };
+      // Trim leading/trailing spaces from email and password as user types
+      if (name === "email") {
+        updated.email = value.trim();
+      }
+      if (name === "password") {
+        updated.password = value.trimStart();
+      }
+      // Strip spaces, dashes, parentheses, and dots from phone on input
+      if (name === "phone") {
+        updated.phone = value.replace(/[\s\-().]/g, "");
+      }
       // Clear branch when role changes to a cross-branch role
       if (name === "role" && !roleRequiresBranch(value as StaffRole)) {
         updated.branch = "";
@@ -279,10 +291,21 @@ export default function StaffManagement() {
                   {/* Name + Avatar */}
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 shrink-0">
-                        {staff.firstName[0]}
-                        {staff.lastName[0]}
-                      </div>
+                      {staff.image?.url ? (
+                        <div className="h-12 w-12 rounded-lg overflow-hidden">
+                          <AppImage
+                            src={staff.image.url}
+                            alt={`${staff.firstName} ${staff.lastName}`}
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 shrink-0">
+                          {staff.firstName[0]}
+                          {staff.lastName[0]}
+                        </div>
+                      )}
+
                       <div>
                         <p className="font-semibold text-gray-800 text-sm">
                           {staff.firstName} {staff.lastName}
