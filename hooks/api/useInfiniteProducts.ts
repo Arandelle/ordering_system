@@ -17,6 +17,7 @@ interface ProductParams {
   productType?: string;
   categoryName?: string;     // ← new
   subcategoryName?: string;  // ← new
+  activeOnly?: boolean;      // ← filter out inactive products (customer-facing)
   enabled: boolean
 }
 

@@ -98,7 +98,12 @@ export async function GET(req: NextRequest) {
       idMatch.$nin = excludeObjectIds;
     }
 
-    const matchConditions: Record<string, unknown> = { _id: idMatch };
+    const matchConditions: Record<string, unknown> = {
+      _id: idMatch,
+      // Only recommend active, purchasable products to customers
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
+      isComingSoon: { $ne: true },
+    };
 
     const categoryOid = getValidObjectId(categoryId);
     if (categoryOid) matchConditions.category = categoryOid;

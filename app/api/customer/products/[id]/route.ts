@@ -196,6 +196,7 @@ export async function GET(
         paxCount: 1,
         isPopular: 1,
         isSignature: 1,
+        isComingSoon: 1,
         quantity: 1,
         status: 1,
       },
@@ -204,6 +205,11 @@ export async function GET(
     const [product] = await Product.aggregate(pipeline);
 
     if (!product) {
+      return getAPIError("Product not found", 404);
+    }
+
+    // Block access to inactive products — hide them from customers entirely
+    if (product.isActive === false) {
       return getAPIError("Product not found", 404);
     }
 
@@ -273,6 +279,7 @@ export async function GET(
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
+      isComingSoon: product.isComingSoon || false,
       activeProductDiscount:
         discountPreviews.get(product._id.toString()) ?? null,
       quantity: branchId ? (product.quantity ?? 0) : null,

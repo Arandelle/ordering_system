@@ -108,6 +108,7 @@ const MenuSection = () => {
     limit: 20,
     categoryName: activeCategory !== "All" ? activeCategory : undefined,
     subcategoryName: activeSubcategory ?? undefined,
+    activeOnly: true,
     enabled: !branchId,
   });
 

@@ -215,6 +215,12 @@ export async function GET(request: NextRequest) {
     const productMatch = {
       _id: { $in: discountedProductIds },
       price: { $gt: 0 },
+      // Hide inactive products from customers; exclude coming soon (not purchasable yet)
+      $or: [
+        { isActive: true },
+        { isActive: { $exists: false } },
+      ],
+      isComingSoon: { $ne: true },
     };
 
     // lookup inventory if branchId is provided, then determine stock status 

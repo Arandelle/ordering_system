@@ -26,6 +26,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
     "Image",
     "Product",
     "Type",
+    "Status",
     "Category",
     "Price",
     "Pax",
@@ -70,7 +71,7 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
               products.map((product) => (
                 <TableRow
                   key={product._id}
-                  className="hover:bg-slate-50 transition-colors"
+                  className={`hover:bg-slate-50 transition-colors ${product.isActive === false ? "opacity-50" : ""}`}
                 >
                   {/* IMAGE */}
                   <TableCell className="px-6 py-4 flex items-center justify-center">
@@ -124,6 +125,26 @@ export default function ProductTable({ products, onEdit }: ProductTableProps) {
                     <span className="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 uppercase">
                       {product.productType || "No Product Type"}
                     </span>
+                  </TableCell>
+
+                  {/* STATUS */}
+                  <TableCell className="px-6 py-4 text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      {product.isActive === false ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase">
+                          Inactive
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-600 uppercase">
+                          Active
+                        </span>
+                      )}
+                      {product.isComingSoon && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 uppercase">
+                          Coming Soon
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* CATEGORY */}

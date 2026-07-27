@@ -58,6 +58,15 @@ export async function GET(req: NextRequest) {
 
     // Use aggregation pipeline to get products sorted by category position
     const basePipeline: any[] = [
+      // Hide inactive products from customers; include coming soon (visible but not purchasable)
+      {
+        $match: {
+          $or: [
+            { isActive: true },
+            { isActive: { $exists: false } },
+          ],
+        },
+      },
       {
         $lookup: {
           from: "categories",
@@ -211,6 +220,7 @@ export async function GET(req: NextRequest) {
           paxCount: 1,
           isPopular: 1,
           isSignature: 1,
+          isComingSoon: 1,
           quantity: 1,
           status: 1,
         },
@@ -295,6 +305,7 @@ export async function GET(req: NextRequest) {
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
+      isComingSoon: product.isComingSoon || false,
       activeProductDiscount:
         discountPreviews.get(product._id.toString()) ?? null,
       quantity: product.quantity,

@@ -38,6 +38,8 @@ interface ProductFormData {
   description: string;
   isSignature: boolean;
   isPopular: boolean;
+  isActive: boolean;
+  isComingSoon: boolean;
   productType: ProductType;
   paxCount: string;
 }
@@ -90,6 +92,8 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
     description: "",
     isSignature: false,
     isPopular: false,
+    isActive: true,
+    isComingSoon: false,
     productType: ITEM_TYPES.SOLO,
     paxCount: "",
   });
@@ -217,6 +221,8 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         description: editProduct.description || "",
         isSignature: editProduct.isSignature || false,
         isPopular: editProduct.isPopular || false,
+        isActive: editProduct.isActive !== false,
+        isComingSoon: editProduct.isComingSoon || false,
         productType: editProduct.productType || ITEM_TYPES.SOLO,
         paxCount: editProduct.paxCount?.toString() || "",
       });
@@ -322,6 +328,8 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         subcategory: subcategoryId,
         isSignature: formData.isSignature,
         isPopular: formData.isPopular,
+        isActive: formData.isActive,
+        isComingSoon: formData.isComingSoon,
         productType: formData.productType,
         paxCount: formData.paxCount ? parseInt(formData.paxCount) : null,
         modifierGroups: isComboOrSet
@@ -568,6 +576,32 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                   title="Visibility & Badges"
                   iconName="Sparkles"
                 >
+                  {/* Active — controls whether customers can see this product */}
+                  <VisibilityToggles
+                    title="Active"
+                    subTitle="Hide from customer menu without deleting"
+                  >
+                    <ToggleButton
+                      checked={formData.isActive}
+                      onCheckedChange={(value) =>
+                        toggleFieldChange("isActive", value)
+                      }
+                    />
+                  </VisibilityToggles>
+
+                  {/* Coming Soon — visible on menu but cannot be ordered */}
+                  <VisibilityToggles
+                    title="Coming Soon"
+                    subTitle="Show on menu with a badge, but disable ordering"
+                  >
+                    <ToggleButton
+                      checked={formData.isComingSoon}
+                      onCheckedChange={(value) =>
+                        toggleFieldChange("isComingSoon", value)
+                      }
+                    />
+                  </VisibilityToggles>
+
                   {/* Signature */}
                   <VisibilityToggles
                     title="Signature Product"

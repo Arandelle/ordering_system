@@ -35,7 +35,7 @@ const ProductCardSkeleton = () => (
 
 // ── Main component ───────────────────────────────────────────────────────────
 const ProductMain = () => {
-  const { data: menuData, isLoading, isError, refetch, error } = useProducts();
+  const { data: menuData, isLoading, isError, refetch, error } = useProducts({ activeOnly: true });
   const { isMobile, isTablet } = useBreakpoint();
   const orderUrl = useSubdomainPath("/", "food");
 

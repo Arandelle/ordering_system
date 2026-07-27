@@ -54,8 +54,12 @@ const ProductSchema = new Schema(
 
     isPopular: { type: Boolean, default: false },
     isSignature: { type: Boolean, default: false },
+
+    // Admin-controlled visibility flags
+    isActive: { type: Boolean, default: true },
+    isComingSoon: { type: Boolean, default: false },
   },
-  { timestamps: true }, 
+  { timestamps: true },
 );
 
 export const Product =

@@ -106,6 +106,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     hasBranch &&
     (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0);
   const isLowStock = hasBranch && status === STOCK_STATUSES.LOW_STOCK;
+  const isComingSoon = item.isComingSoon === true;
   const modifierGroupNames = getModifierGroupNames(item.modifierGroups);
   const hasModifierGroups = isNonSolo && modifierGroupNames.length > 0;
   const activeProductDiscount = item.activeProductDiscount;
@@ -127,19 +128,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <div className="relative h-full">
       <div
         className={`group flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-color-500 hover:shadow-md ${
-          isOutOfStock ? "opacity-70" : ""
+          isOutOfStock || isComingSoon ? "opacity-70" : ""
         }`}
       >
         {/* Image */}
         <div className="aspect-square overflow-hidden bg-white relative flex items-center justify-center">
           <AppImage src={item.image.url} alt={item.name} />
 
-          {isOutOfStock && (
+          {(isOutOfStock || isComingSoon) && (
             <div className="absolute inset-0 bg-black/10 z-10" />
           )}
 
           <div className="absolute left-3 top-3 z-20 flex max-w-[70%] flex-col items-start gap-1.5">
-            {isOutOfStock ? (
+            {isComingSoon ? (
+              <div className="rounded-full bg-blue-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
+                Coming Soon
+              </div>
+            ) : isOutOfStock ? (
               <div className="rounded-full bg-red-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
                 {getStockLabel(status, quantity)}
               </div>
@@ -240,9 +245,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <IconButton
               type="button"
               onClick={() => openDetail()}
-              disabled={isOutOfStock}
-              aria-label={`Add ${item.name} to cart`}
-              icon={{ name: "ShoppingBag", size: 16 }}
+              disabled={isOutOfStock || isComingSoon}
+              aria-label={isComingSoon ? `${item.name} — coming soon` : `Add ${item.name} to cart`}
+              icon={{ name: isComingSoon ? "Clock" : "ShoppingBag", size: 16 }}
               className="rounded-full"
             />
           </div>

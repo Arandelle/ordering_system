@@ -197,6 +197,8 @@ export async function PUT(
       subcategory,
       isSignature,
       isPopular,
+      isActive,
+      isComingSoon,
       productType,
       paxCount,
       modifierGroups,
@@ -271,6 +273,8 @@ export async function PUT(
 
         isSignature,
         isPopular,
+        isActive: isActive !== undefined ? isActive : existingProduct.isActive,
+        isComingSoon: isComingSoon !== undefined ? isComingSoon : existingProduct.isComingSoon,
         productType: resolvedProductType,
         paxCount: resolvedProductType === "set" ? (paxCount ?? null) : null,
         modifierGroups:

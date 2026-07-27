@@ -39,6 +39,8 @@ const productBaseSchema = z.object({
 
   isSignature: z.boolean().optional().default(false),
   isPopular: z.boolean().optional().default(false),
+  isActive: z.boolean().optional().default(true),
+  isComingSoon: z.boolean().optional().default(false),
   productType: z.enum(["solo", "combo", "set"]).default("solo"),
   paxCount: z.coerce.number().int().positive().nullable().optional(),
   modifierGroups: z.array(modifierGroupSchema).optional().default([]),
@@ -86,6 +88,15 @@ export async function GET(request: NextRequest) {
     const searchParams = new URL(request.url).searchParams;
     const categoryName = searchParams.get("categoryName");
     const subcategoryName = searchParams.get("subcategoryName");
+    const activeOnly = searchParams.get("activeOnly") === "true";
+
+    // When customer-facing (activeOnly=true), hide inactive products
+    if (activeOnly) {
+      match.$or = [
+        { isActive: true },
+        { isActive: { $exists: false } },
+      ];
+    }
 
     const postLookupMatch: any = {};
     if (categoryName) postLookupMatch["category.name"] = categoryName;
@@ -289,6 +300,8 @@ export async function POST(request: NextRequest) {
       description,
       isSignature,
       isPopular,
+      isActive,
+      isComingSoon,
       productType,
       paxCount,
       modifierGroups,
@@ -331,6 +344,8 @@ export async function POST(request: NextRequest) {
       description: description ?? "Product description is not available",
       isSignature,
       isPopular,
+      isActive,
+      isComingSoon,
       productType,
       paxCount: productType === "set" ? (paxCount ?? null) : null,
       modifierGroups:

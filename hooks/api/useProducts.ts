@@ -31,6 +31,7 @@ export const useProducts = (params?: {
   search?: string;
   status?: string;
   productType?: string;
+  activeOnly?: boolean;
 }) => {
   return useQuery<ProductResponse, Error>({
     // unique key for this query - like an ID for the cache

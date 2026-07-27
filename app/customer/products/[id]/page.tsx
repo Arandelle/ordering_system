@@ -247,6 +247,7 @@ const ProductDetailPage: React.FC = () => {
     branchId &&
     (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0),
   );
+  const isComingSoon = product?.isComingSoon === true;
 
   // ── Fire ViewContent pixel ── (also moved above the early returns) ────────
   React.useEffect(() => {
@@ -440,6 +441,11 @@ const ProductDetailPage: React.FC = () => {
               {isOutOfStock && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 z-10">
                   <p className="text-red-500 font-bold">Out of stock</p>
+                </div>
+              )}
+              {isComingSoon && !isOutOfStock && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 z-10">
+                  <p className="text-blue-500 font-bold">Coming Soon</p>
                 </div>
               )}
             </div>
@@ -761,20 +767,21 @@ const ProductDetailPage: React.FC = () => {
                   <IconButton
                     text={
                       isAdded
-                        ? "Added!"
+                        ? "Added!" :
+                        isComingSoon ? "Coming soon!" 
                         : `Add to cart · ${formatCurrency(total)}`
                     }
                     variant={
                       isAdded
                         ? "success"
-                        : canAddToCart && !isOutOfStock
+                        : canAddToCart && !isOutOfStock && !isComingSoon
                           ? "primary"
                           : "disabled"
                     }
                     className="p-3 rounded-lg w-full"
-                    icon={{ name: isAdded ? "Check" : "ShoppingBag" }}
+                    icon={{ name: isAdded ? "Check" : isComingSoon ? "Clock" : "ShoppingBag" }}
                     onClick={handleAddToCart}
-                    disabled={isAdded || !canAddToCart || isOutOfStock}
+                    disabled={isAdded || !canAddToCart || isOutOfStock || isComingSoon}
                   />
                 </div>
               </div>

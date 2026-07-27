@@ -122,6 +122,8 @@ export interface Product {
   paxCount?: number | null;
   isPopular?: boolean;
   isSignature?: boolean;
+  isActive?: boolean;
+  isComingSoon?: boolean;
   activeProductDiscount?: ActiveProductDiscountPreview | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -139,6 +141,8 @@ export interface ProductPayload {
   imageFile?: string;
   isSignature?: boolean;
   isPopular?: boolean;
+  isActive?: boolean;
+  isComingSoon?: boolean;
   productType: ProductType;
   paxCount?: number | null;
   modifierGroups?: ModifierGroup[];
