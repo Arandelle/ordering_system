@@ -1,5 +1,3 @@
-import { formatDate } from "./formatDate";
-
 export interface DateGroup<T> {
   label: string;
   items: T[];
@@ -25,30 +23,38 @@ export function groupByDate<T>(
 
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const groups: Map<string, T[]> = new Map();
+  const groups: Map<string, { label: string; items: T[] }> = new Map();
 
-  for (const item of items){
+  for (const item of items) {
     const date = new Date(getDate(item));
-    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayStart = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+    );
+
+    const key = dayStart.toISOString().split("T")[0];
 
     let label: string;
-    if(dayStart.getTime() === today.getTime()){
+
+    if (dayStart.getTime() === today.getTime()) {
       label = "Today";
-    } else if (dayStart.getTime() === yesterday.getTime()){
-      label = "Yesterday"
-    } else{
-      label = formatDate(date, {weekday: true})
+    } else if (dayStart.getTime() === yesterday.getTime()) {
+      label = "Yesterday";
+    } else {
+      label = date.toLocaleDateString("en-PH", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
     }
 
-    if(!groups.has(label)){
-      groups.set(label, []);
+    if (!groups.has(key)) {
+      groups.set(key, { label, items: [] });
     }
 
-    groups.get(label)!.push(item)
+    groups.get(key)!.items.push(item);
   }
-  
-  return Array.from(groups.entries()).map(([label, items]) => ({
-    label,
-    items
-  }))
+
+  return Array.from(groups.values());
 }
