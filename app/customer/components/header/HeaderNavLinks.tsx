@@ -19,8 +19,8 @@ export const HeaderNavLinks = () => {
           Promo Card
         </Link>
       )}
-
-      <Link href="/catering" className="hover:text-brand-color-500">
+  {/** hidden for the meantime until further notice */}
+      <Link href="/catering" className="hover:text-brand-color-500 hidden">
         Catering
       </Link>
       <Link href="/contact" className="hover:text-brand-color-500">

@@ -15,6 +15,9 @@ import { HeaderModals } from "./HeaderModal";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import HeaderBranchSelector from "./HeaderBranchSelector";
+import { useCart } from "@/contexts/CartContext";
+import { useCustomerOrderSummary } from "@/hooks/api/customers/useCustomerOrders";
+import { IconButton } from "@/components/ui/buttons";
 
 const Header = () => {
   const { data: session, isPending: sessionPending } = authClient.useSession();
@@ -38,6 +41,15 @@ const Header = () => {
   }, []);
 
   const queryClient = useQueryClient();
+
+  // Cart and active orders counts for mobile badges
+  const { totalItems } = useCart();
+  const { data: orderSummary } = useCustomerOrderSummary();
+  const activeOrdersCount =
+    (orderSummary?.pending ?? 0) +
+    (orderSummary?.preparing ?? 0) +
+    (orderSummary?.dispatch ?? 0) +
+    (orderSummary?.completed ?? 0);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -81,12 +93,21 @@ const Header = () => {
             </div>
 
             {/* Mobile menu toggle */}
-            <button
-              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="xl:hidden p-2 darkText hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <DynamicIcon name={isMobileMenuOpen ? "X" : "Menu"} size={24} />
-            </button>
+            <div className="relative xl:hidden">
+              <IconButton
+                onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+                variant="ghost"
+                icon={{ name: isMobileMenuOpen ? "X" : "Menu", size: 24 }}
+                className="rounded-lg"
+              />
+              {mounted && totalItems + activeOrdersCount > 0 && (
+                <span
+                  className={`absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce ${isMobileMenuOpen ? "hidden" : "md:hidden"}`}
+                >
+                  {totalItems + activeOrdersCount}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -97,6 +118,9 @@ const Header = () => {
           isLoggingOut={isLoggingOut}
           onClose={() => setIsMobileMenuOpen(false)}
           onOpenModal={openModal}
+          totalItems={totalItems}
+          activeOrdersCount={activeOrdersCount}
+          mounted={mounted}
         />
       )}
 
