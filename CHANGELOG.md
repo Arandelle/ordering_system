@@ -1,6 +1,67 @@
 # Changelog
 
 
+## 1.16.0 - Product Visibility Controls & Modifier Template Propagation - 2026-07-27
+**Release Focus:** Admin controls for product visibility (active/inactive, coming soon), modifier template editing moved to dedicated pages with one-click propagation to all linked products, floating mobile order/cart count badge, and delivery location accuracy improvements.
+
+### Added
+- **Product Active/Inactive status** — admin can toggle products as active or inactive; inactive products are hidden from all customer-facing menus and recommendation pipelines without being deleted
+- **Coming Soon flag** — admin can mark products as "coming soon"; these appear on the customer menu with a blue badge but are not purchasable (add to cart disabled, Clock icon)
+- `isActive` and `isComingSoon` boolean fields on Product model with Zod validation in create/update schemas
+- Admin ProductTable new "Status" column — displays Active (green), Inactive (red), and Coming Soon (blue) badges; inactive rows dimmed at 50% opacity
+- Admin product form "Visibility & Badges" section — toggle controls for Active and Coming Soon alongside existing Signature/Popular toggles
+- **Modifier template dedicated pages** — creating and editing modifier group templates now uses full pages (`/modifier-groups/new` and `/modifier-groups/[id]/edit`) instead of inline modals
+- **Shared `ModifierGroupTemplateForm` component** — single form component reused for both create and edit flows, with consistent layout and validation
+- **Template propagation API** — `POST /api/modifier-group-templates/[id]/propagate` endpoint syncs edited template data (name, required, minSelect, maxSelect, maxQty, items) to all products referencing it
+- **Propagation confirmation modal** — after saving an edited template that has linked products, admin sees a modal showing the product count with options to "Sync All" or "Skip"
+- `maxQty` field added to modifier group template schema (create and update), defaults to `max(minSelect, maxSelect)` when not specified
+- `getInternalServerError` helper in `getApiError.ts` — standardized 500 error responses with fallback messages
+- **Floating mobile order/cart badge** — combined floating count badge on mobile header showing total pending orders + cart items, with repositioned profile section
+
+### Improved
+- **Customer API inactive filtering** — branch products, discounted products, and recommendation endpoints all exclude inactive products; backward-compatible with `$exists: false` for legacy documents
+- **Coming Soon exclusion from purchase flows** — coming soon products are excluded from discounted products and recommendation pipelines (not purchasable yet)
+- **Template product count** — switched from fragile `$expr` aggregation lookup to a reliable separate `countDocuments` query and single aggregation pipeline, preventing silent mismatches on nested array fields
+- Modifier groups list page refactored — cleaned up ~500 lines of inline logic, navigation now routes to dedicated create/edit pages
+- `activeOnly` query parameter on `/api/products` enables on-demand customer-facing filtering
+- Product type definitions (`Product`, `ProductPayload`) updated with `isActive` and `isComingSoon` optional fields
+- Delivery location picker accuracy threshold increased and error handling improved for edge cases
+
+### Changed
+- Modifier template editing is no longer inline in the list page — all create/edit flows use dedicated pages with a shared form component
+- Customer product card renders a Clock icon and "Coming Soon" label instead of the ShoppingBag icon for coming soon products
+- Customer product detail page shows a "Coming Soon" overlay on the product image and disables the add-to-cart CTA
+- Customer menu section passes `activeOnly: true` to hide inactive products from the public menu
+
+
+## 1.15.1 - Admin Notification System - 2026-07-25
+**Release Focus:** Real-time admin notification system with bell icon, filterable notification panel, date grouping, click-to-navigate, and infinite scroll. Also includes promo editor input component refactoring.
+
+### Added
+- **Admin notification system** — bell icon in admin header with unread count badge, opens a slide-out notification panel
+- **Notification types** — `order`, `reservation`, `low_stock`, and `system` categories, each with configurable priority levels (`low`, `normal`, `high`)
+- **Notification triggers on checkout** — new COD and Maya orders fire a high-priority `order` notification to branch staff automatically
+- **Notification panel** — filter tabs (All, Orders, Stock, Reservations, System), per-item read/unread state with priority dot indicators, type-specific icons (ShoppingBag, CalendarCheck, PackageX, Settings)
+- **Date grouping** — notifications grouped by "Today", "Yesterday", or full date (e.g. "July 25, 2026") via reusable `groupByDate` helper
+- **Click-to-navigate** — clicking a notification routes the admin to the relevant detail page (order, inventory, reservation, product edit) using `getNotificationRoute` helper
+- **Infinite scroll** — notification list loads more on scroll via React Query infinite query (`useNotifications`)
+- **Mark as read** — individual mark-read on click, bulk "Mark all as read" action
+- **Notification model** — `Notification` Mongoose schema with `readBy` array (userId + readAt) for per-user read tracking, branch-scoped filtering
+- **Notification API routes** — `GET /api/admin/notifications` (paginated list), `GET /api/admin/notifications/unread-count`, `PATCH /api/admin/notifications/[id]/read`, `PATCH /api/admin/notifications/read-all`
+- **Notification service** — `notification.service.ts` with `createNotification`, `notifyNewOrder`, `notifyLowStock`, `notifyReservation`, `notifySystem`, `listNotifications`, `markAsRead`, `markAllAsRead`, `purgeOldNotifications`
+- **React Query hooks** — `useNotifications` (infinite query), `useUnreadCount`, `useMarkNotificationRead`, `useMarkAllNotificationsRead`
+- `notificationRoute.ts` utility — maps `NotificationRefType` + `refId` to admin route paths
+- **Reusable input components applied** — promo card settings, order discount editors, and product discount editors refactored to use shared `InputField` and `SelectField` components
+
+### Improved
+- Branch-scoped notifications — admin role sees their branch only; superadmin/cashier can filter by selected branch context
+- Notification fetch deferred until panel opens — avoids unnecessary API calls when the bell is not interacted with
+
+### Fixed
+- Date grouping key uses ISO date string instead of formatted display date, preventing duplicate groups
+- Added missing `key` props on stat card list and notification map to resolve React key warnings
+
+
 ## 1.15.0 - Maya QR PH Payments, Order Lifecycle Controls & Product Recommendations - 2026-07-24
 **Release Focus:** Maya QR PH direct payment flow, admin controls for cancelling/expiring/refunding orders with reason tracking, product recommendation engine based on branch sales data, and shared cart row component for reuse across the app.
 
