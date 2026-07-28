@@ -77,6 +77,11 @@ function groupProducts(products: MenuProduct[]): CategoryGroup[] {
   }));
 }
 
+/** Count products that are coming soon */
+function countComingSoon(products: MenuProduct[]): number {
+  return products.filter((p) => p.isComingSoon).length;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────
 
 const MenuSection = () => {
@@ -90,6 +95,7 @@ const MenuSection = () => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(),
   );
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null); // for IntersectionObserver
@@ -212,7 +218,13 @@ const MenuSection = () => {
       })
     : dynamicProducts; // already filtered server-side for non-branch
 
-  const groupedItems = groupProducts(filteredProducts);
+  // Filter products based on coming-soon toggle
+  const comingSoonCount = countComingSoon(dynamicProducts);
+  const displayProducts = showComingSoon
+    ? filteredProducts.filter((p) => p.isComingSoon)
+    : filteredProducts.filter((p) => !p.isComingSoon);
+
+  const groupedItems = groupProducts(displayProducts);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -226,6 +238,7 @@ const MenuSection = () => {
   const handleSelectCategory = (categoryName: string) => {
     setActiveCategory(categoryName);
     setActiveSubcategory(null);
+    setShowComingSoon(false);
     scrollToContent();
     trackSearch({ search_string: categoryName });
 
@@ -319,9 +332,26 @@ const MenuSection = () => {
 
   const GroupedContent = () => (
     <>
-      {groupedItems.length > 0 || discountedProducts.length > 0 ? (
+      {groupedItems.length > 0 || (!showComingSoon && discountedProducts.length > 0) ? (
         <div className="space-y-12">
-          {activeCategory === "All" && <DiscountedProductsShelf />}
+          {/* Coming Soon section header */}
+          {showComingSoon && (
+            <div className="mb-2">
+              <div className="flex items-center gap-3">
+                <DynamicIcon name="Clock" size={20} className="text-blue-500" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Coming Soon
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    These items aren't available yet — check back soon!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!showComingSoon && activeCategory === "All" && <DiscountedProductsShelf />}
 
           {groupedItems.map(({ categoryName, subcategoryGroups }) => (
             <div key={categoryName}>
@@ -386,6 +416,25 @@ const MenuSection = () => {
           title="Failed to load products"
           description="Our menu couldn't be fetched right now. Please try again."
         />
+      ) : showComingSoon ? (
+        <div className="text-center py-16">
+          <DynamicIcon name="Clock" size={40} className="mx-auto text-blue-300 mb-4" />
+          <h3 className="text-base font-semibold text-gray-700 mb-1">
+            No coming soon items
+          </h3>
+          <p className="text-sm text-gray-400">
+            {activeCategory !== "All"
+              ? "This category has no coming soon items. Try viewing all categories."
+              : "There are no coming soon items right now."}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowComingSoon(false)}
+            className="mt-4 rounded-full bg-brand-color-500 px-5 py-2 text-sm font-bold text-white hover:bg-brand-color-600 transition-colors cursor-pointer"
+          >
+            View Live Menu
+          </button>
+        </div>
       ) : (
         <FetchError
           onRetry={refetch}
@@ -407,8 +456,8 @@ const MenuSection = () => {
       <div className="lg:hidden">
         {/* Sticky pill bar */}
         <div className="sticky top-18 z-30 bg-white border-b border-gray-100 pt-8 pb-2">
-          {/* Category pills */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-1">
+          {/* Category pills + Coming Soon toggle */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-1 items-center">
             <SelectField
               value={activeCategory}
               onChange={(e) => handleSelectCategory(e.target.value)}
@@ -431,6 +480,29 @@ const MenuSection = () => {
                 })) ?? []),
               ]}
             />
+            {comingSoonCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowComingSoon((prev) => !prev)}
+                className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
+                  showComingSoon
+                    ? "bg-blue-500 text-white shadow-sm"
+                    : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                }`}
+              >
+                <DynamicIcon name="Clock" size={13} />
+                Coming Soon
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                    showComingSoon
+                      ? "bg-white/25 text-white"
+                      : "bg-blue-200 text-blue-700"
+                  }`}
+                >
+                  {comingSoonCount}
+                </span>
+              </button>
+            )}
           </div>
 
           {/* Subcategory pills (only when category has subcategories) */}
@@ -479,15 +551,45 @@ const MenuSection = () => {
 
             {/* All */}
             <button
-              onClick={() => handleSelectCategory("All")}
+              onClick={() => {
+                handleSelectCategory("All");
+                setShowComingSoon(false);
+              }}
               className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
-                activeCategory === "All"
+                activeCategory === "All" && !showComingSoon
                   ? "bg-brand-color-500 text-white shadow-sm"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
             >
               All Categories
             </button>
+
+            {/* Coming Soon toggle */}
+            {comingSoonCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowComingSoon((prev) => !prev)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
+                  showComingSoon
+                    ? "bg-blue-500 text-white shadow-sm"
+                    : "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <DynamicIcon name="Clock" size={14} />
+                  Coming Soon
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    showComingSoon
+                      ? "bg-white/25 text-white"
+                      : "bg-blue-200 text-blue-700"
+                  }`}
+                >
+                  {comingSoonCount}
+                </span>
+              </button>
+            )}
 
             {/* Skeletons */}
             {isCategoriesPending &&

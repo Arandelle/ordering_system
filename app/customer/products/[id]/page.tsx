@@ -21,6 +21,70 @@ import { useQuery } from "@tanstack/react-query";
 import { AppImage } from "@/components/AppImage";
 import { IconButton } from "@/components/ui/buttons";
 import ProductRecommendations from "@/app/customer/components/ProductRecommendations";
+import { cn } from "@/lib/utils";
+
+// Show "NEW" badge for products within 15 days of going live
+const NEW_BADGE_MS = 15 * 24 * 60 * 60 * 1000;
+
+// ── Badge system (aligned with ProductCard) ──────────────────────────────────
+
+interface ProductBadge {
+  label: string;
+  bg: string;
+  icon: string;
+}
+
+const RIBBON_CLIP = {
+  clipPath: "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%)",
+};
+
+const getProductBadges = (
+  isPopular: boolean,
+  isOutOfStock: boolean,
+  isLowStock: boolean,
+  isComingSoon: boolean,
+  isNew: boolean,
+  quantity: number | null,
+): ProductBadge[] => {
+  const badges: ProductBadge[] = [];
+
+  if (isNew) {
+    badges.push({ label: "NEW!", bg: "bg-brand-color-500", icon: "Flame" });
+  }
+
+  if (isComingSoon) {
+    badges.push({ label: "Coming Soon", bg: "bg-blue-500", icon: "Clock" });
+  } else if (isOutOfStock) {
+    badges.push({ label: "Out of stock", bg: "bg-red-500", icon: "Ban" });
+  } else if (isLowStock) {
+    badges.push({
+      label: `${quantity} left`,
+      bg: "bg-amber-500",
+      icon: "ChevronsDown",
+    });
+  } else if (isPopular) {
+    badges.push({
+      label: "Best Seller",
+      bg: "bg-brand-color-500",
+      icon: "TrendingUp",
+    });
+  }
+
+  return badges;
+};
+
+const ProductBadgeRibbon = ({ badge }: { badge: ProductBadge }) => (
+  <div
+    style={RIBBON_CLIP}
+    className={cn(
+      `flex items-center gap-1.5 pl-3 pr-5 py-1.5 text-[11px] font-bold text-white`,
+      badge.bg,
+    )}
+  >
+    <DynamicIcon name={badge.icon} size={12} />
+    <span>{badge.label}</span>
+  </div>
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -247,7 +311,26 @@ const ProductDetailPage: React.FC = () => {
     branchId &&
     (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0),
   );
+  const isLowStock = Boolean(branchId && status === STOCK_STATUSES.LOW_STOCK);
   const isComingSoon = product?.isComingSoon === true;
+  // eslint-disable-next-line react-hooks/purity -- deterministic for a given product
+  const isNew = (() => {
+    if (isComingSoon) return false;
+    // Use goLiveDate (scheduled launch) or fall back to createdAt
+    const ref = product?.goLiveDate || product?.createdAt;
+    if (ref == null) return false;
+    const t = new Date(ref as string).getTime();
+    if (isNaN(t)) return false;
+    return Date.now() - t <= NEW_BADGE_MS;
+  })();
+  const badges = getProductBadges(
+    product?.isPopular ?? false,
+    isOutOfStock,
+    isLowStock,
+    isComingSoon,
+    isNew,
+    quantity,
+  );
 
   // ── Fire ViewContent pixel ── (also moved above the early returns) ────────
   React.useEffect(() => {
@@ -433,20 +516,16 @@ const ProductDetailPage: React.FC = () => {
           <div className="w-full max-w-md lg:w-2/5 lg:shrink-0 lg:sticky lg:top-40 lg:self-start">
             <div className="relative aspect-square max-h-96 w-full place-self-center rounded-xl overflow-hidden bg-white">
               <AppImage src={product.image.url} alt={product.name} />
-              {product.isPopular && (
-                <div className="absolute top-3 left-3 bg-brand-color-500 text-white text-[10px] font-bold px-3 py-1 rounded-full">
-                  Best Seller
+              {/* Product badges — ribbon style, flush left */}
+              {badges.length > 0 && (
+                <div className="absolute left-0 top-0 z-20 flex flex-col gap-2">
+                  {badges.map((badge) => (
+                    <ProductBadgeRibbon key={badge.label} badge={badge} />
+                  ))}
                 </div>
               )}
-              {isOutOfStock && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 z-10">
-                  <p className="text-red-500 font-bold">Out of stock</p>
-                </div>
-              )}
-              {isComingSoon && !isOutOfStock && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 z-10">
-                  <p className="text-blue-500 font-bold">Coming Soon</p>
-                </div>
+              {(isOutOfStock || isComingSoon) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 z-10" />
               )}
             </div>
 

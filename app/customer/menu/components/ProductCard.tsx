@@ -3,13 +3,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BranchProduct } from "@/hooks/api/useBranchProductInfinite";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import ProductDetailModal from "./ProductDetailsModal";
-import { toast } from "sonner";
 import { ITEM_TYPES } from "@/types/products";
 import { formatCurrency } from "@/helper/formatter/";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useProductReviews } from "@/hooks/api/customers/useProductReviews";
 import { IconButton } from "@/components/ui/buttons";
 import { AppImage } from "@/components/AppImage";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   item: BranchProduct;
@@ -18,10 +18,24 @@ interface ProductCardProps {
   openBranchSelector: () => void;
 }
 // ── Helpers (pure, no need to live inside component) ──────────────────────────
-const getStockLabel = (status: string, quantity: number | null): string => {
-  if (status === STOCK_STATUSES.OUT_OF_STOCK) return "Out of stock";
-  if (status === STOCK_STATUSES.LOW_STOCK) return `Only ${quantity} left!`;
-  return `${quantity} available`;
+
+/** Number of days a product is considered "new" after going live */
+const NEW_BADGE_DAYS = 15;
+
+/**
+ * Returns true if the product is within the NEW badge window.
+ * Uses goLiveDate if set (scheduled launch), otherwise falls back to createdAt.
+ */
+const isNewProduct = (
+  goLiveDate: string | null | undefined,
+  createdAt: string | undefined,
+): boolean => {
+  const referenceDate = goLiveDate || createdAt;
+  if (!referenceDate) return false;
+  const refTime = new Date(referenceDate).getTime();
+  if (isNaN(refTime)) return false;
+  const ageMs = Date.now() - refTime;
+  return ageMs >= 0 && ageMs <= NEW_BADGE_DAYS * 24 * 60 * 60 * 1000;
 };
 
 // Discount Label
@@ -37,18 +51,79 @@ const getProductDiscountLabel = (
   return `${formatCurrency(discount.discountAmount)} OFF`;
 };
 
-// Modifier group names for combo/set products
-const getModifierGroupNames = (
-  modifierGroups: BranchProduct["modifierGroups"],
-): string[] => (modifierGroups ?? []).map((g) => g.name || "Unnamed group");
-
-// Simple slugify helper — put this in a shared util file, e.g. @/helper/slugify.ts
+// Simple slugify helper
 const slugify = (text: string) =>
   text
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+
+// ── Badge system ──────────────────────────────────────────────────────────────
+
+interface ProductBadge {
+  label: string;
+  bg: string;
+  icon: string;
+}
+
+/** Ribbon clip-path — flat left edge, pennant notch on the right */
+const RIBBON_CLIP = {
+  clipPath: "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%)",
+};
+
+/**
+ * Returns all applicable badges for a product, ordered by priority.
+ * "NEW" can coexist with a status badge; status badges are mutually exclusive.
+ */
+const getProductBadges = (
+  item: BranchProduct,
+  isOutOfStock: boolean,
+  isLowStock: boolean,
+  isComingSoon: boolean,
+  isNew: boolean,
+  status: string,
+  quantity: number | null,
+): ProductBadge[] => {
+  const badges: ProductBadge[] = [];
+
+  if (isNew) {
+    badges.push({ label: "NEW!", bg: "bg-brand-color-500", icon: "Flame" });
+  }
+
+  if (isComingSoon) {
+    badges.push({ label: "Coming Soon", bg: "bg-blue-500", icon: "Clock" });
+  } else if (isOutOfStock) {
+    badges.push({ label: "Out of stock", bg: "bg-red-500", icon: "Ban" });
+  } else if (isLowStock) {
+    badges.push({
+      label: `${quantity} left`,
+      bg: "bg-amber-500",
+      icon: "ChevronsDown",
+    });
+  } else if (item.isPopular) {
+    badges.push({
+      label: "Best Seller",
+      bg: "bg-brand-color-500",
+      icon: "TrendingUp",
+    });
+  }
+
+  return badges;
+};
+
+const ProductBadgeRibbon = ({ badge }: { badge: ProductBadge }) => (
+  <div
+    style={RIBBON_CLIP}
+    className={cn(
+      `flex items-center gap-1.5 pl-3 pr-5 py-1.5 text-[11px] font-bold text-white`,
+      badge.bg,
+    )}
+  >
+    <DynamicIcon name={badge.icon} size={12} />
+    <span>{badge.label}</span>
+  </div>
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -72,8 +147,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const productSlug = `${item._id}-${slugify(item.name)}`;
 
   // ── Derived state: product type (needed before openDetail) ─────────────────
-  const isCombo = item.productType === ITEM_TYPES.COMBO;
-  const isSet = item.productType === ITEM_TYPES.SET;
   const isNonSolo =
     item.productType !== ITEM_TYPES.SOLO && item.productType != null;
 
@@ -102,13 +175,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
   // Stock info is only meaningful when a branch is selected
   const quantity = hasBranch ? (item.quantity ?? 0) : null;
   const status = hasBranch ? (item.status ?? "") : "";
-  const isOutOfStock =
+  const isOutOfStock = Boolean(
     hasBranch &&
-    (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0);
-  const isLowStock = hasBranch && status === STOCK_STATUSES.LOW_STOCK;
+    (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0),
+  );
+  const isLowStock = Boolean(hasBranch && status === STOCK_STATUSES.LOW_STOCK);
   const isComingSoon = item.isComingSoon === true;
-  const modifierGroupNames = getModifierGroupNames(item.modifierGroups);
-  const hasModifierGroups = isNonSolo && modifierGroupNames.length > 0;
+  const isNew = !isComingSoon && isNewProduct(item.goLiveDate, item.createdAt);
+  const badges = getProductBadges(
+    item,
+    isOutOfStock,
+    isLowStock,
+    isComingSoon,
+    isNew,
+    status,
+    quantity,
+  );
   const activeProductDiscount = item.activeProductDiscount;
   const hasProductDiscount =
     Boolean(activeProductDiscount) && activeProductDiscount!.discountAmount > 0;
@@ -117,18 +199,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
     : item.price;
   const productDiscountLabel = getProductDiscountLabel(activeProductDiscount);
 
-  const handleOpenBranchSelector = () => {
-    openBranchSelector();
-    toast.warning("Select branch first");
-    return null;
-  };
-
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="relative h-full">
       <div
-        className={`group flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-color-500 hover:shadow-md ${
-          isOutOfStock || isComingSoon ? "opacity-70" : ""
+        role={isOutOfStock || isComingSoon ? undefined : "button"}
+        tabIndex={isOutOfStock || isComingSoon ? undefined : 0}
+        onClick={() => {
+          if (!isOutOfStock && !isComingSoon) openDetail();
+        }}
+        onKeyDown={(e) => {
+          if (
+            (e.key === "Enter" || e.key === " ") &&
+            !isOutOfStock &&
+            !isComingSoon
+          ) {
+            e.preventDefault();
+            openDetail();
+          }
+        }}
+        className={`group flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:-translate-y-0.5 hover:border-brand-color-500 hover:shadow-md ${
+          isOutOfStock || isComingSoon ? "opacity-70" : "cursor-pointer"
         }`}
       >
         {/* Image */}
@@ -139,47 +230,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <div className="absolute inset-0 bg-black/10 z-10" />
           )}
 
-          <div className="absolute left-3 top-3 z-20 flex max-w-[70%] flex-col items-start gap-1.5">
-            {isComingSoon ? (
-              <div className="rounded-full bg-blue-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
-                Coming Soon
-              </div>
-            ) : isOutOfStock ? (
-              <div className="rounded-full bg-red-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
-                {getStockLabel(status, quantity)}
-              </div>
-            ) : isLowStock ? (
-              <div className="rounded-full bg-yellow-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
-                {getStockLabel(status, quantity)}
-              </div>
-            ) : item.isPopular ? (
-              <div className="rounded-full bg-brand-color-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
-                Best Seller
-              </div>
-            ) : null}
-          </div>
+          {/* Product badges — ribbon style, flush left */}
+          {badges.length > 0 && (
+            <div className="absolute left-0 top-0 z-20 flex flex-col gap-2">
+              {badges.map((badge) => (
+                <ProductBadgeRibbon key={badge.label} badge={badge} />
+              ))}
+            </div>
+          )}
 
           {hasProductDiscount && productDiscountLabel && (
             <div className="absolute bottom-3 left-3 z-10 flex flex-col items-start gap-1">
               <span className="rounded-full bg-green-600 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
                 {productDiscountLabel}
-              </span>
-            </div>
-          )}
-
-          {/* Combo / Set badge */}
-          {isNonSolo && (
-            <div className="absolute top-3 right-3 z-10">
-              <span
-                className={`rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm ${
-                  isCombo
-                    ? "bg-amber-500 text-white"
-                    : "bg-emerald-500 text-white"
-                }`}
-              >
-                {isCombo
-                  ? "COMBO"
-                  : `SET${item.paxCount ? ` - ${item.paxCount}pax` : ""}`}
               </span>
             </div>
           )}
@@ -196,31 +259,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {item.description}
             </p>
           )}
-          {isSet && item.paxCount && (
-            <p className="text-[11px] font-semibold text-emerald-600">
-              Good for {item.paxCount} pax
-            </p>
-          )}
 
           {/* Dynamic product rating from reviews */}
           {hasReviews && (
-            <button
-              type="button"
-              onClick={() => router.push(`/products/${item._id}/reviews`)}
-              className="absolute top-3 inline-flex items-center gap-1 text-[11px] bg-gray-200 px-2 py-1 rounded-full group/review text-gray-500 hover:text-brand-color-500 transition-colors cursor-pointer"
-              data-tooltip-id="app-tooltip"
-              data-tooltip-content="View Reviews"
-              data-tooltip-place="left"
-              aria-label={`View ${totalReviews} reviews for ${item.name}`}
-            >
-              <DynamicIcon
-                name="Star"
-                className="fill-yellow-500 text-yellow-500 group-hover/review:fill-brand-color-500 group-hover/review:text-brand-color-500"
-              />
-              <span className="font-semibold text-gray-700">
-                {averageRating}
-              </span>
-            </button>
+            <div>
+              <div className="group/review absolute top-1 left-1">
+                <IconButton
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/products/${item._id}/reviews`);
+                  }}
+                  title={`View ${totalReviews} reviews for ${item.name}`}
+                  aria-label={`View ${totalReviews} reviews for ${item.name}`}
+                  icon={{
+                    name: "Star",
+                    className:
+                      "fill-yellow-500 text-yellow-500 group-hover/review:fill-brand-color-500 group-hover/review:text-brand-color-500",
+                  }}
+                  variant="ghost"
+                  text={String(averageRating)}
+                  className="text-[11px] rounded-full"
+                />
+              </div>
+            </div>
           )}
           <div className="mt-auto flex items-center justify-between gap-3 pt-2">
             <div className="min-w-0">
@@ -244,9 +306,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
             <IconButton
               type="button"
-              onClick={() => openDetail()}
+              onClick={(e) => {
+                e.stopPropagation();
+                openDetail();
+              }}
               disabled={isOutOfStock || isComingSoon}
-              aria-label={isComingSoon ? `${item.name} — coming soon` : `Add ${item.name} to cart`}
+              aria-label={
+                isComingSoon
+                  ? `${item.name} — coming soon`
+                  : `Add ${item.name} to cart`
+              }
               icon={{ name: isComingSoon ? "Clock" : "ShoppingBag", size: 16 }}
               className="rounded-full"
             />
