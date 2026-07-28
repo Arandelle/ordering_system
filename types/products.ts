@@ -124,9 +124,10 @@ export interface Product {
   isSignature?: boolean;
   isActive?: boolean;
   isComingSoon?: boolean;
+  goLiveDate?: string | null;
   activeProductDiscount?: ActiveProductDiscountPreview | null;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductPayload {
@@ -143,6 +144,7 @@ export interface ProductPayload {
   isPopular?: boolean;
   isActive?: boolean;
   isComingSoon?: boolean;
+  goLiveDate?: string | null;
   productType: ProductType;
   paxCount?: number | null;
   modifierGroups?: ModifierGroup[];
