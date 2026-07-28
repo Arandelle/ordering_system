@@ -121,10 +121,16 @@ async function hardDeleteExpiredUsers(): Promise<{
   try {
     const now = new Date();
 
-    // Find users past their scheduled deletion date
+    // Find users past their scheduled deletion date.
+    // Includes incomplete Google restores: isDeleted was temporarily set to false
+    // by the restore endpoint, but the user never completed Google sign-in,
+    // so deletedAt and scheduledDeletionAt are still present.
     const expiredUsers = await User.find({
-      isDeleted: true,
       scheduledDeletionAt: { $lte: now },
+      $or: [
+        { isDeleted: true },
+        { isDeleted: false, deletedAt: { $ne: null } },
+      ],
     }).lean();
 
     for (const user of expiredUsers) {

@@ -220,6 +220,49 @@ export const auth = betterAuth({
           }
         }
       }
+
+      // ── Block deleted users on social/OAuth sign-in + finalize Google restores ──
+      // The before hook only guards /sign-in/email. OAuth callbacks and social
+      // sign-in don't have the user's email until after the provider returns,
+      // so we check here in the after hook once the session is created.
+      if (isOAuthCallback || ctx.path === "/sign-in/social") {
+        const userId = ctx.context.newSession?.user?.id;
+        if (userId) {
+          const user = await ctx.context.internalAdapter.findUserById(userId) as (Record<string, unknown> | null);
+
+          if (user) {
+            const isDeleted = user.isDeleted === true;
+            const hasScheduledDeletion = user.scheduledDeletionAt != null;
+            const hasDeletedAt = user.deletedAt != null;
+
+            // Case 1: User is soft-deleted and NOT in restore mode → block sign-in
+            // (isDeleted is still true — they didn't go through the restore endpoint)
+            if (isDeleted && hasScheduledDeletion) {
+              // Revoke the session that was just created
+              await db.collection("session").deleteMany({ userId });
+              throw new APIError("FORBIDDEN", {
+                message: "ACCOUNT_SCHEDULED_FOR_DELETION",
+                scheduledDeletionAt: user.scheduledDeletionAt,
+                email: user.email,
+              });
+            }
+
+            // Case 2: Restore-in-progress → finalize the restore
+            // Detected by: isDeleted=false but deletion metadata still present.
+            // This only happens when the restore endpoint temporarily unset isDeleted
+            // and the user then completed Google sign-in.
+            if (!isDeleted && hasScheduledDeletion && hasDeletedAt) {
+              // Use internalAdapter to update — handles ID type conversion
+              await ctx.context.internalAdapter.updateUser(userId, {
+                isDeleted: false,
+                deletedAt: null,
+                scheduledDeletionAt: null,
+                deletionReason: null,
+              });
+            }
+          }
+        }
+      }
     }),
   },
 

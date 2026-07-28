@@ -45,6 +45,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     email: string;
     password: string;
     scheduledDeletionAt: string;
+    provider: "email" | "google";
   } | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -116,6 +117,26 @@ const AuthModal: React.FC<AuthModalProps> = ({
       },
       {
         onError: (ctx) => {
+          // Detect soft-deleted account — show restore dialog instead of error
+          const errorMessage =
+            ctx.error?.message ||
+            (ctx.error as Record<string, unknown>)?.error ||
+            "";
+          if (
+            errorMessage === "ACCOUNT_SCHEDULED_FOR_DELETION" ||
+            JSON.stringify(ctx.error).includes("ACCOUNT_SCHEDULED_FOR_DELETION")
+          ) {
+            const deletionError = ctx.error as Record<string, unknown>;
+            setDeletedAccount({
+              email: (deletionError.email as string) || "",
+              password: "",
+              scheduledDeletionAt:
+                (deletionError.scheduledDeletionAt as string) || "",
+              provider: "google",
+            });
+            setIsSocialLoading(false);
+            return;
+          }
           socialFailed = true;
           toast.error(ctx.error.message || "Google sign in failed");
           setIsSocialLoading(false);
@@ -199,6 +220,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               password: values.password,
               scheduledDeletionAt:
                 (deletionError.scheduledDeletionAt as string) || "",
+              provider: "email",
             });
             setIsLoading(false);
             return;
@@ -220,6 +242,38 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setIsRestoring(true);
 
     try {
+      // ── Google provider: prepare account, then redirect to Google sign-in ──
+      // The auth after-hook finalizes the restore on successful callback.
+      if (deletedAccount.provider === "google") {
+        await apiClient.post("/customer/account/restore", {
+          email: deletedAccount.email,
+          provider: "google",
+        });
+
+        toast.success("Account prepared! Redirecting to Google sign-in...");
+        setDeletedAccount(null);
+
+        // Re-initiate Google sign-in — the after-hook will finalize the restore
+        await authClient.signIn.social(
+          {
+            provider: "google",
+            callbackURL: "/",
+          },
+          {
+            onError: () => {
+              toast.error(
+                "Account prepared for restore. Please try signing in with Google again.",
+              );
+            },
+          },
+        );
+
+        await mergeGuestCartOnLogin();
+        setIsRestoring(false);
+        return;
+      }
+
+      // ── Email provider: restore immediately with password verification ──
       await apiClient.post("/customer/account/restore", {
         email: deletedAccount.email,
         password: deletedAccount.password,
