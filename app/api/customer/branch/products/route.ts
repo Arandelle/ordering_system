@@ -67,6 +67,24 @@ export async function GET(req: NextRequest) {
           ],
         },
       },
+      // Auto-live: if goLiveDate has passed, treat as not coming-soon
+      // Uses $$NOW (MongoDB server time) for reliable comparison
+      {
+        $addFields: {
+          isComingSoon: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$goLiveDate", null] },
+                  { $lte: ["$goLiveDate", "$$NOW"] },
+                ],
+              },
+              then: false,
+              else: { $ifNull: ["$isComingSoon", false] },
+            },
+          },
+        },
+      },
       {
         $lookup: {
           from: "categories",
@@ -221,6 +239,8 @@ export async function GET(req: NextRequest) {
           isPopular: 1,
           isSignature: 1,
           isComingSoon: 1,
+          goLiveDate: 1,
+          createdAt: 1,
           quantity: 1,
           status: 1,
         },
@@ -305,7 +325,13 @@ export async function GET(req: NextRequest) {
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
-      isComingSoon: product.isComingSoon || false,
+      // Safety net: auto-live if goLiveDate has passed (catches edge cases the pipeline might miss)
+      isComingSoon:
+        product.goLiveDate && product.goLiveDate <= new Date()
+          ? false
+          : product.isComingSoon || false,
+      goLiveDate: product.goLiveDate || null,
+      createdAt: product.createdAt || null,
       activeProductDiscount:
         discountPreviews.get(product._id.toString()) ?? null,
       quantity: product.quantity,

@@ -60,6 +60,8 @@ type DiscountedProductAggregate = {
   paxCount?: number | null;
   isPopular?: boolean;
   isSignature?: boolean;
+  goLiveDate?: Date | null;
+  createdAt?: Date;
   quantity?: number;
   status?: string;
 };
@@ -136,6 +138,8 @@ function normalizeProduct(
     paxCount: product.paxCount,
     isPopular: product.isPopular || false,
     isSignature: product.isSignature || false,
+    goLiveDate: product.goLiveDate || null,
+    createdAt: product.createdAt || null,
     activeProductDiscount: discountPreviews.get(product._id.toString()) ?? null,
     ...(product.quantity != null && { quantity: product.quantity }),
     ...(product.status && { status: product.status }),
@@ -286,6 +290,23 @@ export async function GET(request: NextRequest) {
 
     // if no branchId, skip inventory lookup and default to in stock with null quantity
     const basePipeline: PipelineStage[] = [
+      // Auto-live: if goLiveDate has passed, treat as not coming-soon
+      {
+        $addFields: {
+          isComingSoon: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$goLiveDate", null] },
+                  { $lte: ["$goLiveDate", "$$NOW"] },
+                ],
+              },
+              then: false,
+              else: { $ifNull: ["$isComingSoon", false] },
+            },
+          },
+        },
+      },
       { $match: productMatch },
       {
         $lookup: {
@@ -377,6 +398,8 @@ export async function GET(request: NextRequest) {
           paxCount: 1,
           isPopular: 1,
           isSignature: 1,
+          goLiveDate: 1,
+          createdAt: 1,
           quantity: 1,
           status: 1,
         },

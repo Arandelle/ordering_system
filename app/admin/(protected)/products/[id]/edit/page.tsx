@@ -20,6 +20,17 @@ const EditProductPage = async ( context : {params: Promise<{id: string}>}) => {
 
   const serialized = JSON.parse(JSON.stringify(product));
 
+  // Apply goLiveDate check: if the scheduled go-live time has passed,
+  // treat the product as live and persist the change
+  if (serialized.goLiveDate && new Date(serialized.goLiveDate) <= new Date()) {
+    serialized.isComingSoon = false;
+    // Persist so the DB stays in sync (fire-and-forget)
+    ProductModel.updateOne(
+      { _id: product._id, isComingSoon: true },
+      { $set: { isComingSoon: false } },
+    ).catch(() => {});
+  }
+
   return <ProductFormPage editProduct={serialized} />;
 };
 

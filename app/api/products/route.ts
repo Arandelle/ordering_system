@@ -41,6 +41,7 @@ const productBaseSchema = z.object({
   isPopular: z.boolean().optional().default(false),
   isActive: z.boolean().optional().default(true),
   isComingSoon: z.boolean().optional().default(false),
+  goLiveDate: z.string().nullable().optional(),
   productType: z.enum(["solo", "combo", "set"]).default("solo"),
   paxCount: z.coerce.number().int().positive().nullable().optional(),
   modifierGroups: z.array(modifierGroupSchema).optional().default([]),
@@ -105,6 +106,23 @@ export async function GET(request: NextRequest) {
     const basePipeline: any[] = [
       // Use the merged match from parseRequestQuery
       ...(Object.keys(match).length ? [{ $match: match }] : []),
+      // Auto-live: if goLiveDate has passed, treat as not coming-soon
+      {
+        $addFields: {
+          isComingSoon: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$goLiveDate", null] },
+                  { $lte: ["$goLiveDate", "$$NOW"] },
+                ],
+              },
+              then: false,
+              else: { $ifNull: ["$isComingSoon", false] },
+            },
+          },
+        },
+      },
       {
         $lookup: {
           from: "categories",
@@ -302,6 +320,7 @@ export async function POST(request: NextRequest) {
       isPopular,
       isActive,
       isComingSoon,
+      goLiveDate,
       productType,
       paxCount,
       modifierGroups,
@@ -333,6 +352,9 @@ export async function POST(request: NextRequest) {
 
     // ── Create ──────────────────────────────────────────────────────────────
 
+    // Respect admin's coming-soon toggle; goLiveDate is optional scheduled launch
+    const resolvedGoLiveDate = goLiveDate ? new Date(goLiveDate) : null;
+
     const product = await Product.create({
       name,
       price: price ?? null,
@@ -346,6 +368,7 @@ export async function POST(request: NextRequest) {
       isPopular,
       isActive,
       isComingSoon,
+      goLiveDate: resolvedGoLiveDate,
       productType,
       paxCount: productType === "set" ? (paxCount ?? null) : null,
       modifierGroups:

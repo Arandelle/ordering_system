@@ -24,6 +24,23 @@ export async function GET(
 
   const pipeline: any[] = [
     { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    // Auto-live: if goLiveDate has passed, treat as not coming-soon
+    {
+      $addFields: {
+        isComingSoon: {
+          $cond: {
+            if: {
+              $and: [
+                { $ne: ["$goLiveDate", null] },
+                { $lte: ["$goLiveDate", "$$NOW"] },
+              ],
+            },
+            then: false,
+            else: { $ifNull: ["$isComingSoon", false] },
+          },
+        },
+      },
+    },
     {
       $lookup: {
         from: "categories",
@@ -199,6 +216,7 @@ export async function PUT(
       isPopular,
       isActive,
       isComingSoon,
+      goLiveDate,
       productType,
       paxCount,
       modifierGroups,
@@ -254,6 +272,44 @@ export async function PUT(
     const resolvedProductType =
       productType ?? existingProduct.productType ?? "solo";
 
+    // Resolve goLiveDate
+    const resolvedGoLiveDate =
+      goLiveDate !== undefined
+        ? goLiveDate
+          ? new Date(goLiveDate)
+          : null
+        : existingProduct.goLiveDate;
+
+    // Determine effective isComingSoon:
+    // If goLiveDate is set and hasn't passed yet → coming soon
+    // If goLiveDate has passed → auto-live (force isComingSoon false)
+    let willBeComingSoon: boolean;
+    if (resolvedGoLiveDate) {
+      willBeComingSoon = resolvedGoLiveDate.getTime() > Date.now();
+    } else {
+      willBeComingSoon =
+        isComingSoon !== undefined
+          ? isComingSoon
+          : existingProduct.isComingSoon;
+    }
+
+    // Block reverting old products (created > 30 days ago) back to "coming soon"
+    // (only applies when there's no goLiveDate — scheduled go-live is always allowed)
+    if (!resolvedGoLiveDate) {
+      const COMING_SOON_AGE_LIMIT_MS = 30 * 24 * 60 * 60 * 1000;
+      const productAge = Date.now() - existingProduct.createdAt.getTime();
+
+      if (willBeComingSoon && productAge > COMING_SOON_AGE_LIMIT_MS) {
+        return NextResponse.json(
+          {
+            error:
+              "Products older than 30 days cannot be set to Coming Soon. Deactivate the product instead.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const updated = await Product.findByIdAndUpdate(
       id,
       {
@@ -274,7 +330,8 @@ export async function PUT(
         isSignature,
         isPopular,
         isActive: isActive !== undefined ? isActive : existingProduct.isActive,
-        isComingSoon: isComingSoon !== undefined ? isComingSoon : existingProduct.isComingSoon,
+        isComingSoon: willBeComingSoon,
+        goLiveDate: resolvedGoLiveDate,
         productType: resolvedProductType,
         paxCount: resolvedProductType === "set" ? (paxCount ?? null) : null,
         modifierGroups:
@@ -301,13 +358,17 @@ export async function PUT(
       { new: true, runValidators: true },
     );
 
+    // Lazy cleanup: fix all stale coming-soon products whenever an admin saves
+    Product.updateMany(
+      { isComingSoon: true, goLiveDate: { $lte: new Date() } },
+      { $set: { isComingSoon: false } },
+    ).catch(() => {});
+
     return NextResponse.json(updated, { status: 200 });
   } catch (error: any) {
     if (uploadResult?.public_id) {
       await cloudinary.uploader.destroy(uploadResult.public_id);
     }
-
-
 
     return getAPIError(error, 500, {fallbackMessage: "Failed to update product"})
   }

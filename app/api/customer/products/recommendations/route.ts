@@ -109,6 +109,23 @@ export async function GET(req: NextRequest) {
     if (categoryOid) matchConditions.category = categoryOid;
 
     const products = await Product.aggregate([
+      // Auto-live: if goLiveDate has passed, treat as not coming-soon
+      {
+        $addFields: {
+          isComingSoon: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$goLiveDate", null] },
+                  { $lte: ["$goLiveDate", "$$NOW"] },
+                ],
+              },
+              then: false,
+              else: { $ifNull: ["$isComingSoon", false] },
+            },
+          },
+        },
+      },
       { $match: matchConditions },
       {
         $lookup: {
@@ -193,6 +210,8 @@ export async function GET(req: NextRequest) {
           paxCount: 1,
           isPopular: 1,
           isSignature: 1,
+          goLiveDate: 1,
+          createdAt: 1,
           quantity: 1,
           status: 1,
         },
@@ -249,6 +268,8 @@ export async function GET(req: NextRequest) {
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
+      goLiveDate: product.goLiveDate || null,
+      createdAt: product.createdAt || null,
       activeProductDiscount:
         discountPreviews.get(product._id.toString()) ?? null,
       quantity: product.quantity,

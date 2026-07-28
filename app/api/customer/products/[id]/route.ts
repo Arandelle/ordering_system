@@ -39,6 +39,25 @@ export async function GET(
     const pipeline: any[] = [
       { $match: { _id: new mongoose.Types.ObjectId(id) } },
 
+      // Auto-live: if goLiveDate has passed, treat as not coming-soon
+      // Uses $$NOW (MongoDB server time) for reliable comparison
+      {
+        $addFields: {
+          isComingSoon: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ["$goLiveDate", null] },
+                  { $lte: ["$goLiveDate", "$$NOW"] },
+                ],
+              },
+              then: false,
+              else: { $ifNull: ["$isComingSoon", false] },
+            },
+          },
+        },
+      },
+
       // Populate category
       {
         $lookup: {
@@ -197,6 +216,8 @@ export async function GET(
         isPopular: 1,
         isSignature: 1,
         isComingSoon: 1,
+        goLiveDate: 1,
+        createdAt: 1,
         quantity: 1,
         status: 1,
       },
@@ -279,7 +300,13 @@ export async function GET(
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
-      isComingSoon: product.isComingSoon || false,
+      // Safety net: auto-live if goLiveDate has passed
+      isComingSoon:
+        product.goLiveDate && product.goLiveDate <= new Date()
+          ? false
+          : product.isComingSoon || false,
+      goLiveDate: product.goLiveDate || null,
+      createdAt: product.createdAt || null,
       activeProductDiscount:
         discountPreviews.get(product._id.toString()) ?? null,
       quantity: branchId ? (product.quantity ?? 0) : null,
