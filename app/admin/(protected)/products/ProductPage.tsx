@@ -30,6 +30,10 @@ import CategorySection, {
 import ModifierGroupsSection from "./components/ModifierGroupsSection";
 import ComboPricePreview from "./components/ComboPricePreview";
 import GroupReorderPanel from "./components/GroupReorderPanel";
+import { formatDateInputValue, toTimeInputValue } from "@/helper/formatter";
+
+// Products older than 30 days cannot be reverted to "coming soon"
+const COMING_SOON_AGE_LIMIT_MS = 30 * 24 * 60 * 60 * 1000;
 
 interface ProductFormData {
   name: string;
@@ -40,6 +44,8 @@ interface ProductFormData {
   isPopular: boolean;
   isActive: boolean;
   isComingSoon: boolean;
+  goLiveDate: string;
+  goLiveTime: string;
   productType: ProductType;
   paxCount: string;
 }
@@ -94,6 +100,8 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
     isPopular: false,
     isActive: true,
     isComingSoon: false,
+    goLiveDate: "",
+    goLiveTime: "00:00",
     productType: ITEM_TYPES.SOLO,
     paxCount: "",
   });
@@ -135,6 +143,15 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
   const isLoading = createMutation.isPending || updateMutation.isPending;
   const isSuccess = createMutation.isSuccess || updateMutation.isSuccess;
   const isComboOrSet = formData.productType !== ITEM_TYPES.SOLO;
+
+  // Products older than 30 days cannot be set to coming soon
+  // eslint-disable-next-line react-hooks/purity -- deterministic for a given product
+  const isProductTooOldForComingSoon = (() => {
+    if (!isEditMode || editProduct?.createdAt == null) return false;
+    const createdMs = new Date(editProduct.createdAt).getTime();
+    if (isNaN(createdMs)) return false;
+    return Date.now() - createdMs > COMING_SOON_AGE_LIMIT_MS;
+  })();
 
   const previewUrl = imageSelection.imageFile
     ? URL.createObjectURL(imageSelection.imageFile)
@@ -223,6 +240,8 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         isPopular: editProduct.isPopular || false,
         isActive: editProduct.isActive !== false,
         isComingSoon: editProduct.isComingSoon || false,
+        goLiveDate: formatDateInputValue(editProduct.goLiveDate),
+        goLiveTime: toTimeInputValue(editProduct.goLiveDate),
         productType: editProduct.productType || ITEM_TYPES.SOLO,
         paxCount: editProduct.paxCount?.toString() || "",
       });
@@ -329,7 +348,14 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         isSignature: formData.isSignature,
         isPopular: formData.isPopular,
         isActive: formData.isActive,
-        isComingSoon: formData.isComingSoon,
+        isComingSoon: isProductTooOldForComingSoon
+          ? false
+          : formData.isComingSoon,
+        // Combine date + time into ISO string using browser's timezone
+        goLiveDate:
+          formData.goLiveDate
+            ? new Date(`${formData.goLiveDate}T${formData.goLiveTime || "00:00"}`).toISOString()
+            : null,
         productType: formData.productType,
         paxCount: formData.paxCount ? parseInt(formData.paxCount) : null,
         modifierGroups: isComboOrSet
@@ -592,15 +618,55 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                   {/* Coming Soon — visible on menu but cannot be ordered */}
                   <VisibilityToggles
                     title="Coming Soon"
-                    subTitle="Show on menu with a badge, but disable ordering"
+                    subTitle={
+                      isProductTooOldForComingSoon
+                        ? "Disabled — products older than 30 days cannot be set to Coming Soon"
+                        : "Show on menu with a badge, but disable ordering"
+                    }
                   >
                     <ToggleButton
-                      checked={formData.isComingSoon}
+                      checked={
+                        isProductTooOldForComingSoon
+                          ? false
+                          : formData.isComingSoon
+                      }
+                      disabled={isProductTooOldForComingSoon}
                       onCheckedChange={(value) =>
                         toggleFieldChange("isComingSoon", value)
                       }
                     />
                   </VisibilityToggles>
+
+                  {/* Go-Live Date — schedule when the product automatically goes live */}
+                  {formData.isComingSoon && !isProductTooOldForComingSoon && (
+                    <div className="flex flex-col gap-3 border border-blue-100 rounded-xl p-4 bg-blue-50/50">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">
+                          Schedule Go-Live
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Product auto-goes live at this date & time. Leave empty for manual control.
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <InputField
+                          type="date"
+                          name="goLiveDate"
+                          value={formData.goLiveDate}
+                          onChange={handleChange}
+                          min={formatDateInputValue(new Date())}
+                          className="text-gray-500 flex-1"
+                        />
+                        <InputField
+                          type="time"
+                          name="goLiveTime"
+                          value={formData.goLiveTime}
+                          onChange={handleChange}
+                          className="text-gray-500 w-28"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Signature */}
                   <VisibilityToggles

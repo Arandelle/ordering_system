@@ -91,7 +91,7 @@ const ProductsPage = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton />)
+          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i}/>)
           : statCards.map((card) => <StatCard key={card.label} {...card} />)}
       </div>
 
