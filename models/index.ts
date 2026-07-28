@@ -23,6 +23,7 @@ export { Voucher } from "./Voucher";
 export { CheckoutSession } from "./CheckoutSession";
 export { Verification } from "./Verification";
 export { Session } from "./Session";
+export { ArchivedUser } from "./ArchivedUser";
 
 // ─── Default exports (need alias) ────────────────────────────────────────────
 export { default as Account } from "./Account";

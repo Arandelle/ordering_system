@@ -44,6 +44,23 @@ export const auth = betterAuth({
         required: false,
         defaultValue: false,
       },
+      isDeleted: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+      },
+      deletedAt: {
+        type: "date",
+        required: false,
+      },
+      scheduledDeletionAt: {
+        type: "date",
+        required: false,
+      },
+      deletionReason: {
+        type: "string",
+        required: false,
+      },
     },
   },
 
@@ -164,11 +181,18 @@ export const auth = betterAuth({
             });
           }
 
-          // Block login for banned customer accounts
-          const existingUser = await ctx.context.internalAdapter.findUserByEmail(email) as (Record<string, unknown> | null);
+          // Block login for banned or soft-deleted customer accounts
+          // Use raw MongoDB query to ensure all fields (including isDeleted) are returned
+          const existingUser = await db.collection("user").findOne({ email }) as (Record<string, unknown> | null);
           if (existingUser && existingUser.banned === true) {
             throw new APIError("FORBIDDEN", {
               message: "Your account has been suspended. Please contact support.",
+            });
+          }
+          if (existingUser && existingUser.isDeleted === true) {
+            throw new APIError("FORBIDDEN", {
+              message: "ACCOUNT_SCHEDULED_FOR_DELETION",
+              scheduledDeletionAt: existingUser.scheduledDeletionAt,
             });
           }
         }

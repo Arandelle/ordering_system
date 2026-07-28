@@ -38,6 +38,13 @@ const UserSchema = new Schema(
       required: false,
       default: () => ({}),
     },
+
+    // Soft-delete fields — account scheduled for permanent deletion
+    // Customer can restore within the retention period (30 days)
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
+    scheduledDeletionAt: { type: Date, default: null, index: true },
+    deletionReason: { type: String, default: null },
   },
   {
     timestamps: true,

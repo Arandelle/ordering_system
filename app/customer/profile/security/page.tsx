@@ -6,6 +6,10 @@ import { InputField } from "@/components/ui/FormComponents/InputField";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { apiClient } from "@/lib/apiClient";
+import { useRouter } from "next/navigation";
+import DeleteAccountModal from "../component/DeleteAccountModal";
+import { IconButton } from "@/components/ui/buttons";
 
 interface PasswordForm {
   currentPassword: string;
@@ -63,7 +67,8 @@ const SecurityTab = () => {
   });
   const [show, setShow] = useState(initialShow);
   const [saving, setSaving] = useState(false);
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
   const [isOAuthOnly, setIsOAuthOnly] = useState(false);
 
   useEffect(() => {
@@ -128,6 +133,7 @@ const SecurityTab = () => {
       setSaving(false);
     }
   };
+
   return (
     <div className="flex flex-col gap-6">
       <SectionCard
@@ -251,16 +257,24 @@ const SecurityTab = () => {
           <div>
             <p className="text-sm font-medium text-gray-800">Delete Account</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              Permanently delete your account and all associated data. This
-              cannot be undone.
+              Your data is retained for 30 days before permanent removal, giving you time to reconsider and restore your account.
             </p>
           </div>
-          <button className="flex items-center gap-2 border border-red-200 text-red-500 hover:bg-red-50 text-sm font-medium px-4 py-2 rounded-xl transition-colors cursor-pointer">
-            <DynamicIcon name="Trash2" size={14} />
-            Delete Account
-          </button>
+          <IconButton
+            onClick={() => setShowDeleteModal(true)}
+            variant="outline"
+            text="Delete Account"
+            icon={{ name: "Trash2" }}
+            className="px-4 rounded-xl text-sm  border-red-200 text-red-500 font-medium"
+          />
         </div>
       </SectionCard>
+
+      {showDeleteModal && (
+        <DeleteAccountModal
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
     </div>
   );
 };

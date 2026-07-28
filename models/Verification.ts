@@ -30,4 +30,4 @@ const VerificationSchema = new Schema({
     },
 })
 
-export const Verification =models.Verification || mongoose.model("Verification", VerificationSchema);
+export const Verification =models.Verification || mongoose.model("Verification", VerificationSchema, "verification");
