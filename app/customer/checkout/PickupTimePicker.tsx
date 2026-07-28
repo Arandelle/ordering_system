@@ -3,10 +3,9 @@
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { InputField } from "@/components/ui/FormComponents";
 import { IconButton } from "@/components/ui/buttons";
-import { formatDate, formatTime } from "@/helper/formatter";
+import { formatDate, formatDateInputValue, formatTime, toTimeInputValue } from "@/helper/formatter";
 import {
   getLocalDate,
-  fromMinutes,
   validatePickupTime,
   PICKUP_MIN_ADVANCE_MINUTES,
   type OperatingHours,
@@ -40,9 +39,7 @@ export function PickupTimePicker({
     if (!value) return { datePart: "", timePart: "" };
     const dt = new Date(value);
     if (isNaN(dt.getTime())) return { datePart: "", timePart: "" };
-    const date = getLocalDate(dt);
-    const time = fromMinutes(dt.getHours() * 60 + dt.getMinutes());
-    return { datePart: date, timePart: time };
+    return { datePart: formatDateInputValue(dt), timePart: toTimeInputValue(dt) };
   }, [value]);
 
   const minDate = getLocalDate(new Date());

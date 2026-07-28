@@ -1,4 +1,5 @@
 import type { Days, SettingsType } from "@/hooks/api/useSettings";
+import { toPHDate } from "@/utils/toPHDate";
 
 export type OperatingHours = SettingsType["operatingHours"];
 
@@ -9,11 +10,12 @@ const DAY_LABELS: Days[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const getDayLabel = (date: Date): Days =>
   DAY_LABELS[(date.getDay() + 6) % 7];
 
-/** Returns "YYYY-MM-DD" using local time components (avoids UTC timezone drift in PH) */
+/** Returns "YYYY-MM-DD" in PH timezone (works on both local and Vercel) */
 export const getLocalDate = (date: Date): string => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
+  const ph = toPHDate(date);
+  const y = ph.getFullYear();
+  const m = String(ph.getMonth() + 1).padStart(2, "0");
+  const d = String(ph.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 };
 

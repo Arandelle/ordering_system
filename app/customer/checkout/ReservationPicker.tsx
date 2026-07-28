@@ -6,11 +6,10 @@ import { useMemo } from "react";
 import { InputField } from "@/components/ui/FormComponents";
 import { IconButton } from "@/components/ui/buttons";
 import { QuantityStepper } from "../menu/components/QuantityStepper";
-import { formatDate, formatTime } from "@/helper/formatter";
+import { formatDate, formatDateInputValue, formatTime, toTimeInputValue } from "@/helper/formatter";
 import {
   generateTimeSlots,
   getLocalDate,
-  fromMinutes,
   isOperatingDay,
   type OperatingHours,
 } from "@/lib/operatingHours";
@@ -35,9 +34,7 @@ export function ReservationPicker({
     if (!value?.scheduledAt) return { datePart: "", timePart: "" };
     const dt = new Date(value.scheduledAt);
     if (isNaN(dt.getTime())) return { datePart: "", timePart: "" };
-    const date = getLocalDate(dt);
-    const time = fromMinutes(dt.getHours() * 60 + dt.getMinutes());
-    return { datePart: date, timePart: time };
+    return { datePart: formatDateInputValue(dt), timePart: toTimeInputValue(dt) };
   }, [value?.scheduledAt]);
 
   const minDate = getLocalDate(new Date());
