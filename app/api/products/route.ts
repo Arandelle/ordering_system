@@ -90,6 +90,7 @@ export async function GET(request: NextRequest) {
     const categoryName = searchParams.get("categoryName");
     const subcategoryName = searchParams.get("subcategoryName");
     const activeOnly = searchParams.get("activeOnly") === "true";
+    const isComingSoon = searchParams.get("isComingSoon");
 
     // When customer-facing (activeOnly=true), hide inactive products
     if (activeOnly) {
@@ -102,6 +103,9 @@ export async function GET(request: NextRequest) {
     const postLookupMatch: any = {};
     if (categoryName) postLookupMatch["category.name"] = categoryName;
     if (subcategoryName) postLookupMatch["subcategory.name"] = subcategoryName;
+    // Filter by coming-soon status (evaluated after auto-live $addFields)
+    if (isComingSoon === "true") postLookupMatch.isComingSoon = true;
+    if (isComingSoon === "false") postLookupMatch.isComingSoon = false;
 
     const basePipeline: any[] = [
       // Use the merged match from parseRequestQuery

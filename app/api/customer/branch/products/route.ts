@@ -50,6 +50,7 @@ export async function GET(req: NextRequest) {
 
     const categoryName = searchParams.get("categoryName");
     const subcategoryName = searchParams.get("subcategoryName");
+    const isComingSoon = searchParams.get("isComingSoon");
 
     const { page, limit, skip } = parseRequestQuery(req, {
       defaultLimit: 20,
@@ -163,6 +164,9 @@ export async function GET(req: NextRequest) {
       ...(subcategoryName
         ? [{ $match: { "subcategory.name": subcategoryName } }]
         : []),
+      // Filter by coming-soon status (evaluated after auto-live $addFields)
+      ...(isComingSoon === "true" ? [{ $match: { isComingSoon: true } }] : []),
+      ...(isComingSoon === "false" ? [{ $match: { isComingSoon: false } }] : []),
 
       // Lookup inventory for this specific branch
       {

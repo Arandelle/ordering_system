@@ -15,9 +15,10 @@ interface ProductParams {
   search?: string;
   status?: string;
   productType?: string;
-  categoryName?: string;     // ← new
-  subcategoryName?: string;  // ← new
-  activeOnly?: boolean;      // ← filter out inactive products (customer-facing)
+  categoryName?: string;
+  subcategoryName?: string;
+  activeOnly?: boolean;
+  isComingSoon?: string;     // "true" | "false" — filter by coming-soon status
   enabled: boolean
 }
 

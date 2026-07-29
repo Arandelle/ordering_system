@@ -15,5 +15,6 @@ export interface Category {
     public_id: string
   }
   activeProductCount?: number;
+  comingSoonCount?: number;
   createdAt?: Date;
 }

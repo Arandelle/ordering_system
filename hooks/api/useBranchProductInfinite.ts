@@ -22,6 +22,7 @@ export type BranchProductResponse = {
 export const useBranchProductInfinite = (branchId: string, params?: {
   categoryName?: string;
   subcategoryName?: string;
+  isComingSoon?: string;
   limit?: number;
   enabled: boolean
 }) => {
@@ -34,6 +35,7 @@ export const useBranchProductInfinite = (branchId: string, params?: {
         limit: params?.limit ?? 1,
         categoryName: params?.categoryName,
         subcategoryName: params?.subcategoryName,
+        isComingSoon: params?.isComingSoon,
       })}`),
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;

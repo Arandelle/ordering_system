@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
 import { useScrollToSection } from "@/hooks/utils/useScrollToSection";
 import { Category } from "@/types/category";
@@ -77,11 +77,6 @@ function groupProducts(products: MenuProduct[]): CategoryGroup[] {
   }));
 }
 
-/** Count products that are coming soon */
-function countComingSoon(products: MenuProduct[]): number {
-  return products.filter((p) => p.isComingSoon).length;
-}
-
 // ─── Component ────────────────────────────────────────────────────────────
 
 const MenuSection = () => {
@@ -100,6 +95,9 @@ const MenuSection = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null); // for IntersectionObserver
 
+  // Only pass real categories to the API (exclude "All" and "__coming_soon__")
+  const isRealCategory = activeCategory !== "All" && activeCategory !== "__coming_soon__";
+
   // Always fetch all products (for no-branch browsing)
   const {
     data: infiniteData,
@@ -112,10 +110,11 @@ const MenuSection = () => {
     error: allError,
   } = useProductsInfinite({
     limit: 20,
-    categoryName: activeCategory !== "All" ? activeCategory : undefined,
+    categoryName: isRealCategory ? activeCategory : undefined,
     subcategoryName: activeSubcategory ?? undefined,
     activeOnly: true,
-    enabled: !branchId,
+    isComingSoon: "false",
+    enabled: !branchId && !showComingSoon,
   });
 
   const allProducts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
@@ -132,12 +131,39 @@ const MenuSection = () => {
     error: branchError,
   } = useBranchProductInfinite(branchId ?? "", {
     limit: 20,
-    categoryName: activeCategory !== "All" ? activeCategory : undefined,
+    categoryName: isRealCategory ? activeCategory : undefined,
     subcategoryName: activeSubcategory ?? undefined,
-    enabled: !!branchId, // only fires when branch selected
+    isComingSoon: "false",
+    enabled: !!branchId && !showComingSoon,
   });
 
   const branchProducts = branchInfiniteData?.pages.flatMap((p) => p.data) ?? [];
+
+  // Fetch coming soon products separately when the Coming Soon view is active
+  const {
+    data: csInfiniteData,
+    isLoading: isCsAllLoading,
+  } = useProductsInfinite({
+    limit: 50,
+    activeOnly: true,
+    isComingSoon: "true",
+    enabled: !branchId && showComingSoon,
+  });
+  const {
+    data: csBranchData,
+    isLoading: isCsBranchLoading,
+  } = useBranchProductInfinite(branchId ?? "", {
+    limit: 50,
+    isComingSoon: "true",
+    enabled: !!branchId && showComingSoon,
+  });
+  const comingSoonProducts = useMemo(() => {
+    const pages = branchId
+      ? csBranchData?.pages.flatMap((p) => p.data)
+      : csInfiniteData?.pages.flatMap((p) => p.data);
+    return pages ?? [];
+  }, [branchId, csBranchData, csInfiniteData]);
+
   const {
     data: discountedProductsData,
     fetchNextPage: fetchNextDiscountedPage,
@@ -167,10 +193,16 @@ const MenuSection = () => {
     refetch: refetchCategories,
   } = useMenuCategories();
 
-  // Hide categories that have no active products (e.g. all items inactive)
+  // Hide categories that have no live (non-coming-soon) products
   const visibleCategories = (categories ?? []).filter(
     (cat: Category) => (cat.activeProductCount ?? 0) > 0,
   );
+
+  // Total coming soon count from server — covers all products, not just loaded pages
+  const totalComingSoon = (categories ?? []).reduce(
+    (sum: number, cat: Category) => sum + (cat.comingSoonCount ?? 0),
+    0,
+  ); 
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -212,7 +244,7 @@ const MenuSection = () => {
   // ── Branch-side client filtering (branch products still filtered locally) ──
   const filteredProducts = branchId
     ? dynamicProducts.filter((p) => {
-        if (activeCategory !== "All" && p.category?.name !== activeCategory)
+        if (isRealCategory && p.category?.name !== activeCategory)
           return false;
         if (
           activeSubcategory &&
@@ -223,13 +255,8 @@ const MenuSection = () => {
       })
     : dynamicProducts; // already filtered server-side for non-branch
 
-  // Filter products based on coming-soon toggle
-  const comingSoonCount = countComingSoon(dynamicProducts);
-  const displayProducts = showComingSoon
-    ? filteredProducts.filter((p) => p.isComingSoon)
-    : filteredProducts.filter((p) => !p.isComingSoon);
-
-  const groupedItems = groupProducts(displayProducts);
+  // Show all products (including coming soon) under their categories
+  const groupedItems = groupProducts(filteredProducts);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -337,31 +364,62 @@ const MenuSection = () => {
     );
   };
 
+  const ComingSoonView = () => {
+    const csLoading = branchId ? isCsBranchLoading : isCsAllLoading;
+    if (csLoading && comingSoonProducts.length === 0) {
+      return (
+        <div className="text-center py-20">
+          <div className="inline-block animate-spin mb-4">
+            <div className="h-8 w-8 border-4 border-gray-200 border-t-brand-color-500 rounded-full" />
+          </div>
+          <h3 className="text-base font-semibold text-black mb-1">
+            Loading coming soon items...
+          </h3>
+        </div>
+      );
+    }
+    if (comingSoonProducts.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <DynamicIcon name="Clock" size={40} className="mx-auto text-blue-300 mb-4" />
+          <h3 className="text-base font-semibold text-gray-700 mb-1">
+            No coming soon items
+          </h3>
+          <p className="text-sm text-gray-400">
+            There are no coming soon items right now.
+          </p>
+          <IconButton
+            onClick={() => setShowComingSoon(false)}
+            variant="primary"
+            className="mt-4 rounded-full px-5 py-2"
+            text="View Live Menu"
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <DynamicIcon name="Clock" size={20} className="text-blue-500" />
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Coming Soon</h2>
+            <p className="text-xs text-gray-500">
+              These items aren't available yet — check back soon!
+            </p>
+          </div>
+        </div>
+        <ProductGrid items={comingSoonProducts} />
+      </div>
+    );
+  };
+
   const GroupedContent = () => (
     <>
-      {groupedItems.length > 0 ||
-      (!showComingSoon && discountedProducts.length > 0) ? (
+      {showComingSoon ? (
+        <ComingSoonView />
+      ) : groupedItems.length > 0 || discountedProducts.length > 0 ? (
         <div className="space-y-12">
-          {/* Coming Soon section header */}
-          {showComingSoon && (
-            <div className="mb-2">
-              <div className="flex items-center gap-3">
-                <DynamicIcon name="Clock" size={20} className="text-blue-500" />
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Coming Soon
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    These items aren't available yet — check back soon!
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!showComingSoon && activeCategory === "All" && (
-            <DiscountedProductsShelf />
-          )}
+          {activeCategory === "All" && <DiscountedProductsShelf />}
 
           {groupedItems.map(({ categoryName, subcategoryGroups }) => (
             <div key={categoryName}>
@@ -426,28 +484,6 @@ const MenuSection = () => {
           title="Failed to load products"
           description="Our menu couldn't be fetched right now. Please try again."
         />
-      ) : showComingSoon ? (
-        <div className="text-center py-16">
-          <DynamicIcon
-            name="Clock"
-            size={40}
-            className="mx-auto text-blue-300 mb-4"
-          />
-          <h3 className="text-base font-semibold text-gray-700 mb-1">
-            No coming soon items
-          </h3>
-          <p className="text-sm text-gray-400">
-            {activeCategory !== "All"
-              ? "This category has no coming soon items. Try viewing all categories."
-              : "There are no coming soon items right now."}
-          </p>
-          <IconButton
-            onClick={() => setShowComingSoon(false)}
-            variant="primary"
-            className="mt-4 rounded-full px-5 py-2"
-            text="View Live Menu"
-          />
-        </div>
       ) : (
         <FetchError
           onRetry={refetch}
@@ -487,8 +523,8 @@ const MenuSection = () => {
                     ? { label: "Failed to load categories", value: "__error" }
                     : { label: "All Categories", value: "All" },
 
-                ...(comingSoonCount > 0
-                  ? [{ label: "Coming Soon Products", value: "__coming_soon__" }]
+                ...(totalComingSoon > 0
+                  ? [{ label: "Coming Soon", value: "__coming_soon__" }]
                   : []),
 
                 ...visibleCategories.map((cat: Category) => ({
@@ -499,8 +535,8 @@ const MenuSection = () => {
             />
           </div>
 
-          {/* Subcategory pills (only when category has subcategories) */}
-          {activeCategory !== "All" &&
+          {/* Subcategory pills (only when a real category is selected) */}
+          {activeCategory !== "All" && activeCategory !== "__coming_soon__" &&
             (() => {
               const subs = getSubcategoriesForCategory(activeCategory);
               if (subs.length === 0) return null;
@@ -544,31 +580,32 @@ const MenuSection = () => {
             </p>
             {/* All */}
             <IconButton
-              onClick={() => {
-                handleSelectCategory("All");
-                setShowComingSoon(false);
-              }}
-              variant={
-                activeCategory === "All" && !showComingSoon
-                  ? "primary"
-                  : "ghost"
-              }
+              onClick={() => handleSelectCategory("All")}
+              variant={activeCategory === "All" && !showComingSoon ? "primary" : "ghost"}
               text="All Categories"
               className="w-full rounded-xl p-3 justify-start"
             />
 
             {/* Coming Soon toggle */}
-            {comingSoonCount > 0 && (
+            {totalComingSoon > 0 && (
               <IconButton
-                type="button"
-                onClick={() => setShowComingSoon((prev) => !prev)}
-                className={`w-full flex items-center justify-start p-3 rounded-xl ${
+                onClick={() => {
+                  if (showComingSoon) {
+                    handleSelectCategory("All");
+                  } else {
+                    setActiveCategory("__coming_soon__");
+                    setActiveSubcategory(null);
+                    setShowComingSoon(true);
+                    scrollToContent();
+                  }
+                }}
+                className={`w-full justify-start p-3 rounded-xl ${
                   showComingSoon
-                    ? "bg-blue-500 hover:bg-blue-600 shadow-sm"
+                    ? "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
                     : "text-blue-600 bg-blue-50 hover:bg-blue-100"
                 }`}
                 icon={{ name: "Clock" }}
-                text="Coming Soon"
+                text={`Coming Soon (${totalComingSoon})`}
               />
             )}
 
