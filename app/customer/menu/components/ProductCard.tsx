@@ -5,11 +5,13 @@ import { STOCK_STATUSES } from "@/types/inventory_types";
 import ProductDetailModal from "./ProductDetailsModal";
 import { ITEM_TYPES } from "@/types/products";
 import { formatCurrency } from "@/helper/formatter/";
-import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useProductReviews } from "@/hooks/api/customers/useProductReviews";
 import { IconButton } from "@/components/ui/buttons";
 import { AppImage } from "@/components/AppImage";
-import { cn } from "@/lib/utils";
+import {
+  getProductBadges,
+  ProductBadgeRibbon,
+} from "../../helper/getProductBadges";
 
 interface ProductCardProps {
   item: BranchProduct;
@@ -18,25 +20,6 @@ interface ProductCardProps {
   openBranchSelector: () => void;
 }
 // ── Helpers (pure, no need to live inside component) ──────────────────────────
-
-/** Number of days a product is considered "new" after going live */
-const NEW_BADGE_DAYS = 15;
-
-/**
- * Returns true if the product is within the NEW badge window.
- * Uses goLiveDate if set (scheduled launch), otherwise falls back to createdAt.
- */
-const isNewProduct = (
-  goLiveDate: string | null | undefined,
-  createdAt: string | undefined,
-): boolean => {
-  const referenceDate = goLiveDate || createdAt;
-  if (!referenceDate) return false;
-  const refTime = new Date(referenceDate).getTime();
-  if (isNaN(refTime)) return false;
-  const ageMs = Date.now() - refTime;
-  return ageMs >= 0 && ageMs <= NEW_BADGE_DAYS * 24 * 60 * 60 * 1000;
-};
 
 // Discount Label
 const getProductDiscountLabel = (
@@ -58,72 +41,6 @@ const slugify = (text: string) =>
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-
-// ── Badge system ──────────────────────────────────────────────────────────────
-
-interface ProductBadge {
-  label: string;
-  bg: string;
-  icon: string;
-}
-
-/** Ribbon clip-path — flat left edge, pennant notch on the right */
-const RIBBON_CLIP = {
-  clipPath: "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%)",
-};
-
-/**
- * Returns all applicable badges for a product, ordered by priority.
- * "NEW" can coexist with a status badge; status badges are mutually exclusive.
- */
-const getProductBadges = (
-  item: BranchProduct,
-  isOutOfStock: boolean,
-  isLowStock: boolean,
-  isComingSoon: boolean,
-  isNew: boolean,
-  status: string,
-  quantity: number | null,
-): ProductBadge[] => {
-  const badges: ProductBadge[] = [];
-
-  if (isNew) {
-    badges.push({ label: "NEW!", bg: "bg-brand-color-500", icon: "Flame" });
-  }
-
-  if (isComingSoon) {
-    badges.push({ label: "Coming Soon", bg: "bg-blue-500", icon: "Clock" });
-  } else if (isOutOfStock) {
-    badges.push({ label: "Out of stock", bg: "bg-red-500", icon: "Ban" });
-  } else if (isLowStock) {
-    badges.push({
-      label: `${quantity} left`,
-      bg: "bg-amber-500",
-      icon: "ChevronsDown",
-    });
-  } else if (item.isPopular) {
-    badges.push({
-      label: "Best Seller",
-      bg: "bg-brand-color-500",
-      icon: "TrendingUp",
-    });
-  }
-
-  return badges;
-};
-
-const ProductBadgeRibbon = ({ badge }: { badge: ProductBadge }) => (
-  <div
-    style={RIBBON_CLIP}
-    className={cn(
-      `flex items-center gap-1.5 pl-3 pr-5 py-1.5 text-[11px] font-bold text-white`,
-      badge.bg,
-    )}
-  >
-    <DynamicIcon name={badge.icon} size={12} />
-    <span>{badge.label}</span>
-  </div>
-);
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -179,18 +96,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
     hasBranch &&
     (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0),
   );
-  const isLowStock = Boolean(hasBranch && status === STOCK_STATUSES.LOW_STOCK);
   const isComingSoon = item.isComingSoon === true;
-  const isNew = !isComingSoon && isNewProduct(item.goLiveDate, item.createdAt);
-  const badges = getProductBadges(
-    item,
-    isOutOfStock,
-    isLowStock,
+  const badges = getProductBadges({
+    isPopular: item.isPopular,
     isComingSoon,
-    isNew,
-    status,
+    status: hasBranch ? status : "",
     quantity,
-  );
+    goLiveDate: item.goLiveDate,
+    createdAt: item.createdAt,
+  });
   const activeProductDiscount = item.activeProductDiscount;
   const hasProductDiscount =
     Boolean(activeProductDiscount) && activeProductDiscount!.discountAmount > 0;

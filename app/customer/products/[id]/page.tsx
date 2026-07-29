@@ -21,70 +21,10 @@ import { useQuery } from "@tanstack/react-query";
 import { AppImage } from "@/components/AppImage";
 import { IconButton } from "@/components/ui/buttons";
 import ProductRecommendations from "@/app/customer/components/ProductRecommendations";
-import { cn } from "@/lib/utils";
-
-// Show "NEW" badge for products within 15 days of going live
-const NEW_BADGE_MS = 15 * 24 * 60 * 60 * 1000;
-
-// ── Badge system (aligned with ProductCard) ──────────────────────────────────
-
-interface ProductBadge {
-  label: string;
-  bg: string;
-  icon: string;
-}
-
-const RIBBON_CLIP = {
-  clipPath: "polygon(0 0, 100% 0, 97% 50%, 100% 100%, 0 100%)",
-};
-
-const getProductBadges = (
-  isPopular: boolean,
-  isOutOfStock: boolean,
-  isLowStock: boolean,
-  isComingSoon: boolean,
-  isNew: boolean,
-  quantity: number | null,
-): ProductBadge[] => {
-  const badges: ProductBadge[] = [];
-
-  if (isNew) {
-    badges.push({ label: "NEW!", bg: "bg-brand-color-500", icon: "Flame" });
-  }
-
-  if (isComingSoon) {
-    badges.push({ label: "Coming Soon", bg: "bg-blue-500", icon: "Clock" });
-  } else if (isOutOfStock) {
-    badges.push({ label: "Out of stock", bg: "bg-red-500", icon: "Ban" });
-  } else if (isLowStock) {
-    badges.push({
-      label: `${quantity} left`,
-      bg: "bg-amber-500",
-      icon: "ChevronsDown",
-    });
-  } else if (isPopular) {
-    badges.push({
-      label: "Best Seller",
-      bg: "bg-brand-color-500",
-      icon: "TrendingUp",
-    });
-  }
-
-  return badges;
-};
-
-const ProductBadgeRibbon = ({ badge }: { badge: ProductBadge }) => (
-  <div
-    style={RIBBON_CLIP}
-    className={cn(
-      `flex items-center gap-1.5 pl-3 pr-5 py-1.5 text-[11px] font-bold text-white`,
-      badge.bg,
-    )}
-  >
-    <DynamicIcon name={badge.icon} size={12} />
-    <span>{badge.label}</span>
-  </div>
-);
+import {
+  getProductBadges,
+  ProductBadgeRibbon,
+} from "../../helper/getProductBadges";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -311,26 +251,15 @@ const ProductDetailPage: React.FC = () => {
     branchId &&
     (status === STOCK_STATUSES.OUT_OF_STOCK || (quantity ?? 1) <= 0),
   );
-  const isLowStock = Boolean(branchId && status === STOCK_STATUSES.LOW_STOCK);
   const isComingSoon = product?.isComingSoon === true;
-  // eslint-disable-next-line react-hooks/purity -- deterministic for a given product
-  const isNew = (() => {
-    if (isComingSoon) return false;
-    // Use goLiveDate (scheduled launch) or fall back to createdAt
-    const ref = product?.goLiveDate || product?.createdAt;
-    if (ref == null) return false;
-    const t = new Date(ref as string).getTime();
-    if (isNaN(t)) return false;
-    return Date.now() - t <= NEW_BADGE_MS;
-  })();
-  const badges = getProductBadges(
-    product?.isPopular ?? false,
-    isOutOfStock,
-    isLowStock,
+  const badges = getProductBadges({
+    isPopular: product?.isPopular ?? false,
     isComingSoon,
-    isNew,
+    status: branchId ? status : "",
     quantity,
-  );
+    goLiveDate: product?.goLiveDate,
+    createdAt: product?.createdAt,
+  });
 
   // ── Fire ViewContent pixel ── (also moved above the early returns) ────────
   React.useEffect(() => {
@@ -510,7 +439,7 @@ const ProductDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-360 mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* ── Left: Image ─────────────────────────────────────────────── */}
           <div className="w-full max-w-md lg:w-2/5 lg:shrink-0 lg:sticky lg:top-40 lg:self-start">
@@ -552,9 +481,23 @@ const ProductDetailPage: React.FC = () => {
               </div>
             </div>
           </div>
-
           {/* ── Right: Details & Modifier Groups ────────────────────────── */}
           <div className="w-full lg:flex-1 flex flex-col gap-5">
+            {/* ── Validation errors ────────────────────────────────────────── */}
+            {modifierValidationErrors.length > 0 && (
+              <div className="flex items-start gap-2 text-sm shadow-sm text-red-500 bg-red-100 p-3">
+                <div className="place-self-center">
+                  <DynamicIcon name="X" size={18} />
+                </div>
+
+                {modifierValidationErrors.map((err, i) => (
+                  <p key={i} className="">
+                    {err}
+                  </p>
+                ))}
+              </div>
+            )}
+
             <div>
               {/* Header */}
               <div>
@@ -615,6 +558,7 @@ const ProductDetailPage: React.FC = () => {
                   </p>
                 )}
               </div>
+
               {/* ── Modifier Groups ─────────────────────────────────────────── */}
               {hasModifierGroups &&
                 populatedGroups.map((group) => {
@@ -818,21 +762,7 @@ const ProductDetailPage: React.FC = () => {
                     </div>
                   );
                 })}
-              {/* ── Validation errors ────────────────────────────────────────── */}
-              {modifierValidationErrors.length > 0 && (
-                <div className="flex items-start gap-2 text-xs text-red-500 bg-red-50 rounded-lg p-3">
-                  <DynamicIcon
-                    name="AlertCircle"
-                    size={14}
-                    className="shrink-0 mt-0.5"
-                  />
-                  <div>
-                    {modifierValidationErrors.map((err, i) => (
-                      <p key={i}>{err}</p>
-                    ))}
-                  </div>
-                </div>
-              )}
+
               {/* ── Add to cart footer ────────────────────────────────────────── */}
               <div className="sticky bottom-0 bg-gray-50 border-t border-gray-100 py-4 -mx-4 px-4 md:mx-0 md:px-0 md:border-t-0 md:pt-0">
                 <div className="flex items-center gap-3 mt-4">
@@ -846,9 +776,10 @@ const ProductDetailPage: React.FC = () => {
                   <IconButton
                     text={
                       isAdded
-                        ? "Added!" :
-                        isComingSoon ? "Coming soon!" 
-                        : `Add to cart · ${formatCurrency(total)}`
+                        ? "Added!"
+                        : isComingSoon
+                          ? "Coming soon!"
+                          : `Add to cart · ${formatCurrency(total)}`
                     }
                     variant={
                       isAdded
@@ -858,25 +789,34 @@ const ProductDetailPage: React.FC = () => {
                           : "disabled"
                     }
                     className="p-3 rounded-lg w-full"
-                    icon={{ name: isAdded ? "Check" : isComingSoon ? "Clock" : "ShoppingBag" }}
+                    icon={{
+                      name: isAdded
+                        ? "Check"
+                        : isComingSoon
+                          ? "Clock"
+                          : "ShoppingBag",
+                    }}
                     onClick={handleAddToCart}
-                    disabled={isAdded || !canAddToCart || isOutOfStock || isComingSoon}
+                    disabled={
+                      isAdded || !canAddToCart || isOutOfStock || isComingSoon
+                    }
                   />
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* ── Recommendations sidebar ────────────────────────────────── */}
-          <div className="lg:w-64 lg:shrink-0">
-            <ProductRecommendations
-              branchId={branchId ?? null}
-              excludeIds={[product._id]}
-              categoryId={product.category?._id}
-              layout="column"
-            />
-          </div>
+          {branchId && (
+            <div className="lg:w-64 lg:shrink-0">
+              <ProductRecommendations
+                branchId={branchId ?? null}
+                excludeIds={[product._id]}
+                categoryId={product.category?._id}
+                layout="column"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
