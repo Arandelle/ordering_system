@@ -28,6 +28,12 @@ export async function GET(request: NextRequest) {
     // Start with the $or search match from parseRequestQuery, then layer custom filters
     const query: Record<string, unknown> = { ...match };
 
+    // Show only soft-deleted accounts when "deleted" filter is active;
+    // otherwise exclude them from the main customer list
+    if (filter === "deleted") {
+      query.isDeleted = true;
+    }
+
     // Filter tabs (banned / active are DB-level; new / vip are applied after stats enrichment)
     if (filter === "banned") query.banned = true;
     if (filter === "active") query.banned = { $ne: true };
@@ -58,9 +64,10 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const [totalCount, newCustomerCount] = await Promise.all([
-      User.countDocuments({}),
-      User.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+    const [totalCount, newCustomerCount, deletedCount] = await Promise.all([
+      User.countDocuments({ isDeleted: { $ne: true } }),
+      User.countDocuments({ isDeleted: { $ne: true }, createdAt: { $gte: thirtyDaysAgo } }),
+      User.countDocuments({ isDeleted: true }),
     ]);
 
     // Single aggregation for current page customers
@@ -104,6 +111,7 @@ export async function GET(request: NextRequest) {
           totalCustomers: totalCount,
           newCustomers: newCustomerCount,
           vipCustomers: vipCount,
+          deletedCustomers: deletedCount,
         },
       },
       { status: 200 },

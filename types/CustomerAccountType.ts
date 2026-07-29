@@ -10,6 +10,11 @@ export type Customer = {
   emailVerified?: boolean;
   createdAt?: string;
   image: string;
+  // Soft-delete fields
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  scheduledDeletionAt?: string | null;
+  deletionReason?: string | null;
 };
 
 export type CustomerCreateInput = {
@@ -41,6 +46,7 @@ export type CustomersListResponse = {
     totalCustomers: number;
     newCustomers: number;
     vipCustomers: number;
+    deletedCustomers: number;
   };
 };
 
@@ -48,4 +54,38 @@ export type CustomersListResponse = {
 export type CustomerSortBy = "newest" | "oldest" | "highest_spent" | "most_orders" | "name_asc" | "name_desc";
 
 /** Filter tabs for the customer list */
-export type CustomerFilter = "all" | "active" | "banned" | "new" | "vip";
+export type CustomerFilter = "all" | "active" | "banned" | "new" | "vip" | "deleted";
+
+/** Archived (permanently deleted) customer account */
+export type ArchivedCustomer = {
+  _id: string;
+  originalUserId: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  image?: string;
+  emailVerified?: boolean;
+  deletedAt: string;
+  scheduledDeletionAt: string;
+  deletionReason?: string | null;
+  archivedAt: string;
+  stats: {
+    totalOrders: number;
+    totalSpent: number;
+    totalReviews: number;
+  };
+};
+
+export type ArchivedCustomersListResponse = {
+  data: ArchivedCustomer[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+};

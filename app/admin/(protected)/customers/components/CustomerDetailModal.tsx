@@ -56,6 +56,7 @@ export default function CustomerDetailModal({
   });
 
   const isBanned = customer?.banned === true;
+  const isDeleted = customer?.isDeleted === true;
 
   return (
     <Modal
@@ -96,10 +97,14 @@ export default function CustomerDetailModal({
                 </h3>
                 <span
                   className={`text-xs font-semibold py-1 px-3 rounded-lg text-white ${
-                    isBanned ? "bg-red-500" : "bg-emerald-500"
+                    isDeleted
+                      ? "bg-stone-500"
+                      : isBanned
+                        ? "bg-red-500"
+                        : "bg-emerald-500"
                   }`}
                 >
-                  {isBanned ? "Suspended" : "Active"}
+                  {isDeleted ? "Deleted" : isBanned ? "Suspended" : "Active"}
                 </span>
               </div>
               <p className="text-sm text-stone-500 mt-0.5">{customer.email}</p>
@@ -199,14 +204,16 @@ export default function CustomerDetailModal({
             <div className="bg-stone-50 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-3 text-sm">
                 <DynamicIcon
-                  name={isBanned ? "ShieldOff" : "ShieldCheck"}
+                  name={isDeleted ? "UserX" : isBanned ? "ShieldOff" : "ShieldCheck"}
                   size={16}
-                  className={`shrink-0 ${isBanned ? "text-red-500" : "text-emerald-500"}`}
+                  className={`shrink-0 ${isDeleted ? "text-stone-500" : isBanned ? "text-red-500" : "text-emerald-500"}`}
                 />
                 <span className="text-stone-700">
-                  {isBanned
-                    ? "Account suspended — cannot log in or place orders"
-                    : "Account active — can log in and place orders"}
+                  {isDeleted
+                    ? "Account deleted — pending permanent removal"
+                    : isBanned
+                      ? "Account suspended — cannot log in or place orders"
+                      : "Account active — can log in and place orders"}
                 </span>
               </div>
               <div className="flex items-center gap-3 text-sm">
@@ -222,6 +229,55 @@ export default function CustomerDetailModal({
             </div>
           </section>
 
+          {/* ── Deletion Details (shown only for soft-deleted accounts) ── */}
+          {isDeleted && (
+            <section>
+              <h4 className="text-xs font-bold text-stone-500 uppercase tracking-widest mb-3">
+                Deletion Details
+              </h4>
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <DynamicIcon
+                    name="Trash2"
+                    size={16}
+                    className="text-red-400 shrink-0"
+                  />
+                  <span className="text-stone-700">
+                    Deleted on{" "}
+                    {customer.deletedAt
+                      ? formatDateOnly(customer.deletedAt)
+                      : "Unknown date"}
+                  </span>
+                </div>
+                {customer.scheduledDeletionAt && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <DynamicIcon
+                      name="Clock"
+                      size={16}
+                      className="text-amber-500 shrink-0"
+                    />
+                    <span className="text-stone-700">
+                      Scheduled for permanent purge on{" "}
+                      {formatDateOnly(customer.scheduledDeletionAt)}
+                    </span>
+                  </div>
+                )}
+                {customer.deletionReason && (
+                  <div className="flex items-start gap-3 text-sm">
+                    <DynamicIcon
+                      name="MessageSquare"
+                      size={16}
+                      className="text-stone-400 shrink-0 mt-0.5"
+                    />
+                    <span className="text-stone-700">
+                      Reason: {customer.deletionReason}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* ── Action Buttons ── */}
           <div className="flex gap-3 justify-end pt-2 border-t border-stone-100">
             <IconButton
@@ -230,22 +286,24 @@ export default function CustomerDetailModal({
               className="rounded-lg px-6"
               text="Close"
             />
-            <IconButton
-              onClick={() => toggleBan.mutate(isBanned ? "unban" : "ban")}
-              disabled={toggleBan.isPending}
-              variant={isBanned ? "success" : "danger"}
-              text={isBanned ? "Reactive Account" : "Suspend Account"}
-              icon={{
-                name: toggleBan.isPending
-                  ? "Loader2"
-                  : isBanned
-                    ? "ShieldCheck"
-                    : "ShieldOff",
-                size: 16,
-                className: toggleBan.isPending ? "animate-spin" : "",
-              }}
-              className="rounded-lg px-6"
-            />
+            {!isDeleted && (
+              <IconButton
+                onClick={() => toggleBan.mutate(isBanned ? "unban" : "ban")}
+                disabled={toggleBan.isPending}
+                variant={isBanned ? "success" : "danger"}
+                text={isBanned ? "Reactive Account" : "Suspend Account"}
+                icon={{
+                  name: toggleBan.isPending
+                    ? "Loader2"
+                    : isBanned
+                      ? "ShieldCheck"
+                      : "ShieldOff",
+                  size: 16,
+                  className: toggleBan.isPending ? "animate-spin" : "",
+                }}
+                className="rounded-lg px-6"
+              />
+            )}
           </div>
         </div>
       )}

@@ -25,6 +25,8 @@ import type {
 import CustomerDetailModal from "./components/CustomerDetailModal";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { IconButton } from "@/components/ui/buttons";
+import { formatCurrency, formatDate } from "@/helper/formatter";
+import { AppImage } from "@/components/AppImage";
 
 const FILTER_OPTIONS: { value: CustomerFilter; label: string }[] = [
   { value: "all", label: "All Customers" },
@@ -32,6 +34,7 @@ const FILTER_OPTIONS: { value: CustomerFilter; label: string }[] = [
   { value: "new", label: "New (30 days)" },
   { value: "vip", label: "VIP (₱10k+)" },
   { value: "banned", label: "Suspended" },
+  { value: "deleted", label: "Deleted" },
 ];
 
 const SORT_OPTIONS: { value: CustomerSortBy; label: string }[] = [
@@ -123,7 +126,7 @@ const CustomersPage = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {(
           [
             {
@@ -145,6 +148,10 @@ const CustomersPage = () => {
             {
               label: "New (30 days)",
               value: summary?.newCustomers ?? 0,
+            },
+            {
+              label: "Deleted Accounts",
+              value: summary?.deletedCustomers ?? 0,
             },
           ] as StatCardProps[]
         ).map((card) => (
@@ -234,18 +241,11 @@ const CustomersPage = () => {
                       <TableCell>
                         <div className="flex items-center gap-3 mx-auto max-w-60 min-w-44">
                           <div className="w-10 h-10 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden">
-                            {customer.image ? (
-                              <img
-                                src={customer.image}
-                                alt={`${customer.firstName} photo`}
-                                loading="lazy"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span>
-                                {customer.firstName?.charAt(0) ?? "?"}
-                              </span>
-                            )}
+                            <AppImage
+                              src={customer.image ?? ""}
+                              alt={`${customer.firstName} photo`}
+                              loading="lazy"
+                            />
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-stone-800 truncate">
@@ -280,13 +280,18 @@ const CustomersPage = () => {
                       {/* Total Spent */}
                       <TableCell className="text-center">
                         <span className="text-sm font-semibold text-emerald-600">
-                          ₱{(customer.totalSpent ?? 0).toLocaleString()}
+                          {formatCurrency(customer.totalSpent)}
                         </span>
                       </TableCell>
 
                       {/* Status */}
                       <TableCell className="text-center">
-                        {isBanned ? (
+                        {customer.isDeleted ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-stone-200 text-stone-600">
+                            <DynamicIcon name="UserX" size={12} />
+                            Deleted
+                          </span>
+                        ) : isBanned ? (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-red-100 text-red-600">
                             <DynamicIcon name="Ban" size={12} />
                             Suspended
@@ -297,34 +302,34 @@ const CustomersPage = () => {
                             Active
                           </span>
                         )}
+                        {customer.isDeleted && customer.scheduledDeletionAt && (
+                          <p className="text-[10px] text-stone-400 mt-1">
+                            Purges{" "}
+                            {formatDate(customer.scheduledDeletionAt, {
+                              time: false,
+                            })}
+                          </p>
+                        )}
                       </TableCell>
 
                       {/* Join Date */}
                       <TableCell className="text-center">
                         <span className="text-sm text-stone-600">
-                          {customer.createdAt
-                            ? new Date(customer.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                },
-                              )
-                            : "—"}
+                          {formatDate(customer.createdAt)}
                         </span>
                       </TableCell>
 
                       {/* Actions */}
                       <TableCell className="text-center">
-                        <button
+                        <IconButton
                           onClick={() =>
                             customer._id && setSelectedCustomerId(customer._id)
                           }
-                          className="px-4 py-2 text-sm font-semibold text-brand-color-500 hover:bg-brand-color-500/10 rounded-lg transition-colors cursor-pointer"
-                        >
-                          View Details
-                        </button>
+                          variant="underline"
+                          text="View Details"
+                          className="text-xs"
+                          title="View customer details"
+                        />
                       </TableCell>
                     </TableRow>
                   );
