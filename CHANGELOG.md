@@ -1,6 +1,62 @@
 # Changelog
 
 
+## 1.18.0 - Go-Live Scheduler, NEW Badge & Coming Soon Section - 2026-07-28
+**Release Focus:** Scheduled product launches with automatic go-live, "NEW!" badge for recently launched products, customer-facing coming soon section toggle, and a unified ribbon-style badge system across product cards and detail pages.
+
+### Added
+- **Go-live date scheduler** — `goLiveDate` field on Product model; admin can set a date and time in the product form to schedule when a coming soon product automatically goes live
+- **Auto-live resolution** — products with a `goLiveDate` in the past are automatically treated as live (not coming soon) across all customer-facing APIs using MongoDB `$$NOW` server-time comparison in aggregation pipelines, with a JS-level safety net on the response mapper
+- **Lazy cleanup on admin save** — whenever an admin saves any product, a background `updateMany` clears `isComingSoon` on all products whose `goLiveDate` has passed, keeping the database eventually consistent
+- **"NEW!" badge** — products display a flame-icon "NEW!" ribbon for 15 days after going live (uses `goLiveDate` if set, otherwise falls back to `createdAt`)
+- **Coming Soon section toggle** — customer menu has a "Coming Soon" pill button (with count badge) on both mobile pill bar and desktop sidebar; toggling it filters the view to show only coming soon products with a dedicated header
+- **Coming Soon empty state** — when no coming soon items exist in the active category, a friendly empty state is shown with a "View Live Menu" button to return to the regular menu
+- **Ribbon-style badge system** — new `ProductBadgeRibbon` component with pennant-notch clip-path, replacing the old pill-shaped badges; supports NEW!, Coming Soon, Out of Stock, Low Stock, and Best Seller badges with icons
+- **30-day age limit for coming soon** — products older than 30 days cannot be set to "Coming Soon" (enforced in both admin UI and API); admin is prompted to deactivate instead
+- `goLiveDate` and `createdAt` now projected through all customer-facing API responses (branch products, discounted products, recommendations, single product)
+- `goLiveDate` field in admin product form with combined date + time picker inside a blue "Schedule Go-Live" panel, shown only when Coming Soon is toggled on
+
+### Improved
+- **Badge coexistence** — "NEW!" badge can coexist with a status badge (out of stock, low stock, best seller); status badges remain mutually exclusive
+- **Product card interaction** — entire card is now clickable (with keyboard support via `role`, `tabIndex`, `onKeyDown`) for purchasable products; out-of-stock and coming soon cards are non-interactive with reduced opacity
+- **Product detail page badges** — ribbon-style badges replace the old inline "Best Seller" / "Out of stock" / "Coming Soon" overlays; cleaner overlay using a transparent backdrop instead of text labels
+- **Review button** — product card review rating now uses `IconButton` with `stopPropagation` to prevent accidental card navigation when clicking the rating
+
+### Changed
+- `ProductCard` badge rendering moved from inline conditional JSX to the `getProductBadges()` + `ProductBadgeRibbon` pipeline, aligned with the product detail page
+- Combo/Set badge removed from the product card image overlay (product type is conveyed through the product detail page)
+- `Product` and `ProductPayload` type definitions updated with `goLiveDate?: string | null`; `createdAt` and `updatedAt` changed from `Date` to `string` for API response consistency
+- Admin product form "Coming Soon" toggle is disabled with an explanatory subtitle when the product is older than 30 days
+
+
+## 1.17.0 - Customer Account Deletion & Recovery - 2026-07-28
+**Release Focus:** Customer self-service account deletion with 30-day retention and recovery, orphaned auth record cleanup, hard-deletion of expired accounts with data archival, and blocked sign-in for deleted accounts (including Google).
+
+### Added
+- **Customer account deletion** — customers can delete their account from the profile security page; requires typing their email address to confirm, with an optional reason field
+- **30-day soft-delete retention** — deleted accounts are flagged with `isDeleted`, `deletedAt`, `scheduledDeletionAt` (30 days out), and `deletionReason`; the customer is immediately signed out and their cart is cleared
+- **Account restore on login** — when a deleted customer tries to sign in, the auth modal shows an amber "Account Scheduled for Deletion" dialog with days remaining and a "Restore My Account" button
+- **Email restore flow** — temporarily unsets `isDeleted` to allow Better Auth sign-in; on success, clears all deletion fields; on failure, re-sets `isDeleted` to keep the account soft-deleted
+- **Google restore flow** — prepares the account by unsetting `isDeleted`, then redirects to Google sign-in; the auth after-hook detects the restore-in-progress state and finalizes on successful callback
+- **Google sign-in block for deleted accounts** — auth hooks detect `isDeleted` users signing in via Google and return an `ACCOUNT_SCHEDULED_FOR_DELETION` error with the scheduled deletion date
+- **`ArchivedUser` model** — stores a full snapshot of the user profile, auth accounts, and order/review stats before hard-deletion; preserves historical context after the user record is removed
+- **Account cleanup service** — `runAccountCleanup()` runs two tasks: (1) removes orphaned Account/Session records with no matching user, (2) hard-deletes soft-deleted users past their retention period with archival
+- **Inngest scheduled cleanup** — `cleanupAccounts` Inngest function runs the cleanup service on a schedule
+- **Admin manual cleanup trigger** — `POST /api/admin/cleanup/orphaned-accounts` endpoint (admin-only) to manually invoke the cleanup process and get a summary of deleted records
+- **`DeleteAccountModal` component** — confirmation modal listing what happens on deletion (sign out, cart cleared, can't log in, history preserved, 30-day undo window)
+- `isDeleted`, `deletedAt`, `scheduledDeletionAt`, `deletionReason` fields on the User model
+
+### Improved
+- **Hard-delete with archival** — before removing a user, the cleanup service aggregates their total orders, total spent, and review count, then writes an `ArchivedUser` document with the user's profile, auth accounts, and stats
+- **Error-tolerant cleanup** — each user's hard-deletion is wrapped in try/catch; failures are collected in an `errors` array rather than aborting the entire batch
+- **Restore dialog UX** — shows a benefits list (data preserved, auto sign-in, history intact), remaining days countdown, and loading state during restore
+
+### Changed
+- Auth hooks (`after` callbacks) now check `isDeleted` on the user record and block sign-in with `ACCOUNT_SCHEDULED_FOR_DELETION` when the account is soft-deleted
+- Account deletion revokes all active sessions via Better Auth `revokeOtherSessions` and signs out the current session
+- `AuthModal` refactored to detect soft-deleted accounts in both email and Google sign-in error paths and show the restore dialog instead of a generic error toast
+
+
 ## 1.16.0 - Product Visibility Controls & Modifier Template Propagation - 2026-07-27
 **Release Focus:** Admin controls for product visibility (active/inactive, coming soon), modifier template editing moved to dedicated pages with one-click propagation to all linked products, floating mobile order/cart count badge, and delivery location accuracy improvements.
 
