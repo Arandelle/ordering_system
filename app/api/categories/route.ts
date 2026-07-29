@@ -19,12 +19,41 @@ export async function GET() {
           as: "subcategories",
         },
       },
+      // Count active products per category so the customer menu can hide empty categories
+      {
+        $lookup: {
+          from: "products",
+          let: { categoryId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$category", "$$categoryId"] },
+                    {
+                      $or: [
+                        { $eq: ["$isActive", true] },
+                        { $eq: [{ $type: "$isActive" }, "missing"] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            { $count: "count" },
+          ],
+          as: "activeProductData",
+        },
+      },
       {
         $addFields: {
           subCategoryCount: { $size: "$subcategories" },
+          activeProductCount: {
+            $ifNull: [{ $arrayElemAt: ["$activeProductData.count", 0] }, 0],
+          },
         },
       },
-      { $project: { subcategories: 0 } }, // don't bloat the payload
+      { $project: { subcategories: 0, activeProductData: 0 } }, // don't bloat the payload
     ]);
 
     return NextResponse.json(categories);

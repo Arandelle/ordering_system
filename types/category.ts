@@ -14,5 +14,6 @@ export interface Category {
     url: string,
     public_id: string
   }
+  activeProductCount?: number;
   createdAt?: Date;
 }

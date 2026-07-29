@@ -167,6 +167,11 @@ const MenuSection = () => {
     refetch: refetchCategories,
   } = useMenuCategories();
 
+  // Hide categories that have no active products (e.g. all items inactive)
+  const visibleCategories = (categories ?? []).filter(
+    (cat: Category) => (cat.activeProductCount ?? 0) > 0,
+  );
+
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       if (!entries[0].isIntersecting) return;
@@ -244,6 +249,8 @@ const MenuSection = () => {
 
     if (categoryName === "All") {
       setExpandedCategories(new Set());
+    } else if (categoryName === "__coming_soon__") {
+      setShowComingSoon(true);
     } else {
       setExpandedCategories((prev) => {
         const next = new Set<string>();
@@ -317,14 +324,14 @@ const MenuSection = () => {
         </div>
         <ProductGrid items={discountedProducts} />
         {hasMoreDiscountedProducts && (
-          <button
-            type="button"
+          <IconButton
             onClick={() => fetchNextDiscountedPage()}
             disabled={isFetchingNextDiscountedPage}
-            className="shrink-0 rounded-full border border-brand-color-200 bg-white px-4 py-2 text-xs font-bold text-brand-color-700 transition-colors hover:bg-brand-color-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isFetchingNextDiscountedPage ? "Loading..." : "See more"}
-          </button>
+            variant="outline"
+            text={isFetchingNextDiscountedPage ? "Loading..." : "See more"}
+            isLoading={isFetchingNextDiscountedPage}
+            className="shrink-0 rounded-full border-brand-color-200 text-brand-color-700 hover:bg-brand-color-100"
+          />
         )}
       </section>
     );
@@ -332,7 +339,8 @@ const MenuSection = () => {
 
   const GroupedContent = () => (
     <>
-      {groupedItems.length > 0 || (!showComingSoon && discountedProducts.length > 0) ? (
+      {groupedItems.length > 0 ||
+      (!showComingSoon && discountedProducts.length > 0) ? (
         <div className="space-y-12">
           {/* Coming Soon section header */}
           {showComingSoon && (
@@ -351,7 +359,9 @@ const MenuSection = () => {
             </div>
           )}
 
-          {!showComingSoon && activeCategory === "All" && <DiscountedProductsShelf />}
+          {!showComingSoon && activeCategory === "All" && (
+            <DiscountedProductsShelf />
+          )}
 
           {groupedItems.map(({ categoryName, subcategoryGroups }) => (
             <div key={categoryName}>
@@ -418,7 +428,11 @@ const MenuSection = () => {
         />
       ) : showComingSoon ? (
         <div className="text-center py-16">
-          <DynamicIcon name="Clock" size={40} className="mx-auto text-blue-300 mb-4" />
+          <DynamicIcon
+            name="Clock"
+            size={40}
+            className="mx-auto text-blue-300 mb-4"
+          />
           <h3 className="text-base font-semibold text-gray-700 mb-1">
             No coming soon items
           </h3>
@@ -427,13 +441,12 @@ const MenuSection = () => {
               ? "This category has no coming soon items. Try viewing all categories."
               : "There are no coming soon items right now."}
           </p>
-          <button
-            type="button"
+          <IconButton
             onClick={() => setShowComingSoon(false)}
-            className="mt-4 rounded-full bg-brand-color-500 px-5 py-2 text-sm font-bold text-white hover:bg-brand-color-600 transition-colors cursor-pointer"
-          >
-            View Live Menu
-          </button>
+            variant="primary"
+            className="mt-4 rounded-full px-5 py-2"
+            text="View Live Menu"
+          />
         </div>
       ) : (
         <FetchError
@@ -474,35 +487,16 @@ const MenuSection = () => {
                     ? { label: "Failed to load categories", value: "__error" }
                     : { label: "All Categories", value: "All" },
 
-                ...(categories?.map((cat: Category) => ({
+                ...(comingSoonCount > 0
+                  ? [{ label: "Coming Soon Products", value: "__coming_soon__" }]
+                  : []),
+
+                ...visibleCategories.map((cat: Category) => ({
                   label: cat.name,
                   value: cat.name,
-                })) ?? []),
+                })),
               ]}
             />
-            {comingSoonCount > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowComingSoon((prev) => !prev)}
-                className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-                  showComingSoon
-                    ? "bg-blue-500 text-white shadow-sm"
-                    : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                }`}
-              >
-                <DynamicIcon name="Clock" size={13} />
-                Coming Soon
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                    showComingSoon
-                      ? "bg-white/25 text-white"
-                      : "bg-blue-200 text-blue-700"
-                  }`}
-                >
-                  {comingSoonCount}
-                </span>
-              </button>
-            )}
           </div>
 
           {/* Subcategory pills (only when category has subcategories) */}
@@ -543,52 +537,39 @@ const MenuSection = () => {
       ══════════════════════════════════════════════ */}
       <div className="hidden lg:flex max-w-360 mx-auto gap-8 py-8 relative mt-12">
         {/* Sidebar */}
-        <aside className="w-72 shrink-0 sticky top-52 self-start max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-thin">
+        <aside className="w-72 shrink-0 sticky top-52 self-start max-h-[calc(100vh-12rem)] overflow-y-auto scrollbar-thin">
           <div className="space-y-2 pr-1">
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-3 pb-3">
               Browse Menu
             </p>
-
             {/* All */}
-            <button
+            <IconButton
               onClick={() => {
                 handleSelectCategory("All");
                 setShowComingSoon(false);
               }}
-              className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              variant={
                 activeCategory === "All" && !showComingSoon
-                  ? "bg-brand-color-500 text-white shadow-sm"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              }`}
-            >
-              All Categories
-            </button>
+                  ? "primary"
+                  : "ghost"
+              }
+              text="All Categories"
+              className="w-full rounded-xl p-3 justify-start"
+            />
 
             {/* Coming Soon toggle */}
             {comingSoonCount > 0 && (
-              <button
+              <IconButton
                 type="button"
                 onClick={() => setShowComingSoon((prev) => !prev)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
+                className={`w-full flex items-center justify-start p-3 rounded-xl ${
                   showComingSoon
-                    ? "bg-blue-500 text-white shadow-sm"
+                    ? "bg-blue-500 hover:bg-blue-600 shadow-sm"
                     : "text-blue-600 bg-blue-50 hover:bg-blue-100"
                 }`}
-              >
-                <span className="flex items-center gap-2">
-                  <DynamicIcon name="Clock" size={14} />
-                  Coming Soon
-                </span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    showComingSoon
-                      ? "bg-white/25 text-white"
-                      : "bg-blue-200 text-blue-700"
-                  }`}
-                >
-                  {comingSoonCount}
-                </span>
-              </button>
+                icon={{ name: "Clock" }}
+                text="Coming Soon"
+              />
             )}
 
             {/* Skeletons */}
@@ -604,19 +585,18 @@ const MenuSection = () => {
             {isCategoriesError && !isCategoriesPending && (
               <div className="px-3 py-2 text-xs text-red-500">
                 Failed to load.{" "}
-                <button
+                <IconButton
                   onClick={() => refetchCategories()}
-                  className="underline cursor-pointer"
-                >
-                  Retry
-                </button>
+                  variant="underline"
+                  text="Retry"
+                />
               </div>
             )}
 
             {/* Categories */}
             {!isCategoriesPending &&
               !isCategoriesError &&
-              categories?.map((cat: Category) => {
+              visibleCategories.map((cat: Category) => {
                 const isActive = activeCategory === cat.name;
                 const isExpanded = expandedCategories.has(cat.name);
                 const subcategories = getSubcategoriesForCategory(cat.name);
@@ -624,51 +604,40 @@ const MenuSection = () => {
 
                 return (
                   <div key={cat._id}>
-                    <button
-                      onClick={() => handleSelectCategory(cat.name)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 ${
-                        isActive
-                          ? "bg-brand-color-500 text-white shadow-sm"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
-                    >
-                      <span className="truncate">{cat.name}</span>
-                      {hasSubcategories && (
-                        <DynamicIcon
-                          name="ChevronDown"
-                          size={14}
-                          className={`shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""} ${
-                            isActive ? "text-white/70" : "text-gray-400"
-                          }`}
-                        />
-                      )}
-                    </button>
+                    <div>
+                      <IconButton
+                        onClick={() => handleSelectCategory(cat.name)}
+                        variant={isActive ? "primary" : "ghost"}
+                        className="w-full p-3 justify-start rounded-xl"
+                        icon={{
+                          name: hasSubcategories ? "ChevronDown" : null,
+                          className: isExpanded
+                            ? "rotate-180"
+                            : isActive
+                              ? "text-white/70"
+                              : "",
+                        }}
+                        text={cat.name}
+                      />
+                    </div>
 
                     {/* Subcategory list */}
                     {hasSubcategories && isExpanded && (
                       <div className="ml-3 my-2 border-l-2 border-gray-100 pl-3 space-y-2">
-                        <button
+                        <IconButton
                           onClick={() => handleSelectSubcategory(null)}
-                          className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            activeSubcategory === null
-                              ? "text-brand-color-500 bg-brand-color-500/10"
-                              : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-                          }`}
-                        >
-                          All
-                        </button>
+                          variant="ghost"
+                          text="All"
+                          className={`w-full justify-start py-1.5 px-3 rounded-lg ${activeSubcategory === null && "bg-brand-color-500/10 text-brand-color-500"}`}
+                        />
                         {subcategories.map((sub) => (
-                          <button
+                          <IconButton
                             key={sub}
                             onClick={() => handleSelectSubcategory(sub)}
-                            className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                              activeSubcategory === sub
-                                ? "text-brand-color-500 bg-brand-color-500/10"
-                                : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-                            }`}
-                          >
-                            {sub}
-                          </button>
+                            variant="ghost"
+                            text={sub}
+                            className={`w-full justify-start py-1.5 px-3 rounded-lg ${activeSubcategory === sub && "bg-brand-color-500/10 text-brand-color-500"}`}
+                          />
                         ))}
                       </div>
                     )}
