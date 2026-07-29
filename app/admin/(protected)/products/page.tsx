@@ -91,12 +91,17 @@ const ProductsPage = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i}/>)
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <StatCardSkeleton key={i} />
+            ))
           : statCards.map((card) => <StatCard key={card.label} {...card} />)}
       </div>
 
       {/* Products Table */}
-      <ProductTable products={sortedProducts} />
+      <ProductTable
+        products={sortedProducts}
+        isProductLoading={isLoading}
+      />
 
       <Pagination
         currentPage={pagination?.page ?? 1}
