@@ -19,23 +19,44 @@ export async function GET() {
           as: "subcategories",
         },
       },
-      // Count active products per category so the customer menu can hide empty categories
+      // Resolve effective isComingSoon using the same auto-live logic as
+      // the products & branch-products routes ($addFields + $$NOW)
       {
         $lookup: {
           from: "products",
           let: { categoryId: "$_id" },
           pipeline: [
+            // Auto-live: if goLiveDate has passed, treat as not coming-soon
+            {
+              $addFields: {
+                isComingSoon: {
+                  $cond: {
+                    if: {
+                      $and: [
+                        { $ne: ["$goLiveDate", null] },
+                        { $lte: ["$goLiveDate", "$$NOW"] },
+                      ],
+                    },
+                    then: false,
+                    else: { $ifNull: ["$isComingSoon", false] },
+                  },
+                },
+              },
+            },
             {
               $match: {
                 $expr: {
                   $and: [
                     { $eq: ["$category", "$$categoryId"] },
+                    // Must be active
                     {
                       $or: [
                         { $eq: ["$isActive", true] },
                         { $eq: [{ $type: "$isActive" }, "missing"] },
                       ],
                     },
+                    // Must NOT be coming soon (uses resolved value from $addFields)
+                    { $ne: ["$isComingSoon", true] },
                   ],
                 },
               },
@@ -45,15 +66,64 @@ export async function GET() {
           as: "activeProductData",
         },
       },
+      // Count coming-soon products (active only, respects auto-live goLiveDate)
+      {
+        $lookup: {
+          from: "products",
+          let: { categoryId: "$_id" },
+          pipeline: [
+            // Auto-live: if goLiveDate has passed, treat as not coming-soon
+            {
+              $addFields: {
+                isComingSoon: {
+                  $cond: {
+                    if: {
+                      $and: [
+                        { $ne: ["$goLiveDate", null] },
+                        { $lte: ["$goLiveDate", "$$NOW"] },
+                      ],
+                    },
+                    then: false,
+                    else: { $ifNull: ["$isComingSoon", false] },
+                  },
+                },
+              },
+            },
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$category", "$$categoryId"] },
+                    // Must be active
+                    {
+                      $or: [
+                        { $eq: ["$isActive", true] },
+                        { $eq: [{ $type: "$isActive" }, "missing"] },
+                      ],
+                    },
+                    // Must be coming soon (uses resolved value from $addFields)
+                    { $eq: ["$isComingSoon", true] },
+                  ],
+                },
+              },
+            },
+            { $count: "count" },
+          ],
+          as: "comingSoonData",
+        },
+      },
       {
         $addFields: {
           subCategoryCount: { $size: "$subcategories" },
           activeProductCount: {
             $ifNull: [{ $arrayElemAt: ["$activeProductData.count", 0] }, 0],
           },
+          comingSoonCount: {
+            $ifNull: [{ $arrayElemAt: ["$comingSoonData.count", 0] }, 0],
+          },
         },
       },
-      { $project: { subcategories: 0, activeProductData: 0 } }, // don't bloat the payload
+      { $project: { subcategories: 0, activeProductData: 0, comingSoonData: 0 } },
     ]);
 
     return NextResponse.json(categories);
