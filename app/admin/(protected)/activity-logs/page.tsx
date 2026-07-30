@@ -4,8 +4,12 @@ import React, { useState } from "react";
 import Pagination from "@/components/ui/Pagination";
 import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
 import { useBranchName } from "../../hooks/useBranchName";
-import { useAdminActivityLogs, ActivityLogParams } from "@/hooks/api/useActivityLogs";
+import {
+  useAdminActivityLogs,
+  ActivityLogParams,
+} from "@/hooks/api/useActivityLogs";
 import ActivityLogsTable from "./components/ActivityLogsTable";
+import { SelectField } from "@/components/ui/FormComponents";
 
 const CATEGORY_OPTIONS = [
   { value: "all", label: "All Categories" },
@@ -62,36 +66,25 @@ const ActivityLogsPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-500">Category</label>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-color-500/30 focus:border-brand-color-500"
-          >
-            {CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-500">Actor</label>
-          <select
-            value={actorFilter}
-            onChange={(e) => setActorFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-color-500/30 focus:border-brand-color-500"
-          >
-            {ACTOR_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="flex max-w-5xl gap-3">
+        <SelectField
+          label="Category"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          options={CATEGORY_OPTIONS.map((opt) => ({
+            label: opt.label,
+            value: opt.value,
+          }))}
+        />
+        <SelectField
+          label="Actor"
+          value={actorFilter}
+          onChange={(e) => setActorFilter(e.target.value)}
+          options={ACTOR_OPTIONS.map((opt) => ({
+            label: opt.label,
+            value: opt.value,
+          }))}
+        />
       </div>
 
       {/* Table */}

@@ -1,6 +1,17 @@
 import { ActivityLogEntry } from "@/hooks/api/useActivityLogs";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import LoadingPage from "@/components/ui/LoadingPage";
+import { formatDate } from "@/helper/formatter";
+import {
+  Table,
+  TableBody,
+  TableCard,
+  TableCell,
+  TableEmptyState,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ActivityLogsTableProps {
   logs: ActivityLogEntry[];
@@ -38,31 +49,6 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 /**
- * Format a relative time string (e.g. "2 hours ago")
- */
-function timeAgo(dateStr: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 1000,
-  );
-
-  const intervals: [number, string][] = [
-    [31536000, "year"],
-    [2592000, "month"],
-    [86400, "day"],
-    [3600, "hour"],
-    [60, "minute"],
-  ];
-
-  for (const [secs, label] of intervals) {
-    const count = Math.floor(seconds / secs);
-    if (count >= 1) {
-      return `${count} ${label}${count > 1 ? "s" : ""} ago`;
-    }
-  }
-  return "just now";
-}
-
-/**
  * Extract a meaningful detail from the metadata for display
  */
 function extractDetail(log: ActivityLogEntry): string | null {
@@ -95,56 +81,56 @@ function extractDetail(log: ActivityLogEntry): string | null {
 const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
   if (isPending) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <TableCard>
         <div className="p-8">
           <LoadingPage />
         </div>
-      </div>
+      </TableCard>
     );
   }
 
   if (logs.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 flex flex-col items-center justify-center py-16 text-gray-400">
-        <DynamicIcon name="ScrollText" size={48} />
-        <p className="mt-4 text-sm font-medium">No activity logs found</p>
-        <p className="text-xs">
-          Logs will appear here as actions are performed
-        </p>
-      </div>
+      <TableCard>
+        <TableEmptyState
+          icon="ScrollText"
+          title="No activity logs found"
+          description="Logs will appear here as actions are performed"
+        />
+      </TableCard>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <TableCard>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+        <Table className="w-full text-sm">
+          <TableHeader className="bg-gray-50 border-b border-gray-200">
+            <TableRow className="border-0">
+              <TableHead className="px-4 py-3 font-semibold text-gray-600">
                 Actor
-              </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              </TableHead>
+              <TableHead className="px-4 py-3 font-semibold text-gray-600">
                 Action
-              </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              </TableHead>
+              <TableHead className="px-4 py-3 font-semibold text-gray-600">
                 Target
-              </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              </TableHead>
+              <TableHead className="px-4 py-3 font-semibold text-gray-600">
                 Detail
-              </th>
-              <th className="text-left px-4 py-3 font-semibold text-gray-600">
+              </TableHead>
+              <TableHead className="px-4 py-3 font-semibold text-gray-600">
                 Time
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-gray-100">
             {logs.map((log) => {
               const actorName =
                 log.actor.actorType === "staff"
-                  ? log.actor.staffName ?? "Staff"
+                  ? (log.actor.staffName ?? "Staff")
                   : log.actor.actorType === "customer"
-                    ? log.actor.customerName ?? "Customer"
+                    ? (log.actor.customerName ?? "Customer")
                     : log.actor.actorType === "webhook"
                       ? "Payment Gateway"
                       : "System";
@@ -152,12 +138,12 @@ const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
               const detail = extractDetail(log);
 
               return (
-                <tr
+                <TableRow
                   key={log._id}
-                  className="hover:bg-gray-50/50 transition-colors"
+                  className="hover:bg-gray-50/50 transition-colors border-0"
                 >
                   {/* Actor */}
-                  <td className="px-4 py-3">
+                  <TableCell className="px-4 py-3 text-left">
                     <div className="flex items-center gap-2">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ACTOR_BADGE[log.actor.actorType] ?? "bg-gray-100 text-gray-600"}`}
@@ -165,16 +151,13 @@ const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
                         {actorName}
                       </span>
                     </div>
-                  </td>
+                  </TableCell>
 
                   {/* Action */}
-                  <td className="px-4 py-3">
+                  <TableCell className="px-4 py-3 text-left">
                     <div className="flex items-center gap-2">
                       <DynamicIcon
-                        name={
-                          CATEGORY_ICON[log.category] ??
-                          "CircleDot"
-                        }
+                        name={CATEGORY_ICON[log.category] ?? "CircleDot"}
                         size={16}
                         className="text-gray-400"
                       />
@@ -185,10 +168,10 @@ const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
                         {log.action.split(".").pop()}
                       </span>
                     </div>
-                  </td>
+                  </TableCell>
 
                   {/* Target */}
-                  <td className="px-4 py-3">
+                  <TableCell className="px-4 py-3 text-left">
                     <div className="flex flex-col">
                       <span className="text-gray-700 font-medium">
                         {log.target.label ?? log.target.entityType}
@@ -197,10 +180,10 @@ const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
                         {log.target.entityType}
                       </span>
                     </div>
-                  </td>
+                  </TableCell>
 
                   {/* Detail */}
-                  <td className="px-4 py-3">
+                  <TableCell className="px-4 py-3 text-left">
                     {detail ? (
                       <span className="text-gray-500 text-xs font-mono">
                         {detail}
@@ -208,26 +191,21 @@ const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
                     ) : (
                       <span className="text-gray-300 text-xs">—</span>
                     )}
-                  </td>
+                  </TableCell>
 
                   {/* Time */}
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col">
-                      <span className="text-gray-600 text-xs">
-                        {timeAgo(log.createdAt)}
-                      </span>
-                      <span className="text-gray-300 text-[10px]">
-                        {new Date(log.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
+                  <TableCell className="px-4 py-3 text-left">
+                    <span className="text-gray-400">
+                      {formatDate(log.createdAt)}
+                    </span>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-    </div>
+    </TableCard>
   );
 };
 
