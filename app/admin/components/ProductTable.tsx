@@ -5,6 +5,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton
 } from "../../../components/ui/table";
 import { useDeleteProduct } from "@/hooks/api/useProducts";
 import PermissionGuard from "@/lib/PermissionGuard";
@@ -13,7 +14,6 @@ import { Product } from "@/types/products";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppImage } from "@/components/AppImage";
-import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import { ProductBadgeRibbon } from "@/app/customer/helper/getProductBadges";
 import { IconButton } from "@/components/ui/buttons";
 
