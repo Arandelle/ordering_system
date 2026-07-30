@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "./ProductCard";
 import { useScrollToSection } from "@/hooks/utils/useScrollToSection";
 import { Category } from "@/types/category";
@@ -91,6 +92,10 @@ const MenuSection = () => {
     new Set(),
   );
   const [showComingSoon, setShowComingSoon] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const categoryInitialized = useRef(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null); // for IntersectionObserver
@@ -239,6 +244,17 @@ const MenuSection = () => {
     return () => observer.disconnect();
   }, [handleObserver]);
 
+  // Restore active category from URL query param on initial load
+  useEffect(() => {
+    if (categoryInitialized.current) return;
+    const categoryFromUrl = searchParams.get("category");
+    if (categoryFromUrl) {
+      setActiveCategory(categoryFromUrl);
+      setExpandedCategories(new Set([categoryFromUrl]));
+    }
+    categoryInitialized.current = true;
+  }, [searchParams]);
+
   // ── Filter + group ──────────────────────────────────────────────────────────
 
   // ── Branch-side client filtering (branch products still filtered locally) ──
@@ -273,6 +289,15 @@ const MenuSection = () => {
     setShowComingSoon(false);
     scrollToContent();
     trackSearch({ search_string: categoryName });
+
+    // Sync category to URL so refresh/back lands on the same view
+    const params = new URLSearchParams(window.location.search);
+    if (categoryName === "All" || categoryName === "__coming_soon__") {
+      params.delete("category");
+    } else {
+      params.set("category", categoryName);
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
 
     if (categoryName === "All") {
       setExpandedCategories(new Set());
