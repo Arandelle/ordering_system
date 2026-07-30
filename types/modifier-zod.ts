@@ -5,9 +5,16 @@ import { z } from "zod";
  * Used by both the Products API and the Modifier Group Templates API.
  */
 
+/** Regex for a valid MongoDB ObjectId (24 hex characters) */
+const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+
+export const objectIdString = z
+  .string()
+  .regex(objectIdRegex, "Must be a valid ObjectId");
+
 /** Validates a single modifier item (or template item) in a request body */
 export const modifierItemSchema = z.object({
-  product: z.string().min(1, "Item must reference a product"),
+  product: objectIdString.min(1, "Item must reference a product"),
   label: z.string().nullable().optional(),
   price: z.coerce.number().nullable().optional(),
   snapshotName: z.string().nullable().optional(),

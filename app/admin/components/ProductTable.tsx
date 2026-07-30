@@ -22,8 +22,39 @@ import { ProductBadgeRibbon } from "@/app/customer/helper/getProductBadges";
 import { IconButton } from "@/components/ui/buttons";
 import { FetchError } from "@/components/ui/FetchError";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { SelectField } from "@/components/ui/FormComponents";
 import { useStaffContext } from "@/contexts/StaffContext";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
+
+// ─── Filter & sort option constants ──────────────────────────────────────────
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+  { value: "coming-soon", label: "Coming Soon" },
+];
+
+const TYPE_OPTIONS = [
+  { value: "all", label: "All Types" },
+  { value: "solo", label: "Solo" },
+  { value: "combo", label: "Combo" },
+  { value: "set", label: "Set" },
+];
+
+const POPULARITY_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "popular", label: "Popular" },
+  { value: "not-popular", label: "Not Popular" },
+];
+
+const SORT_OPTIONS = [
+  { value: "default", label: "Status (default)" },
+  { value: "price:asc", label: "Price: Low → High" },
+  { value: "price:desc", label: "Price: High → Low" },
+  { value: "name:asc", label: "Name: A → Z" },
+  { value: "name:desc", label: "Name: Z → A" },
+];
 
 interface ProductTableProps {
   products: Product[];
@@ -34,10 +65,20 @@ interface ProductTableProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onSearch: () => void;
+  statusFilter: string;
+  onStatusFilterChange: (value: string) => void;
+  typeFilter: string;
+  onTypeFilterChange: (value: string) => void;
+  popularityFilter: string;
+  onPopularityFilterChange: (value: string) => void;
+  sortOption: string;
+  onSortOptionChange: (value: string) => void;
+  onResetFilters: () => void;
 }
 
 /**
  * Admin product table with loading skeleton, error recovery, and empty state.
+ * Includes server-side filtering (status, type, popularity) and sorting (price, name, status).
  */
 export default function ProductTable({
   products,
@@ -48,9 +89,25 @@ export default function ProductTable({
   searchQuery,
   onSearchChange,
   onSearch,
+  statusFilter,
+  onStatusFilterChange,
+  typeFilter,
+  onTypeFilterChange,
+  popularityFilter,
+  onPopularityFilterChange,
+  sortOption,
+  onSortOptionChange,
+  onResetFilters,
 }: ProductTableProps) {
   const router = useRouter();
   const admin = useStaffContext();
+
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    typeFilter !== "all" ||
+    popularityFilter !== "all" ||
+    sortOption !== "default" ||
+    searchQuery !== "";
 
   const productHeaders = [
     "Image",
@@ -96,13 +153,49 @@ export default function ProductTable({
           </div>
         }
       />
-      <TableToolbar>
+      <TableToolbar className="flex-wrap">
         <SearchBar
           value={searchQuery}
           onChange={onSearchChange}
           onSearch={onSearch}
           placeholder="Search product by name, price, type"
         />
+        <div className="flex items-end gap-3 flex-1 min-w-0">
+          <SelectField
+            label="Status"
+            value={statusFilter}
+            onChange={(e) => onStatusFilterChange(e.target.value)}
+            options={STATUS_OPTIONS}
+          />
+          <SelectField
+            label="Type"
+            value={typeFilter}
+            onChange={(e) => onTypeFilterChange(e.target.value)}
+            options={TYPE_OPTIONS}
+          />
+          <SelectField
+            label="Popularity"
+            value={popularityFilter}
+            onChange={(e) => onPopularityFilterChange(e.target.value)}
+            options={POPULARITY_OPTIONS}
+          />
+          <SelectField
+            label="Sort by"
+            value={sortOption}
+            onChange={(e) => onSortOptionChange(e.target.value)}
+            options={SORT_OPTIONS}
+          />
+        </div>
+        {hasActiveFilters && (
+          <IconButton
+            onClick={onResetFilters}
+            variant="ghost"
+            className="text-slate-500 hover:text-red-500 hover:bg-red-50 self-end mb-0.5"
+            icon={{ name: "RotateCcw", size: 14 }}
+            text="Reset"
+            title="Clear all filters and sort"
+          />
+        )}
       </TableToolbar>
       <div className="overflow-x-auto">
         <Table>
@@ -258,6 +351,13 @@ export default function ProductTable({
                         </div>
                       ) : (
                         <div className="flex items-center justify-center gap-2">
+                          <IconButton
+                            onClick={() => router.push(`/products/${product._id}`)}
+                            variant="ghost"
+                            className="text-blue-600 hover:bg-blue-50"
+                            icon={{ name: "Eye", size: 16 }}
+                            title="View details"
+                          />
                           <PermissionGuard
                             permission="products.update"
                             fallback={

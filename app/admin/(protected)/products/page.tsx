@@ -12,16 +12,31 @@ const ProductsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
 
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [popularityFilter, setPopularityFilter] = useState("all");
+
+  // Sort state
+  const [sortOption, setSortOption] = useState("default");
+
   const { data, isLoading, isError, error, refetch } = useProducts({
     page,
     limit,
     search: appliedSearch,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    productType: typeFilter === "all" ? undefined : typeFilter,
+    isPopular:
+      popularityFilter === "all"
+        ? undefined
+        : popularityFilter === "popular"
+          ? "true"
+          : "false",
+    sort: sortOption === "default" ? undefined : sortOption,
   });
 
   const products = useMemo(() => data?.data ?? [], [data?.data]);
   const pagination = data?.pagination;
-
-  const sortedProducts = [...products];
 
   const handleLimitChange = (newLimit: number) => {
     setLimit(newLimit);
@@ -33,6 +48,34 @@ const ProductsPage = () => {
     setPage(1);
   };
 
+  // Each filter/sort change also resets to page 1
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setPage(1);
+  };
+  const handleTypeFilterChange = (value: string) => {
+    setTypeFilter(value);
+    setPage(1);
+  };
+  const handlePopularityFilterChange = (value: string) => {
+    setPopularityFilter(value);
+    setPage(1);
+  };
+  const handleSortOptionChange = (value: string) => {
+    setSortOption(value);
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setAppliedSearch("");
+    setStatusFilter("all");
+    setTypeFilter("all");
+    setPopularityFilter("all");
+    setSortOption("default");
+    setPage(1);
+  };
+
   return (
     <section className="space-y-6">
       <SectionHeader
@@ -41,7 +84,7 @@ const ProductsPage = () => {
       />
 
       <ProductTable
-        products={sortedProducts}
+        products={products}
         isProductLoading={isLoading}
         isError={isError}
         error={error}
@@ -49,6 +92,15 @@ const ProductsPage = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onSearch={handleSearch}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
+        typeFilter={typeFilter}
+        onTypeFilterChange={handleTypeFilterChange}
+        popularityFilter={popularityFilter}
+        onPopularityFilterChange={handlePopularityFilterChange}
+        sortOption={sortOption}
+        onSortOptionChange={handleSortOptionChange}
+        onResetFilters={handleResetFilters}
       />
 
       <Pagination

@@ -1,18 +1,29 @@
 import { connectDB } from "@/lib/mongodb";
-import { Product, Inventory, Branch } from "@/models";
+import { Product, Inventory, Branch, Category, SubCategory } from "@/models";
 import { NextResponse, NextRequest } from "next/server";
 import cloudinary from "@/lib/cloudinary";
+import mongoose from "mongoose";
 import { z } from "zod";
-import "@/lib/registerModels"
+import "@/lib/registerModels";
 import { extractPublicId } from "@/utils/extractImagePublicId";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { buildPaginationMeta, parseRequestQuery } from "@/utils/query-helpers";
 import { getActiveProductDiscountPreviews } from "@/lib/product-promotions/product-promotion.application";
-import { getAPIError } from "@/lib/getApiError";
-import { modifierGroupSchema } from "@/types/modifier-zod";
-import type { ModifierGroupAggregate, ModifierItemAggregate } from "@/types/modifier-aggregate";
+import {
+  getAPIError,
+  getInternalServerError,
+  getNotFoundError,
+} from "@/lib/getApiError";
+import { modifierGroupSchema, objectIdString } from "@/types/modifier-zod";
+import type {
+  ModifierGroupAggregate,
+  ModifierItemAggregate,
+} from "@/types/modifier-aggregate";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
+
+/** Validates that a string is a well-formed MongoDB ObjectId */
+const objectIdField = objectIdString;
 
 const productBaseSchema = z.object({
   name: z
@@ -20,12 +31,11 @@ const productBaseSchema = z.object({
     .min(3, "Name must be at least 3 characters")
     .max(60, "Name must be less than 60 characters"),
   price: z.coerce.number().positive().nullable().optional(),
-  category: z.string().min(1, "Category is required"),
-  subcategory: z.string().nullable().optional(),
-  image: z.string().optional(),
+  category: objectIdField,
+  subcategory: objectIdField.nullable().optional(),
+  image: z.string().url("Image must be a valid URL").optional(),
   imageFile: z.string().optional(),
 
-  // ✅ NEW: Creative content fields
   info: z
     .string()
     .max(200, "Info must be less than 200 characters")
@@ -41,7 +51,14 @@ const productBaseSchema = z.object({
   isPopular: z.boolean().optional().default(false),
   isActive: z.boolean().optional().default(true),
   isComingSoon: z.boolean().optional().default(false),
-  goLiveDate: z.string().nullable().optional(),
+  goLiveDate: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (val) => !val || new Date(val).getTime() > Date.now(),
+      "Go-live date must be in the future",
+    ),
   productType: z.enum(["solo", "combo", "set"]).default("solo"),
   paxCount: z.coerce.number().int().positive().nullable().optional(),
   modifierGroups: z.array(modifierGroupSchema).optional().default([]),
@@ -81,9 +98,9 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { page, limit, skip, sort, match } = parseRequestQuery(request, {
-      exactFields: ["productType", "status", "category", "subcategory"],
+      exactFields: ["productType", "category", "subcategory"],
       searchFields: ["name", "description", "productType", "price"],
-      defaultSort: { "category.position": 1, createdAt: -1 },
+      defaultSort: { statusPriority: 1, "category.position": 1, createdAt: -1 },
     });
 
     const searchParams = new URL(request.url).searchParams;
@@ -91,12 +108,29 @@ export async function GET(request: NextRequest) {
     const subcategoryName = searchParams.get("subcategoryName");
     const activeOnly = searchParams.get("activeOnly") === "true";
     const isComingSoon = searchParams.get("isComingSoon");
+    const status = searchParams.get("status");
+    const popularity = searchParams.get("isPopular");
 
     // When customer-facing (activeOnly=true), hide inactive products
     if (activeOnly) {
-      match.$or = [
-        { isActive: true },
-        { isActive: { $exists: false } },
+      match.$or = [{ isActive: true }, { isActive: { $exists: false } }];
+    }
+
+    // Status filter: maps UI status values to underlying boolean fields
+    if (status === "active") {
+      match.isActive = { $ne: false };
+    } else if (status === "inactive") {
+      match.isActive = false;
+    }
+    // "coming-soon" is handled in postLookupMatch since isComingSoon is computed
+
+    // Popularity filter
+    if (popularity === "true") {
+      match.isPopular = true;
+    } else if (popularity === "false") {
+      match.$and = [
+        ...(match.$and ?? []),
+        { $or: [{ isPopular: false }, { isPopular: { $exists: false } }] },
       ];
     }
 
@@ -106,6 +140,8 @@ export async function GET(request: NextRequest) {
     // Filter by coming-soon status (evaluated after auto-live $addFields)
     if (isComingSoon === "true") postLookupMatch.isComingSoon = true;
     if (isComingSoon === "false") postLookupMatch.isComingSoon = false;
+    // Status "coming-soon" must be evaluated after the auto-live $addFields
+    if (status === "coming-soon") postLookupMatch.isComingSoon = true;
 
     const basePipeline: any[] = [
       // Use the merged match from parseRequestQuery
@@ -123,6 +159,24 @@ export async function GET(request: NextRequest) {
               },
               then: false,
               else: { $ifNull: ["$isComingSoon", false] },
+            },
+          },
+        },
+      },
+      // Status priority: coming-soon=0 (top), active=1 (middle), inactive=2 (bottom)
+      {
+        $addFields: {
+          statusPriority: {
+            $cond: {
+              if: "$isComingSoon",
+              then: 0,
+              else: {
+                $cond: {
+                  if: { $eq: ["$isActive", false] },
+                  then: 2,
+                  else: 1,
+                },
+              },
             },
           },
         },
@@ -145,7 +199,9 @@ export async function GET(request: NextRequest) {
         },
       },
       { $unwind: { path: "$subcategory", preserveNullAndEmptyArrays: true } },
-      ...(Object.keys(postLookupMatch).length ? [{ $match: postLookupMatch }] : []),
+      ...(Object.keys(postLookupMatch).length
+        ? [{ $match: postLookupMatch }]
+        : []),
       {
         $lookup: {
           from: "products",
@@ -200,15 +256,18 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      { $unset: "_modifierProducts" },
+      { $unset: ["_modifierProducts", "statusPriority"] },
     ];
+
+    // Always keep coming-soon on top and inactive on bottom, regardless of user sort
+    const finalSort = { statusPriority: 1, ...sort };
 
     // Run count + paginated data in parallel
     const [countResult, products] = await Promise.all([
       Product.aggregate([...basePipeline, { $count: "total" }]),
       Product.aggregate([
         ...basePipeline,
-        { $sort: sort }, // dyanamic sort from parseRequestQuery
+        { $sort: finalSort },
         ...(limit > 0 ? [{ $skip: skip }, { $limit: limit }] : []),
       ]),
     ]);
@@ -218,9 +277,7 @@ export async function GET(request: NextRequest) {
       products
         .filter(
           (product) =>
-            product._id &&
-            Number.isFinite(product.price) &&
-            product.price > 0,
+            product._id && Number.isFinite(product.price) && product.price > 0,
         )
         .map((product) => ({
           productId: product._id,
@@ -290,7 +347,7 @@ export async function GET(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("GET /products error:", error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to fetch products"}, { status: 500 });
+    return getInternalServerError(error, "Failed to fetch products");
   }
 }
 
@@ -329,6 +386,49 @@ export async function POST(request: NextRequest) {
       paxCount,
       modifierGroups,
     } = validated;
+
+    // ── Referential integrity: verify referenced documents exist ──────────
+
+    const categoryExists = await Category.findById(category).lean();
+    if (!categoryExists) {
+      return getNotFoundError("Category not found");
+    }
+
+    if (subcategory) {
+      const subcategoryExists = await SubCategory.findById(subcategory).lean();
+      if (!subcategoryExists) {
+        return getNotFoundError("Subcategory not found");
+      }
+    }
+
+    // Verify all modifier item product references exist
+    if (productType !== "solo" && modifierGroups.length > 0) {
+      const productIds = modifierGroups.flatMap((g) =>
+        g.items.map((item) => item.product),
+      );
+      const uniqueIds = [...new Set(productIds)];
+
+      if (uniqueIds.length > 0) {
+        const validObjectIds = uniqueIds.filter((id) =>
+          mongoose.Types.ObjectId.isValid(id),
+        );
+        const found = await Product.find(
+          { _id: { $in: validObjectIds } },
+          { _id: 1 },
+        ).lean();
+        const foundIds = new Set(
+          found.map((p) => (p._id as mongoose.Types.ObjectId).toString()),
+        );
+        const missing = uniqueIds.filter((id) => !foundIds.has(id));
+
+        if (missing.length > 0) {
+          return getAPIError(
+            `Referenced products not found: ${missing.join(", ")}`,
+            400,
+          );
+        }
+      }
+    }
 
     // ── Upload image ────────────────────────────────────────────────────────
 
@@ -385,7 +485,9 @@ export async function POST(request: NextRequest) {
               required: group.required ?? true,
               minSelect: group.minSelect ?? 1,
               maxSelect: group.maxSelect ?? 1,
-              maxQty: group.maxQty ?? Math.max(group.minSelect ?? 1, group.maxSelect ?? 1),
+              maxQty:
+                group.maxQty ??
+                Math.max(group.minSelect ?? 1, group.maxSelect ?? 1),
               items: (group.items ?? []).map((item) => ({
                 product: item.product,
                 label: item.label ?? null,
@@ -416,11 +518,19 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(product, { status: 201 });
   } catch (error: any) {
-
     if (uploadResult?.public_id) {
       await cloudinary.uploader.destroy(uploadResult.public_id);
     }
 
-    return getAPIError(error, 500, {fallbackMessage: "Failed to create product"});
+    // Return validation errors as 400 with field-level details
+    if (error instanceof z.ZodError) {
+      return getAPIError("Validation failed", 400, {
+        extra: {
+          details: error.flatten(),
+        },
+      });
+    }
+
+    return getInternalServerError(error, "Failed to create product");
   }
 }

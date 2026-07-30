@@ -31,6 +31,7 @@ export const useProducts = (params?: {
   search?: string;
   status?: string;
   productType?: string;
+  isPopular?: string;
   activeOnly?: boolean;
 }) => {
   return useQuery<ProductResponse, Error>({
@@ -48,13 +49,18 @@ export const useProducts = (params?: {
 /**
  * Fetch single product by ID
  *
- * The querykey inludes ID, so each product gets its own cache entry
+ * The querykey inludes ID, so each product gets its own cache entry.
+ * API returns { data: Product } — this hook unwraps it so consumers
+ * get the Product directly via `data`.
  */
 
 export const useProduct = (id: string) => {
-  return useQuery({
+  return useQuery<Product, Error>({
     queryKey: ["products", id], // ['products', '123'] is different from ['products', '456']
-    queryFn: () => apiClient.get(`/products/${id}`),
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: Product }>(`/products/${id}`);
+      return response.data;
+    },
     enabled: !!id, // Only run query if ID exists
   });
 };
