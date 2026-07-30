@@ -4,8 +4,9 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import React from "react";
 
 type SectionHeaderProps = {
-  title: string;
-  subTitle?: string;
+  /** Accepts a plain string or JSX — e.g. <>Orders — <span className="text-brand-color-500">{branch}</span></> */
+  title: React.ReactNode;
+  subTitle?: React.ReactNode;
   breadcrumb?: React.ReactNode;
 
   // Primary action button

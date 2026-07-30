@@ -4,27 +4,49 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import {
   Table,
   TableBody,
+  TableCard,
+  TableCardHeader,
   TableCell,
+  TableEmptyState,
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton,
+  TableToolbar,
 } from "@/components/ui/table";
 import { OrderType } from "@/types/OrderTypes";
 import { OrderActionButton } from "./OrderActionButton";
 import PermissionGuard from "@/lib/PermissionGuard";
-import LoadingPage from "@/components/ui/LoadingPage";
 import { formatDate } from "@/helper/formatter/formatDate";
 import { useRouter } from "next/navigation";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { IconButton } from "@/components/ui/buttons";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { SelectField } from "@/components/ui/FormComponents";
+
+interface OrdersTableProps {
+  orders: OrderType[];
+  isPending: boolean;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  onSearch: () => void;
+  statusFilter: string;
+  onStatusFilterChange: (filter: string) => void;
+  filterOptions: { key: string; label: string }[];
+  filterCounts?: Record<string, number>;
+}
 
 export default function OrdersTable({
   orders,
   isPending,
-}: {
-  orders: OrderType[];
-  isPending: boolean;
-}) {
+  searchQuery,
+  onSearchChange,
+  onSearch,
+  statusFilter,
+  onStatusFilterChange,
+  filterOptions,
+  filterCounts,
+}: OrdersTableProps) {
   const router = useRouter();
 
   const headerTitles = [
@@ -75,12 +97,31 @@ export default function OrdersTable({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-      <div className="p-6 border-b border-stone-200">
-        <h3 className="text-lg font-bold text-stone-800">Recent Orders</h3>
-        <p className="text-sm text-stone-500 mt-1">Latest customer orders</p>
-      </div>
-
+    <TableCard>
+      <TableCardHeader
+        title="Recent Orders"
+        subtitle={`${orders.length} order${orders.length !== 1 ? "s" : ""} found`}
+      />
+      <TableToolbar>
+        <SelectField
+          label="Filter by status"
+          options={filterOptions.map((option) => ({
+            label:
+              filterCounts?.[option.key] != null
+                ? `${option.label} ${filterCounts[option.key] > 0 ? `(${filterCounts[option.key]})` : ""}`
+                : option.label,
+            value: option.key,
+          }))}
+          value={statusFilter}
+          onChange={(e) => onStatusFilterChange(e.target.value)}
+        />
+        <SearchBar
+          value={searchQuery}
+          onChange={onSearchChange}
+          onSearch={onSearch}
+          placeholder="Search orders — customer name, branch, delivery, etc."
+        />
+      </TableToolbar>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -236,25 +277,21 @@ export default function OrdersTable({
                 );
               })
             ) : isPending ? (
-              <TableRow>
-                <TableCell>
-                  <div className="h-full bg-white">
-                    <LoadingPage />
-                  </div>
-                </TableCell>
-              </TableRow>
+              <TableSkeleton columns={headerTitles.length} rows={8} />
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center">
-                  <p className="text-sm text-gray-500">
-                    No orders found on this branch.
-                  </p>
+                <TableCell colSpan={headerTitles.length}>
+                  <TableEmptyState
+                    icon="ShoppingCart"
+                    title="No orders found"
+                    description="No orders match your current filters. Try adjusting your search or status filter."
+                  />
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-    </div>
+    </TableCard>
   );
 }

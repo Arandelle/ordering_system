@@ -109,7 +109,7 @@ const TableCaption = React.forwardRef<
 ));
 TableCaption.displayName = "TableCaption";
 
-// ─── Card & State Wrappers ───────────────────────────────────────────────────
+// ─── Card, Header, Toolbar & State Wrappers ──────────────────────────────────
 
 /** White card wrapper used around all admin tables */
 const TableCard = React.forwardRef<
@@ -126,6 +126,45 @@ const TableCard = React.forwardRef<
   />
 ));
 TableCard.displayName = "TableCard";
+
+interface TableCardHeaderProps {
+  title: string;
+  subtitle?: string;
+  /** Optional action slot rendered on the right (e.g. add button) */
+  actions?: React.ReactNode;
+  className?: string;
+}
+
+/** Card-internal header with title, subtitle, and optional action button */
+function TableCardHeader({ title, subtitle, actions, className }: TableCardHeaderProps) {
+  return (
+    <div className={cn("px-6 py-5 border-b border-stone-100", className)}>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-stone-800">{title}</h3>
+          {subtitle && <p className="text-sm text-stone-500 mt-1">{subtitle}</p>}
+        </div>
+        {actions && <div className="shrink-0">{actions}</div>}
+      </div>
+    </div>
+  );
+}
+
+/** Toolbar row for search + filters + sort — sits inside TableCard, below the header */
+const TableToolbar = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "flex items-end gap-3 px-6 py-4 border-b border-stone-100",
+      className,
+    )}
+    {...props}
+  />
+));
+TableToolbar.displayName = "TableToolbar";
 
 /** Loading state — renders inside TableCard */
 interface TableSkeletonProps {
@@ -190,6 +229,8 @@ export {
   TableCell,
   TableCaption,
   TableCard,
+  TableCardHeader,
+  TableToolbar,
   TableSkeleton,
   TableEmptyState,
 };

@@ -26,7 +26,7 @@ const ReviewFilter = ({ filters }: ReviewFilterProps) => {
   } = filters;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_3fr] gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_3fr] gap-4 w-full">
       <SelectField
         label="Filter by rating"
         options={RATING_FILTER_OPTIONS.map((option) => ({

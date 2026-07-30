@@ -1,11 +1,15 @@
 import {
   Table,
   TableBody,
+  TableCard,
+  TableCardHeader,
   TableCell,
+  TableEmptyState,
   TableHead,
   TableHeader,
   TableRow,
-  TableSkeleton
+  TableSkeleton,
+  TableToolbar,
 } from "../../../components/ui/table";
 import { useDeleteProduct } from "@/hooks/api/useProducts";
 import PermissionGuard from "@/lib/PermissionGuard";
@@ -16,23 +20,37 @@ import { useRouter } from "next/navigation";
 import { AppImage } from "@/components/AppImage";
 import { ProductBadgeRibbon } from "@/app/customer/helper/getProductBadges";
 import { IconButton } from "@/components/ui/buttons";
+import { FetchError } from "@/components/ui/FetchError";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { useStaffContext } from "@/contexts/StaffContext";
+import { canAccess } from "@/lib/roleBasedAccessCtrl";
 
 interface ProductTableProps {
   products: Product[];
   isProductLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  onRetry?: () => void;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  onSearch: () => void;
 }
 
 /**
- *
- * @param products - array of items to render with type of Product[]
- * @param isProductLoading - loading - if products is not yet available
- * @returns
+ * Admin product table with loading skeleton, error recovery, and empty state.
  */
 export default function ProductTable({
   products,
   isProductLoading,
+  isError,
+  error,
+  onRetry,
+  searchQuery,
+  onSearchChange,
+  onSearch,
 }: ProductTableProps) {
   const router = useRouter();
+  const admin = useStaffContext();
 
   const productHeaders = [
     "Image",
@@ -62,7 +80,30 @@ export default function ProductTable({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <TableCard>
+      <TableCardHeader
+        title="All Products"
+        subtitle={`${products.length} product${products.length !== 1 ? "s" : ""} found`}
+        actions={
+          <div>
+            <IconButton
+              onClick={() => router.push("/products/new")}
+              disabled={!admin || !canAccess(admin.role, "products.create")}
+              icon={{ name: "Plus" }}
+              text="Add Product"
+              className="py-3 px-4 rounded-xl"
+            />
+          </div>
+        }
+      />
+      <TableToolbar>
+        <SearchBar
+          value={searchQuery}
+          onChange={onSearchChange}
+          onSearch={onSearch}
+          placeholder="Search product by name, price, type"
+        />
+      </TableToolbar>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -80,6 +121,21 @@ export default function ProductTable({
 
           {isProductLoading ? (
             <TableSkeleton columns={productHeaders.length} rows={10} />
+          ) : isError ? (
+            <TableBody className="divide-y divide-slate-100">
+              <TableRow>
+                <TableCell colSpan={productHeaders.length}>
+                  <FetchError
+                    error={
+                      error instanceof Error
+                        ? error
+                        : new Error("We couldn't load these products")
+                    }
+                    onRetry={onRetry ?? (() => {})}
+                  />
+                </TableCell>
+              </TableRow>
+            </TableBody>
           ) : (
             <TableBody className="divide-y divide-slate-100">
               {products.length > 0 ? (
@@ -237,19 +293,10 @@ export default function ProductTable({
               ) : (
                 <TableRow>
                   <TableCell colSpan={productHeaders.length}>
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <DynamicIcon
-                        name="Search"
-                        size={48}
-                        className="text-slate-300 mb-4"
-                      />
-                      <h3 className="text-lg font-semibold text-slate-700">
-                        No Products Found
-                      </h3>
-                      <p className="text-sm text-slate-500 mt-1">
-                        There are currently no products available.
-                      </p>
-                    </div>
+                    <TableEmptyState
+                      title="No Products Found"
+                      description="Try refreshing the page or use the search bar"
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -257,6 +304,6 @@ export default function ProductTable({
           )}
         </Table>
       </div>
-    </div>
+    </TableCard>
   );
 }

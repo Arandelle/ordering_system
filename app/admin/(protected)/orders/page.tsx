@@ -3,12 +3,11 @@
 import OrdersTable from "@/app/admin/(protected)/orders/components/OrdersTable";
 import React, { useState } from "react";
 import Pagination from "@/components/ui/Pagination";
-import { SearchBar } from "@/components/ui/SearchBar";
 import { useAdminOrders } from "@/hooks/api/admin/useAdminOrders";
 import { ORDER_STATUSES, OrderStatus } from "@/types/orderConstants";
 import { useAdminBranchContext } from "@/contexts/AdminBranchContext";
 import { useBranchName } from "../../hooks/useBranchName";
-import { SelectField } from "@/components/ui/FormComponents";
+import SectionHeader from "../../components/SectionHeader";
 
 /**
  * Filter keys that map to API filter params.
@@ -90,7 +89,7 @@ const OrdersPage = () => {
 
   // Resolve the selected filter option into API query params
   const selectedFilter = ORDER_FILTER_OPTIONS.find(
-    (option) => option.key === statusFilter
+    (option) => option.key === statusFilter,
   )!;
 
   const { data, isPending } = useAdminOrders({
@@ -122,40 +121,28 @@ const OrdersPage = () => {
 
   return (
     <section className="space-y-6">
-      {/** Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Orders Management -{" "}
-          <span className="text-brand-color-500">{branchName}</span>
-        </h1>
-        <p className="text-gray-500">View and manage all customers order</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_8fr] gap-4">
-        <SelectField
-          label="Filter by status"
-          options={ORDER_FILTER_OPTIONS.map((option) => ({
-            label:
-              filterCounts?.[option.key] != null
-                ? `${option.label} ${filterCounts[option.key] > 0 ? `(${filterCounts[option.key]})` : ""}`
-                : option.label,
-            value: option.key,
-          }))}
-          value={statusFilter}
-          onChange={(e) =>
-            handleFilterChange(e.target.value as statusFilterType)
-          }
-        />
-
-        <SearchBar
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onSearch={handleSearch}
-          placeholder="Search orders - e.g. makati, pecho, delivery, customer name, branch, etc"
-        />
-      </div>
-
-      <OrdersTable orders={orders} isPending={isPending} />
+      <SectionHeader
+        title={
+          <>
+            Orders Management —{" "}
+            <span className="text-brand-color-500">{branchName}</span>
+          </>
+        }
+        subTitle="View and manage all customers' orders"
+      />
+      <OrdersTable
+        orders={orders}
+        isPending={isPending}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearch={handleSearch}
+        statusFilter={statusFilter}
+        onStatusFilterChange={(val) =>
+          handleFilterChange(val as statusFilterType)
+        }
+        filterOptions={ORDER_FILTER_OPTIONS}
+        filterCounts={filterCounts}
+      />
 
       {pagination && (
         <Pagination

@@ -21,6 +21,12 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { OrderItemImage } from "@/app/customer/components/OrderItemImage";
 import ReviewFilter from "../components/ReviewFilter";
 import { useReviewFilters } from "../hooks/useReviewFilter";
+import {
+  TableCard,
+  TableCardHeader,
+  TableEmptyState,
+  TableToolbar,
+} from "@/components/ui/table";
 
 /** Full review detail modal */
 const ViewDetailsModal = ({
@@ -586,17 +592,14 @@ const OrderReviewsPage = () => {
         />
       )}
 
-      {/** Fields for filtering */}
-      <ReviewFilter filters={reviewFilters} />
-
-      {/* Review cards list */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-gray-800">Customer Reviews</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Order-level ratings and feedback
-          </p>
-        </div>
+      <TableCard>
+        <TableCardHeader
+          title="Customer Reviews"
+          subtitle="Order-level ratings and feedback"
+        />
+        <TableToolbar>
+          <ReviewFilter filters={reviewFilters} />
+        </TableToolbar>
 
         <div className="p-4 space-y-4">
           {reviews.length > 0 ? (
@@ -611,15 +614,14 @@ const OrderReviewsPage = () => {
               ))}
             </div>
           ) : (
-            <div className="py-16 flex flex-col items-center gap-3">
-              <DynamicIcon name="Package" size={40} className="text-gray-300" />
-              <p className="text-sm text-gray-500">
-                No reviews found for this branch.
-              </p>
-            </div>
+            <TableEmptyState
+              icon="MessageSquare"
+              title="No reviews found"
+              description="No reviews match your current filters for this branch."
+            />
           )}
         </div>
-      </div>
+      </TableCard>
 
       {/* Pagination */}
       {pagination && (
