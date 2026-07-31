@@ -59,7 +59,7 @@ function ActivitySection({
   const config = SECTION_CONFIG[sectionKey];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+    <div className="bg-white border border-stone-100 overflow-hidden">
       {/* Header — clickable to toggle */}
       <IconButton
         variant="ghost"

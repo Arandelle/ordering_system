@@ -4,6 +4,7 @@ import SectionHeader from "@/app/admin/components/SectionHeader";
 import { useBundleDiscountPromotions } from "../../hooks/useBundleDiscountPromotions";
 import { BundleDiscountPromotionList } from "./components/BundleDiscountPromotionList";
 import { useRouter } from "next/navigation";
+import { IconButton } from "@/components/ui/buttons";
 
 const BundleDiscountPromotionsPage = () => {
   const router = useRouter();
@@ -20,9 +21,13 @@ const BundleDiscountPromotionsPage = () => {
       <SectionHeader
         title="Bundle Discounts"
         subTitle="Create and manage discounts for bundle items"
-        btnTxt="Create Bundle Discount"
-        onClick={() => router.push("/promotions/bundle-discounts/new")}
-        permission="promotions.read"
+        actions={
+          <IconButton
+            onClick={() => router.push("/promotions/bundle-discounts/new")}
+            text="Create Bundle Discount"
+            className="px-4 rounded-lg"
+          />
+        }
       />
       {isLoading && <p className="text-sm text-stone-500">Loading...</p>}
       {isError && (

@@ -119,7 +119,7 @@ const PoliciesPage = () => {
       })
     );
   })();
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (
@@ -247,9 +247,15 @@ const PoliciesPage = () => {
         <SectionHeader
           title="Legal Policies"
           subTitle="View and update your legal policy documents"
-          btnTxt={!seeded ? "+ Apply Policies to Database" : undefined}
-          onClick={!seeded ? handleSeed : undefined}
-          permission="legal.update"
+          actions={
+            !seeded && (
+              <IconButton
+                onClick={!seeded ? handleSeed : undefined}
+                text={"+ Apply Policies to Database"}
+                className="px-4 rounded-lg"
+              />
+            )
+          }
         />
 
         {!seeded && (

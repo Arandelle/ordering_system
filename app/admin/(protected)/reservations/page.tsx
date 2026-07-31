@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from "@/helper/formatter";
 import Link from "next/link";
 import { useBranchName } from "../../hooks/useBranchName";
 import { IconButton } from "@/components/ui/buttons";
+import SectionHeader from "../../components/SectionHeader";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = [
@@ -132,52 +133,42 @@ const ReservationsPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-stone-800">
-            Reservations — {branchName}
-          </h1>
-          <p className="text-sm text-stone-500 mt-0.5">
-            Manage dine-in reservations and upcoming bookings
-          </p>
-        </div>
+        <SectionHeader
+          title={
+            <>
+              Reservations Management -{" "}
+              <span className="text-brand-color-500">{branchName}</span>
+            </>
+          }
+          subTitle="Manage dine-in reservations and upcoming bookings"
+        />
 
         {/* View toggle */}
         <div className="flex items-center border border-stone-200 rounded-xl overflow-hidden">
-          <button
+          <IconButton
             onClick={() => setViewMode("calendar")}
-            className={`px-4 py-2 text-xs font-semibold transition-colors ${
-              viewMode === "calendar"
-                ? "bg-indigo-600 text-white"
-                : "bg-white text-stone-600 hover:bg-stone-50"
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <DynamicIcon name="CalendarDays" size={14} />
-              Calendar
-            </div>
-          </button>
-          <button
+            variant={viewMode === "calendar" ? "primary" : "secondary"}
+            icon={{ name: "CalendarDays" }}
+            className="px-4"
+            text="Calendar"
+          />
+
+          <IconButton
             onClick={() => {
               setViewMode("list");
               setSelectedDay(null);
             }}
-            className={`px-4 py-2 text-xs font-semibold transition-colors ${
-              viewMode === "list"
-                ? "bg-indigo-600 text-white"
-                : "bg-white text-stone-600 hover:bg-stone-50"
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <DynamicIcon name="List" size={14} />
-              List
-            </div>
-          </button>
+            variant={viewMode === "list" ? "primary" : "secondary"}
+            icon={{ name: "List" }}
+            className="px-4"
+            text="List"
+          />
         </div>
       </div>
 
       {/* Calendar view */}
       {viewMode === "calendar" && (
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+        <div className="bg-white border border-stone-100 overflow-hidden">
           {/* Month navigation */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
             <button
@@ -287,7 +278,7 @@ const ReservationsPage = () => {
 
       {/* Reservation list (shown below calendar when day is selected, or in list view) */}
       {(viewMode === "list" || selectedDay) && (
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+        <div className="bg-white border border-stone-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between">
             <h3 className="text-sm font-bold text-stone-800">
               {selectedDay

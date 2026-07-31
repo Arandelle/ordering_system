@@ -12,6 +12,7 @@ import PermissionGuard from "@/lib/PermissionGuard";
 import { SubCategory } from "@/types/category";
 import SectionHeader from "@/app/admin/components/SectionHeader";
 import { debounce, REORDER_DEBOUNCE_MS } from "@/utils/debounce";
+import { IconButton } from "@/components/ui/buttons";
 
 // ── Inline edit row ───────────────────────────────────────────────────────────
 const SubEditRow = ({
@@ -210,7 +211,8 @@ const SubcategoriesPage = () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] }); // refresh count
       toast.success("Subcategory deleted!");
     },
-    onError: (error: Error) => toast.error(error.message || "Failed to delete subcategory"),
+    onError: (error: Error) =>
+      toast.error(error.message || "Failed to delete subcategory"),
   });
 
   const debouncedReorderRef = useRef<ReturnType<typeof debounce> | null>(null);
@@ -269,12 +271,16 @@ const SubcategoriesPage = () => {
         <SectionHeader
           title={`${parentCategory?.name ?? "..."} — Subcategories`}
           subTitle="Drag rows to reorder. Changes save automatically."
-          btnTxt={
-            canAccess(admin?.role, "categories.create") && !isAdding
-              ? "+ Add Subcategory"
-              : ""
+          actions={
+            <IconButton
+              onClick={() => setIsAdding((prev) => !prev)}
+              disabled={!canAccess(admin?.role, "categories.create")}
+              variant={isAdding ? "secondary" : "primary"}
+              text={!isAdding ? "Add SubCategory" : "Cancel"}
+              icon={{ name: "Layers2" }}
+              className="px-4 rounded-lg"
+            />
           }
-          onClick={() => setIsAdding(true)}
         />
       </div>
 

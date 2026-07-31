@@ -149,21 +149,24 @@ const ProfilePage = () => {
 
   return (
     <div className="space-y-8">
-      <SectionHeader
-        title="My Profile"
-        subTitle="View and manage your account details"
-        icon="Save"
-        btnTxt="Save Changes"
-        type="submit"
-        form="profile-form"
-        isLoading={isSaving}
-        loadingTxt="Saving..."
-      />
+      <div className="w-full flex justify-between items-center">
+        <SectionHeader
+          title="My Profile"
+          subTitle="View and manage your account details"
+        />
+        <IconButton
+          form="profile-form"
+          type="submit"
+          icon={{ name: "Save" }}
+          text={isSaving ? "Saving..." : "Save changes"}
+          className="px-4 rounded-lg"
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/** Left column — Avatar + quick info */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center space-y-4">
+          <div className="bg-white border border-slate-200 p-6 text-center space-y-4">
             {/** Avatar with preview-first flow */}
             <div className="relative mx-auto w-28 h-28">
               <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-slate-100 mx-auto">
@@ -257,7 +260,7 @@ const ProfilePage = () => {
         <div className="lg:col-span-2 space-y-6">
           {/** Personal Information */}
           <form id="profile-form" onSubmit={handleSaveProfile}>
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+            <div className="bg-white  border border-slate-200 p-6 space-y-5">
               <h2 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3">
                 Personal Information
               </h2>
@@ -307,13 +310,15 @@ const ProfilePage = () => {
           </form>
 
           {/** Change Password section */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+          <div className="bg-white  border border-slate-200 p-6 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-lg font-bold text-slate-800">Security</h2>
               {!showPasswordSection && (
                 <IconButton
                   onClick={() => setShowPasswordSection(true)}
                   text="Change Password"
+                  variant="success"
+                  icon={{name: "Lock"}}
                   className="rounded-lg px-4"
                 />
               )}

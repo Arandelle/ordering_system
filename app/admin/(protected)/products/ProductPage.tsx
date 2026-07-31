@@ -31,6 +31,7 @@ import ModifierGroupsSection from "./components/ModifierGroupsSection";
 import ComboPricePreview from "./components/ComboPricePreview";
 import GroupReorderPanel from "./components/GroupReorderPanel";
 import { formatDateInputValue, toTimeInputValue } from "@/helper/formatter";
+import { IconButton } from "@/components/ui/buttons";
 
 // Products older than 30 days cannot be reverted to "coming soon"
 const COMING_SOON_AGE_LIMIT_MS = 30 * 24 * 60 * 60 * 1000;
@@ -352,10 +353,11 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
           ? false
           : formData.isComingSoon,
         // Combine date + time into ISO string using browser's timezone
-        goLiveDate:
-          formData.goLiveDate
-            ? new Date(`${formData.goLiveDate}T${formData.goLiveTime || "00:00"}`).toISOString()
-            : null,
+        goLiveDate: formData.goLiveDate
+          ? new Date(
+              `${formData.goLiveDate}T${formData.goLiveTime || "00:00"}`,
+            ).toISOString()
+          : null,
         productType: formData.productType,
         paxCount: formData.paxCount ? parseInt(formData.paxCount) : null,
         modifierGroups: isComboOrSet
@@ -428,14 +430,33 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
               title={
                 isEditMode ? `Edit: ${editProduct?.name}` : "Add New Product"
               }
-              type="submit"
-              form="product-form"
-              btnTxt={isEditMode ? "Save Changes" : "Create Product"}
-              icon="Save"
-              isLoading={isLoading}
-              loadingTxt={isEditMode ? "Updating..." : "Creating..."}
-              showCancel
-              onCancel={() => router.back()}
+              actions={
+                <div className="gap-2 flex items-center">
+                  <IconButton
+                    onClick={() => router.back()}
+                    disabled={isLoading}
+                    variant="outline"
+                    text="Cancel"
+                    className="px-4 rounded-lg"
+                  />
+                  <IconButton
+                    type="submit"
+                    disabled={isLoading}
+                    form="product-form"
+                    icon={{ name: "Save" }}
+                    text={
+                      isLoading
+                        ? isEditMode
+                          ? "Updating..."
+                          : "Creating..."
+                        : isEditMode
+                          ? "Save Changes"
+                          : "Create Product"
+                    }
+                    className="px-4 rounded-lg"
+                  />
+                </div>
+              }
             />
           </div>
         </header>
@@ -645,7 +666,8 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                           Schedule Go-Live
                         </p>
                         <p className="text-xs text-gray-500">
-                          Product auto-goes live at this date & time. Leave empty for manual control.
+                          Product auto-goes live at this date & time. Leave
+                          empty for manual control.
                         </p>
                       </div>
                       <div className="flex gap-2">

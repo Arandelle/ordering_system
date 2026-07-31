@@ -10,10 +10,8 @@ import PermissionGuard from "@/lib/PermissionGuard";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { useStaffContext } from "@/contexts/StaffContext";
 import { Category, SubCategory } from "@/types/category";
-import {
-  categories_api,
-  subcategories_api,
-} from "../categories/hooks/api";
+import { categories_api, subcategories_api } from "../categories/hooks/api";
+import { IconButton } from "@/components/ui/buttons";
 
 type SubCategoryCategory = SubCategory["category"] | null | undefined;
 type ApiClientError = { message?: string };
@@ -189,10 +187,7 @@ const Page = () => {
   const [newName, setNewName] = useState("");
   const [newCategoryId, setNewCategoryId] = useState("");
 
-  const {
-    data: categories = [],
-    isLoading: isLoadingCategories,
-  } = useQuery({
+  const { data: categories = [], isLoading: isLoadingCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: categories_api.getAll,
     select: (data) => [...data].sort((a, b) => a.position - b.position),
@@ -265,12 +260,16 @@ const Page = () => {
       <SectionHeader
         title="Product Subcategories"
         subTitle="View and manage all subcategories across product categories."
-        btnTxt={
-          !isAdding && canAccess(admin?.role, "categories.create")
-            ? "+ Add Subcategory"
-            : ""
+        actions={
+          isAdding &&
+          canAccess(admin?.role, "categories.create") && (
+            <IconButton
+              onClick={() => setIsAdding(true)}
+              text="Add SubCategory"
+              className="px-4 rounded-lg"
+            />
+          )
         }
-        onClick={() => setIsAdding(true)}
       />
 
       <div className="flex items-center justify-center w-full">

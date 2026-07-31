@@ -30,7 +30,7 @@ export const ProductGroupCard = ({
   );
 
   return (
-    <div className="flex flex-col bg-white rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+    <div className="flex flex-col bg-white border border-gray-100 transition-all hover:shadow-sm">
       <div className="flex-1">
         {/* ── Product header: image + name + rating ────────────────────────── */}
         <div className="px-5 pt-5 pb-3 flex items-start gap-4">

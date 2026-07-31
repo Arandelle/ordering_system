@@ -4,6 +4,7 @@ import SectionHeader from "@/app/admin/components/SectionHeader";
 import { useRouter } from "next/navigation";
 import { useProductDiscountPromotions } from "../../hooks/useProductDiscountPromotions";
 import { ProductDiscountPromotionList } from "./components/ProductDiscountPromotionList";
+import { IconButton } from "@/components/ui/buttons";
 
 export default function ProductDiscountPromotionsPage() {
   const router = useRouter();
@@ -15,9 +16,13 @@ export default function ProductDiscountPromotionsPage() {
       <SectionHeader
         title="Product Discounts"
         subTitle="Create and manage discounts for selected products."
-        btnTxt="Create Product Discount"
-        onClick={() => router.push("/promotions/product-discounts/new")}
-        permission="promotions.read"
+        actions={
+          <IconButton
+            onClick={() => router.push("/promotions/product-discounts/new")}
+            text="Create Product Discount"
+            className="px-4 rounded-lg"
+          />
+        }
       />
 
       {isLoading && <p className="text-sm text-stone-500">Loading...</p>}

@@ -331,7 +331,7 @@ const ReviewCard = ({
 
   return (
     <div
-      className={`flex flex-col bg-white rounded-xl border shadow-sm transition-all hover:shadow-md ${
+      className={`flex flex-col bg-white border transition-all hover:shadow-sm ${
         !review.isVisible
           ? "border-red-200 bg-red-50/20 opacity-70"
           : "border-gray-100"

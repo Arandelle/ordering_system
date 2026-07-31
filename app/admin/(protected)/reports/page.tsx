@@ -28,13 +28,16 @@ import { NoDataFound } from "../../components/dashboard/NoDataFound";
 import { formatCurrency } from "@/helper/formatter";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatCardSkeleton } from "@/components/ui/StatCardSkeleton";
+import SectionHeader from "../../components/SectionHeader";
+import { useBranchName } from "../../hooks/useBranchName";
 
 // ============================================
 // MAIN PAGE
 // ============================================
 
 const ReportsPage = () => {
-  const { selectedBranchId } = useAdminBranchContext();
+  const { selectedBranchId, selectedBranch } = useAdminBranchContext();
+  const { branchName } = useBranchName();
   const [period, setPeriod] = useState<DashboardPeriod>({
     range: "month",
     month: new Date().getMonth() + 1,
@@ -63,21 +66,22 @@ const ReportsPage = () => {
     <section className="space-y-6">
       {/** Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-stone-800 mb-2">
-            Reports & Analytics
-          </h1>
-          <p className="text-stone-500">
-            Detailed insights into your business performance
-          </p>
-        </div>
+        <SectionHeader
+          title={
+            <>
+              Reports & Analytics -{" "}
+              <span className="text-brand-color-500">{branchName}</span>
+            </>
+          }
+          subTitle=" Detailed insights into your business performance"
+        />
         <DashboardFilter value={period} onChange={setPeriod} />
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i}/>)
+          Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : isError ? (
           <div className="col-span-full">
             <NoDataFound
@@ -110,7 +114,7 @@ const ReportsPage = () => {
       </div>
 
       {/** Revenue & Orders Trend */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white p-6 border border-gray-100">
         <div className="mb-6">
           <h3 className="text-lg font-bold text-stone-800">
             Revenue & Orders Trend
@@ -195,7 +199,7 @@ const ReportsPage = () => {
       {/** Sales by Category & Peak Hours */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/** Category Distribution */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white  p-6  border border-gray-100">
           <div className="mb-6">
             <h3 className="text-lg font-bold text-stone-800">
               Sales by Category
@@ -248,7 +252,7 @@ const ReportsPage = () => {
         </div>
 
         {/* Peak Hours */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100">
+        <div className="bg-white  p-6  border border-stone-100">
           <div className="mb-6">
             <h3 className="text-lg font-bold text-stone-800">
               Peak Hours Analysis

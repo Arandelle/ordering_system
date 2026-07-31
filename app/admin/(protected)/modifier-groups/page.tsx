@@ -165,8 +165,13 @@ export default function ModifierGroupTemplatesPage() {
       <SectionHeader
         title="Modifier Group Templates"
         subTitle="Create reusable modifier groups that can be applied to combo/set products"
-        btnTxt="+ Create Template"
-        onClick={() => router.push("/modifier-groups/new")}
+        actions={
+          <IconButton
+            onClick={() => router.push("/modifier-groups/new")}
+            text="+ Create Template"
+            className="px-4 rounded-lg"
+          />
+        }
       />
 
       <div className="flex items-center justify-center w-full">

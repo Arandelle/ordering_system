@@ -132,7 +132,7 @@ const ProductReviewsPage = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+        <div className="bg-white border border-gray-100 p-12 text-center">
           <DynamicIcon
             name="Package"
             size={32}

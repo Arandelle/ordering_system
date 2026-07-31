@@ -193,6 +193,7 @@ const CustomersPage = () => {
             }
           />
         </TableToolbar>
+        
         {isLoading ? (
           <TableSkeleton
             columns={customerHeaders.length}

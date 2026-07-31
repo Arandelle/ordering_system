@@ -5,6 +5,7 @@ import LoadingPage from "@/components/ui/LoadingPage";
 import { useRouter } from "next/navigation";
 import { useOrderDiscountPromotions } from "../../hooks/useOrderDiscountPromotions";
 import { PromotionList } from "./components/PromotionList";
+import { IconButton } from "@/components/ui/buttons";
 
 export default function OrderDiscountPromotionsPage() {
   const router = useRouter();
@@ -18,9 +19,13 @@ export default function OrderDiscountPromotionsPage() {
       <SectionHeader
         title="Order Discounts"
         subTitle="Create and manage whole-order discounts with schedule, minimum order, caps, and redemption limits"
-        onClick={() => router.push("/promotions/order-discounts/new")}
-        btnTxt="+ Create Discount"
-        permission=""
+        actions={
+          <IconButton
+            onClick={() => router.push("/promotions/order-discounts/new")}
+            text="Create Discount"
+            className="px-4 rounded-lg"
+          />
+        }
       />
       {error ? (
         <p className="text-sm font-medium text-red-600">

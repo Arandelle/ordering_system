@@ -15,6 +15,7 @@ import Modal from "@/components/ui/Modal";
 import { Loader2, Trash2 } from "lucide-react";
 import { fileToBase64 } from "@/utils/fileUtils";
 import { debounce, REORDER_DEBOUNCE_MS } from "@/utils/debounce";
+import { IconButton } from "@/components/ui/buttons";
 
 // ── Image Upload Button ───────────────────────────────────────────────────────
 const ImageUploadButton = ({
@@ -489,12 +490,16 @@ const Page = () => {
       <SectionHeader
         title="Product Categories"
         subTitle="Drag rows to reorder. Changes save automatically."
-        btnTxt={
-          !isAdding && canAccess(admin?.role, "categories.create")
-            ? "+ Add Category"
-            : ""
+        actions={
+          <IconButton
+            onClick={() => setIsAdding((prev) => !prev)}
+            disabled={!canAccess(admin?.role, "categories.create")}
+            variant={isAdding ? "secondary" : "primary"}
+            text={!isAdding ? "Add Category" : "Cancel"}
+            icon={{name: "Layers2"}}
+            className="px-4 rounded-lg"
+          />
         }
-        onClick={() => setIsAdding(true)}
       />
 
       <div className="flex items-center justify-center w-full">

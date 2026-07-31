@@ -60,7 +60,7 @@ export default function SalesChartClient({ period }: { period: DashboardPeriod }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white p-6 border border-gray-100">
         <div className="mb-6">
           <h3 className="text-lg font-bold text-gray-800">Sales Overview</h3>
           <p className="text-sm text-gray-500 mt-1">{rangeLabel} revenue trend</p>
@@ -114,7 +114,7 @@ export default function SalesChartClient({ period }: { period: DashboardPeriod }
         )}
       </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-whitel p-6 border border-gray-100">
         <div className="mb-6">
           <h3 className="text-lg font-bold text-stone-800">
             Top Selling Products
