@@ -6,10 +6,10 @@ import Modal from "@/components/ui/Modal";
 import ProductViewModal from "@/app/admin/components/ProductViewModal";
 
 /**
- * Intercepting route: catches client-side navigation to /admin/products/[id]
+ * Intercepting route: catches client-side navigation to /admin/products/view/[id]
  * and renders the product detail view inside a modal overlay.
  */
-export default function ProductModal({
+export default function ProductViewModalPage({
   params,
 }: {
   params: Promise<{ id: string }>;
