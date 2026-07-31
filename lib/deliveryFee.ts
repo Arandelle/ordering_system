@@ -28,7 +28,7 @@ const EXCESS_TIER_RATE = 8;
 // Free delivery: waived when item subtotal ≥ threshold AND distance is within the max km.
 // Distance exceeding the max km disqualifies free delivery even if the subtotal threshold is met.
 // Toggle via NEXT_PUBLIC_FREE_DELIVERY_ENABLED env var — set "false" to disable (e.g. after promo period).
-export const FREE_DELIVERY_MINIMUM_PURCHASE = 500;
+export const FREE_DELIVERY_MINIMUM_PURCHASE = 549;
 export const FREE_DELIVERY_MAX_DISTANCE_KM = 5;
 export const FREE_DELIVERY_ENABLED =
   process.env.NEXT_PUBLIC_FREE_DELIVERY_ENABLED !== "false";

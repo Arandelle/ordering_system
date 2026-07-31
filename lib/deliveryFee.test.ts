@@ -15,31 +15,31 @@ describe("Delivery Fee", () => {
     assert.deepEqual(calculateDeliveryFee(0), {
       distanceKm: 0,
       billableKm: 0,
-      deliveryFee: 49,
+      deliveryFee: 65,
     });
 
     assert.deepEqual(calculateDeliveryFee(0.1), {
       distanceKm: 0.1,
       billableKm: 0,
-      deliveryFee: 49,
+      deliveryFee: 65,
     });
 
     assert.deepEqual(calculateDeliveryFee(5), {
       distanceKm: 5,
       billableKm: 5,
-      deliveryFee: 79,
+      deliveryFee: 115,
     });
 
     assert.deepEqual(calculateDeliveryFee(6), {
       distanceKm: 6,
       billableKm: 6,
-      deliveryFee: 84,
+      deliveryFee: 123,
     });
 
     assert.deepEqual(calculateDeliveryFee(8.3), {
       distanceKm: 8.3,
       billableKm: 8,
-      deliveryFee: 94,
+      deliveryFee: 139,
     });
   });
 
@@ -54,47 +54,47 @@ describe("Delivery Fee", () => {
 });
 
 describe("Free Delivery", () => {
-  test("qualifies for free delivery when subtotal ≥ 500 and distance ≤ 5 km", () => {
-    const result = resolveEffectiveDeliveryFee(3, 500);
+  test("qualifies for free delivery when subtotal ≥ 549 and distance ≤ 5 km", () => {
+    const result = resolveEffectiveDeliveryFee(3, 549);
 
     assert.equal(result.freeDeliveryEligible, true);
     assert.equal(result.effectiveDeliveryFee, 0);
-    assert.equal(result.deliveryFee, 67); // base 49 + 3*6 = 67
+    assert.equal(result.deliveryFee, 95); // base 65 + 3*10 = 95
     assert.equal(result.freeDeliveryReason, undefined);
   });
 
-  test("qualifies for free delivery at exactly 500 subtotal and exactly 5 km", () => {
-    const result = resolveEffectiveDeliveryFee(5, 500);
+  test("qualifies for free delivery at exactly 549 subtotal and exactly 5 km", () => {
+    const result = resolveEffectiveDeliveryFee(5, 549);
 
     assert.equal(result.freeDeliveryEligible, true);
     assert.equal(result.effectiveDeliveryFee, 0);
-    assert.equal(result.deliveryFee, 79); // base 49 + 5*6 = 79
+    assert.equal(result.deliveryFee, 115); // base 65 + 5*10 = 115
     assert.equal(result.freeDeliveryReason, undefined);
   });
 
-  test("does NOT qualify for free delivery when subtotal < 500", () => {
+  test("does NOT qualify for free delivery when subtotal < 549", () => {
     const result = resolveEffectiveDeliveryFee(3, 499);
 
     assert.equal(result.freeDeliveryEligible, false);
-    assert.equal(result.effectiveDeliveryFee, 67);
-    assert.equal(result.deliveryFee, 67);
-    assert.ok(result.freeDeliveryReason?.includes("₱1.00"));
+    assert.equal(result.effectiveDeliveryFee, 95);
+    assert.equal(result.deliveryFee, 95);
+    assert.ok(result.freeDeliveryReason?.includes("₱50.00"));
   });
 
-  test("does NOT qualify for free delivery when distance > 5 km, even if subtotal ≥ 500", () => {
+  test("does NOT qualify for free delivery when distance > 5 km, even if subtotal ≥ 549", () => {
     const result = resolveEffectiveDeliveryFee(6, 600);
 
     assert.equal(result.freeDeliveryEligible, false);
-    assert.equal(result.effectiveDeliveryFee, 84); // base 49 + 5*6 + 1*5 = 84
-    assert.equal(result.deliveryFee, 84);
+    assert.equal(result.effectiveDeliveryFee, 123); // base 65 + 5*10 + 1*8 = 123
+    assert.equal(result.deliveryFee, 123);
     assert.ok(result.freeDeliveryReason?.includes("within 5 km"));
   });
 
-  test("does NOT qualify for free delivery when both subtotal < 500 and distance > 5 km", () => {
+  test("does NOT qualify for free delivery when both subtotal < 549 and distance > 5 km", () => {
     const result = resolveEffectiveDeliveryFee(7, 300);
 
     assert.equal(result.freeDeliveryEligible, false);
-    assert.equal(result.effectiveDeliveryFee, 89); // base 49 + 5*6 + 2*5 = 89
+    assert.equal(result.effectiveDeliveryFee, 131); // base 65 + 5*10 + 2*8 = 131
     // Distance reason takes priority since it's the harder constraint
     assert.ok(result.freeDeliveryReason?.includes("within 5 km"));
   });
@@ -108,30 +108,30 @@ describe("Free Delivery", () => {
   });
 
   test("no free delivery reason when distance is 0 (pickup scenario edge case)", () => {
-    const result = resolveEffectiveDeliveryFee(0, 500);
+    const result = resolveEffectiveDeliveryFee(0, 549);
 
     assert.equal(result.freeDeliveryReason, undefined);
   });
 });
 
 describe("isFreeDeliveryEligible", () => {
-  test("returns true for delivery with subtotal ≥ 500 and distance ≤ 5 km", () => {
-    assert.equal(isFreeDeliveryEligible("delivery", 3, 500), true);
+  test("returns true for delivery with subtotal ≥ 549 and distance ≤ 5 km", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 3, 549), true);
   });
 
-  test("returns true at exactly 500 subtotal and exactly 5 km", () => {
-    assert.equal(isFreeDeliveryEligible("delivery", 5, 500), true);
+  test("returns true at exactly 549 subtotal and exactly 5 km", () => {
+    assert.equal(isFreeDeliveryEligible("delivery", 5, 549), true);
   });
 
   test("returns false for pickup regardless of subtotal", () => {
-    assert.equal(isFreeDeliveryEligible("pickup", 3, 500), false);
+    assert.equal(isFreeDeliveryEligible("pickup", 3, 549), false);
   });
 
-  test("returns false when subtotal < 500", () => {
+  test("returns false when subtotal < 549", () => {
     assert.equal(isFreeDeliveryEligible("delivery", 3, 499), false);
   });
 
-  test("returns false when distance > 5 km even if subtotal ≥ 500", () => {
+  test("returns false when distance > 5 km even if subtotal ≥ 549", () => {
     assert.equal(isFreeDeliveryEligible("delivery", 6, 600), false);
   });
 
@@ -140,6 +140,6 @@ describe("isFreeDeliveryEligible", () => {
   });
 
   test("returns false at boundary distance slightly over 5 km", () => {
-    assert.equal(isFreeDeliveryEligible("delivery", 5.01, 500), false);
+    assert.equal(isFreeDeliveryEligible("delivery", 5.01, 549), false);
   });
 });
