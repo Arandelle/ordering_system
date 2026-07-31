@@ -143,7 +143,7 @@ export function OrderActionButton({ order, role }: Props) {
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-1">
         {allowedStatuses.map((nextStatus) => {
           const actionConfig = getActionConfig(status, nextStatus);
 
@@ -199,7 +199,7 @@ export function OrderActionButton({ order, role }: Props) {
                   key={nextStatus}
                   variant="underline"
                   disabled={true}
-                  className="text-xs"
+                  className="text-xs p-0"
                   title={`Reservation: ${formatDate(scheduled)} — You can start preparing at ${formatDate(earliest)}`}
                   text={actionConfig.label}
                 />
@@ -218,7 +218,8 @@ export function OrderActionButton({ order, role }: Props) {
                 className: "animate-spin",
               }}
               variant="underline"
-              className={`text-xs ${actionConfig.variant}`}
+              className={`text-xs p-1 ${actionConfig.variant}`}
+              title={actionConfig.label}
             />
           );
         })}

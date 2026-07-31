@@ -30,6 +30,7 @@ export type OrderParams = {
   search?: string;
   status?: OrderStatus | OrderStatus[];
   paymentFilter?: "confirmed" | "unpaid";
+  fulfillmentType?: string;
   branchId?: "all" | string;
   productType?: string;
 };

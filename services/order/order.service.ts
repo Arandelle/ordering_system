@@ -1,6 +1,5 @@
 import { Order } from "@/models/Orders";
 import {
-  FULFILLMENT_TYPE,
   ORDER_ACTION_CONFIG,
   OrderStatus,
   STATUS_PRIORITY,
@@ -71,7 +70,7 @@ export async function queryOrders(options: OrderQueryOptions) {
     createdAt: order.createdAt,
     branchSnapshot: order.branchSnapshot,
     status: order.status,
-    fulfillmentType: order.fulfillmentType ?? FULFILLMENT_TYPE.DELIVERY,
+    fulfillmentType: order.fulfillmentType,
     reservation: order.reservation,
     items: order.items,
     total: order.total,

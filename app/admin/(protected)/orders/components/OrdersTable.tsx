@@ -17,12 +17,31 @@ import {
 import { OrderType } from "@/types/OrderTypes";
 import { OrderActionButton } from "./OrderActionButton";
 import PermissionGuard from "@/lib/PermissionGuard";
-import { formatDate } from "@/helper/formatter/formatDate";
+import { formatDate, formatCurrency } from "@/helper/formatter";
 import { useRouter } from "next/navigation";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { IconButton } from "@/components/ui/buttons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SelectField } from "@/components/ui/FormComponents";
+
+// ─── Filter & sort option constants ──────────────────────────────────────────
+
+const FULFILLMENT_OPTIONS = [
+  { value: "all", label: "All Types" },
+  { value: FULFILLMENT_TYPE.DELIVERY, label: "Delivery" },
+  { value: FULFILLMENT_TYPE.PICKUP, label: "Pickup" },
+  { value: FULFILLMENT_TYPE.DINE_IN, label: "Dine-in / Reservation" },
+];
+
+const SORT_OPTIONS = [
+  { value: "default", label: "Default" },
+  { value: "createdAt:desc", label: "Newest first" },
+  { value: "createdAt:asc", label: "Oldest first" },
+  { value: "total.totalAmount:desc", label: "Highest total" },
+  { value: "total.totalAmount:asc", label: "Lowest total" },
+];
+
+const COLUMN_COUNT = 5;
 
 interface OrdersTableProps {
   orders: OrderType[];
@@ -34,6 +53,11 @@ interface OrdersTableProps {
   onStatusFilterChange: (filter: string) => void;
   filterOptions: { key: string; label: string }[];
   filterCounts?: Record<string, number>;
+  fulfillmentTypeFilter: string;
+  onFulfillmentTypeFilterChange: (value: string) => void;
+  sortOption: string;
+  onSortOptionChange: (value: string) => void;
+  onResetFilters: () => void;
 }
 
 export default function OrdersTable({
@@ -46,54 +70,99 @@ export default function OrdersTable({
   onStatusFilterChange,
   filterOptions,
   filterCounts,
+  fulfillmentTypeFilter,
+  onFulfillmentTypeFilterChange,
+  sortOption,
+  onSortOptionChange,
+  onResetFilters,
 }: OrdersTableProps) {
   const router = useRouter();
 
-  const headerTitles = [
-    "Customer",
-    "Total",
-    "Payment Method",
-    "Branch",
-    "Status",
-    "Time",
-    "Actions",
-  ];
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    fulfillmentTypeFilter !== "all" ||
+    sortOption !== "default" ||
+    searchQuery !== "";
 
+  /** Payment status capsule — small pill showing Maya payment state */
   const PaymentStatusCapsule = (status: "awaiting" | "paid" | "unpaid") => {
-    const statusObject = {
+    const styles = {
       paid: {
         text: "text-green-700",
         bg: "bg-green-50",
-        bgPill: "bg-green-500",
+        pill: "bg-green-500",
         border: "border-green-200",
         title: "Paid",
       },
       awaiting: {
         text: "text-amber-700",
         bg: "bg-amber-50",
-        bgPill: "bg-amber-500",
+        pill: "bg-amber-500",
         border: "border-amber-200",
-        title: "Awaiting Payment",
+        title: "Awaiting",
       },
       unpaid: {
         text: "text-red-700",
         bg: "bg-red-50",
-        bgPill: "bg-red-500",
+        pill: "bg-red-500",
         border: "border-red-200",
         title: "Unpaid",
       },
     };
 
-    const current = statusObject[status];
+    const s = styles[status];
 
     return (
       <span
-        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${current.border} ${current.bg} ${current.text}`}
+        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${s.border} ${s.bg} ${s.text}`}
       >
-        <span className={`h-1.5 w-1.5 rounded-full ${current.bgPill}`} />
-        {current.title}
+        <span className={`h-1.5 w-1.5 rounded-full ${s.pill}`} />
+        {s.title}
       </span>
     );
+  };
+
+  /** Returns fulfillment label and color for an order */
+  const getFulfillmentInfo = (order: OrderType) => {
+    const isPickup = order.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
+    const isDineIn = order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+    const isDelivery = order.fulfillmentType === FULFILLMENT_TYPE.DELIVERY;
+
+    // Orders without fulfillmentType stored in the DB (legacy data)
+    if (!isPickup && !isDineIn && !isDelivery) {
+      return {
+        label: "N/A",
+        style: "text-gray-400",
+        isPickup: false,
+      };
+    }
+
+    return {
+      label: isDineIn ? "Reservation" : isPickup ? "Pickup" : "Delivery",
+      style: isDineIn
+        ? "text-indigo-500"
+        : isPickup
+          ? "text-blue-500"
+          : "text-brand-color-500",
+      isPickup,
+    };
+  };
+
+  /**
+   * Determines the Maya payment capsule to show for an order.
+   * Returns null for COD orders (they use a separate paid indicator).
+   */
+  const getMayaPaymentCapsule = (order: OrderType) => {
+    const isMaya = order.paymentInfo.paymentMethod === "maya";
+    if (!isMaya) return null;
+
+    if (order.paymentInfo.paymentConfirmed) {
+      return PaymentStatusCapsule("paid");
+    }
+    if (order.status === ORDER_STATUSES.PENDING_PAYMENT) {
+      return PaymentStatusCapsule("awaiting");
+    }
+    return PaymentStatusCapsule("unpaid");
   };
 
   return (
@@ -102,31 +171,61 @@ export default function OrdersTable({
         title="Recent Orders"
         subtitle={`${orders.length} order${orders.length !== 1 ? "s" : ""} found`}
       />
-      <TableToolbar>
-        <SelectField
-          label="Filter by status"
-          options={filterOptions.map((option) => ({
-            label:
-              filterCounts?.[option.key] != null
-                ? `${option.label} ${filterCounts[option.key] > 0 ? `(${filterCounts[option.key]})` : ""}`
-                : option.label,
-            value: option.key,
-          }))}
-          value={statusFilter}
-          onChange={(e) => onStatusFilterChange(e.target.value)}
-        />
+      <TableToolbar className="flex-wrap">
         <SearchBar
           value={searchQuery}
           onChange={onSearchChange}
           onSearch={onSearch}
           placeholder="Search orders — customer name, branch, delivery, etc."
         />
+        <div className="flex items-end gap-3 flex-1 min-w-0">
+          <SelectField
+            label="Status"
+            options={filterOptions.map((option) => ({
+              label:
+                filterCounts?.[option.key] != null
+                  ? `${option.label} ${filterCounts[option.key] > 0 ? `(${filterCounts[option.key]})` : ""}`
+                  : option.label,
+              value: option.key,
+            }))}
+            value={statusFilter}
+            onChange={(e) => onStatusFilterChange(e.target.value)}
+          />
+          <SelectField
+            label="Fulfillment"
+            value={fulfillmentTypeFilter}
+            onChange={(e) => onFulfillmentTypeFilterChange(e.target.value)}
+            options={FULFILLMENT_OPTIONS}
+          />
+          <SelectField
+            label="Sort by"
+            value={sortOption}
+            onChange={(e) => onSortOptionChange(e.target.value)}
+            options={SORT_OPTIONS}
+          />
+        </div>
+        {hasActiveFilters && (
+          <IconButton
+            onClick={onResetFilters}
+            variant="ghost"
+            className="text-slate-500 hover:text-red-500 hover:bg-red-50 self-end mb-0.5"
+            icon={{ name: "RotateCcw", size: 14 }}
+            text="Reset"
+            title="Clear all filters and sort"
+          />
+        )}
       </TableToolbar>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              {headerTitles.map((head, index) => (
+              {[
+                "Customer",
+                "Total",
+                "Fulfillment/Branch",
+                "Status",
+                "Actions",
+              ].map((head, index) => (
                 <TableHead
                   key={index}
                   className="px-4 py-4 uppercase text-xs font-semibold tracking-wider text-center"
@@ -140,30 +239,26 @@ export default function OrdersTable({
             {orders.length > 0 ? (
               orders.map((order) => {
                 const isMaya = order.paymentInfo.paymentMethod === "maya";
-                const isMayaPaid = order.paymentInfo.paymentConfirmed === true;
+                const oneDayMs = 24 * 60 * 60 * 1000;
                 const isNewPaidOrder =
                   isMaya &&
-                  isMayaPaid &&
-                  order.status === ORDER_STATUSES.PENDING;
+                  order.paymentInfo.paymentConfirmed === true &&
+                  order.status === ORDER_STATUSES.PENDING &&
+                  Date.now() - new Date(order.createdAt).getTime() < oneDayMs;
 
-                const isPickup =
-                  order?.fulfillmentType &&
-                  order.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
-                const isDineIn =
-                  order?.fulfillmentType &&
-                  order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+                const {
+                  label: fulfillmentLabel,
+                  style: fulfillmentStyle,
+                  isPickup,
+                } = getFulfillmentInfo(order);
 
-                const fulfillmentLabel = isDineIn
-                  ? "Reservation"
-                  : isPickup
-                    ? "Pickup"
-                    : "Delivery";
-
-                const fulfillmentStyle = isDineIn
-                  ? "text-indigo-500"
-                  : isPickup
-                    ? "text-blue-500"
-                    : "text-brand-color-500";
+                const mayaCapsule = getMayaPaymentCapsule(order);
+                const fullname = [
+                  order.paymentInfo.firstName,
+                  order.paymentInfo.lastName,
+                ]
+                  .filter(Boolean)
+                  .join(" ");
 
                 return (
                   <TableRow
@@ -174,99 +269,72 @@ export default function OrdersTable({
                         : "hover:bg-stone-50"
                     }`}
                   >
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {/* Ribbon badge — sits in normal flow, doesn't overlap text */}
-                        {isNewPaidOrder && (
-                          <span
-                            className="shrink-0 inline-flex items-center bg-red-500 text-white
-                              text-[10px] font-bold uppercase tracking-wide
-                              py-1 pl-2 pr-3
-                              [clip-path:polygon(0_0,80%_0,100%_50%,80%_100%,0_100%)]
-                              animate-pulse"
-                          >
-                            New
-                          </span>
-                        )}
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {order.paymentInfo.firstName ?? "—"}{" "}
-                            {order.paymentInfo.lastName ?? "—"}
-                          </span>
-                          <span className="text-xs text-gray-500 truncate">
-                            {order.paymentInfo.customerEmail ?? "—"}
-                          </span>
-                          <span className="text-xs text-gray-500 truncate">
-                            {order.paymentInfo.customerPhone ?? "—"}
-                          </span>
-                        </div>
+                    {/* CUSTOMER */}
+                    <TableCell className="flex flex-col items-center gap-2">
+                      {isNewPaidOrder && (
+                        <span className="shrink-0 inline-flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full animate-pulse">
+                          New
+                        </span>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900 truncate">
+                          {fullname ?? "Customer Name"}
+                        </span>
+                        <span className="text-xs font-medium text-gray-600 truncate">
+                          {order.paymentInfo.customerPhone ?? "--"}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4">
+
+                    {/* TOTAL */}
+                    <TableCell className="px-4 py-4">
                       <span className="text-sm font-semibold text-stone-800">
-                        ₱{order.total.totalAmount?.toFixed(2)}
+                        {formatCurrency(order.total.totalAmount)}
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <span
-                        className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                          isMaya
-                            ? "bg-green-100 text-green-700"
-                            : "text-orange-700 bg-orange-100"
-                        }`}
-                      >
-                        {isMaya ? "Maya" : "Cash on Delivery"}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={`text-xs font-semibold gap-2 flex flex-col`}
-                    >
+
+                    {/* FULFILLMENT / BRANCH */}
+                    <TableCell className="px-4 py-4 text-center">
                       <p
                         className={`text-xs font-semibold ${fulfillmentStyle}`}
                       >
                         {fulfillmentLabel}
                       </p>
-                      <p className="text-nowrap">
-                        {order.branchSnapshot?.name}
-                      </p>
                       {isPickup && order.pickupTime && (
-                        <p className="text-xs text-blue-400 font-normal">
+                        <p className="text-xs text-blue-400 mt-0.5">
                           {formatDate(order.pickupTime)}
                         </p>
                       )}
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-end justify-end gap-1.5">
-                        <div className="flex items-end flex-col gap-1.5 flex-wrap">
-                          <StatusBadge status={order.status} />
-                          {isMaya && isMayaPaid && PaymentStatusCapsule("paid")}
-                          {order.status === ORDER_STATUSES.PENDING_PAYMENT &&
-                            isMaya &&
-                            !isMayaPaid &&
-                            PaymentStatusCapsule("awaiting")}
-                          {!isMaya &&
-                            order.paymentInfo?.paymentId &&
-                            PaymentStatusCapsule("paid")}
-                          {order.status === ORDER_STATUSES.PENDING &&
-                            isMaya &&
-                            !isMayaPaid &&
-                            PaymentStatusCapsule("unpaid")}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
                       <span className="text-xs text-stone-500">
-                        {formatDate(order.createdAt)}
+                        {order.branchSnapshot?.name ?? "—"}
                       </span>
                     </TableCell>
 
-                    <TableCell className="px-6 py-4">
-                      <div className="flex flex-col lg:flex-row items-center justify-center">
+                    {/* STATUS */}
+                    <TableCell className="px-4 py-4">
+                      <div className="flex flex-col items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                          <StatusBadge status={order.status} />
+                          {mayaCapsule}
+                          {!isMaya &&
+                            order.paymentInfo?.paymentId &&
+                            PaymentStatusCapsule("paid")}
+                        </div>
+                        <span className="text-xs text-stone-400 whitespace-nowrap">
+                          {formatDate(order.createdAt)}
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    {/* ACTIONS */}
+                    <TableCell className="px-4 py-4">
+                      <div className="flex items-center justify-center gap-2">
                         <IconButton
                           onClick={() => router.push(`/orders/${order._id}`)}
-                          text="Details"
-                          variant="underline"
-                          className="text-blue-500 hover:text-blue-600 text-xs"
+                          variant="ghost"
+                          className="text-blue-600 hover:bg-blue-50"
+                          icon={{ name: "Eye", size: 16 }}
+                          title="View details"
                         />
                         <PermissionGuard permission="orders.update">
                           <OrderActionButton order={order} role="admin" />
@@ -277,14 +345,14 @@ export default function OrdersTable({
                 );
               })
             ) : isPending ? (
-              <TableSkeleton columns={headerTitles.length} rows={8} />
+              <TableSkeleton columns={COLUMN_COUNT} rows={7} />
             ) : (
               <TableRow>
-                <TableCell colSpan={headerTitles.length}>
+                <TableCell colSpan={COLUMN_COUNT}>
                   <TableEmptyState
                     icon="ShoppingCart"
                     title="No orders found"
-                    description="No orders match your current filters. Try adjusting your search or status filter."
+                    description="No orders match your current filters. Try adjusting your search or filters."
                   />
                 </TableCell>
               </TableRow>

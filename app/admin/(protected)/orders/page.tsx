@@ -26,16 +26,14 @@ const ORDER_FILTER_OPTIONS: {
   label: string;
   statuses?: OrderStatus | OrderStatus[];
   paymentFilter?: "confirmed" | "unpaid";
-  highlight?: boolean;
 }[] = [
-  { key: "all", label: "All Orders", paymentFilter: "confirmed" },
+  { key: "all", label: "All Valid Orders", paymentFilter: "confirmed" },
   {
     key: "pending_payment",
     label: "Pending Payment",
     statuses: ORDER_STATUSES.PENDING_PAYMENT,
-    highlight: true,
   },
-  { key: "unpaid", label: "Unpaid", paymentFilter: "unpaid", highlight: true },
+  { key: "unpaid", label: "Unpaid", paymentFilter: "unpaid" },
   {
     key: ORDER_STATUSES.PENDING,
     label: "Pending",
@@ -81,6 +79,8 @@ const OrdersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<statusFilterType>("all");
+  const [fulfillmentTypeFilter, setFulfillmentTypeFilter] = useState("all");
+  const [sortOption, setSortOption] = useState("default");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -98,6 +98,9 @@ const OrdersPage = () => {
     search: appliedSearch,
     status: selectedFilter.statuses,
     paymentFilter: selectedFilter.paymentFilter,
+    fulfillmentType:
+      fulfillmentTypeFilter === "all" ? undefined : fulfillmentTypeFilter,
+    sort: sortOption === "default" ? undefined : sortOption,
     branchId: selectedBranchId === "all" ? undefined : selectedBranchId,
   });
 
@@ -112,6 +115,25 @@ const OrdersPage = () => {
 
   const handleFilterChange = (filter: statusFilterType) => {
     setStatusFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const handleFulfillmentTypeChange = (value: string) => {
+    setFulfillmentTypeFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortOption(value);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setAppliedSearch("");
+    setStatusFilter("all");
+    setFulfillmentTypeFilter("all");
+    setSortOption("default");
     setCurrentPage(1);
   };
 
@@ -142,6 +164,11 @@ const OrdersPage = () => {
         }
         filterOptions={ORDER_FILTER_OPTIONS}
         filterCounts={filterCounts}
+        fulfillmentTypeFilter={fulfillmentTypeFilter}
+        onFulfillmentTypeFilterChange={handleFulfillmentTypeChange}
+        sortOption={sortOption}
+        onSortOptionChange={handleSortChange}
+        onResetFilters={handleResetFilters}
       />
 
       {pagination && (

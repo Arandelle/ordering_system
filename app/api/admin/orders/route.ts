@@ -18,6 +18,11 @@ import { parseRequestQuery } from "@/utils/query-helpers";
 import { ORDER_STATUSES } from "@/types/orderConstants";
 import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
+import {
+  getBadRequestError,
+  getForbiddenError,
+  getInternalServerError,
+} from "@/lib/getApiError";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,11 +30,11 @@ export async function GET(request: NextRequest) {
 
     const admin = await requireAdmin(request);
     if (!canAccess(admin.role, "orders.read")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return getForbiddenError();
     }
 
     const { page, limit, skip, sort, match } = parseRequestQuery(request, {
-      exactFields: ["status"],
+      exactFields: ["status", "fulfillmentType"],
       searchFields: [
         "paymentInfo.firstName",
         "paymentInfo.lastName",
@@ -40,7 +45,7 @@ export async function GET(request: NextRequest) {
         "items.name",
         "paymentInfo.shippingAddress.city",
         "branchSnapshot.name",
-        "fulfillmentType"
+        "fulfillmentType",
       ],
       defaultLimit: 20,
       maxLimit: 50,
@@ -133,28 +138,18 @@ export async function GET(request: NextRequest) {
         const branchObjectId = getValidObjectId(requestedBranchId);
 
         if (!branchObjectId) {
-          return NextResponse.json(
-            { error: "Invalid branch id" },
-            { status: 400 },
-          );
+          return getBadRequestError("Invalid branch id");
         }
 
         filter.branchId = branchObjectId;
       }
     } else {
-      if (!admin.branch)
-        return NextResponse.json(
-          { error: "No branch assigned" },
-          { status: 403 },
-        );
+      if (!admin.branch) return getForbiddenError("No branch assigned");
 
       const assignedBranchId = getValidObjectId(admin.branch);
 
       if (!assignedBranchId) {
-        return NextResponse.json(
-          { error: "Invalid assigned branch" },
-          { status: 403 },
-        );
+        return getForbiddenError("Invalid assigned branch");
       }
 
       filter.branchId = assignedBranchId;
@@ -253,14 +248,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ...result, tabCounts });
   } catch (error: any) {
-    if (error.message === "Unauthorized!") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     console.error("GET /api/orders error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch orders" },
-      { status: 500 },
-    );
+    return getInternalServerError(error, "Failed to fetch orders");
   }
 }

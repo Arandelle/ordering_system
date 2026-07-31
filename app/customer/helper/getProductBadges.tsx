@@ -19,6 +19,25 @@ export interface ProductBadgeOptions {
   createdAt?: string;
 }
 
+export interface ProductBadgeRibbonClassNames {
+  /** Overrides/extends the outer ribbon container classes (layout, padding, bg is still driven by badge.bg unless overridden here too) */
+  parent?: string;
+  /** Overrides/extends the icon wrapper classes */
+  icon?: string;
+  /** Overrides/extends the label <span> classes */
+  text?: string;
+}
+
+export interface ProductBadgeRibbonProps {
+  badge: ProductBadge;
+  /** Icon pixel size, defaults to 12 */
+  iconSize?: number;
+  /** Fine-grained className overrides for parent/icon/text */
+  classNames?: ProductBadgeRibbonClassNames;
+  /** Back-compat: className applied to the outer container, same as classNames.parent */
+  className?: string;
+}
+
 // ── Constants ────────────────────────────────────────────────────────────────
 
 /** Ribbon clip-path — flat left edge, pennant notch on the right */
@@ -102,15 +121,32 @@ export const getProductBadges = (opts: ProductBadgeOptions): ProductBadge[] => {
 
 // ── Components ───────────────────────────────────────────────────────────────
 
-export const ProductBadgeRibbon = ({ badge }: { badge: ProductBadge }) => (
+/**
+ * @param badge - object of shape { label: string; bg: string; icon: string }
+ * @param iconSize - icon pixel size, defaults to 12
+ * @param classNames - optional overrides for `parent`, `icon`, and `text` wrapper classes
+ * @param className - shorthand for classNames.parent (back-compat)
+ */
+export const ProductBadgeRibbon = ({
+  badge,
+  iconSize = 12,
+  classNames,
+  className,
+}: ProductBadgeRibbonProps) => (
   <div
     style={RIBBON_CLIP}
     className={cn(
-      `flex items-center gap-1.5 pl-3 pr-5 py-1.5 text-[11px] font-bold text-white`,
+      "flex items-center gap-1.5 pl-3 pr-5 py-1.5 text-[11px] font-bold text-white",
       badge.bg,
+      className,
+      classNames?.parent,
     )}
   >
-    <DynamicIcon name={badge.icon} size={12} />
-    <span>{badge.label}</span>
+    <DynamicIcon
+      name={badge.icon}
+      size={iconSize}
+      className={cn(classNames?.icon)}
+    />
+    <span className={cn(classNames?.text)}>{badge.label}</span>
   </div>
 );
