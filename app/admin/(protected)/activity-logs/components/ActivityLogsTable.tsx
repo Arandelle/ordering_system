@@ -1,21 +1,28 @@
 import { ActivityLogEntry } from "@/hooks/api/useActivityLogs";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
-import LoadingPage from "@/components/ui/LoadingPage";
 import { formatDate } from "@/helper/formatter";
 import {
   Table,
   TableBody,
   TableCard,
+  TableCardHeader,
   TableCell,
   TableEmptyState,
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton,
+  TableToolbar,
 } from "@/components/ui/table";
+import { SelectField } from "@/components/ui/FormComponents";
 
 interface ActivityLogsTableProps {
   logs: ActivityLogEntry[];
   isPending: boolean;
+  categoryFilter: string;
+  setCategoryFilter: (category: string) => void;
+  actorFilter: string;
+  setActorFilter: (actor: string) => void;
 }
 
 /**
@@ -78,50 +85,75 @@ function extractDetail(log: ActivityLogEntry): string | null {
   return null;
 }
 
-const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
-  if (isPending) {
-    return (
-      <TableCard>
-        <div className="p-8">
-          <LoadingPage />
-        </div>
-      </TableCard>
-    );
-  }
+const CATEGORY_OPTIONS = [
+  { value: "all", label: "All Categories" },
+  { value: "order", label: "Orders" },
+  { value: "payment", label: "Payments" },
+  { value: "inventory", label: "Inventory" },
+  { value: "voucher", label: "Vouchers" },
+];
 
-  if (logs.length === 0) {
-    return (
-      <TableCard>
+const ACTOR_OPTIONS = [
+  { value: "all", label: "All Actors" },
+  { value: "staff", label: "Staff" },
+  { value: "customer", label: "Customers" },
+  { value: "system", label: "System" },
+  { value: "webhook", label: "Webhooks" },
+];
+
+const ActivityLogHeaders = ["Actor", "Action", "Target", "Detail", "Time"];
+
+const ActivityLogsTable = ({
+  logs,
+  isPending,
+  categoryFilter,
+  actorFilter,
+  setCategoryFilter,
+  setActorFilter,
+}: ActivityLogsTableProps) => {
+  return (
+    <TableCard>
+      <TableCardHeader title="Recent Activity Logs" />
+      <TableToolbar>
+        <SelectField
+          label="Category"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          options={CATEGORY_OPTIONS.map((opt) => ({
+            label: opt.label,
+            value: opt.value,
+          }))}
+        />
+        <SelectField
+          label="Actor"
+          value={actorFilter}
+          onChange={(e) => setActorFilter(e.target.value)}
+          options={ACTOR_OPTIONS.map((opt) => ({
+            label: opt.label,
+            value: opt.value,
+          }))}
+        />
+      </TableToolbar>
+      {isPending ? (
+        <TableSkeleton columns={5} headers={ActivityLogHeaders} />
+      ) : logs.length === 0 ? (
         <TableEmptyState
           icon="ScrollText"
           title="No activity logs found"
           description="Logs will appear here as actions are performed"
         />
-      </TableCard>
-    );
-  }
-
-  return (
-    <TableCard>
-      <div className="overflow-x-auto">
-        <Table className="w-full text-sm">
+      ) : (
+        <Table>
           <TableHeader className="bg-gray-50 border-b border-gray-200">
             <TableRow className="border-0">
-              <TableHead className="px-4 py-3 font-semibold text-gray-600">
-                Actor
-              </TableHead>
-              <TableHead className="px-4 py-3 font-semibold text-gray-600">
-                Action
-              </TableHead>
-              <TableHead className="px-4 py-3 font-semibold text-gray-600">
-                Target
-              </TableHead>
-              <TableHead className="px-4 py-3 font-semibold text-gray-600">
-                Detail
-              </TableHead>
-              <TableHead className="px-4 py-3 font-semibold text-gray-600">
-                Time
-              </TableHead>
+              {ActivityLogHeaders.map((header, i) => (
+                <TableHead
+                  key={i}
+                  className="px-4 py-3 font-semibold text-gray-600"
+                >
+                  {header}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-gray-100">
@@ -204,7 +236,7 @@ const ActivityLogsTable = ({ logs, isPending }: ActivityLogsTableProps) => {
             })}
           </TableBody>
         </Table>
-      </div>
+      )}
     </TableCard>
   );
 };

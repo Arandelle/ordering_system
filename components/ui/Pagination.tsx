@@ -84,7 +84,7 @@ export default function Pagination({
   const [pageInput, setPageInput] = useState("");
 
   return (
-    <div className="flex items-center justify-between flex-wrap gap-3 border border-gray-200 shadow-sm rounded-xl p-4">
+    <div className="flex items-center justify-between flex-wrap gap-3 border border-stone-100 p-4">
       {showInfo && start && end && total ? (
         <p className="text-sm text-stone-500">
           Showing {start}–{end} of {total} results

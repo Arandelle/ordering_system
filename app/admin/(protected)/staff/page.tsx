@@ -1,14 +1,20 @@
 "use client";
 import { InputField } from "@/components/ui/FormComponents/InputField";
+import { FetchError } from "@/components/ui/FetchError";
 import Modal from "@/components/ui/Modal";
 import { StatCard, StatCardProps } from "@/components/ui/StatCard";
 import {
   Table,
   TableBody,
+  TableCard,
+  TableCardHeader,
   TableCell,
+  TableEmptyState,
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton,
+  TableToolbar,
 } from "@/components/ui/table";
 import { useBranches } from "@/hooks/api/useBranch";
 import {
@@ -66,7 +72,7 @@ export default function StaffManagement() {
   const [search, setSearch] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { data: staffList = [], isLoading } = useStaff();
+  const { data: staffList = [], isLoading, error: staffError } = useStaff();
   const { data: branches = [] } = useBranches();
   const createStaff = useCreateStaff();
   const updateStaff = useUpdateStaff();
@@ -188,13 +194,6 @@ export default function StaffManagement() {
       <SectionHeader
         title="Staff Management"
         subTitle="Manage your store's staff and branch assignments"
-        onClick={() => {
-          setStaffToEdit(null);
-          setForm(emptyForm);
-          setErrors({});
-          setShowModal(true);
-        }}
-        btnTxt="+ Add New Staff"
       />
 
       {/* Stats */}
@@ -204,22 +203,18 @@ export default function StaffManagement() {
             {
               label: "Total Staff",
               value: staffList.length,
-              hasPreviousData: false,
             },
             {
               label: "Active",
               value: staffList.filter((s) => s.isActive).length,
-              hasPreviousData: false,
             },
             {
               label: "Inactive",
               value: staffList.filter((s) => !s.isActive).length,
-              hasPreviousData: false,
             },
             {
               label: "Branches",
               value: branches.length,
-              hasPreviousData: false,
             },
           ] as StatCardProps[]
         ).map((card) => (
@@ -227,69 +222,65 @@ export default function StaffManagement() {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <InputField
-          placeholder="Search by name, email, role, or branch..."
-          leftIcon={<DynamicIcon name="Search" size={18} />}
-          name="search"
-          autoComplete="new-search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-lg"
+      <TableCard>
+        <TableCardHeader
+          title="Recent Staff"
+          actions={
+            <IconButton
+              onClick={() => {
+                setStaffToEdit(null);
+                setForm(emptyForm);
+                setErrors({});
+                setShowModal(true);
+              }}
+              icon={{ name: "Plus" }}
+              text="Add New Staff"
+              className="px-4 rounded-lg"
+            />
+          }
         />
-      </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {[
-                "Staff",
-                "Email",
-                "Phone",
-                "Role",
-                "Branch",
-                "Status",
-                "Action",
-              ].map((h) => (
-                <TableHead key={h} className="text-center">
-                  {h}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        <TableToolbar>
+          <InputField
+            placeholder="Search by name, email, role, or branch..."
+            leftIcon={<DynamicIcon name="Search" size={18} />}
+            name="search"
+            autoComplete="new-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-lg"
+          />
+        </TableToolbar>
+
+        {isLoading ? (
+          <TableSkeleton columns={5} headers={["Staff", "Role", "Branch", "Status", "Action"]} />
+        ) : staffError ? (
+          <FetchError
+            error={staffError}
+            onRetry={() => window.location.reload()}
+            description="We couldn't load the staff list. Please try again."
+          />
+        ) : filtered.length === 0 ? (
+          <TableEmptyState icon="User" title="No Staff found." />
+        ) : (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7}>
-                  <div className="flex justify-center items-center gap-2 p-8 text-gray-400">
-                    <DynamicIcon
-                      name="Loader2"
-                      size={20}
-                      className="animate-spin"
-                    />{" "}
-                    Loading staff...
-                  </div>
-                </TableCell>
+                {["Staff", "Role", "Branch", "Status", "Action"].map((h) => (
+                  <TableHead key={h} className="text-center">
+                    {h}
+                  </TableHead>
+                ))}
               </TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7}>
-                  <div className="flex flex-col items-center text-gray-500 gap-2 p-8">
-                    <DynamicIcon name="Ban" size={24} /> No staff found.
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((staff) => (
+            </TableHeader>
+            <TableBody>
+              {filtered.map((staff) => (
                 <TableRow
                   key={staff._id}
                   className="bg-transparent hover:bg-gray-50 border-gray-100"
                 >
                   {/* Name + Avatar */}
-                  <TableCell>
+                  <TableCell className="w-60">
                     <div className="flex items-center gap-3">
                       {staff.image?.url ? (
                         <div className="h-12 w-12 rounded-lg overflow-hidden">
@@ -305,24 +296,17 @@ export default function StaffManagement() {
                           {staff.lastName[0]}
                         </div>
                       )}
-
-                      <div>
+                      <div className="text-start">
                         <p className="font-semibold text-gray-800 text-sm">
                           {staff.firstName} {staff.lastName}
                         </p>
+
+                        <div className="flex flex-col">
+                          <span>{staff.email}</span>
+                          <span> {staff.phone || "—"}</span>
+                        </div>
                       </div>
                     </div>
-                  </TableCell>
-
-                  <TableCell className="text-sm text-gray-600">
-                    {staff.email}
-                  </TableCell>
-
-                  <TableCell
-                    className="text-sm text-gray-500"
-                    style={{ fontFamily: "'DM Mono', monospace" }}
-                  >
-                    {staff.phone || "—"}
                   </TableCell>
 
                   {/* Role badge */}
@@ -333,15 +317,11 @@ export default function StaffManagement() {
                       {ROLE_LABELS[staff.role]}
                     </span>
                   </TableCell>
-
                   {/* Branch */}
                   <TableCell>
                     {staff.branch ? (
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          style={{ fontFamily: "'DM Mono', monospace" }}
-                          className="text-xs bg-gray-500 py-0.5 px-2 rounded-md text-white"
-                        >
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className="text-xs bg-gray-500 py-0.5 px-2 rounded-md text-white">
                           {staff.branch.code}
                         </span>
                         <span className="text-sm text-gray-600">
@@ -354,7 +334,6 @@ export default function StaffManagement() {
                       </span>
                     )}
                   </TableCell>
-
                   {/* Status */}
                   <TableCell>
                     <span
@@ -363,31 +342,30 @@ export default function StaffManagement() {
                       {staff.isActive ? "Active" : "Inactive"}
                     </span>
                   </TableCell>
-
                   {/* Actions */}
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-end gap-2">
                       <IconButton
                         onClick={() => handleEditClick(staff)}
-                        variant="outline"
+                        variant="success"
                         text="Edit"
-                        className="px-4 rounded-lg text-xs py-1.5 hover:bg-brand-color-500 hover:text-white"
+                        className="px-4 rounded-lg text-xs"
                       />
                       <IconButton
                         onClick={() => toggleStatus.mutate(staff._id)}
                         disabled={toggleStatus.isPending}
                         variant="danger"
                         text={staff.isActive ? "Deactivate" : "Activate"}
-                        className="px-4 rounded-lg text-xs py-1.5 hover:bg-brand-color-500 hover:text-white"
+                        className="px-4 rounded-lg text-xs"
                       />
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </TableCard>
 
       {/* Modal */}
       {showModal && (

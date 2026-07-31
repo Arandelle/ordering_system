@@ -4,15 +4,19 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { InputField, SelectField } from "@/components/ui/FormComponents";
 import { FetchError } from "@/components/ui/FetchError";
-import LoadingPage from "@/components/ui/LoadingPage";
 import Pagination from "@/components/ui/Pagination";
 import {
   Table,
   TableBody,
+  TableCard,
+  TableCardHeader,
   TableCell,
+  TableEmptyState,
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton,
+  TableToolbar,
 } from "@/components/ui/table";
 import { apiClient } from "@/lib/apiClient";
 import { buildQueryString } from "@/utils/buildQueryString";
@@ -27,6 +31,7 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { IconButton } from "@/components/ui/buttons";
 import { formatCurrency, formatDate } from "@/helper/formatter";
 import { AppImage } from "@/components/AppImage";
+import SectionHeader from "../../components/SectionHeader";
 
 const FILTER_OPTIONS: { value: CustomerFilter; label: string }[] = [
   { value: "all", label: "All Customers" },
@@ -62,6 +67,8 @@ const CustomersPage = () => {
     data: response,
     isLoading,
     error,
+    isError,
+    refetch,
   } = useQuery({
     queryKey: ["customers", page, limit, search, filter, sort],
     queryFn: () =>
@@ -105,25 +112,13 @@ const CustomersPage = () => {
     "Actions",
   ];
 
-  if (isLoading) return <LoadingPage />;
-  if (error)
-    return (
-      <FetchError
-        error={
-          error instanceof Error ? error : new Error("Failed to load customers")
-        }
-        onRetry={() => window.location.reload()}
-        description="Something went wrong while fetching the customer list."
-      />
-    );
-
   return (
     <section className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-stone-800 mb-2">Customers</h1>
-        <p className="text-stone-500">View and manage customer information</p>
-      </div>
+      <SectionHeader
+        title="Customers Management"
+        subTitle="View and manage customer information"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -158,10 +153,31 @@ const CustomersPage = () => {
           <StatCard key={card.label} {...card} />
         ))}
       </div>
+      {/* ── Table ── */}
 
-      {/* ── Toolbar: Search + Filter + Sort ── */}
-      <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
-        <div className="w-full md:w-96">
+      <TableCard>
+        <TableCardHeader title="Recent Customers" />
+        <TableToolbar>
+          <div className="flex  gap-2 w-full max-w-lg">
+            <SelectField
+              name="filter"
+              value={filter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+              options={FILTER_OPTIONS.map((f) => ({
+                value: f.value,
+                label: f.label,
+              }))}
+            />
+            <SelectField
+              name="sort"
+              value={sort}
+              onChange={(e) => handleSortChange(e.target.value)}
+              options={SORT_OPTIONS.map((s) => ({
+                value: s.value,
+                label: s.label,
+              }))}
+            />
+          </div>
           <InputField
             placeholder="Search by name, email, or phone..."
             leftIcon={<DynamicIcon name="Search" size={16} />}
@@ -176,36 +192,25 @@ const CustomersPage = () => {
               />
             }
           />
-        </div>
-
-        <div className="w-full md:w-52">
-          <SelectField
-            name="filter"
-            value={filter}
-            onChange={(e) => handleFilterChange(e.target.value)}
-            options={FILTER_OPTIONS.map((f) => ({
-              value: f.value,
-              label: f.label,
-            }))}
+        </TableToolbar>
+        {isLoading ? (
+          <TableSkeleton
+            columns={customerHeaders.length}
+            headers={customerHeaders}
           />
-        </div>
-
-        <div className="w-full md:w-52">
-          <SelectField
-            name="sort"
-            value={sort}
-            onChange={(e) => handleSortChange(e.target.value)}
-            options={SORT_OPTIONS.map((s) => ({
-              value: s.value,
-              label: s.label,
-            }))}
+        ) : isError ? (
+          <FetchError
+            error={
+              error instanceof Error
+                ? error
+                : new Error("Failed to load customers")
+            }
+            onRetry={refetch}
+            description="Something went wrong while fetching the customer list."
           />
-        </div>
-      </div>
-
-      {/* ── Table ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-        <div className="overflow-x-auto">
+        ) : customerList.length === 0 ? (
+          <TableEmptyState icon="Ban" title="No customers found" />
+        ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -220,125 +225,108 @@ const CustomersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody className="divide-y divide-stone-100">
-              {customerList.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={customerHeaders.length}>
-                    <div className="flex flex-col items-center text-stone-400 gap-2 py-12">
-                      <DynamicIcon name="Ban" size={28} />
-                      <p className="text-sm">No customers found</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                customerList.map((customer) => {
-                  const isBanned = customer.banned === true;
-                  return (
-                    <TableRow
-                      key={customer._id}
-                      className="hover:bg-stone-50 transition-colors"
-                    >
-                      {/* Customer Name + Avatar */}
-                      <TableCell>
-                        <div className="flex items-center gap-3 mx-auto max-w-60 min-w-44">
-                          <div className="w-10 h-10 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden">
-                            <AppImage
-                              src={customer.image ?? ""}
-                              alt={`${customer.firstName} photo`}
-                              loading="lazy"
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-stone-800 truncate">
-                              {customer.firstName} {customer.lastName}
-                            </p>
-                            <p className="text-xs text-stone-400 font-mono truncate">
-                              {customer._id}
-                            </p>
-                          </div>
+              {customerList.map((customer) => {
+                const isBanned = customer.banned === true;
+                return (
+                  <TableRow
+                    key={customer._id}
+                    className="hover:bg-stone-50 transition-colors"
+                  >
+                    {/* Customer Name + Avatar */}
+                    <TableCell>
+                      <div className="flex items-center gap-3 mx-auto max-w-60 min-w-44">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden">
+                          <AppImage
+                            src={customer.image ?? ""}
+                            alt={`${customer.firstName} photo`}
+                            loading="lazy"
+                          />
                         </div>
-                      </TableCell>
-
-                      {/* Contact */}
-                      <TableCell>
-                        <div>
-                          <p className="text-sm text-stone-700">
-                            {customer.email ?? "--"}
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-stone-800 truncate">
+                            {customer.firstName} {customer.lastName}
                           </p>
-                          <p className="text-xs text-stone-500 mt-0.5">
-                            {customer.phone ?? "--"}
+                          <p className="text-xs text-stone-400 font-mono truncate">
+                            {customer._id}
                           </p>
                         </div>
-                      </TableCell>
-
-                      {/* Total Orders */}
-                      <TableCell className="text-center">
-                        <span className="text-sm font-semibold text-stone-800">
-                          {customer.totalOrders ?? 0}
+                      </div>
+                    </TableCell>
+                    {/* Contact */}
+                    <TableCell>
+                      <div>
+                        <p className="text-sm text-stone-700">
+                          {customer.email ?? "--"}
+                        </p>
+                        <p className="text-xs text-stone-500 mt-0.5">
+                          {customer.phone ?? "--"}
+                        </p>
+                      </div>
+                    </TableCell>
+                    {/* Total Orders */}
+                    <TableCell className="text-center">
+                      <span className="text-sm font-semibold text-stone-800">
+                        {customer.totalOrders ?? 0}
+                      </span>
+                    </TableCell>
+                    {/* Total Spent */}
+                    <TableCell className="text-center">
+                      <span className="text-sm font-semibold text-emerald-600">
+                        {formatCurrency(customer.totalSpent)}
+                      </span>
+                    </TableCell>
+                    {/* Status */}
+                    <TableCell className="text-center">
+                      {customer.isDeleted ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-stone-200 text-stone-600">
+                          <DynamicIcon name="UserX" size={12} />
+                          Deleted
                         </span>
-                      </TableCell>
-
-                      {/* Total Spent */}
-                      <TableCell className="text-center">
-                        <span className="text-sm font-semibold text-emerald-600">
-                          {formatCurrency(customer.totalSpent)}
+                      ) : isBanned ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-red-100 text-red-600">
+                          <DynamicIcon name="Ban" size={12} />
+                          Suspended
                         </span>
-                      </TableCell>
-
-                      {/* Status */}
-                      <TableCell className="text-center">
-                        {customer.isDeleted ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-stone-200 text-stone-600">
-                            <DynamicIcon name="UserX" size={12} />
-                            Deleted
-                          </span>
-                        ) : isBanned ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-red-100 text-red-600">
-                            <DynamicIcon name="Ban" size={12} />
-                            Suspended
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-emerald-100 text-emerald-700">
-                            <DynamicIcon name="UserCheck" size={12} />
-                            Active
-                          </span>
-                        )}
-                        {customer.isDeleted && customer.scheduledDeletionAt && (
-                          <p className="text-[10px] text-stone-400 mt-1">
-                            Purges{" "}
-                            {formatDate(customer.scheduledDeletionAt, {
-                              time: false,
-                            })}
-                          </p>
-                        )}
-                      </TableCell>
-
-                      {/* Join Date */}
-                      <TableCell className="text-center">
-                        <span className="text-sm text-stone-600">
-                          {formatDate(customer.createdAt)}
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold py-1 px-2.5 rounded-lg bg-emerald-100 text-emerald-700">
+                          <DynamicIcon name="UserCheck" size={12} />
+                          Active
                         </span>
-                      </TableCell>
-
-                      {/* Actions */}
-                      <TableCell className="text-center">
-                        <IconButton
-                          onClick={() =>
-                            customer._id && setSelectedCustomerId(customer._id)
-                          }
-                          variant="underline"
-                          text="View Details"
-                          className="text-xs"
-                          title="View customer details"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
+                      )}
+                      {customer.isDeleted && customer.scheduledDeletionAt && (
+                        <p className="text-[10px] text-stone-400 mt-1">
+                          Purges{" "}
+                          {formatDate(customer.scheduledDeletionAt, {
+                            time: false,
+                          })}
+                        </p>
+                      )}
+                    </TableCell>
+                    {/* Join Date */}
+                    <TableCell className="text-center">
+                      <span className="text-sm text-stone-600">
+                        {formatDate(customer.createdAt)}
+                      </span>
+                    </TableCell>
+                    {/* Actions */}
+                    <TableCell className="text-center">
+                      <IconButton
+                        onClick={() =>
+                          customer._id && setSelectedCustomerId(customer._id)
+                        }
+                        variant="underline"
+                        text="View Details"
+                        className="text-xs"
+                        title="View customer details"
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
-        </div>
-      </div>
+        )}
+      </TableCard>
 
       {/* ── Pagination ── */}
       {pagination && pagination.totalPages > 0 && (

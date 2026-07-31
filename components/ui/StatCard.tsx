@@ -66,7 +66,7 @@ export function StatCard({
             : value;
 
   return (
-    <div className="bg-white rounded-xl p-6 border border-stone-100">
+    <div className="bg-white p-6 border border-stone-100">
       <p className="text-sm text-stone-500 mb-2">{label}</p>
       {displayValue !== null && (
         <p className="text-2xl font-bold text-stone-800">{displayValue}</p>

@@ -11,22 +11,6 @@ import {
 import ActivityLogsTable from "./components/ActivityLogsTable";
 import { SelectField } from "@/components/ui/FormComponents";
 
-const CATEGORY_OPTIONS = [
-  { value: "all", label: "All Categories" },
-  { value: "order", label: "Orders" },
-  { value: "payment", label: "Payments" },
-  { value: "inventory", label: "Inventory" },
-  { value: "voucher", label: "Vouchers" },
-];
-
-const ACTOR_OPTIONS = [
-  { value: "all", label: "All Actors" },
-  { value: "staff", label: "Staff" },
-  { value: "customer", label: "Customers" },
-  { value: "system", label: "System" },
-  { value: "webhook", label: "Webhooks" },
-];
-
 const ActivityLogsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -65,30 +49,15 @@ const ActivityLogsPage = () => {
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="flex max-w-5xl gap-3">
-        <SelectField
-          label="Category"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          options={CATEGORY_OPTIONS.map((opt) => ({
-            label: opt.label,
-            value: opt.value,
-          }))}
-        />
-        <SelectField
-          label="Actor"
-          value={actorFilter}
-          onChange={(e) => setActorFilter(e.target.value)}
-          options={ACTOR_OPTIONS.map((opt) => ({
-            label: opt.label,
-            value: opt.value,
-          }))}
-        />
-      </div>
-
       {/* Table */}
-      <ActivityLogsTable logs={logs} isPending={isPending} />
+      <ActivityLogsTable
+        logs={logs}
+        isPending={isPending}
+        actorFilter={actorFilter}
+        setActorFilter={setActorFilter}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+      />
 
       {/* Pagination */}
       {pagination && (

@@ -11,9 +11,13 @@ const ClientPage = () => {
   return (
     <div className="space-y-8">
       <SectionHeader
-        title={`Inventory Management - ${branchName}`}
+        title={
+          <>
+            Inventory Management -{" "}
+            <span className="text-brand-color-500">{branchName}</span>{" "}
+          </>
+        }
         subTitle="Manage your branch's inventory"
-        btnTxt="Add an item"
       />
 
       <InventoryTable />

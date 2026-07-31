@@ -119,7 +119,7 @@ const TableCard = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden",
+      "bg-white border border-stone-100 overflow-hidden",
       className,
     )}
     {...props}
@@ -166,28 +166,45 @@ const TableToolbar = React.forwardRef<
 ));
 TableToolbar.displayName = "TableToolbar";
 
-/** Loading state — renders inside TableCard */
+/** Loading state — standalone component, renders its own Table inside TableCard */
 interface TableSkeletonProps {
   /** Number of columns per row */
   columns: number;
   /** Number of skeleton rows to render */
   rows?: number;
+  /** Optional column header labels to display at the top */
+  headers?: string[];
 }
 
-// Reusable skeleton body — drop inside an existing <Table> that already has headers
-function TableSkeleton({ columns, rows = 10 }: TableSkeletonProps) {
+function TableSkeleton({ columns, rows = 10, headers }: TableSkeletonProps) {
   return (
-    <TableBody className="divide-y divide-slate-100">
-      {Array.from({ length: rows }).map((_, rowIndex) => (
-        <TableRow key={rowIndex} className="animate-pulse">
-          {Array.from({ length: columns }).map((_, colIndex) => (
-            <TableCell key={colIndex} className="px-6 py-4">
-              <div className="h-4 w-3/4 bg-slate-200 rounded" />
-            </TableCell>
-          ))}
-        </TableRow>
-      ))}
-    </TableBody>
+    <Table>
+      {headers && headers.length > 0 && (
+        <TableHeader>
+          <TableRow>
+            {headers.map((h, i) => (
+              <TableHead
+                key={i}
+                className="text-xs font-semibold uppercase tracking-wider text-center"
+              >
+                {h}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+      )}
+      <TableBody className="divide-y divide-slate-100">
+        {Array.from({ length: rows }).map((_, rowIndex) => (
+          <TableRow key={rowIndex} className="animate-pulse">
+            {Array.from({ length: columns }).map((_, colIndex) => (
+              <TableCell key={colIndex} className="px-6 py-4">
+                <div className="h-4 w-3/4 bg-slate-200 rounded" />
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 

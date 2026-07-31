@@ -8,10 +8,15 @@ import { StatCard, StatCardProps } from "@/components/ui/StatCard";
 import {
   Table,
   TableBody,
+  TableCard,
+  TableCardHeader,
   TableCell,
+  TableEmptyState,
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton,
+  TableToolbar,
 } from "@/components/ui/table";
 import { Branch, BranchFormData, BranchFormErrors } from "@/types/branch";
 import { Ban, Loader2, Search } from "lucide-react";
@@ -23,6 +28,8 @@ import {
   useToggleBranchStatus,
 } from "@/hooks/api/useBranch";
 import BranchModal from "./BranchModal";
+import { IconButton } from "@/components/ui/buttons";
+import { FetchError } from "@/components/ui/FetchError";
 
 export const emptyForm: BranchFormData = {
   name: "",
@@ -47,7 +54,7 @@ export default function BranchManagement() {
   const [errors, setErrors] = useState<BranchFormErrors>({});
   const [search, setSearch] = useState("");
 
-  const { data: branches = [], isLoading } = useBranches();
+  const { data: branches = [], isLoading, isError, error } = useBranches();
 
   const toggleStatus = useToggleBranchStatus();
   const deleteBranch = useDeleteBranch();
@@ -63,7 +70,6 @@ export default function BranchManagement() {
     branch: Branch,
     type: "delete" | "edit" = "edit",
   ) => {
-
     setBranchToUpdate(branch);
 
     if (type === "edit") {
@@ -83,106 +89,101 @@ export default function BranchManagement() {
     setErrors({});
   };
 
-  return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
-        rel="stylesheet"
-      />
+  const StoreHeaders = ["Branch", "Code", "Address", "Status", "Action"];
 
+  return (
+    <div>
       <SectionHeader
         title="Store Management"
         subTitle="Manage your store's branches"
-        onClick={() => {
-          setShowModal(true);
-          setErrors({});
-          setForm(emptyForm);
-        }}
-        btnTxt="+ Add New Branch"
       />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
-        {([
-          { label: "Total Branches", value: branches.length, hasPreviousData: false },
-          {
-            label: "Active",
-            value: branches.filter((b) => b.isActive).length,
-            hasPreviousData: false,
-          },
-          {
-            label: "Inactive",
-            value: branches.filter((b) => !b.isActive).length,
-            hasPreviousData: false,
-          },
-          {
-            label: "Opening Soon",
-            value: branches.filter((b) => b.openingSoon).length,
-            hasPreviousData: false,
-          },
-          {
-            label: "Busy",
-            value: branches.filter((b) => b.isBusy).length,
-            hasPreviousData: false,
-          },
-        ] as StatCardProps[]).map((card) => (
+        {(
+          [
+            {
+              label: "Total Branches",
+              value: branches.length,
+            },
+            {
+              label: "Active",
+              value: branches.filter((b) => b.isActive).length,
+            },
+            {
+              label: "Inactive",
+              value: branches.filter((b) => !b.isActive).length,
+            },
+          ] as StatCardProps[]
+        ).map((card) => (
           <StatCard key={card.label} {...card} />
         ))}
       </div>
 
-      {/* Search */}
-      <div className="mb-8">
-        <InputField
-          placeholder="Search branches..."
-          leftIcon={<Search size={18} />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-lg"
+      <TableCard>
+        <TableCardHeader
+          title="Recent Branches"
+          actions={
+            <IconButton
+              onClick={() => {
+                setShowModal(true);
+                setErrors({});
+                setForm(emptyForm);
+              }}
+              icon={{ name: "Plus" }}
+              text="Add New Branch"
+              className="px-4 rounded-lg"
+            />
+          }
         />
-      </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {["Branch", "Code", "Address", "Status", "Action"].map((h) => (
-                <TableHead key={h} className="text-center">
-                  {h}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        <TableToolbar>
+          <InputField
+            placeholder="Search branches..."
+            leftIcon={<Search size={18} />}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="max-w-lg"
+          />
+        </TableToolbar>
+        {isLoading ? (
+          <TableSkeleton columns={StoreHeaders.length} headers={StoreHeaders} />
+        ) : isError ? (
+          <FetchError
+            error={
+              error instanceof Error
+                ? error
+                : new Error("Failed to load branches")
+            }
+            onRetry={() => window.location.reload()}
+            description="Something went wrong while fetching the branches."
+          />
+        ) : filtered.length === 0 ? (
+          <TableEmptyState
+            icon="Ban"
+            title="No branches found"
+            description="Branches will be listed here"
+          />
+        ) : (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8}>
-                  <div className="flex justify-center items-center gap-2 p-8 text-gray-400">
-                    <Loader2 size={20} className="animate-spin" /> Loading
-                    branches...
-                  </div>
-                </TableCell>
+                {StoreHeaders.map((h) => (
+                  <TableHead key={h} className="text-center">
+                    {h}
+                  </TableHead>
+                ))}
               </TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8}>
-                  <div className="flex flex-col items-center text-gray-500 gap-2 p-8">
-                    <Ban size={24} /> No branches found.
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((branch) => (
+            </TableHeader>
+            <TableBody>
+              {filtered.map((branch) => (
                 <TableRow
                   key={branch._id}
                   className="bg-transparent hover:bg-gray-100 border-gray-100"
                 >
                   <TableCell className="capitalize">{branch.name}</TableCell>
                   <TableCell>
-                    <span
-                      style={{ fontFamily: "'DM Mono', monospace" }}
-                      className="text-xs bg-gray-500 py-1 px-2.5 rounded-md text-white text-nowrap"
-                    >
+                    <span className="text-xs bg-gray-500 py-1 px-2.5 rounded-md text-white text-nowrap">
                       {branch.code}
                     </span>
                   </TableCell>
@@ -210,36 +211,36 @@ export default function BranchManagement() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
-                      <button
+                      <IconButton
                         onClick={() => handleUpdateBranch(branch, "edit")}
-                        className="text-xs font-medium py-1.5 px-2.5 rounded-lg border border-dark-green-600 bg-dark-green-500 text-white hover:bg-dark-green-600 hover:border-dark-green-600 disabled:opacity-50 cursor-pointer"
-                      >
-                        Edit
-                      </button>
-                      <button
+                        variant="success"
+                        text="Edit"
+                        className="text-xs rounded-lg px-4"
+                      />
+                      <IconButton
                         onClick={() => toggleStatus.mutate(branch._id)}
                         disabled={toggleStatus.isPending}
-                        className="text-xs font-medium py-1.5 px-2.5 rounded-lg border border-gray-500 bg-white text-gray-900 hover:bg-brand-color-500 hover:text-white hover:border-brand-color-600 disabled:opacity-50 cursor-pointer"
-                      >
-                        {branch.isActive ? "Deactivate" : "Activate"}
-                      </button>
+                        variant={branch.isActive ? "outline" : "primary"}
+                        text={branch.isActive ? "Deactivate" : "Activate"}
+                        className="px-4 rounded-lg text-xs"
+                      />
                       {!branch.isActive && (
-                        <button
+                        <IconButton
                           onClick={() => handleUpdateBranch(branch, "delete")}
                           disabled={toggleStatus.isPending}
-                          className="text-xs font-medium py-1.5 px-2.5 rounded-lg border border-red-600 bg-red-500 text-white hover:bg-red-600 hover:border-red-600 disabled:opacity-50 cursor-pointer"
-                        >
-                          Delete
-                        </button>
+                          variant="danger"
+                          text="Delete"
+                          className="px-4 rounded-lg text-xs"
+                        />
                       )}
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </TableCard>
 
       {/* Modal */}
       {showModal && (
@@ -252,7 +253,6 @@ export default function BranchManagement() {
           onClose={handleCloseModal}
         >
           <BranchModal
-          
             branchToUpdate={branchToUpdate}
             setBranchToUpdate={setBranchToUpdate}
             setShowModal={setShowModal}

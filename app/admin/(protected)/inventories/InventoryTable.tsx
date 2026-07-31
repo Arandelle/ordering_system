@@ -1,16 +1,22 @@
 "use client";
 
 import { InputField } from "@/components/ui/FormComponents/InputField";
+import { FetchError } from "@/components/ui/FetchError";
 import LoadingPage from "@/components/ui/LoadingPage";
 import Modal from "@/components/ui/Modal";
 import Pagination from "@/components/ui/Pagination";
 import {
   Table,
   TableBody,
+  TableCard,
+  TableCardHeader,
   TableCell,
+  TableEmptyState,
   TableHead,
   TableHeader,
   TableRow,
+  TableSkeleton,
+  TableToolbar,
 } from "@/components/ui/table";
 import {
   useBranchInventories,
@@ -97,7 +103,7 @@ const InventoryTable = () => {
     ...(statusFilter ? { status: statusFilter } : {}),
   };
 
-  const { data, isPending } = useBranchInventories(
+  const { data, isPending, error: queryError } = useBranchInventories(
     selectedBranchId ? queryParams : undefined,
   );
 
@@ -296,44 +302,13 @@ const InventoryTable = () => {
       {/* Summary cards */}
       <InventorySummaryCards counts={counts} />
 
-      {/* Toolbar: branch selector, search, filters, sort */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
-          <div className="flex gap-2 w-full max-w-lg">
-            <SelectField
-              value={statusFilter}
-              onChange={(e) => handleStatusFilter(e.target.value)}
-              options={[
-                ...STATUS_OPTIONS.map((s) => ({
-                  label: s.label,
-                  value: s.value,
-                })),
-              ]}
-            />
-            <SelectField
-              value={sort}
-              onChange={(e) => handleSort(e.target.value)}
-              options={[
-                ...SORT_OPTIONS.map((s) => ({
-                  label: s.label,
-                  value: s.value,
-                })),
-              ]}
-            />
-          </div>
-          {/* Search */}
-          <InputField
-            type="text"
-            placeholder="Search by product name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            rightElement={<DynamicIcon name="Search" />}
-          />
+      {/* Table */}
 
-          {/* Sub-toolbar: item count + bulk actions */}
-
-          <div className="flex items-stretch whitespace-nowrap  gap-2">
-            {isBulkMode ? (
+      <TableCard>
+        <TableCardHeader
+          title="Recent Stocks"
+          actions={
+            isBulkMode ? (
               <>
                 <IconButton
                   type="button"
@@ -365,189 +340,205 @@ const InventoryTable = () => {
                 variant={isAllBranches ? "disabled" : "primary"}
                 className="rounded-lg px-4"
               />
-            )}
+            )
+          }
+        />
+        <TableToolbar>
+          <div className="flex gap-2 w-full max-w-lg">
+            <SelectField
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              options={[
+                ...STATUS_OPTIONS.map((s) => ({
+                  label: s.label,
+                  value: s.value,
+                })),
+              ]}
+            />
+            <SelectField
+              value={sort}
+              onChange={(e) => handleSort(e.target.value)}
+              options={[
+                ...SORT_OPTIONS.map((s) => ({
+                  label: s.label,
+                  value: s.value,
+                })),
+              ]}
+            />
           </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-y-auto max-h-[65vh]">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                {isBulkMode && !isAllBranches && (
-                  <TableHead className="w-10 text-center">
-                    <Checkbox
-                      type="checkbox"
-                      checked={
-                        selectedIds.size === inventoryData.length &&
-                        inventoryData.length > 0
-                      }
-                      onChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                )}
-                {inventoryHeader
-                  .filter((h) => !(isBulkMode && h === "Action"))
-                  .map((item, index) => (
-                    <TableHead
-                      key={index}
-                      className="text-center font-semibold text-slate-700"
-                    >
-                      {item}
-                    </TableHead>
-                  ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isPending ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={inventoryHeader.length + (isBulkMode ? 1 : 0)}
-                    className="text-center py-12 text-slate-400"
-                  >
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : inventoryData.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={inventoryHeader.length + (isBulkMode ? 1 : 0)}
-                    className="text-center py-12 text-slate-500"
-                  >
-                    No inventory items found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                inventoryData.map((item, index) => {
-                  const status = getStockStatus(item.status as StockStatus);
-                  const isSelected = selectedIds.has(item.id);
-                  return (
-                    <TableRow
-                      key={`${item.id}-${index}`}
-                      onClick={() => isBulkMode && toggleSelect(item.id)}
-                      className={`border-b border-slate-100 transition-colors ${
-                        isBulkMode
-                          ? isSelected
-                            ? "bg-brand-color-50 cursor-pointer"
-                            : "hover:bg-slate-50 cursor-pointer"
-                          : "hover:bg-slate-50"
-                      }`}
-                    >
-                      {isBulkMode && !isAllBranches && (
-                        <TableCell
-                          className="text-center"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Checkbox
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelect(item.id)}
-                          />
-                        </TableCell>
-                      )}
-                      <TableCell className="text-center py-3">
-                        <div className="flex justify-center">
-                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100">
-                            <AppImage src={item.image.url} alt={item.name} />
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium text-slate-900">
-                        {item.name}
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {item.category}
-                      </TableCell>
-                      <TableCell className="text-center text-slate-900 font-medium">
-                        ₱{item.price}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="font-semibold text-slate-900">
-                          {item.quantity}
-                        </span>
-                        <span className="text-xs text-slate-500 block">
-                          Reorder: {item.reorderLevel}
-                        </span>
-                      </TableCell>
-
-                      {/* Incoming Orders — amber, draws attention */}
-                      <TableCell className="text-center">
-                        {(item.reserved || 0) > 0 ? (
-                          <span className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-sm">
-                            <span>⏳</span>
-                            {item.reserved}
-                          </span>
-                        ) : (
-                          <span className="font-semibold text-slate-400">
-                            —
-                          </span>
-                        )}
-                      </TableCell>
-
-                      {/* Sellable — green/amber/red based on level */}
-                      <TableCell className="text-center">
-                        {item.available === 0 ? (
-                          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-red-600">
-                            <span>✕</span> 0
-                          </span>
-                        ) : (item.available || 0) <= item.reorderLevel ? (
-                          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-amber-600">
-                            <span>⚠️</span>
-                            {item.available}
-                          </span>
-                        ) : (
-                          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-green-600">
-                            <span>✓</span>
-                            {item.available}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${status.className}`}
-                        >
-                          {status.label}
-                        </span>
-                      </TableCell>
-                      {/* Branch column — only visible when viewing all branches */}
-                      {isAllBranches && (
-                        <TableCell className="text-center">
-                          {item.branch ? (
-                            <div className="flex flex-col items-center">
-                              <span
-                                style={{ fontFamily: "'DM Mono', monospace" }}
-                                className="text-xs bg-gray-500 py-0.5 px-2 rounded-md text-white"
-                              >
-                                {item.branch.code}
-                              </span>
-                              <span className="text-xs text-gray-600 mt-0.5">
-                                {item.branch.name}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400">All</span>
-                          )}
-                        </TableCell>
-                      )}
-                      {!isBulkMode && (
-                        <TableCell className="text-center">
-                          <IconButton
-                            type="button"
-                            onClick={() => handleProductToEdit(item)}
-                            text="Edit"
-                            variant="underline"
-                            className="text-blue-500 hover:text-blue-600"
-                          />
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })
+          {/* Search */}
+          <InputField
+            type="text"
+            placeholder="Search by product name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            rightElement={<DynamicIcon name="Search" />}
+          />
+        </TableToolbar>
+        {isPending ? (
+          <TableSkeleton columns={inventoryHeader.length} headers={inventoryHeader} />
+        ) : queryError ? (
+          <FetchError
+            error={queryError instanceof Error ? queryError : new Error("Failed to load inventory")}
+            onRetry={() => window.location.reload()}
+            description="We couldn't load the inventory data. Please try again."
+          />
+        ) : inventoryData.length === 0 ? (
+          <TableEmptyState icon="Package" title="No inventory items found" />
+        ) : (
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50">
+              {isBulkMode && !isAllBranches && (
+                <TableHead className="w-10 text-center">
+                  <Checkbox
+                    type="checkbox"
+                    checked={
+                      selectedIds.size === inventoryData.length &&
+                      inventoryData.length > 0
+                    }
+                    onChange={toggleSelectAll}
+                  />
+                </TableHead>
               )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+              {inventoryHeader
+                .filter((h) => !(isBulkMode && h === "Action"))
+                .map((item, index) => (
+                  <TableHead
+                    key={index}
+                    className="text-center font-semibold text-slate-700"
+                  >
+                    {item}
+                  </TableHead>
+                ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {inventoryData.map((item, index) => {
+                const status = getStockStatus(item.status as StockStatus);
+                const isSelected = selectedIds.has(item.id);
+                return (
+                  <TableRow
+                    key={`${item.id}-${index}`}
+                    onClick={() => isBulkMode && toggleSelect(item.id)}
+                    className={`border-b border-slate-100 transition-colors ${
+                      isBulkMode
+                        ? isSelected
+                          ? "bg-brand-color-50 cursor-pointer"
+                          : "hover:bg-slate-50 cursor-pointer"
+                        : "hover:bg-slate-50"
+                    }`}
+                  >
+                    {isBulkMode && !isAllBranches && (
+                      <TableCell
+                        className="text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(item.id)}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell className="text-center py-3">
+                      <div className="flex justify-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100">
+                          <AppImage src={item.image.url} alt={item.name} />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium text-slate-900">
+                      {item.name}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600">
+                      {item.category}
+                    </TableCell>
+                    <TableCell className="text-center text-slate-900 font-medium">
+                      ₱{item.price}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="font-semibold text-slate-900">
+                        {item.quantity}
+                      </span>
+                      <span className="text-xs text-slate-500 block">
+                        Reorder: {item.reorderLevel}
+                      </span>
+                    </TableCell>
+                    {/* Incoming Orders — amber, draws attention */}
+                    <TableCell className="text-center">
+                      {(item.reserved || 0) > 0 ? (
+                        <span className="inline-flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-sm">
+                          <span>⏳</span>
+                          {item.reserved}
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-slate-400">—</span>
+                      )}
+                    </TableCell>
+                    {/* Sellable — green/amber/red based on level */}
+                    <TableCell className="text-center">
+                      {item.available === 0 ? (
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-red-600">
+                          <span>✕</span> 0
+                        </span>
+                      ) : (item.available || 0) <= item.reorderLevel ? (
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-amber-600">
+                          <span>⚠️</span>
+                          {item.available}
+                        </span>
+                      ) : (
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-green-600">
+                          <span>✓</span>
+                          {item.available}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${status.className}`}
+                      >
+                        {status.label}
+                      </span>
+                    </TableCell>
+                    {/* Branch column — only visible when viewing all branches */}
+                    {isAllBranches && (
+                      <TableCell className="text-center">
+                        {item.branch ? (
+                          <div className="flex flex-col items-center">
+                            <span
+                              style={{ fontFamily: "'DM Mono', monospace" }}
+                              className="text-xs bg-gray-500 py-0.5 px-2 rounded-md text-white"
+                            >
+                              {item.branch.code}
+                            </span>
+                            <span className="text-xs text-gray-600 mt-0.5">
+                              {item.branch.name}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">All</span>
+                        )}
+                      </TableCell>
+                    )}
+                    {!isBulkMode && (
+                      <TableCell className="text-center">
+                        <IconButton
+                          type="button"
+                          onClick={() => handleProductToEdit(item)}
+                          text="Edit"
+                          variant="underline"
+                          className="text-blue-500 hover:text-blue-600"
+                        />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
+          </TableBody>
+        </Table>
+        )}
+      </TableCard>
 
       {/* Pagination */}
       {pagination && (
