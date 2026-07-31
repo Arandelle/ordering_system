@@ -276,8 +276,8 @@ export default function OrdersTable({
                           New
                         </span>
                       )}
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-900 truncate">
+                      <div className="normal-case flex flex-col">
+                        <span className="text-base font-medium text-brand-color-500 truncate">
                           {fullname ?? "Customer Name"}
                         </span>
                         <span className="text-xs font-medium text-gray-600 truncate">
@@ -312,29 +312,29 @@ export default function OrdersTable({
 
                     {/* STATUS */}
                     <TableCell className="px-4 py-4">
-                      <div className="flex flex-col items-center gap-1.5">
-                        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                      <div className="flex flex-col place-self-start gap-1.5">
+                        <div className="flex gap-1.5 flex-wrap">
                           <StatusBadge status={order.status} />
                           {mayaCapsule}
                           {!isMaya &&
                             order.paymentInfo?.paymentId &&
                             PaymentStatusCapsule("paid")}
                         </div>
-                        <span className="text-xs text-stone-400 whitespace-nowrap">
+                        <span className="text-xs text-stone-400 text-start whitespace-nowrap">
                           {formatDate(order.createdAt)}
                         </span>
                       </div>
                     </TableCell>
 
                     {/* ACTIONS */}
-                    <TableCell className="px-4 py-4">
-                      <div className="flex items-center justify-center gap-2">
+                    <TableCell className="px-4 py-4 w-xs">
+                      <div className=" grid grid-cols-2 gap-2">
                         <IconButton
                           onClick={() => router.push(`/orders/${order._id}`)}
-                          variant="ghost"
-                          className="text-blue-600 hover:bg-blue-50"
-                          icon={{ name: "Eye", size: 16 }}
+                          variant="underline"
+                          className="text-blue-600 hover:text-gray-700 text-xs"
                           title="View details"
+                          text="View Details"
                         />
                         <PermissionGuard permission="orders.update">
                           <OrderActionButton order={order} role="admin" />

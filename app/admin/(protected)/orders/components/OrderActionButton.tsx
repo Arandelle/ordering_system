@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { IconButton } from "@/components/ui/buttons";
 import ConfirmationWithReasonModal from "@/components/ConfirmationWithReasonModal";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { formatDate } from "@/helper/formatter";
 import { useAdminUpdateOrder } from "@/hooks/api/admin/useAdminOrders";
 import {
@@ -29,9 +30,19 @@ const REASON_REQUIRED_STATUSES: OrderStatus[] = [
   ORDER_STATUSES.EXPIRED,
 ];
 
+/** Irreversible forward transitions that need a quick confirmation */
+const CONFIRM_REQUIRED_STATUSES: OrderStatus[] = [
+  ORDER_STATUSES.DISPATCH,
+  ORDER_STATUSES.READY_FOR_PICKUP,
+  ORDER_STATUSES.COMPLETED,
+];
+
 export function OrderActionButton({ order, role }: Props) {
   const { mutate, isPending } = useAdminUpdateOrder();
   const [pendingAction, setPendingAction] = useState<OrderStatus | null>(null);
+  const [confirmingAction, setConfirmingAction] =
+    useState<OrderStatus | null>(null);
+  const [actionLocked, setActionLocked] = useState(false);
 
   const {
     status,
@@ -47,53 +58,52 @@ export function OrderActionButton({ order, role }: Props) {
 
   if (!nextStatuses?.length) return null;
 
-  const handleDirectClick = (nextStatus: OrderStatus) => {
-    const label =
-      nextStatus.charAt(0).toUpperCase() +
-      nextStatus.slice(1).replace("_", " ");
+  const formatStatusLabel = (s: OrderStatus) =>
+    s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ");
+
+  const executeAction = (
+    nextStatus: OrderStatus,
+    extra?: { reason: string; notes: string },
+  ) => {
+    if (actionLocked) return;
+    setActionLocked(true);
+    const label = formatStatusLabel(nextStatus);
     mutate(
-      { id: order._id, data: { status: nextStatus } },
+      {
+        id: order._id,
+        data: { status: nextStatus, ...extra },
+      },
       {
         onSuccess: () => {
           toast.success(
             `Order #${order.paymentInfo.referenceNumber ?? order._id} → ${label}`,
           );
+        },
+        onSettled: () => {
+          setActionLocked(false);
+          setConfirmingAction(null);
+          setPendingAction(null);
         },
       },
     );
   };
 
   const handleClick = (nextStatus: OrderStatus) => {
-    // Terminal actions open the reason modal
+    if (actionLocked) return;
     if (REASON_REQUIRED_STATUSES.includes(nextStatus)) {
       setPendingAction(nextStatus);
       return;
     }
-    handleDirectClick(nextStatus);
+    if (CONFIRM_REQUIRED_STATUSES.includes(nextStatus)) {
+      setConfirmingAction(nextStatus);
+      return;
+    }
+    executeAction(nextStatus);
   };
 
   const handleReasonConfirm = (data: { reason: string; notes: string }) => {
     if (!pendingAction) return;
-    const label =
-      pendingAction.charAt(0).toUpperCase() +
-      pendingAction.slice(1).replace("_", " ");
-    mutate(
-      {
-        id: order._id,
-        data: { status: pendingAction, reason: data.reason, notes: data.notes },
-      },
-      {
-        onSuccess: () => {
-          toast.success(
-            `Order #${order.paymentInfo.referenceNumber ?? order._id} → ${label}`,
-          );
-          setPendingAction(null);
-        },
-        onSettled: () => {
-          setPendingAction(null);
-        },
-      },
-    );
+    executeAction(pendingAction, data);
   };
 
   const isDineInReservation =
@@ -141,89 +151,113 @@ export function OrderActionButton({ order, role }: Props) {
     return [];
   };
 
+  const isBusy = actionLocked || isPending;
+
+  // Split actions into forward-flow and destructive for visual grouping
+  const forwardActions = allowedStatuses.filter(
+    (s) => !REASON_REQUIRED_STATUSES.includes(s),
+  );
+  const destructiveActions = allowedStatuses.filter((s) =>
+    REASON_REQUIRED_STATUSES.includes(s),
+  );
+
+  const renderActionButton = (nextStatus: OrderStatus) => {
+    const actionConfig = getActionConfig(status, nextStatus);
+    if (!actionConfig) return null;
+    if (actionConfig.roles && !actionConfig.roles.includes(role)) return null;
+    if (
+      actionConfig.paymentMethods &&
+      !actionConfig.paymentMethods.includes(paymentMethod)
+    )
+      return null;
+
+    // Maya orders must be paid (paymentConfirmed) before admin can accept
+    const isMayaUnpaid =
+      paymentMethod === "maya" &&
+      !paymentConfirmed &&
+      nextStatus === ORDER_STATUSES.PREPARING;
+    if (isMayaUnpaid) return null;
+
+    // Guard: confirmed dine-in reservations can only start preparing
+    // within 1 hour of scheduled time.
+    const isPreparingConfirmedReservation =
+      status === ORDER_STATUSES.CONFIRMED &&
+      nextStatus === ORDER_STATUSES.PREPARING &&
+      fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+
+    if (isPreparingConfirmedReservation) {
+      if (!reservation?.scheduledAt) {
+        return (
+          <span
+            key={nextStatus}
+            className="text-xs text-red-400 italic"
+            title="Reservation date is missing — contact support"
+          >
+            Invalid reservation
+          </span>
+        );
+      }
+
+      const scheduledTime = new Date(reservation.scheduledAt).getTime();
+      const oneHourBefore = scheduledTime - 60 * 60 * 1000;
+      const isTooEarly = Date.now() < oneHourBefore;
+
+      if (isTooEarly) {
+        const scheduled = new Date(reservation.scheduledAt);
+        const earliest = new Date(oneHourBefore);
+        return (
+          <IconButton
+            key={nextStatus}
+            variant="underline"
+            disabled={true}
+            className="text-xs p-0"
+            title={`Reservation: ${formatDate(scheduled)} — You can start preparing at ${formatDate(earliest)}`}
+            text={actionConfig.label}
+          />
+        );
+      }
+    }
+
+    return (
+      <IconButton
+        key={nextStatus}
+        onClick={() => handleClick(nextStatus)}
+        disabled={isBusy}
+        isLoading={isBusy}
+        text={isBusy ? "Updating..." : actionConfig.label}
+        variant="underline"
+        className={`text-xs p-1 ${actionConfig.variant}`}
+        title={actionConfig.label}
+      />
+    );
+  };
+
   return (
     <>
-      <div className="flex flex-col gap-1">
-        {allowedStatuses.map((nextStatus) => {
-          const actionConfig = getActionConfig(status, nextStatus);
+      <div className="flex flex-col gap-1 items-center">
+        {/* Forward-flow actions */}
+        {forwardActions.map(renderActionButton)}
 
-          if (!actionConfig) return null;
+        {/* Visual separator before destructive actions */}
+        {forwardActions.length > 0 && destructiveActions.length > 0 && (
+          <div className="w-10 border-t border-stone-200 my-0.5" />
+        )}
 
-          if (actionConfig.roles && !actionConfig.roles.includes(role)) {
-            return null;
-          }
-
-          if (
-            actionConfig.paymentMethods &&
-            !actionConfig.paymentMethods.includes(paymentMethod)
-          ) {
-            return null;
-          }
-
-          // Maya orders must be paid (paymentConfirmed) before admin can accept
-          const isMayaUnpaid =
-            paymentMethod === "maya" &&
-            !paymentConfirmed &&
-            nextStatus === ORDER_STATUSES.PREPARING;
-
-          if (isMayaUnpaid) return null;
-          // Guard: confirmed dine-in reservations can only start preparing
-          // within 1 hour of scheduled time.
-          const isPreparingConfirmedReservation =
-            status === ORDER_STATUSES.CONFIRMED &&
-            nextStatus === ORDER_STATUSES.PREPARING &&
-            fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
-
-          if (isPreparingConfirmedReservation) {
-            if (!reservation?.scheduledAt) {
-              return (
-                <span
-                  key={nextStatus}
-                  className="text-xs text-red-400 italic"
-                  title="Reservation date is missing — contact support"
-                >
-                  Invalid reservation
-                </span>
-              );
-            }
-
-            const scheduledTime = new Date(reservation.scheduledAt).getTime();
-            const oneHourBefore = scheduledTime - 60 * 60 * 1000;
-            const isTooEarly = Date.now() < oneHourBefore;
-
-            if (isTooEarly) {
-              const scheduled = new Date(reservation.scheduledAt);
-              const earliest = new Date(oneHourBefore);
-              return (
-                <IconButton
-                  key={nextStatus}
-                  variant="underline"
-                  disabled={true}
-                  className="text-xs p-0"
-                  title={`Reservation: ${formatDate(scheduled)} — You can start preparing at ${formatDate(earliest)}`}
-                  text={actionConfig.label}
-                />
-              );
-            }
-          }
-
-          return (
-            <IconButton
-              key={nextStatus}
-              onClick={() => handleClick(nextStatus)}
-              disabled={isPending}
-              text={isPending ? "Updating..." : actionConfig.label}
-              icon={{
-                name: isPending ? "Loader2" : null,
-                className: "animate-spin",
-              }}
-              variant="underline"
-              className={`text-xs p-1 ${actionConfig.variant}`}
-              title={actionConfig.label}
-            />
-          );
-        })}
+        {/* Destructive actions (Cancel, Expire) */}
+        {destructiveActions.map(renderActionButton)}
       </div>
+
+      {confirmingAction && (
+        <ConfirmModal
+          title={formatStatusLabel(confirmingAction)}
+          subTitle={`Order #${order.paymentInfo.referenceNumber ?? order._id}`}
+          message={`Are you sure you want to ${formatStatusLabel(confirmingAction).toLowerCase()} this order? This action cannot be undone.`}
+          confirmLabel={formatStatusLabel(confirmingAction)}
+          isLoading={isBusy}
+          onClose={() => setConfirmingAction(null)}
+          onConfirm={() => executeAction(confirmingAction)}
+        />
+      )}
 
       {pendingAction && (
         <ConfirmationWithReasonModal
@@ -240,7 +274,7 @@ export function OrderActionButton({ order, role }: Props) {
               ? "Expire Order"
               : "Cancel Order"
           }
-          isLoading={isPending}
+          isLoading={isBusy}
           onClose={() => setPendingAction(null)}
           onConfirm={handleReasonConfirm}
         />

@@ -58,8 +58,8 @@ export default function ConfirmationWithReasonModal({
   };
 
   return (
-    <Modal onClose={onClose} title={title} subTitle={subTitle}>
-      <div className="flex flex-col gap-5">
+    <Modal onClose={onClose} title={title} subTitle={subTitle} className="text-start normal-case">
+      <div className="flex flex-col gap-5 text-start">
         <p className="text-lg text-gray-500">
           Are you sure you want to {confirmLabel.toLowerCase()}{" "}
           <span className="font-semibold text-gray-700">{referenceLabel}</span>?
