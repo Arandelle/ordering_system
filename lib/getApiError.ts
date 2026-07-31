@@ -48,9 +48,14 @@ export function getNotFoundError(resource = "Resource") {
   return getAPIError(`${resource} not found`, 404);
 }
 
+/** 400 - Bad Request */
+export function getBadRequestError(error = "Invalid request") {
+  return getAPIError(error, 400)
+}
+
 /** 403 — Permission denied */
-export function getForbiddenError() {
-  return getAPIError("Forbidden", 403);
+export function getForbiddenError(error = "Forbidden") {
+  return getAPIError(error, 403);
 }
 
 /** 400 — Array size out of bounds */
@@ -65,6 +70,9 @@ export function getInvalidArraySizeError(
   );
 }
 /** 500 — Internal server error */
-export function getInternalServerError(error: any, fallbackMessage: string = "Internal Server Error.") {
+export function getInternalServerError(
+  error: any,
+  fallbackMessage: string = "Internal Server Error.",
+) {
   return getAPIError(error, 500, { fallbackMessage });
 }
