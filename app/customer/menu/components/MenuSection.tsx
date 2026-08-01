@@ -116,7 +116,6 @@ const MenuSection = () => {
   } = useProductsInfinite({
     limit: 20,
     categoryName: isRealCategory ? activeCategory : undefined,
-    subcategoryName: activeSubcategory ?? undefined,
     activeOnly: true,
     isComingSoon: "false",
     enabled: !branchId && !showComingSoon,
@@ -137,7 +136,6 @@ const MenuSection = () => {
   } = useBranchProductInfinite(branchId ?? "", {
     limit: 20,
     categoryName: isRealCategory ? activeCategory : undefined,
-    subcategoryName: activeSubcategory ?? undefined,
     isComingSoon: "false",
     enabled: !!branchId && !showComingSoon,
   });
@@ -258,14 +256,11 @@ const MenuSection = () => {
   // ── Filter + group ──────────────────────────────────────────────────────────
 
   // ── Branch-side client filtering (branch products still filtered locally) ──
+  // Branch products are filtered client-side by category only.
+  // Subcategory navigation is handled via scroll-to-section (all subcategories stay visible).
   const filteredProducts = branchId
     ? dynamicProducts.filter((p) => {
         if (isRealCategory && p.category?.name !== activeCategory)
-          return false;
-        if (
-          activeSubcategory &&
-          (p.subcategory?.name ?? null) !== activeSubcategory
-        )
           return false;
         return true;
       })
@@ -312,11 +307,21 @@ const MenuSection = () => {
     }
   };
 
+  // Subcategory pills scroll to the matching section header instead of filtering,
+  // so all subcategories remain visible at all times.
   const handleSelectSubcategory = (subcategoryName: string | null) => {
     setActiveSubcategory(subcategoryName);
-    scrollToContent();
     if (subcategoryName) {
       trackSearch({ search_string: `${activeCategory} - ${subcategoryName}` });
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`subcategory-${subcategoryName}`);
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.scrollY - 200;
+          window.scrollTo({ top, behavior: "smooth" });
+        }
+      });
+    } else {
+      scrollToContent();
     }
   };
 
@@ -461,7 +466,10 @@ const MenuSection = () => {
                 {subcategoryGroups.map(({ subcategoryName, items }) => (
                   <div key={subcategoryName ?? "__none__"}>
                     {subcategoryName && (
-                      <div className="flex items-center gap-3 mb-5">
+                      <div
+                        id={`subcategory-${subcategoryName}`}
+                        className="flex items-center gap-3 mb-5 scroll-mt-52"
+                      >
                         <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-400 shrink-0">
                           {subcategoryName}
                         </h3>
