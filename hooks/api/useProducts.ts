@@ -118,31 +118,60 @@ export const useUpdateProduct = () => {
       apiClient.put(`/products/${id}`, data),
 
     onMutate: async ({ id, data }) => {
+      // Cancel all product-related queries (list + individual)
       await queryClient.cancelQueries({ queryKey: ["products"] });
 
-      const previousProducts = queryClient.getQueryData(["products"]);
-
-      queryClient.setQueryData(["products"], (old: Product[] = []) => {
-        return old.map((p) => {
-          if (p._id !== id) return p;
-          return {
-            ...p,
-            ...data,
-            // ✅ Preserve populated objects — payload only has ObjectId strings
-            // but the cache holds full populated objects
-            category: p.category,
-            subcategory: p.subcategory,
-            modifierGroups: p.modifierGroups,
-          };
-        });
+      // Snapshot all matching product queries for rollback
+      const snapshot = queryClient.getQueriesData<ProductResponse>({
+        queryKey: ["products"],
       });
 
-      return { previousProducts };
+      // Optimistically update every matching product list cache
+      queryClient.setQueriesData<ProductResponse>(
+        { queryKey: ["products"] },
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((p): Product => {
+              if (p._id !== id) return p;
+              return {
+                ...p,
+                name: data.name,
+                price: data.price,
+                info: data.info ?? p.info,
+                description: data.description ?? p.description,
+                isSignature: data.isSignature ?? p.isSignature,
+                isPopular: data.isPopular ?? p.isPopular,
+                isActive: data.isActive ?? p.isActive,
+                isComingSoon: data.isComingSoon ?? p.isComingSoon,
+                isOnlineExclusive: data.isOnlineExclusive ?? p.isOnlineExclusive,
+                goLiveDate: data.goLiveDate ?? p.goLiveDate,
+                productType: data.productType,
+                paxCount: data.paxCount ?? p.paxCount,
+                // Preserve populated objects — payload only has ObjectId strings
+                // or different shapes, but the cache holds full populated objects
+                image: p.image,
+                category: p.category,
+                subcategory: p.subcategory,
+                modifierGroups: p.modifierGroups,
+              };
+            }),
+          };
+        },
+      );
+
+      return { snapshot };
     },
 
-    onError: (err, variables, context) => {
-      if (context?.previousProducts) {
-        queryClient.setQueryData(["products"], context.previousProducts);
+    onError: (_err, _variables, context) => {
+      // Rollback all product queries to their pre-mutation snapshots
+      if (context?.snapshot) {
+        for (const [key, data] of context.snapshot) {
+          if (data !== undefined) {
+            queryClient.setQueryData(key, data);
+          }
+        }
       }
       toast.error("Failed to update product");
     },
@@ -169,6 +198,51 @@ export const useDeleteProduct = () => {
     },
     onError: () => {
       toast.error("Failed to delete product!");
+    },
+  });
+};
+
+// ── Bulk update payload shape ─────────────────────────────────────────────────
+
+export interface BulkUpdatePayload {
+  ids: string[];
+  updates: {
+    category?: string;
+    subcategory?: string | null;
+    price?: number | null;
+    isActive?: boolean;
+    isComingSoon?: boolean;
+    goLiveDate?: string | null;
+    isOnlineExclusive?: boolean;
+    isPopular?: boolean;
+    isSignature?: boolean;
+  };
+}
+
+export interface BulkUpdateResponse {
+  success: boolean;
+  modifiedCount: number;
+  matchedCount: number;
+}
+
+/**
+ * Bulk-update shared attributes (category, price, toggles) across multiple products.
+ */
+export const useBulkUpdateProducts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<BulkUpdateResponse, Error, BulkUpdatePayload>({
+    mutationFn: (payload) => apiClient.put("/products/bulk", payload),
+    onSuccess: (data) => {
+      toast.success(`${data.modifiedCount} product${data.modifiedCount !== 1 ? "s" : ""} updated`);
+    },
+    onError: () => {
+      toast.error("Failed to bulk update products");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["subcategories"] });
     },
   });
 };

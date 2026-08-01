@@ -255,6 +255,7 @@ const ProductDetailPage: React.FC = () => {
   const badges = getProductBadges({
     isPopular: product?.isPopular ?? false,
     isComingSoon,
+    isOnlineExclusive: product?.isOnlineExclusive === true,
     status: branchId ? status : "",
     quantity,
     goLiveDate: product?.goLiveDate,
