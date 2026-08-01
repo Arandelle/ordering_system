@@ -632,7 +632,7 @@ const MenuSection = () => {
                     scrollToContent();
                   }
                 }}
-                className={`w-full justify-start p-3 rounded-xl ${
+                className={`w-full text-start justify-start p-3 rounded-xl ${
                   showComingSoon
                     ? "bg-blue-500 text-white hover:bg-blue-600 shadow-sm"
                     : "text-blue-600 bg-blue-50 hover:bg-blue-100"
@@ -706,7 +706,7 @@ const MenuSection = () => {
                             onClick={() => handleSelectSubcategory(sub)}
                             variant="ghost"
                             text={sub}
-                            className={`w-full justify-start py-1.5 px-3 rounded-lg ${activeSubcategory === sub && "bg-brand-color-500/10 text-brand-color-500"}`}
+                            className={`w-full text-start justify-start py-1.5 px-3 rounded-lg ${activeSubcategory === sub && "bg-brand-color-500/10 text-brand-color-500"}`}
                           />
                         ))}
                       </div>
