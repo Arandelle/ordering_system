@@ -298,6 +298,11 @@ export default function ProductTable({
                           Coming Soon
                         </span>
                       )}
+                      {product.isOnlineExclusive && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-600 uppercase">
+                          Online Exclusive
+                        </span>
+                      )}
                     </div>
                   </TableCell>
 

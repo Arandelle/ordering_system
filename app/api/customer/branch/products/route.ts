@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     const categoryName = searchParams.get("categoryName");
     const subcategoryName = searchParams.get("subcategoryName");
     const isComingSoon = searchParams.get("isComingSoon");
+    const isOnlineExclusive = searchParams.get("isOnlineExclusive");
 
     const { page, limit, skip } = parseRequestQuery(req, {
       defaultLimit: 20,
@@ -168,6 +169,9 @@ export async function GET(req: NextRequest) {
       ...(isComingSoon === "true" ? [{ $match: { isComingSoon: true } }] : []),
       ...(isComingSoon === "false" ? [{ $match: { isComingSoon: false } }] : []),
 
+      // Filter by online-exclusive flag
+      ...(isOnlineExclusive === "true" ? [{ $match: { isOnlineExclusive: true } }] : []),
+
       // Lookup inventory for this specific branch
       {
         $lookup: {
@@ -243,6 +247,7 @@ export async function GET(req: NextRequest) {
           isPopular: 1,
           isSignature: 1,
           isComingSoon: 1,
+          isOnlineExclusive: 1,
           goLiveDate: 1,
           createdAt: 1,
           quantity: 1,
@@ -329,6 +334,7 @@ export async function GET(req: NextRequest) {
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
+      isOnlineExclusive: product.isOnlineExclusive || false,
       // Safety net: auto-live if goLiveDate has passed (catches edge cases the pipeline might miss)
       isComingSoon:
         product.goLiveDate && product.goLiveDate <= new Date()

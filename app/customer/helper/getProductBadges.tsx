@@ -13,6 +13,7 @@ export interface ProductBadge {
 export interface ProductBadgeOptions {
   isPopular?: boolean;
   isComingSoon?: boolean;
+  isOnlineExclusive?: boolean;
   status?: string;
   quantity?: number | null;
   goLiveDate?: string | null;
@@ -80,6 +81,7 @@ export const getProductBadges = (opts: ProductBadgeOptions): ProductBadge[] => {
   const {
     isPopular = false,
     isComingSoon = false,
+    isOnlineExclusive = false,
     status = "",
     quantity = null,
     goLiveDate,
@@ -92,6 +94,11 @@ export const getProductBadges = (opts: ProductBadgeOptions): ProductBadge[] => {
   // "NEW" can coexist with any status badge
   if (isNew) {
     badges.push({ label: "NEW!", bg: "bg-brand-color-500", icon: "Flame" });
+  }
+
+  // "Online Exclusive" can coexist with any status badge
+  if (isOnlineExclusive) {
+    badges.push({ label: "Online Exclusive", bg: "bg-green-600", icon: "Globe" });
   }
 
   // Status badges — mutually exclusive, ordered by priority

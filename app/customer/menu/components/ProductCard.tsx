@@ -100,6 +100,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const badges = getProductBadges({
     isPopular: item.isPopular,
     isComingSoon,
+    isOnlineExclusive: item.isOnlineExclusive === true,
     status: hasBranch ? status : "",
     quantity,
     goLiveDate: item.goLiveDate,

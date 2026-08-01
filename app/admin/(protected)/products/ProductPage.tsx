@@ -45,6 +45,7 @@ interface ProductFormData {
   isPopular: boolean;
   isActive: boolean;
   isComingSoon: boolean;
+  isOnlineExclusive: boolean;
   goLiveDate: string;
   goLiveTime: string;
   productType: ProductType;
@@ -101,6 +102,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
     isPopular: false,
     isActive: true,
     isComingSoon: false,
+    isOnlineExclusive: false,
     goLiveDate: "",
     goLiveTime: "00:00",
     productType: ITEM_TYPES.SOLO,
@@ -241,6 +243,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         isPopular: editProduct.isPopular || false,
         isActive: editProduct.isActive !== false,
         isComingSoon: editProduct.isComingSoon || false,
+        isOnlineExclusive: editProduct.isOnlineExclusive || false,
         goLiveDate: formatDateInputValue(editProduct.goLiveDate),
         goLiveTime: toTimeInputValue(editProduct.goLiveDate),
         productType: editProduct.productType || ITEM_TYPES.SOLO,
@@ -352,6 +355,7 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         isComingSoon: isProductTooOldForComingSoon
           ? false
           : formData.isComingSoon,
+        isOnlineExclusive: formData.isOnlineExclusive,
         // Combine date + time into ISO string using browser's timezone
         goLiveDate: formData.goLiveDate
           ? new Date(
@@ -712,6 +716,19 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
                       checked={formData.isPopular}
                       onCheckedChange={(value) =>
                         toggleFieldChange("isPopular", value)
+                      }
+                    />
+                  </VisibilityToggles>
+
+                  {/* Online Exclusive */}
+                  <VisibilityToggles
+                    title="Online Exclusive"
+                    subTitle="Available only when ordering online"
+                  >
+                    <ToggleButton
+                      checked={formData.isOnlineExclusive}
+                      onCheckedChange={(value) =>
+                        toggleFieldChange("isOnlineExclusive", value)
                       }
                     />
                   </VisibilityToggles>

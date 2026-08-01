@@ -19,6 +19,7 @@ interface ProductParams {
   subcategoryName?: string;
   activeOnly?: boolean;
   isComingSoon?: string;     // "true" | "false" — filter by coming-soon status
+  isOnlineExclusive?: string; // "true" | "false" — filter by online-exclusive flag
   enabled: boolean
 }
 

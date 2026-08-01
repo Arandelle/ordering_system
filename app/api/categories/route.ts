@@ -1,9 +1,10 @@
 import cloudinary from "@/lib/cloudinary";
-import {requireSuperAdmin } from "@/lib/getAuth";
+import { requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { Category } from "@/models/Category";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
+import { getInternalServerError } from "@/lib/getApiError";
 
 export async function GET() {
   try {
@@ -13,7 +14,7 @@ export async function GET() {
       { $sort: { position: 1 } },
       {
         $lookup: {
-          from: "subcategories",       // MongoDB collection name (auto-lowercased+pluralized)
+          from: "subcategories", // MongoDB collection name (auto-lowercased+pluralized)
           localField: "_id",
           foreignField: "category",
           as: "subcategories",
@@ -112,6 +113,33 @@ export async function GET() {
           as: "comingSoonData",
         },
       },
+      // Count online-exclusive products (active only)
+      {
+        $lookup: {
+          from: "products",
+          let: { categoryId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$category", "$$categoryId"] },
+                    {
+                      $or: [
+                        { $eq: ["$isActive", true] },
+                        { $eq: [{ $type: "$isActive" }, "missing"] },
+                      ],
+                    },
+                    { $eq: ["$isOnlineExclusive", true] },
+                  ],
+                },
+              },
+            },
+            { $count: "count" },
+          ],
+          as: "onlineExclusiveData",
+        },
+      },
       {
         $addFields: {
           subCategoryCount: { $size: "$subcategories" },
@@ -121,21 +149,31 @@ export async function GET() {
           comingSoonCount: {
             $ifNull: [{ $arrayElemAt: ["$comingSoonData.count", 0] }, 0],
           },
+          onlineExclusiveCount: {
+            $ifNull: [{ $arrayElemAt: ["$onlineExclusiveData.count", 0] }, 0],
+          },
         },
       },
-      { $project: { subcategories: 0, activeProductData: 0, comingSoonData: 0 } },
+      {
+        $project: {
+          subcategories: 0,
+          activeProductData: 0,
+          comingSoonData: 0,
+          onlineExclusiveData: 0,
+        },
+      },
     ]);
 
     return NextResponse.json(categories);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
+    return getInternalServerError(error, "Failed to fetch categories");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
-    await requireSuperAdmin(request)
+    await requireSuperAdmin(request);
 
     const { name, imageFile } = await request.json();
 
@@ -172,15 +210,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(category, { status: 201 });
   } catch (error: any) {
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { error: "Category name already exists" },
-        { status: 409 },
-      );
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create category" },
-      { status: 500 },
-    );
+    return getInternalServerError(error, "Failed to create category");
   }
 }

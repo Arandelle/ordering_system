@@ -104,6 +104,12 @@ function ProductDetailContent({ product }: { product: Product }) {
                 Signature
               </span>
             )}
+            {product.isOnlineExclusive && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-600 uppercase flex items-center gap-1">
+                <DynamicIcon name="Globe" size={12} />
+                Online Exclusive
+              </span>
+            )}
           </div>
 
           {/* Key details grid */}

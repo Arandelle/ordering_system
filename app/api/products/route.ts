@@ -51,6 +51,7 @@ const productBaseSchema = z.object({
   isPopular: z.boolean().optional().default(false),
   isActive: z.boolean().optional().default(true),
   isComingSoon: z.boolean().optional().default(false),
+  isOnlineExclusive: z.boolean().optional().default(false),
   goLiveDate: z
     .string()
     .nullable()
@@ -108,6 +109,7 @@ export async function GET(request: NextRequest) {
     const subcategoryName = searchParams.get("subcategoryName");
     const activeOnly = searchParams.get("activeOnly") === "true";
     const isComingSoon = searchParams.get("isComingSoon");
+    const isOnlineExclusive = searchParams.get("isOnlineExclusive");
     const status = searchParams.get("status");
     const popularity = searchParams.get("isPopular");
 
@@ -142,6 +144,15 @@ export async function GET(request: NextRequest) {
     if (isComingSoon === "false") postLookupMatch.isComingSoon = false;
     // Status "coming-soon" must be evaluated after the auto-live $addFields
     if (status === "coming-soon") postLookupMatch.isComingSoon = true;
+
+    // Online exclusive filter — stored boolean, safe to match directly
+    if (isOnlineExclusive === "true") match.isOnlineExclusive = true;
+    if (isOnlineExclusive === "false") {
+      match.$and = [
+        ...(match.$and ?? []),
+        { $or: [{ isOnlineExclusive: false }, { isOnlineExclusive: { $exists: false } }] },
+      ];
+    }
 
     const basePipeline: any[] = [
       // Use the merged match from parseRequestQuery
@@ -381,6 +392,7 @@ export async function POST(request: NextRequest) {
       isPopular,
       isActive,
       isComingSoon,
+      isOnlineExclusive,
       goLiveDate,
       productType,
       paxCount,
@@ -472,6 +484,7 @@ export async function POST(request: NextRequest) {
       isPopular,
       isActive,
       isComingSoon,
+      isOnlineExclusive,
       goLiveDate: resolvedGoLiveDate,
       productType,
       paxCount: productType === "set" ? (paxCount ?? null) : null,

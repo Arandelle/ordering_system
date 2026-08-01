@@ -216,6 +216,7 @@ export async function GET(
         isPopular: 1,
         isSignature: 1,
         isComingSoon: 1,
+        isOnlineExclusive: 1,
         goLiveDate: 1,
         createdAt: 1,
         quantity: 1,
@@ -300,6 +301,7 @@ export async function GET(
       paxCount: product.paxCount,
       isPopular: product.isPopular || false,
       isSignature: product.isSignature || false,
+      isOnlineExclusive: product.isOnlineExclusive || false,
       // Safety net: auto-live if goLiveDate has passed
       isComingSoon:
         product.goLiveDate && product.goLiveDate <= new Date()

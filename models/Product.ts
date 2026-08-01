@@ -58,6 +58,8 @@ const ProductSchema = new Schema(
     // Admin-controlled visibility flags
     isActive: { type: Boolean, default: true },
     isComingSoon: { type: Boolean, default: false },
+    // Marks the product as available only through the online menu (not in-store)
+    isOnlineExclusive: { type: Boolean, default: false },
 
     // Optional scheduled go-live date. Product stays "coming soon" until this date,
     // then automatically becomes live. Also used as the "NEW" badge start date.
