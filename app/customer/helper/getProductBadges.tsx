@@ -98,7 +98,7 @@ export const getProductBadges = (opts: ProductBadgeOptions): ProductBadge[] => {
 
   // "Online Exclusive" can coexist with any status badge
   if (isOnlineExclusive) {
-    badges.push({ label: "Online Exclusive", bg: "bg-green-600", icon: "Globe" });
+    badges.push({ label: "Online Exclusive", bg: "bg-yellow-500", icon: "Globe" });
   }
 
   // Status badges — mutually exclusive, ordered by priority

@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "./ProductCard";
-import { useScrollToSection } from "@/hooks/utils/useScrollToSection";
 import { Category } from "@/types/category";
 import { useMenuCategories } from "@/app/main/components/CategoryCarousel";
 import {
@@ -99,9 +104,12 @@ const MenuSection = () => {
 
   const contentRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null); // for IntersectionObserver
+  // Tracks a pending scroll-to-subcategory; consumed once products render
+  const pendingSubcategoryScrollRef = useRef<string | null>(null);
 
   // Only pass real categories to the API (exclude pseudo-categories)
-  const isRealCategory = activeCategory !== "All" && activeCategory !== "__coming_soon__";
+  const isRealCategory =
+    activeCategory !== "All" && activeCategory !== "__coming_soon__";
 
   // Always fetch all products (for no-branch browsing)
   const {
@@ -143,23 +151,19 @@ const MenuSection = () => {
   const branchProducts = branchInfiniteData?.pages.flatMap((p) => p.data) ?? [];
 
   // Fetch coming soon products separately when the Coming Soon view is active
-  const {
-    data: csInfiniteData,
-    isLoading: isCsAllLoading,
-  } = useProductsInfinite({
-    limit: 50,
-    activeOnly: true,
-    isComingSoon: "true",
-    enabled: !branchId && showComingSoon,
-  });
-  const {
-    data: csBranchData,
-    isLoading: isCsBranchLoading,
-  } = useBranchProductInfinite(branchId ?? "", {
-    limit: 50,
-    isComingSoon: "true",
-    enabled: !!branchId && showComingSoon,
-  });
+  const { data: csInfiniteData, isLoading: isCsAllLoading } =
+    useProductsInfinite({
+      limit: 50,
+      activeOnly: true,
+      isComingSoon: "true",
+      enabled: !branchId && showComingSoon,
+    });
+  const { data: csBranchData, isLoading: isCsBranchLoading } =
+    useBranchProductInfinite(branchId ?? "", {
+      limit: 50,
+      isComingSoon: "true",
+      enabled: !!branchId && showComingSoon,
+    });
   const comingSoonProducts = useMemo(() => {
     const pages = branchId
       ? csBranchData?.pages.flatMap((p) => p.data)
@@ -186,8 +190,6 @@ const MenuSection = () => {
   const isError = branchId ? isBranchError : isAllError;
   const refetch = branchId ? refetchBranch : refetchAll;
   const error = branchId ? branchError : allError;
-
-  useScrollToSection();
 
   const {
     data: categories,
@@ -242,13 +244,18 @@ const MenuSection = () => {
     return () => observer.disconnect();
   }, [handleObserver]);
 
-  // Restore active category from URL query param on initial load
+  // Restore active category + subcategory from URL query params on initial load
   useEffect(() => {
     if (categoryInitialized.current) return;
     const categoryFromUrl = searchParams.get("category");
+    const subcategoryFromUrl = searchParams.get("subcategory");
     if (categoryFromUrl) {
       setActiveCategory(categoryFromUrl);
       setExpandedCategories(new Set([categoryFromUrl]));
+    }
+    if (subcategoryFromUrl) {
+      setActiveSubcategory(subcategoryFromUrl);
+      pendingSubcategoryScrollRef.current = subcategoryFromUrl;
     }
     categoryInitialized.current = true;
   }, [searchParams]);
@@ -260,14 +267,27 @@ const MenuSection = () => {
   // Subcategory navigation is handled via scroll-to-section (all subcategories stay visible).
   const filteredProducts = branchId
     ? dynamicProducts.filter((p) => {
-        if (isRealCategory && p.category?.name !== activeCategory)
-          return false;
+        if (isRealCategory && p.category?.name !== activeCategory) return false;
         return true;
       })
     : dynamicProducts; // already filtered server-side for non-branch
 
   // Show all products (including coming soon) under their categories
   const groupedItems = groupProducts(filteredProducts);
+
+  // Scroll to subcategory section once products are rendered in the DOM.
+  // The ref is set by handleSelectSubcategory (or initial load) and consumed here.
+  useEffect(() => {
+    const target = pendingSubcategoryScrollRef.current;
+    if (!target || isLoading) return;
+
+    const el = document.getElementById(`subcategory-${target}`);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 200;
+      window.scrollTo({ top, behavior: "smooth" });
+      pendingSubcategoryScrollRef.current = null;
+    }
+  }, [groupedItems, isLoading]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -292,6 +312,8 @@ const MenuSection = () => {
     } else {
       params.set("category", categoryName);
     }
+    params.delete("subcategory");
+    pendingSubcategoryScrollRef.current = null;
     router.replace(`?${params.toString()}`, { scroll: false });
 
     if (categoryName === "All") {
@@ -307,22 +329,22 @@ const MenuSection = () => {
     }
   };
 
-  // Subcategory pills scroll to the matching section header instead of filtering,
-  // so all subcategories remain visible at all times.
+  // Subcategory selection syncs to URL; scrolling is handled by a useEffect
+  // that waits until products are rendered in the DOM.
   const handleSelectSubcategory = (subcategoryName: string | null) => {
     setActiveSubcategory(subcategoryName);
+
+    const params = new URLSearchParams(window.location.search);
     if (subcategoryName) {
       trackSearch({ search_string: `${activeCategory} - ${subcategoryName}` });
-      requestAnimationFrame(() => {
-        const el = document.getElementById(`subcategory-${subcategoryName}`);
-        if (el) {
-          const top = el.getBoundingClientRect().top + window.scrollY - 200;
-          window.scrollTo({ top, behavior: "smooth" });
-        }
-      });
+      params.set("subcategory", subcategoryName);
+      pendingSubcategoryScrollRef.current = subcategoryName;
     } else {
+      params.delete("subcategory");
+      pendingSubcategoryScrollRef.current = null;
       scrollToContent();
     }
+    router.replace(`?${params.toString()}`, { scroll: false });
   };
 
   const getSubcategoriesForCategory = (categoryName: string): string[] => {
@@ -411,7 +433,11 @@ const MenuSection = () => {
     if (comingSoonProducts.length === 0) {
       return (
         <div className="text-center py-16">
-          <DynamicIcon name="Clock" size={40} className="mx-auto text-blue-300 mb-4" />
+          <DynamicIcon
+            name="Clock"
+            size={40}
+            className="mx-auto text-blue-300 mb-4"
+          />
           <h3 className="text-base font-semibold text-gray-700 mb-1">
             No coming soon items
           </h3>
@@ -569,7 +595,8 @@ const MenuSection = () => {
           </div>
 
           {/* Subcategory pills (only when a real category is selected) */}
-          {activeCategory !== "All" && activeCategory !== "__coming_soon__" &&
+          {activeCategory !== "All" &&
+            activeCategory !== "__coming_soon__" &&
             (() => {
               const subs = getSubcategoriesForCategory(activeCategory);
               if (subs.length === 0) return null;
@@ -614,7 +641,11 @@ const MenuSection = () => {
             {/* All */}
             <IconButton
               onClick={() => handleSelectCategory("All")}
-              variant={activeCategory === "All" && !showComingSoon ? "primary" : "ghost"}
+              variant={
+                activeCategory === "All" && !showComingSoon
+                  ? "primary"
+                  : "ghost"
+              }
               text="All Categories"
               className="w-full rounded-xl p-3 justify-start"
             />
@@ -629,6 +660,11 @@ const MenuSection = () => {
                     setActiveCategory("__coming_soon__");
                     setActiveSubcategory(null);
                     setShowComingSoon(true);
+                    pendingSubcategoryScrollRef.current = null;
+                    const params = new URLSearchParams(window.location.search);
+                    params.delete("category");
+                    params.delete("subcategory");
+                    router.replace(`?${params.toString()}`, { scroll: false });
                     scrollToContent();
                   }
                 }}
