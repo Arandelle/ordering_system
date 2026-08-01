@@ -340,6 +340,11 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         subcategoryId = newSub._id;
       }
 
+      // Effective isComingSoon — forced off for products older than 30 days
+      const effectiveComingSoon = isProductTooOldForComingSoon
+        ? false
+        : formData.isComingSoon;
+
       const payload = {
         name: formData.name,
         info: formData.info,
@@ -352,16 +357,16 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         isSignature: formData.isSignature,
         isPopular: formData.isPopular,
         isActive: formData.isActive,
-        isComingSoon: isProductTooOldForComingSoon
-          ? false
-          : formData.isComingSoon,
+        isComingSoon: effectiveComingSoon,
         isOnlineExclusive: formData.isOnlineExclusive,
-        // Combine date + time into ISO string using browser's timezone
-        goLiveDate: formData.goLiveDate
-          ? new Date(
-              `${formData.goLiveDate}T${formData.goLiveTime || "00:00"}`,
-            ).toISOString()
-          : null,
+        // Only send goLiveDate when coming-soon is active — otherwise the server
+        // would see a future date and force isComingSoon back to true
+        goLiveDate:
+          effectiveComingSoon && formData.goLiveDate
+            ? new Date(
+                `${formData.goLiveDate}T${formData.goLiveTime || "00:00"}`,
+              ).toISOString()
+            : null,
         productType: formData.productType,
         paxCount: formData.paxCount ? parseInt(formData.paxCount) : null,
         modifierGroups: isComboOrSet
