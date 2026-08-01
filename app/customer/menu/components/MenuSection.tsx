@@ -670,7 +670,7 @@ const MenuSection = () => {
                       <IconButton
                         onClick={() => handleSelectCategory(cat.name)}
                         variant={isActive ? "primary" : "ghost"}
-                        className="w-full p-3 justify-start rounded-xl"
+                        className="w-full p-3 justify-start text-start rounded-xl"
                         icon={{
                           name: hasSubcategories ? "ChevronDown" : null,
                           className: isExpanded
@@ -690,7 +690,7 @@ const MenuSection = () => {
                           onClick={() => handleSelectSubcategory(null)}
                           variant="ghost"
                           text="All"
-                          className={`w-full justify-start py-1.5 px-3 rounded-lg ${activeSubcategory === null && "bg-brand-color-500/10 text-brand-color-500"}`}
+                          className={`w-full text-start justify-start py-1.5 px-3 rounded-lg ${activeSubcategory === null && "bg-brand-color-500/10 text-brand-color-500"}`}
                         />
                         {subcategories.map((sub) => (
                           <IconButton
