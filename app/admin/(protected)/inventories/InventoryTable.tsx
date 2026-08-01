@@ -309,23 +309,23 @@ const InventoryTable = () => {
           title="Recent Stocks"
           actions={
             isBulkMode ? (
-              <>
+              <div className="gap-2 flex">
                 <IconButton
                   type="button"
                   onClick={exitBulkMode}
                   disabled={isBulkUpdating}
                   variant="secondary"
                   text="Cancel"
-                  className="rounded-lg px-4"
+                  className="px-4"
                 />
                 <IconButton
                   type="button"
                   onClick={openBulkModal}
                   disabled={selectedIds.size === 0}
                   text={`Save (${selectedIds.size})`}
-                  className="rounded-lg px-4"
+                  className="px-4"
                 />
-              </>
+              </div>
             ) : (
               <IconButton
                 type="button"
@@ -338,7 +338,7 @@ const InventoryTable = () => {
                 }
                 text="Edit Bulk"
                 variant={isAllBranches ? "disabled" : "primary"}
-                className="rounded-lg px-4"
+                className="px-4"
               />
             )
           }
