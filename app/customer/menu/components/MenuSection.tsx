@@ -92,7 +92,6 @@ const MenuSection = () => {
     new Set(),
   );
   const [showComingSoon, setShowComingSoon] = useState(false);
-  const [showOnlineExclusive, setShowOnlineExclusive] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -102,10 +101,7 @@ const MenuSection = () => {
   const sentinelRef = useRef<HTMLDivElement>(null); // for IntersectionObserver
 
   // Only pass real categories to the API (exclude pseudo-categories)
-  const isRealCategory =
-    activeCategory !== "All" &&
-    activeCategory !== "__coming_soon__" &&
-    activeCategory !== "__online_exclusive__";
+  const isRealCategory = activeCategory !== "All" && activeCategory !== "__coming_soon__";
 
   // Always fetch all products (for no-branch browsing)
   const {
@@ -123,7 +119,7 @@ const MenuSection = () => {
     subcategoryName: activeSubcategory ?? undefined,
     activeOnly: true,
     isComingSoon: "false",
-    enabled: !branchId && !showComingSoon && !showOnlineExclusive,
+    enabled: !branchId && !showComingSoon,
   });
 
   const allProducts = infiniteData?.pages.flatMap((p) => p.data) ?? [];
@@ -143,7 +139,7 @@ const MenuSection = () => {
     categoryName: isRealCategory ? activeCategory : undefined,
     subcategoryName: activeSubcategory ?? undefined,
     isComingSoon: "false",
-    enabled: !!branchId && !showComingSoon && !showOnlineExclusive,
+    enabled: !!branchId && !showComingSoon,
   });
 
   const branchProducts = branchInfiniteData?.pages.flatMap((p) => p.data) ?? [];
@@ -172,31 +168,6 @@ const MenuSection = () => {
       : csInfiniteData?.pages.flatMap((p) => p.data);
     return pages ?? [];
   }, [branchId, csBranchData, csInfiniteData]);
-
-  // Fetch online-exclusive products when the Online Exclusive view is active
-  const {
-    data: oeInfiniteData,
-    isLoading: isOeAllLoading,
-  } = useProductsInfinite({
-    limit: 50,
-    activeOnly: true,
-    isOnlineExclusive: "true",
-    enabled: !branchId && showOnlineExclusive,
-  });
-  const {
-    data: oeBranchData,
-    isLoading: isOeBranchLoading,
-  } = useBranchProductInfinite(branchId ?? "", {
-    limit: 50,
-    isOnlineExclusive: "true",
-    enabled: !!branchId && showOnlineExclusive,
-  });
-  const onlineExclusiveProducts = useMemo(() => {
-    const pages = branchId
-      ? oeBranchData?.pages.flatMap((p) => p.data)
-      : oeInfiniteData?.pages.flatMap((p) => p.data);
-    return pages ?? [];
-  }, [branchId, oeBranchData, oeInfiniteData]);
 
   const {
     data: discountedProductsData,
@@ -237,12 +208,6 @@ const MenuSection = () => {
     (sum: number, cat: Category) => sum + (cat.comingSoonCount ?? 0),
     0,
   );
-
-  // Total online-exclusive count from server
-  const totalOnlineExclusive = (categories ?? []).reduce(
-    (sum: number, cat: Category) => sum + (cat.onlineExclusiveCount ?? 0),
-    0,
-  ); 
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -322,13 +287,12 @@ const MenuSection = () => {
     setActiveCategory(categoryName);
     setActiveSubcategory(null);
     setShowComingSoon(false);
-    setShowOnlineExclusive(false);
     scrollToContent();
     trackSearch({ search_string: categoryName });
 
     // Sync category to URL so refresh/back lands on the same view
     const params = new URLSearchParams(window.location.search);
-    if (categoryName === "All" || categoryName === "__coming_soon__" || categoryName === "__online_exclusive__") {
+    if (categoryName === "All" || categoryName === "__coming_soon__") {
       params.delete("category");
     } else {
       params.set("category", categoryName);
@@ -339,8 +303,6 @@ const MenuSection = () => {
       setExpandedCategories(new Set());
     } else if (categoryName === "__coming_soon__") {
       setShowComingSoon(true);
-    } else if (categoryName === "__online_exclusive__") {
-      setShowOnlineExclusive(true);
     } else {
       setExpandedCategories((prev) => {
         const next = new Set<string>();
@@ -476,61 +438,10 @@ const MenuSection = () => {
     );
   };
 
-  const OnlineExclusiveView = () => {
-    const oeLoading = branchId ? isOeBranchLoading : isOeAllLoading;
-    if (oeLoading && onlineExclusiveProducts.length === 0) {
-      return (
-        <div className="text-center py-20">
-          <div className="inline-block animate-spin mb-4">
-            <div className="h-8 w-8 border-4 border-gray-200 border-t-brand-color-500 rounded-full" />
-          </div>
-          <h3 className="text-base font-semibold text-black mb-1">
-            Loading online exclusive items...
-          </h3>
-        </div>
-      );
-    }
-    if (onlineExclusiveProducts.length === 0) {
-      return (
-        <div className="text-center py-16">
-          <DynamicIcon name="Globe" size={40} className="mx-auto text-violet-300 mb-4" />
-          <h3 className="text-base font-semibold text-gray-700 mb-1">
-            No online exclusive items
-          </h3>
-          <p className="text-sm text-gray-400">
-            There are no online exclusive items right now.
-          </p>
-          <IconButton
-            onClick={() => setShowOnlineExclusive(false)}
-            variant="primary"
-            className="mt-4 rounded-full px-5 py-2"
-            text="View Live Menu"
-          />
-        </div>
-      );
-    }
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <DynamicIcon name="Globe" size={20} className="text-violet-600" />
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Online Exclusive</h2>
-            <p className="text-xs text-gray-500">
-              These items are only available when ordering online!
-            </p>
-          </div>
-        </div>
-        <ProductGrid items={onlineExclusiveProducts} />
-      </div>
-    );
-  };
-
   const GroupedContent = () => (
     <>
       {showComingSoon ? (
         <ComingSoonView />
-      ) : showOnlineExclusive ? (
-        <OnlineExclusiveView />
       ) : groupedItems.length > 0 || discountedProducts.length > 0 ? (
         <div className="space-y-12">
           {activeCategory === "All" && <DiscountedProductsShelf />}
@@ -641,10 +552,6 @@ const MenuSection = () => {
                   ? [{ label: "Coming Soon", value: "__coming_soon__" }]
                   : []),
 
-                ...(totalOnlineExclusive > 0
-                  ? [{ label: "Online Exclusive", value: "__online_exclusive__" }]
-                  : []),
-
                 ...visibleCategories.map((cat: Category) => ({
                   label: cat.name,
                   value: cat.name,
@@ -654,7 +561,7 @@ const MenuSection = () => {
           </div>
 
           {/* Subcategory pills (only when a real category is selected) */}
-          {activeCategory !== "All" && activeCategory !== "__coming_soon__" && activeCategory !== "__online_exclusive__" &&
+          {activeCategory !== "All" && activeCategory !== "__coming_soon__" &&
             (() => {
               const subs = getSubcategoriesForCategory(activeCategory);
               if (subs.length === 0) return null;
@@ -699,7 +606,7 @@ const MenuSection = () => {
             {/* All */}
             <IconButton
               onClick={() => handleSelectCategory("All")}
-              variant={activeCategory === "All" && !showComingSoon && !showOnlineExclusive ? "primary" : "ghost"}
+              variant={activeCategory === "All" && !showComingSoon ? "primary" : "ghost"}
               text="All Categories"
               className="w-full rounded-xl p-3 justify-start"
             />
@@ -724,29 +631,6 @@ const MenuSection = () => {
                 }`}
                 icon={{ name: "Clock" }}
                 text={`Coming Soon (${totalComingSoon})`}
-              />
-            )}
-
-            {/* Online Exclusive toggle */}
-            {totalOnlineExclusive > 0 && (
-              <IconButton
-                onClick={() => {
-                  if (showOnlineExclusive) {
-                    handleSelectCategory("All");
-                  } else {
-                    setActiveCategory("__online_exclusive__");
-                    setActiveSubcategory(null);
-                    setShowOnlineExclusive(true);
-                    scrollToContent();
-                  }
-                }}
-                className={`w-full justify-start p-3 rounded-xl ${
-                  showOnlineExclusive
-                    ? "bg-green-600 text-white hover:bg-green-700 shadow-sm"
-                    : "text-green-600 bg-green-50 hover:bg-green-100"
-                }`}
-                icon={{ name: "Globe" }}
-                text={`Online Exclusive (${totalOnlineExclusive})`}
               />
             )}
 

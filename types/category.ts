@@ -16,6 +16,5 @@ export interface Category {
   }
   activeProductCount?: number;
   comingSoonCount?: number;
-  onlineExclusiveCount?: number;
   createdAt?: Date;
 }

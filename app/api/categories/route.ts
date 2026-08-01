@@ -113,33 +113,6 @@ export async function GET() {
           as: "comingSoonData",
         },
       },
-      // Count online-exclusive products (active only)
-      {
-        $lookup: {
-          from: "products",
-          let: { categoryId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$category", "$$categoryId"] },
-                    {
-                      $or: [
-                        { $eq: ["$isActive", true] },
-                        { $eq: [{ $type: "$isActive" }, "missing"] },
-                      ],
-                    },
-                    { $eq: ["$isOnlineExclusive", true] },
-                  ],
-                },
-              },
-            },
-            { $count: "count" },
-          ],
-          as: "onlineExclusiveData",
-        },
-      },
       {
         $addFields: {
           subCategoryCount: { $size: "$subcategories" },
@@ -149,9 +122,6 @@ export async function GET() {
           comingSoonCount: {
             $ifNull: [{ $arrayElemAt: ["$comingSoonData.count", 0] }, 0],
           },
-          onlineExclusiveCount: {
-            $ifNull: [{ $arrayElemAt: ["$onlineExclusiveData.count", 0] }, 0],
-          },
         },
       },
       {
@@ -159,7 +129,6 @@ export async function GET() {
           subcategories: 0,
           activeProductData: 0,
           comingSoonData: 0,
-          onlineExclusiveData: 0,
         },
       },
     ]);
