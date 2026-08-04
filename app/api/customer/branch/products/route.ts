@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
     const subcategoryName = searchParams.get("subcategoryName");
     const isComingSoon = searchParams.get("isComingSoon");
     const isOnlineExclusive = searchParams.get("isOnlineExclusive");
+    const search = searchParams.get("search");
 
     const { page, limit, skip } = parseRequestQuery(req, {
       defaultLimit: 20,
@@ -69,6 +70,19 @@ export async function GET(req: NextRequest) {
           ],
         },
       },
+      // Text search on name and description (early in pipeline for performance)
+      ...(search
+        ? [
+            {
+              $match: {
+                $or: [
+                  { name: { $regex: search, $options: "i" } },
+                  { description: { $regex: search, $options: "i" } },
+                ],
+              },
+            },
+          ]
+        : []),
       // Auto-live: if goLiveDate has passed, treat as not coming-soon
       // Uses $$NOW (MongoDB server time) for reliable comparison
       {

@@ -23,6 +23,7 @@ import { useProductsInfinite } from "@/hooks/api/useInfiniteProducts";
 import { useDiscountedProducts } from "@/hooks/api/useDiscountedProducts";
 import { FetchError } from "@/components/ui/FetchError";
 import { trackSearch } from "@/lib/metaPixel";
+import { Search, X } from "lucide-react";
 import { IconButton } from "@/components/ui/buttons";
 import { SelectField } from "@/components/ui/FormComponents";
 
@@ -97,6 +98,14 @@ const MenuSection = () => {
     new Set(),
   );
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search input to avoid filtering on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 800);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -274,6 +283,44 @@ const MenuSection = () => {
 
   // Show all products (including coming soon) under their categories
   const groupedItems = groupProducts(filteredProducts);
+
+  // ── Server-side search queries (only active when debouncedSearch has a value) ──
+  const isSearchActive = Boolean(debouncedSearch);
+
+  const {
+    data: searchAllData,
+    fetchNextPage: fetchNextSearchAllPage,
+    hasNextPage: hasSearchAllNextPage,
+    isFetchingNextPage: isFetchingSearchAll,
+    isLoading: isLoadingSearchAll,
+  } = useProductsInfinite({
+    limit: 20,
+    search: debouncedSearch || undefined,
+    activeOnly: true,
+    isComingSoon: "false",
+    enabled: !branchId && isSearchActive,
+  });
+
+  const {
+    data: searchBranchData,
+    fetchNextPage: fetchNextSearchBranchPage,
+    hasNextPage: hasSearchBranchNextPage,
+    isFetchingNextPage: isFetchingSearchBranch,
+    isLoading: isLoadingSearchBranch,
+  } = useBranchProductInfinite(branchId ?? "", {
+    limit: 20,
+    search: debouncedSearch || undefined,
+    isComingSoon: "false",
+    enabled: !!branchId && isSearchActive,
+  });
+
+  const searchResults = branchId
+    ? (searchBranchData?.pages.flatMap((p) => p.data) ?? [])
+    : (searchAllData?.pages.flatMap((p) => p.data) ?? []);
+  const isSearchLoading = branchId ? isLoadingSearchBranch : isLoadingSearchAll;
+  const isFetchingSearch = branchId ? isFetchingSearchBranch : isFetchingSearchAll;
+  const hasSearchNextPage = branchId ? hasSearchBranchNextPage : hasSearchAllNextPage;
+  const fetchNextSearchPage = branchId ? fetchNextSearchBranchPage : fetchNextSearchAllPage;
 
   // Scroll to subcategory section once products are rendered in the DOM.
   // The ref is set by handleSelectSubcategory (or initial load) and consumed here.
@@ -471,7 +518,60 @@ const MenuSection = () => {
 
   const GroupedContent = () => (
     <>
-      {showComingSoon ? (
+      {debouncedSearch ? (
+        /* ── Server-side search results view ─────────────────────── */
+        isSearchLoading ? (
+          <div className="text-center py-20">
+            <div className="inline-block animate-spin mb-4">
+              <div className="h-8 w-8 border-4 border-gray-200 border-t-brand-color-500 rounded-full" />
+            </div>
+            <h3 className="text-base font-semibold text-black mb-1">
+              Searching products...
+            </h3>
+          </div>
+        ) : searchResults.length > 0 ? (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Search size={18} className="text-gray-400 shrink-0" />
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">
+                  {searchResults.length} result
+                  {searchResults.length !== 1 ? "s" : ""} for &ldquo;
+                  {debouncedSearch}&rdquo;
+                </h2>
+              </div>
+            </div>
+            <ProductGrid items={searchResults} />
+            {/* Infinite scroll "load more" for search results */}
+            {hasSearchNextPage && (
+              <div className="flex justify-center pt-4">
+                <IconButton
+                  onClick={() => fetchNextSearchPage()}
+                  disabled={isFetchingSearch}
+                  variant="outline"
+                  text={isFetchingSearch ? "Loading..." : "Load more results"}
+                  isLoading={isFetchingSearch}
+                  className="rounded-full border-brand-color-200 text-brand-color-700 hover:bg-brand-color-100"
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <Search
+              size={40}
+              className="mx-auto text-gray-300 mb-4"
+            />
+            <h3 className="text-base font-semibold text-gray-700 mb-1">
+              No products found
+            </h3>
+            <p className="text-sm text-gray-400 max-w-xs mx-auto">
+              We couldn&apos;t find anything matching &ldquo;{debouncedSearch}
+              &rdquo;. Try a different keyword.
+            </p>
+          </div>
+        )
+      ) : showComingSoon ? (
         <ComingSoonView />
       ) : groupedItems.length > 0 || discountedProducts.length > 0 ? (
         <div className="space-y-12">
@@ -563,7 +663,30 @@ const MenuSection = () => {
       ══════════════════════════════════════════════ */}
       <div className="lg:hidden">
         {/* Sticky pill bar */}
-        <div className="sticky top-18 z-30 bg-white border-b border-gray-100 pt-8 pb-2">
+        <div className="sticky top-18 z-30 bg-white border-b border-gray-100 pt-4 pb-2">
+          {/* Search bar */}
+          <div className="relative mb-3">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-10 text-sm outline-none transition focus:border-brand-color-500 focus:bg-white focus:ring-1 focus:ring-brand-color-500"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
           {/* Category pills + Coming Soon toggle */}
           <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-1 items-center">
             <SelectField
@@ -638,6 +761,30 @@ const MenuSection = () => {
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-3 pb-3">
               Browse Menu
             </p>
+
+            {/* Search bar */}
+            <div className="relative px-1 mb-2">
+              <Search
+                size={15}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-9 text-sm outline-none transition focus:border-brand-color-500 focus:bg-white focus:ring-1 focus:ring-brand-color-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+
             {/* All */}
             <IconButton
               onClick={() => handleSelectCategory("All")}

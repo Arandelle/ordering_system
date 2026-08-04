@@ -24,6 +24,7 @@ export const useBranchProductInfinite = (branchId: string, params?: {
   subcategoryName?: string;
   isComingSoon?: string;
   isOnlineExclusive?: string;
+  search?: string;
   limit?: number;
   enabled: boolean
 }) => {
@@ -38,6 +39,7 @@ export const useBranchProductInfinite = (branchId: string, params?: {
         subcategoryName: params?.subcategoryName,
         isComingSoon: params?.isComingSoon,
         isOnlineExclusive: params?.isOnlineExclusive,
+        search: params?.search,
       })}`),
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
