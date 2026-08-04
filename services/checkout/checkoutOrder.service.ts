@@ -64,7 +64,7 @@ export async function persistOrder(
         branchSnapshot: {
           name: branch.name,
           code: branch.code,
-          address: branch.address,
+          address: branch.address?.line1,
           contactNumber: branch.contactNumber,
           location: branch.location,
         },

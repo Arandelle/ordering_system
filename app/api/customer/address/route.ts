@@ -3,8 +3,6 @@ import { connectDB } from "@/lib/mongodb";
 import { User } from "@/models/User";
 import { requireBetterAuth } from "@/lib/getAuth";
 import {
-  CITY_RESTRICTION_MESSAGE,
-  isCityAllowedForDelivery,
   isWithinMetroManilaDeliveryArea,
   OUTSIDE_DELIVERY_AREA_MESSAGE,
 } from "@/lib/deliveryArea";
@@ -12,6 +10,7 @@ import { isValidCoordinate } from "@/helper/isValidCoordinates";
 
 type AddressInput = {
   city?: string;
+  cityCode?: string;
   town?: string;
   municipality?: string;
   suburb?: string;
@@ -63,13 +62,6 @@ export async function PUT(req: Request) {
     if (!isWithinMetroManilaDeliveryArea(deliveryCoordinates)) {
       return NextResponse.json(
         { error: OUTSIDE_DELIVERY_AREA_MESSAGE },
-        { status: 400 },
-      );
-    }
-
-    if (!isCityAllowedForDelivery(addressPayload)) {
-      return NextResponse.json(
-        { error: CITY_RESTRICTION_MESSAGE },
         { status: 400 },
       );
     }

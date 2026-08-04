@@ -41,7 +41,7 @@ const AdminBranchSelector = () => {
       />
       {selectedBranch && (
         <div className="py-2 px-2 text-xs bg-brand-color-50 rounded-lg  ">
-          {selectedBranch?.address}
+          {selectedBranch?.address?.line1}
         </div>
       )}
     </div>

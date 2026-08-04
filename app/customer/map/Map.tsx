@@ -148,7 +148,7 @@ const BranchInfoCard = ({
           {branch.name}
         </p>
         <p className="text-[11px] text-slate-400 leading-snug capitalize">
-          {branch.address}
+          {branch.address?.line1}
         </p>
         {distanceKm !== undefined && (
           <p className="text-[11px] text-brand-color-400">
@@ -504,7 +504,7 @@ const Map = () => {
                           <div className="flex items-start gap-1.5">
                             <HomeIcon className="w-3 h-3 text-gray-400 mt-0.5 shrink-0" />
                             <span className="text-[11px] text-gray-500 leading-snug capitalize">
-                              {branch.address}
+                              {branch.address?.line1}
                             </span>
                           </div>
                           {branch.location?.coordinates && (

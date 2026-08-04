@@ -157,7 +157,7 @@ function HeaderBranchSelector() {
                     {branch.name}
                   </span>
                   <span className="truncate text-xs text-gray-400">
-                    {branch.address}
+                    {branch.address?.line1}
                   </span>
                 </span>
 

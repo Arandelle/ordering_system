@@ -52,7 +52,7 @@ const BranchSelector = ({ selectedBranch }: BranchSelectorProps) => {
         { value: "", label: "Select Branch", disabled: true },
         ...branches.map((branch) => ({
           value: branch._id,
-          label: branchName(`${branch.name} - ${branch.address}`, branch.openingSoon),
+          label: branchName(`${branch.name} - ${branch.address?.line1}`, branch.openingSoon),
           disabled: branch.openingSoon || !branch.isActive
         })),
       ]}
