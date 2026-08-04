@@ -6,14 +6,21 @@ import { toast } from "sonner";
 
 /**
  * Converts BranchFormData (with string coordinates) to API payload
- * Transforms location from { latitude: string, longitude: string } 
+ * Transforms location from { latitude: string, longitude: string }
  * to GeoJSON format: { type: "Point", coordinates: [lng, lat] }
  */
 const formatBranchFormDataForAPI = (formData: BranchFormData) => {
-  const { location, isBusy, maxActiveOrders, maxReservationsPerHour, maxReservationsPerDay, ...rest } = formData;
+  const { location, isBusy, maxActiveOrders, maxReservationsPerHour, maxReservationsPerDay, deliveryRadiusKm, address, ...rest } = formData;
 
   const payload = {
     ...rest,
+    address: {
+      line1: address.line1 || "",
+      city: address.city || "",
+      cityCode: address.cityCode || "",
+      barangayCode: address.barangayCode || "",
+      province: address.province || "Metro Manila",
+    },
     ...(location?.latitude &&
       location?.longitude && {
         location: {
@@ -28,6 +35,7 @@ const formatBranchFormDataForAPI = (formData: BranchFormData) => {
     ...(maxActiveOrders !== undefined && { maxActiveOrders }),
     ...(maxReservationsPerHour !== undefined && { maxReservationsPerHour }),
     ...(maxReservationsPerDay !== undefined && { maxReservationsPerDay }),
+    deliveryRadiusKm,
   };
 
   return payload;
@@ -40,7 +48,13 @@ const formatBranchFormDataForAPI = (formData: BranchFormData) => {
 const formatBranchDataForForm = (branch: Branch): BranchFormData => {
   return {
     name: branch.name,
-    address: branch.address,
+    address: {
+      line1: branch.address?.line1 ?? "",
+      city: branch.address?.city ?? "",
+      cityCode: branch.address?.cityCode ?? "",
+      barangayCode: branch.address?.barangayCode ?? "",
+      province: branch.address?.province ?? "Metro Manila",
+    },
     location:
       branch.location?.coordinates && branch.location.coordinates.length === 2
         ? {
@@ -48,6 +62,7 @@ const formatBranchDataForForm = (branch: Branch): BranchFormData => {
             latitude: branch.location.coordinates[1].toString(),
           }
         : undefined,
+    deliveryRadiusKm: branch.deliveryRadiusKm ?? null,
     openingSoon: branch.openingSoon ?? false,
     isBusy: branch.isBusy ?? false,
     maxActiveOrders: branch.maxActiveOrders ?? null,
@@ -61,6 +76,15 @@ export const useBranches = () => {
   return useQuery<Branch[], Error>({
     queryKey: ["branches"],
     queryFn: () => apiClient.get("/branch"),
+  });
+};
+
+// Fetch a single branch by ID
+export const useBranch = (id: string | null) => {
+  return useQuery<Branch, Error>({
+    queryKey: ["branch", id],
+    queryFn: () => apiClient.get(`/branch/${id}`),
+    enabled: !!id,
   });
 };
 

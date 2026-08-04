@@ -26,12 +26,19 @@ export async function GET(request: NextRequest) {
 
 const branchSchema = z.object({
   name: z.string().min(1, "Branch name is required").trim(),
-  address: z.string().min(1, "Address is required").trim(),
+  address: z.object({
+    line1: z.string().min(1, "Address line 1 is required").trim(),
+    city: z.string().min(1, "City is required").trim(),
+    cityCode: z.string().trim().default(""),
+    barangayCode: z.string().trim().default(""),
+    province: z.string().trim().default(""),
+  }),
   location: z.object({
     coordinates: z
       .array(z.number())
       .length(2, "Coordinates must be [longitude, latitude]"),
   }),
+  deliveryRadiusKm: z.number().min(0).nullable().default(null),
   openingSoon: z.boolean().default(false),
   isBusy: z.boolean().default(false),
   maxActiveOrders: z.number().min(1).nullable().default(null),
@@ -54,7 +61,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, address, location, openingSoon, isBusy, maxActiveOrders, maxReservationsPerHour, maxReservationsPerDay } = parsed.data;
+    const { name, address, location, deliveryRadiusKm, openingSoon, isBusy, maxActiveOrders, maxReservationsPerHour, maxReservationsPerDay } = parsed.data;
 
     // Generate unique branch code
     const count = await Branch.countDocuments();
@@ -68,6 +75,7 @@ export async function POST(request: NextRequest) {
         type: "Point",
         coordinates: location.coordinates, // [longitue, latitude] as GeoJSON format
       },
+      deliveryRadiusKm,
       openingSoon,
       isBusy,
       maxActiveOrders,

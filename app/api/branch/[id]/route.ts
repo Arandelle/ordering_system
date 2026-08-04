@@ -4,6 +4,33 @@ import { connectDB } from "@/lib/mongodb";
 import { Branch } from "@/models/Branch";
 import { NextRequest, NextResponse } from "next/server";
 
+// GET single branch by ID — used by the edit page
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDB();
+
+    const { id } = await context.params;
+
+    if (!id) {
+      return getAPIError("Branch id is required", 400);
+    }
+
+    const branch = await Branch.findById(id).lean();
+
+    if (!branch) {
+      return getAPIError("Branch not found", 404);
+    }
+
+    return NextResponse.json(branch);
+  } catch (error) {
+    console.error("GET /api/branch/[id] error:", error);
+    return getAPIError(error, 500, { fallbackMessage: "Failed to fetch branch" });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -54,6 +81,7 @@ export async function PUT(
       name,
       address,
       location,
+      deliveryRadiusKm,
       openingSoon,
       isBusy,
       maxActiveOrders,
@@ -61,9 +89,9 @@ export async function PUT(
       maxReservationsPerDay,
     } = body;
 
-    // Validate required fields
-    if (!name?.trim() || !address?.trim()) {
-      return getAPIError("Branch name and address are required", 400);
+    // Validate required fields — address is now a nested object
+    if (!name?.trim() || !address?.line1?.trim() || !address?.city?.trim()) {
+      return getAPIError("Branch name, address line 1, and city are required", 400);
     }
 
     // Validate location coordinates if provided
@@ -77,11 +105,21 @@ export async function PUT(
       );
     }
 
-    // Build update object
+    // Build update object with nested address
     const updatedData: any = {
       name,
-      address,
+      address: {
+        line1: address.line1,
+        city: address.city,
+        cityCode: address.cityCode ?? "",
+        barangayCode: address.barangayCode ?? "",
+        province: address.province ?? "",
+      },
       openingSoon: openingSoon ?? false,
+      deliveryRadiusKm:
+        deliveryRadiusKm === null || deliveryRadiusKm === ""
+          ? null
+          : Number(deliveryRadiusKm),
       ...(isBusy !== undefined && { isBusy }),
       ...(maxActiveOrders !== undefined && {
         maxActiveOrders:
