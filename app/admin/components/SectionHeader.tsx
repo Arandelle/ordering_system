@@ -1,11 +1,16 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 type SectionHeaderProps = {
   /** Accepts a plain string or JSX — e.g. <>Orders — <span className="text-brand-color-500">{branch}</span></> */
   title: React.ReactNode;
   subTitle?: React.ReactNode;
-  breadcrumb?: React.ReactNode;
+  breadcrumb?: {
+    href: string;
+    name: string;
+    className?: string;
+  }[];
   /** Optional action buttons rendered to the right of the header */
   actions?: React.ReactNode;
   className?: string;
@@ -32,10 +37,22 @@ const SectionHeader = ({
 }: SectionHeaderProps) => {
   return (
     <div className={cn("flex items-center justify-between", className)}>
-      <div>
-        {breadcrumb && (
-          <p className="text-xs text-gray-400 mb-0.5">{breadcrumb}</p>
-        )}
+      <div className="">
+        {breadcrumb &&
+          breadcrumb.length > 0 &&
+          breadcrumb.map((item, index) => (
+            <Link
+              key={index}
+              href={item.href}
+              className={cn(
+                "text-gray-400 hover:text-brand-color-600 mb-2",
+                item.className,
+              )}
+            >
+              {item.name}
+              {" "} &rsaquo;{" "}
+            </Link>
+          ))}
 
         <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-0 md:mb-2">
           {title}

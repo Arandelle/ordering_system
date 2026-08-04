@@ -428,14 +428,17 @@ const ProductFormPage = ({ editProduct = null }: ProductFormPageProps) => {
         <header className="sticky top-20 z-30 bg-white border-b border-gray-200">
           <div className="mx-auto px-6 py-4">
             <SectionHeader
-              breadcrumb={
-                <>
-                  Products &rsaquo;{" "}
-                  <span className="text-brand-color-500 font-semibold">
-                    {isEditMode ? "Edit Product" : "New Product"}
-                  </span>
-                </>
-              }
+              breadcrumb={[
+                {
+                  href: "/products",
+                  name: "Products",
+                },
+                {
+                  href: "/products/new",
+                  name: "New Products",
+                  className: "text-brand-color-500",
+                },
+              ]}
               title={
                 isEditMode ? `Edit: ${editProduct?.name}` : "Add New Product"
               }
