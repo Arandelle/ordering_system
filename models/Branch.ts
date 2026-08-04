@@ -15,9 +15,31 @@ const BranchSchema = new Schema(
       trim: true,
     },
     address: {
-      type: String,
-      required: [true, "Branch address is required"],
-      trim: true,
+      line1: {
+        type: String,
+        required: [true, "Branch address is required"],
+        trim: true,
+      },
+      city: {
+        type: String,
+        required: [true, "City is required"],
+        trim: true,
+      },
+      cityCode: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      barangayCode: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      province: {
+        type: String,
+        default: "Metro Manila",
+        trim: true,
+      },
     },
     location: {
       type: {
@@ -33,6 +55,11 @@ const BranchSchema = new Schema(
     manager: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Staff",
+    },
+    deliveryRadiusKm: {
+      type: Number,
+      default: null,
+      min: 0,
     },
     isActive: {
       type: Boolean,

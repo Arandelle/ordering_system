@@ -4,12 +4,21 @@ export type Location = {
   coordinates: [number, number] // [longitude, latitude] - GeoJSON format
 }
 
+export type BranchAddress = {
+  line1: string;
+  city: string;
+  cityCode: string;
+  barangayCode: string;
+  province: string;
+};
+
 export type Branch = {
   _id: string;
   name: string;
   code: string;
-  address: string;
+  address: BranchAddress;
   location: Location,
+  deliveryRadiusKm: number | null;
   isActive: boolean;
   openingSoon: boolean;
   maxActiveOrders: number | null;
@@ -22,11 +31,18 @@ export type Branch = {
 
 export type BranchFormData = {
   name: string;
-  address: string;
+  address: {
+    line1: string;
+    city: string;
+    cityCode: string;
+    barangayCode: string;
+    province: string;
+  };
   location?: {
     latitude: string;
     longitude: string
   }
+  deliveryRadiusKm: number | null;
   openingSoon: boolean;
   isBusy: boolean;
   maxActiveOrders: number | null;
@@ -34,4 +50,4 @@ export type BranchFormData = {
   maxReservationsPerDay: number | null;
 };
 
-export type BranchFormErrors = Partial<Record<keyof BranchFormData | "location", string>>;
+export type BranchFormErrors = Partial<Record<keyof BranchFormData | "location" | "address", string>>;
