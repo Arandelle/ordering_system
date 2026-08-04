@@ -1,7 +1,9 @@
 "use client";
 
 import { InputField } from "@/components/ui/FormComponents/InputField";
-import React, { useEffect, useReducer } from "react";
+import { SelectField } from "@/components/ui/FormComponents/SelectField";
+import React, { useEffect, useReducer, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import SectionHeader from "../../components/SectionHeader";
 import {
   useSettings,
@@ -14,6 +16,8 @@ import { TextareaField } from "@/components/ui/FormComponents/TextAreaField";
 import { formatTime, formatDays } from "@/helper/formatter/";
 import { Checkbox } from "@/components/ui/FormComponents";
 import { IconButton } from "@/components/ui/buttons";
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { fetchNcrCities } from "@/lib/psgcAddress";
 
 type Action =
   | { type: "SET_STORE_NAME"; value: string }
@@ -30,6 +34,11 @@ type Action =
   | { type: "SET_IS_GLOBAL_CAPACITY_SHARED"; value: boolean }
   | { type: "SET_GLOBAL_MAX_RESERVATIONS_PER_HOUR"; value: number | null }
   | { type: "SET_GLOBAL_MAX_RESERVATIONS_PER_DAY"; value: number | null }
+  | { type: "SET_FREE_DELIVERY_ENABLED"; value: boolean }
+  | { type: "SET_FREE_DELIVERY_MINIMUM_PURCHASE"; value: number }
+  | { type: "SET_FREE_DELIVERY_MAX_DISTANCE_KM"; value: number }
+  | { type: "ADD_DELIVERY_AREA"; cityCode: string; cityName: string }
+  | { type: "REMOVE_DELIVERY_AREA"; cityCode: string }
   | { type: "LOAD_SETTINGS"; payload: SettingsType }
   | { type: "RESET" };
 
@@ -47,6 +56,10 @@ const DEFAULT_STATE: SettingsType = {
   isGlobalCapacityShared: false,
   globalMaxReservationsPerHour: null,
   globalMaxReservationsPerDay: null,
+  freeDeliveryEnabled: false,
+  freeDeliveryMinimumPurchase: 549,
+  freeDeliveryMaxDistanceKm: 5,
+  deliveryAreas: [],
 };
 
 function settingsReducer(state: SettingsType, action: Action): SettingsType {
@@ -106,6 +119,37 @@ function settingsReducer(state: SettingsType, action: Action): SettingsType {
     case "SET_GLOBAL_MAX_RESERVATIONS_PER_DAY":
       return { ...state, globalMaxReservationsPerDay: action.value };
 
+    case "SET_FREE_DELIVERY_ENABLED":
+      return { ...state, freeDeliveryEnabled: action.value };
+
+    case "SET_FREE_DELIVERY_MINIMUM_PURCHASE":
+      return { ...state, freeDeliveryMinimumPurchase: action.value };
+
+    case "SET_FREE_DELIVERY_MAX_DISTANCE_KM":
+      return { ...state, freeDeliveryMaxDistanceKm: action.value };
+
+    case "ADD_DELIVERY_AREA": {
+      // Prevent duplicates by cityCode
+      if (state.deliveryAreas.some((a) => a.cityCode === action.cityCode)) {
+        return state;
+      }
+      return {
+        ...state,
+        deliveryAreas: [
+          ...state.deliveryAreas,
+          { cityCode: action.cityCode, cityName: action.cityName },
+        ],
+      };
+    }
+
+    case "REMOVE_DELIVERY_AREA":
+      return {
+        ...state,
+        deliveryAreas: state.deliveryAreas.filter(
+          (a) => a.cityCode !== action.cityCode,
+        ),
+      };
+
     case "LOAD_SETTINGS":
       return action.payload;
 
@@ -133,6 +177,14 @@ const SettingsPage = () => {
   const { data: savedSettings, isLoading } = useSettings();
   const { mutate: saveSettings, isPending } = useSaveSettings();
   const [settings, dispatch] = useReducer(settingsReducer, DEFAULT_STATE);
+  const [selectedAreaCityCode, setSelectedAreaCityCode] = useState("");
+
+  // PSGC: NCR cities for delivery area selector
+  const { data: ncrCities = [], isLoading: isLoadingCities } = useQuery({
+    queryKey: ["psgc", "ncr-cities"],
+    queryFn: fetchNcrCities,
+    staleTime: 1000 * 60 * 60 * 24,
+  });
 
   useEffect(() => {
     if (savedSettings) {
@@ -489,6 +541,163 @@ const SettingsPage = () => {
               Counted reservations include: pending payment, pending, confirmed,
               preparing, and ready for pickup. Cancelled and completed
               reservations free up slots automatically.
+            </p>
+          </div>
+        </>
+        {/** Delivery Areas */}
+        <>
+          <h2 className="text-xl font-bold text-stone-800">Delivery Areas</h2>
+          <div className="p-6 border border-gray-200 space-y-4">
+            <p className="text-sm text-stone-600">
+              Configure which cities are available for delivery. Only customers
+              in these cities can place delivery orders. Leave empty to allow
+              all cities.
+            </p>
+
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <SelectField
+                  label="Add City"
+                  value={selectedAreaCityCode}
+                  onChange={(e) => setSelectedAreaCityCode(e.target.value)}
+                  disabled={isLoadingCities}
+                  options={[
+                    {
+                      value: "",
+                      label: isLoadingCities
+                        ? "Loading cities..."
+                        : "Select a city to add",
+                      disabled: true,
+                    },
+                    ...ncrCities
+                      .filter(
+                        (city) =>
+                          !settings.deliveryAreas.some(
+                            (a) => a.cityCode === city.code,
+                          ),
+                      )
+                      .map((city) => ({
+                        value: city.code,
+                        label: city.name,
+                      })),
+                  ]}
+                  leftIcon={<DynamicIcon name="Building2" size={15} />}
+                  className="text-sm"
+                />
+              </div>
+              <IconButton
+                onClick={() => {
+                  const city = ncrCities.find(
+                    (c) => c.code === selectedAreaCityCode,
+                  );
+                  if (city) {
+                    dispatch({
+                      type: "ADD_DELIVERY_AREA",
+                      cityCode: city.code,
+                      cityName: city.name,
+                    });
+                    setSelectedAreaCityCode("");
+                  }
+                }}
+                disabled={!selectedAreaCityCode}
+                text="Add"
+                icon={{ name: "Plus", size: 16 }}
+                className="rounded-lg px-4 h-[50px]"
+              />
+            </div>
+
+            {settings.deliveryAreas.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {settings.deliveryAreas.map((area) => (
+                  <span
+                    key={area.cityCode}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-brand-color-50 border border-brand-color-200 px-3 py-1.5 text-sm text-brand-color-700"
+                  >
+                    <DynamicIcon name="MapPin" size={14} />
+                    {area.cityName}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dispatch({
+                          type: "REMOVE_DELIVERY_AREA",
+                          cityCode: area.cityCode,
+                        })
+                      }
+                      className="ml-0.5 rounded-full p-0.5 text-brand-color-400 hover:bg-brand-color-100 hover:text-brand-color-600 transition"
+                      title={`Remove ${area.cityName}`}
+                    >
+                      <DynamicIcon name="X" size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-stone-400 italic">
+                No delivery areas configured — all cities will be allowed.
+              </p>
+            )}
+          </div>
+        </>
+
+        {/** Free Delivery Settings */}
+        <>
+          <h2 className="text-xl font-bold text-stone-800">Free Delivery</h2>
+          <div className="p-6 border border-gray-200 space-y-4">
+            <p className="text-sm text-stone-600">
+              Control free delivery globally. When enabled, customers who meet
+              the minimum purchase and distance requirements get free delivery.
+              Individual branches can also configure their own free delivery
+              area by city or radius.
+            </p>
+            <Checkbox
+              label="Enable Free Delivery"
+              subLabel="Allow free delivery across all branches. When disabled, delivery fees always apply."
+              checked={settings.freeDeliveryEnabled}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FREE_DELIVERY_ENABLED",
+                  value: e.target.checked,
+                })
+              }
+            />
+            {settings.freeDeliveryEnabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InputField
+                  label="Minimum Purchase (₱)"
+                  subLabel="Item subtotal must reach this amount to qualify."
+                  type="number"
+                  value={String(settings.freeDeliveryMinimumPurchase)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    dispatch({
+                      type: "SET_FREE_DELIVERY_MINIMUM_PURCHASE",
+                      value: Math.max(0, parseFloat(val) || 0),
+                    });
+                  }}
+                  placeholder="e.g., 549"
+                  className={fieldClassName}
+                />
+                <InputField
+                  label="Max Distance (km)"
+                  subLabel="Delivery must be within this distance from the branch."
+                  type="number"
+                  value={String(settings.freeDeliveryMaxDistanceKm)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    dispatch({
+                      type: "SET_FREE_DELIVERY_MAX_DISTANCE_KM",
+                      value: Math.max(0, parseFloat(val) || 0),
+                    });
+                  }}
+                  placeholder="e.g., 5"
+                  className={fieldClassName}
+                />
+              </div>
+            )}
+            <p className="text-xs text-stone-400">
+              Branch-level free delivery (by city or radius) is checked first.
+              If the branch has its own free delivery enabled, the global
+              minimum purchase still applies.
             </p>
           </div>
         </>

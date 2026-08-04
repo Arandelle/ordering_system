@@ -1,9 +1,9 @@
 import assert from "node:assert";
 import test, { describe } from "node:test";
 import {
-  ALLOWED_DELIVERY_CITIES,
   CITY_RESTRICTION_MESSAGE,
   DELIVERY_AREA_POLYGON,
+  type DeliveryAreaConfig,
   METRO_MANILA_CENTER,
   METRO_MANILA_DELIVERY_RADIUS_METERS,
   OUTSIDE_DELIVERY_AREA_MESSAGE,
@@ -201,85 +201,71 @@ describe("Is within delivery area", () => {
   });
 
   describe("isCityAllowedForDelivery", () => {
-    test("returns true when address city is in ALLOWED_DELIVERY_CITIES", () => {
+    // Sample delivery area configs for testing
+    const areas: DeliveryAreaConfig[] = [
+      { cityCode: "137604000", cityName: "Makati" },
+      { cityCode: "137601000", cityName: "Mandaluyong" },
+      { cityCode: "137605000", cityName: "Pasay" },
+    ];
+
+    test("returns true when cityCode matches a configured delivery area", () => {
       assert.strictEqual(
-        isCityAllowedForDelivery({ city: "Makati" }),
+        isCityAllowedForDelivery("137604000", areas),
         true,
       );
     });
 
-    test("returns true when address town matches an allowed city", () => {
+    test("returns true when cityCode matches a different configured area", () => {
       assert.strictEqual(
-        isCityAllowedForDelivery({ town: "Mandaluyong" }),
+        isCityAllowedForDelivery("137601000", areas),
         true,
       );
     });
 
-    test("returns true when address municipality matches an allowed city", () => {
+    test("returns false when cityCode does not match any configured area", () => {
       assert.strictEqual(
-        isCityAllowedForDelivery({ municipality: "Pasay" }),
-        true,
-      );
-    });
-
-    test("returns true for case-insensitive match", () => {
-      assert.strictEqual(
-        isCityAllowedForDelivery({ city: "MAKATI" }),
-        true,
-      );
-    });
-
-    test("returns true when city name contains allowed city as substring", () => {
-      // Nominatim sometimes returns "City of Makati" or "Makati City"
-      assert.strictEqual(
-        isCityAllowedForDelivery({ city: "City of Makati" }),
-        true,
-      );
-    });
-
-    test("returns true when suburb matches an allowed city", () => {
-      // Nominatim sometimes puts the city name in suburb
-      assert.strictEqual(
-        isCityAllowedForDelivery({ suburb: "Mandaluyong" }),
-        true,
-      );
-    });
-
-    test("returns true when city_district matches an allowed city", () => {
-      assert.strictEqual(
-        isCityAllowedForDelivery({ city_district: "Pasay" }),
-        true,
-      );
-    });
-
-    test("returns false when no address field matches an allowed city", () => {
-      assert.strictEqual(
-        isCityAllowedForDelivery({ city: "Pasig" }),
+        isCityAllowedForDelivery("137606000", areas), // Pasig — not in list
         false,
       );
     });
 
-    test("returns false for address with only non-allowed fields", () => {
+    test("returns false for a non-matching cityCode with similar prefix", () => {
       assert.strictEqual(
-        isCityAllowedForDelivery({
-          city: "Parañaque",
-        }),
+        isCityAllowedForDelivery("137604001", areas),
         false,
       );
     });
 
-    test("returns false when all address fields are undefined", () => {
+    test("returns true when deliveryAreas is empty (no restriction)", () => {
       assert.strictEqual(
-        isCityAllowedForDelivery({}),
+        isCityAllowedForDelivery("137604000", []),
+        true,
+      );
+    });
+
+    test("returns true for any cityCode when deliveryAreas is empty", () => {
+      assert.strictEqual(
+        isCityAllowedForDelivery("999999999", []),
+        true,
+      );
+    });
+
+    test("returns false when cityCode is undefined and areas are configured", () => {
+      assert.strictEqual(
+        isCityAllowedForDelivery(undefined, areas),
         false,
       );
     });
 
-    test("returns true when ALLOWED_DELIVERY_CITIES is empty (restriction disabled)", () => {
-      // This test verifies the "kill switch" behavior
-      // We can't mutate the module-level array in node:test without side effects,
-      // so we verify the contract: non-empty list restricts, and the message exists.
-      assert.ok(ALLOWED_DELIVERY_CITIES.length > 0);
+    test("returns true when cityCode is undefined but deliveryAreas is empty", () => {
+      // No restriction when no areas are configured
+      assert.strictEqual(
+        isCityAllowedForDelivery(undefined, []),
+        true,
+      );
+    });
+
+    test("CITY_RESTRICTION_MESSAGE is non-empty", () => {
       assert.ok(CITY_RESTRICTION_MESSAGE.length > 0);
     });
   });

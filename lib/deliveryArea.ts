@@ -16,57 +16,34 @@ export const METRO_MANILA_DELIVERY_RADIUS_METERS = 12_000;
 export const OUTSIDE_DELIVERY_AREA_MESSAGE =
   "Delivery is only available within the Makati and nearby cities service area.";
 
-/**
- * Temporary city-level restriction on top of the polygon check.
- * Only addresses whose resolved city/suburb/municipality matches one of
- * these names (case-insensitive) will be accepted.
- *
- * To remove the restriction, simply empty this array — the check
- * function will then always return true.
- */
-export const ALLOWED_DELIVERY_CITIES: string[] = [
-  "mandaluyong",
-  "pasay",
-  "makati",
-];
-
 export const CITY_RESTRICTION_MESSAGE =
-  "Delivery is currently limited to Mandaluyong, Pasay, and Makati only.";
+  "Delivery is not available in your city. Please check the allowed delivery areas in settings.";
 
 /**
- * Checks whether a reverse-geocoded address belongs to an allowed city.
- * When ALLOWED_DELIVERY_CITIES is empty, this always returns true
- * (no city restriction active).
+ * Delivery area entry from admin settings — stores PSGC city code + display name.
+ */
+export type DeliveryAreaConfig = {
+  cityCode: string;
+  cityName: string;
+};
+
+/**
+ * Checks whether the customer's shipping address city code is in the
+ * admin-configured delivery areas list.
  *
- * Nominatim may populate city, town, municipality, suburb, or
- * city_district — we check all of them against the allowed list.
+ * When deliveryAreas is empty, no city-level restriction is applied
+ * (all cities are allowed). Matching is by PSGC cityCode for reliability.
  */
 export const isCityAllowedForDelivery = (
-  address: {
-    city?: string;
-    town?: string;
-    municipality?: string;
-    suburb?: string;
-    city_district?: string;
-  },
+  shippingAddressCityCode: string | undefined,
+  deliveryAreas: DeliveryAreaConfig[],
 ): boolean => {
-  if (ALLOWED_DELIVERY_CITIES.length === 0) return true;
+  if (deliveryAreas.length === 0) return true;
+  if (!shippingAddressCityCode) return false;
 
-  const candidates = [
-    address.city,
-    address.town,
-    address.municipality,
-    address.suburb,
-    address.city_district,
-  ];
-
-  return candidates.some((candidate) => {
-    if (!candidate) return false;
-    const normalized = candidate.trim().toLowerCase();
-    return ALLOWED_DELIVERY_CITIES.some(
-      (allowed) => normalized.includes(allowed),
-    );
-  });
+  return deliveryAreas.some(
+    (area) => area.cityCode === shippingAddressCityCode,
+  );
 };
 
 /**

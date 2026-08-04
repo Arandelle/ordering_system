@@ -6,6 +6,11 @@ import { toast } from "sonner";
 
 export type Days = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 
+export type DeliveryArea = {
+  cityCode: string;
+  cityName: string;
+};
+
 export interface SettingsType {
   _id?: string;
   storeName: string;
@@ -25,6 +30,10 @@ export interface SettingsType {
   isGlobalCapacityShared: boolean;
   globalMaxReservationsPerHour: number | null;
   globalMaxReservationsPerDay: number | null;
+  freeDeliveryEnabled: boolean;
+  freeDeliveryMinimumPurchase: number;
+  freeDeliveryMaxDistanceKm: number;
+  deliveryAreas: DeliveryArea[];
 }
 
 interface SettingsResponse {

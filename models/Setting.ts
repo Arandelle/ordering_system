@@ -70,6 +70,33 @@ const SettingsSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    // Global free delivery toggle — replaces the NEXT_PUBLIC_FREE_DELIVERY_ENABLED env var.
+    // When false, free delivery is disabled for all branches regardless of per-branch settings.
+    freeDeliveryEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    // Minimum item subtotal (in PHP) to qualify for free delivery.
+    freeDeliveryMinimumPurchase: {
+      type: Number,
+      default: 549,
+      min: 0,
+    },
+    // Maximum distance (in km) from branch to qualify for free delivery.
+    freeDeliveryMaxDistanceKm: {
+      type: Number,
+      default: 5,
+      min: 0,
+    },
+    // Admin-configured list of cities where delivery is available.
+    // Each entry stores the PSGC city code + display name for reliable matching.
+    // When empty, no city-level restriction is applied.
+    deliveryAreas: [
+      {
+        cityCode: { type: String, required: true },
+        cityName: { type: String, required: true },
+      },
+    ],
   },
   { timestamps: true }
 );

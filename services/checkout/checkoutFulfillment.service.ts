@@ -4,6 +4,7 @@ import {
   isCityAllowedForDelivery,
   isWithinMetroManilaDeliveryArea,
   OUTSIDE_DELIVERY_AREA_MESSAGE,
+  type DeliveryAreaConfig,
 } from "../../lib/deliveryArea";
 import { calculateDeliveryFeeFromCoordinates } from "../../lib/deliveryFee";
 import type { CreateOrderPayload } from "../../types/OrderTypes";
@@ -238,7 +239,7 @@ export async function validateFulfillmentPayload({
   shippingAddress,
   reservation,
   pickupTime,
-}: FulfillmentPayload, session?: ClientSession): Promise<void> {
+}: FulfillmentPayload, session?: ClientSession, deliveryAreas?: DeliveryAreaConfig[]): Promise<void> {
   const normalizedFulfillmentType = normalizeFulfillmentType(fulfillmentType);
 
   if (normalizedFulfillmentType === FULFILLMENT_TYPE.PICKUP) {
@@ -272,7 +273,8 @@ export async function validateFulfillmentPayload({
     throw new Error(OUTSIDE_DELIVERY_AREA_MESSAGE);
   }
 
-  if (!isCityAllowedForDelivery(shippingAddress)) {
+  // Check city against admin-configured delivery areas (by PSGC cityCode).
+  if (!isCityAllowedForDelivery(shippingAddress.cityCode, deliveryAreas ?? [])) {
     throw new Error(CITY_RESTRICTION_MESSAGE);
   }
 }
@@ -289,9 +291,11 @@ export async function resolveCheckoutFulfillment({
   reservation,
   pickupTime,
   session,
+  deliveryAreas,
 }: FulfillmentPayload & {
   branch: BranchWithCoordinates;
   session?: ClientSession;
+  deliveryAreas?: DeliveryAreaConfig[];
 }) {
   const normalizedFulfillmentType = normalizeFulfillmentType(fulfillmentType);
 
@@ -328,7 +332,7 @@ export async function resolveCheckoutFulfillment({
   await validateFulfillmentPayload({
     fulfillmentType: normalizedFulfillmentType,
     shippingAddress,
-  });
+  }, session, deliveryAreas);
 
   const branchCoordinates = branch.location?.coordinates;
   const deliveryCoordinates = shippingAddress?.coordinates;
