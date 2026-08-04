@@ -3,7 +3,6 @@
 
 import SectionHeader from "@/app/admin/components/SectionHeader";
 import { InputField } from "@/components/ui/FormComponents/InputField";
-import Modal from "@/components/ui/Modal";
 import { StatCard, StatCardProps } from "@/components/ui/StatCard";
 import {
   Table,
@@ -18,40 +17,20 @@ import {
   TableSkeleton,
   TableToolbar,
 } from "@/components/ui/table";
-import { Branch, BranchFormData, BranchFormErrors } from "@/types/branch";
-import { Ban, Loader2, Search } from "lucide-react";
+import { Branch } from "@/types/branch";
 import { useState } from "react";
 import {
-  formatBranchDataForForm,
   useBranches,
   useDeleteBranch,
   useToggleBranchStatus,
 } from "@/hooks/api/useBranch";
-import BranchModal from "./BranchModal";
 import { IconButton } from "@/components/ui/buttons";
 import { FetchError } from "@/components/ui/FetchError";
-
-export const emptyForm: BranchFormData = {
-  name: "",
-  address: "",
-  location: {
-    latitude: "",
-    longitude: "",
-  },
-  openingSoon: false,
-  isBusy: false,
-  maxActiveOrders: null,
-  maxReservationsPerHour: null,
-  maxReservationsPerDay: null,
-};
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { useRouter } from "next/navigation";
 
 export default function BranchManagement() {
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<BranchFormData>(emptyForm);
-
-  const [branchToUpdate, setBranchToUpdate] = useState<Branch | null>(null);
-
-  const [errors, setErrors] = useState<BranchFormErrors>({});
+  const router = useRouter();
   const [search, setSearch] = useState("");
 
   const { data: branches = [], isLoading, isError, error } = useBranches();
@@ -63,30 +42,11 @@ export default function BranchManagement() {
     (b) =>
       b.name.toLowerCase().includes(search.toLowerCase()) ||
       b.code.toLowerCase().includes(search.toLowerCase()) ||
-      b.address.toLowerCase().includes(search.toLowerCase()),
+      b.address?.line1?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const handleUpdateBranch = async (
-    branch: Branch,
-    type: "delete" | "edit" = "edit",
-  ) => {
-    setBranchToUpdate(branch);
-
-    if (type === "edit") {
-      // Use the conversion helper to transform API data to form data
-      const formData = formatBranchDataForForm(branch);
-      setForm(formData);
-      setShowModal(true);
-    } else {
-      await deleteBranch.mutateAsync(branch._id);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setBranchToUpdate(null);
-    setForm(emptyForm);
-    setErrors({});
+  const handleDeleteBranch = async (branch: Branch) => {
+    await deleteBranch.mutateAsync(branch._id);
   };
 
   const StoreHeaders = ["Branch", "Code", "Address", "Status", "Action"];
@@ -125,11 +85,7 @@ export default function BranchManagement() {
           title="Recent Branches"
           actions={
             <IconButton
-              onClick={() => {
-                setShowModal(true);
-                setErrors({});
-                setForm(emptyForm);
-              }}
+              onClick={() => router.push("/stores/new")}
               icon={{ name: "Plus" }}
               text="Add New Branch"
               className="px-4 rounded-lg"
@@ -140,7 +96,7 @@ export default function BranchManagement() {
         <TableToolbar>
           <InputField
             placeholder="Search branches..."
-            leftIcon={<Search size={18} />}
+            leftIcon={<DynamicIcon name="Search" size={18}/>}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-lg"
@@ -188,7 +144,7 @@ export default function BranchManagement() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div>{branch.address}</div>
+                    <div>{branch.address?.line1}</div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
@@ -212,7 +168,11 @@ export default function BranchManagement() {
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
                       <IconButton
-                        onClick={() => handleUpdateBranch(branch, "edit")}
+                        onClick={() =>
+                          router.push(
+                            `/stores/edit?branch=${branch._id}`,
+                          )
+                        }
                         variant="success"
                         text="Edit"
                         className="text-xs rounded-lg px-4"
@@ -226,7 +186,7 @@ export default function BranchManagement() {
                       />
                       {!branch.isActive && (
                         <IconButton
-                          onClick={() => handleUpdateBranch(branch, "delete")}
+                          onClick={() => handleDeleteBranch(branch)}
                           disabled={toggleStatus.isPending}
                           variant="danger"
                           text="Delete"
@@ -241,28 +201,6 @@ export default function BranchManagement() {
           </Table>
         )}
       </TableCard>
-
-      {/* Modal */}
-      {showModal && (
-        <Modal
-          title={
-            branchToUpdate
-              ? `Edit Branch: ${branchToUpdate.name}`
-              : "Add New Branch"
-          }
-          onClose={handleCloseModal}
-        >
-          <BranchModal
-            branchToUpdate={branchToUpdate}
-            setBranchToUpdate={setBranchToUpdate}
-            setShowModal={setShowModal}
-            form={form}
-            setForm={setForm}
-            errors={errors}
-            setErrors={setErrors}
-          />
-        </Modal>
-      )}
     </div>
   );
 }

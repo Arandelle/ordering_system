@@ -112,7 +112,7 @@ const LocationsSection = () => {
                                   {location.name}
                                 </p>
                                 <p className="text-gray-500 text-xs">
-                                  {location.address}
+                                  {location.address?.line1}
                                 </p>
                               </div>
                             </div>

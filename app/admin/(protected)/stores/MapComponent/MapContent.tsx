@@ -16,7 +16,7 @@ import { DELIVERY_AREA_POLYGON, METRO_MANILA_CENTER } from "@/lib/deliveryArea";
 import { InputField } from "@/components/ui/FormComponents/InputField";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 
-type MapParentProps = {
+type MapContentProps = {
   onSelectCoordinates: (latitude: number, longitude: number) => void;
 };
 
@@ -26,7 +26,7 @@ type SearchResult = {
   lon: string;
 };
 
-const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
+const MapContent: React.FC<MapContentProps> = ({ onSelectCoordinates }) => {
   const markerRef = useRef<LeafletMarker | null>(null);
 
   const { data: branches = [], isPending } = useBranches();
@@ -203,7 +203,7 @@ const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
                   <div className="text-sm">
                     <p className="font-semibold">{branch.name}</p>
                     <p className="text-xs text-gray-600">{branch.code}</p>
-                    <p className="text-xs text-gray-600">{branch.address}</p>
+                    <p className="text-xs text-gray-600">{branch.address?.line1}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       {lat.toFixed(4)}, {lng.toFixed(4)}
                     </p>
@@ -319,4 +319,4 @@ const MapParent: React.FC<MapParentProps> = ({ onSelectCoordinates }) => {
   );
 };
 
-export default MapParent;
+export default MapContent;

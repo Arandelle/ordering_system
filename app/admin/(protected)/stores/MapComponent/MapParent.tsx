@@ -8,7 +8,7 @@ type MapParentProps = {
 const MapParent = ({ onSelectCoordinates }: MapParentProps) => {
   const MapModal = useMemo(
     () =>
-      dynamic(() => import("./MapModal"), {
+      dynamic(() => import("./MapContent"), {
         loading: (): React.ReactNode => (
           <div className="flex items-center justify-center h-full bg-slate-100 text-slate-500 text-sm">
             Loading harrison map...

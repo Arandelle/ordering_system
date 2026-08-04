@@ -1,12 +1,30 @@
 import { useCreateBranch, useUpdateBranch } from "@/hooks/api/useBranch";
 import { Branch, BranchFormData, BranchFormErrors } from "@/types/branch";
 import React, { ChangeEvent, useState } from "react";
-import { emptyForm } from "./page";
 import Modal from "@/components/ui/Modal";
 import MapParent from "./MapComponent/MapParent";
 import { ToggleButton, InputField } from "@/components/ui/FormComponents";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { IconButton } from "@/components/ui/buttons";
+
+// Retained for reference — this modal is superseded by BranchForm.tsx and the /stores/new + /stores/edit pages.
+const emptyForm: BranchFormData = {
+  name: "",
+  address: {
+    line1: "",
+    city: "",
+    cityCode: "",
+    barangayCode: "",
+    province: "Metro Manila",
+  },
+  location: { latitude: "", longitude: "" },
+  deliveryRadiusKm: null,
+  openingSoon: false,
+  isBusy: false,
+  maxActiveOrders: null,
+  maxReservationsPerHour: null,
+  maxReservationsPerDay: null,
+};
 
 type BranchModalProps = {
   form: BranchFormData;
@@ -36,7 +54,7 @@ const BranchModal = ({
   const validate = (): BranchFormErrors => {
     const e: BranchFormErrors = {};
     if (!form.name.trim()) e.name = "Branch name is required.";
-    if (!form.address.trim()) e.address = "Address is required.";
+    if (!form.address.line1.trim()) e.address = "Address is required.";
     if (!form.location?.latitude || !form.location?.longitude) {
       e.location = "Coordinates (latitude & longitude) are required.";
     }
@@ -239,9 +257,9 @@ const BranchModal = ({
 
         <InputField
           label="Address"
-          value={form.address}
+          value={form.address.line1}
           onChange={handleChangeForm}
-          name="address"
+          name="line1"
           placeholder="e.g., 123 Rizal Ave"
           error={errors.address}
           className="capitalize"
