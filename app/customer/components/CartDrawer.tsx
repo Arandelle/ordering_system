@@ -311,6 +311,9 @@ const CartDrawer = () => {
                 text="Clear cart"
                 variant="ghost"
                 className="w-full"
+                onClick={async () => {
+                  await clearCart();
+                }}
               />
             </div>
           </div>

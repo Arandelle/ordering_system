@@ -58,7 +58,9 @@ const Header = () => {
         onSuccess: async () => {
           closeModal();
 
-          queryClient.removeQueries({ queryKey: ["orders"] }); // remove the orders cache
+          queryClient.removeQueries({ queryKey: ["orders"] });
+          // Clear checkout draft so the next user doesn't inherit address/coordinates
+          window.sessionStorage.removeItem("checkout_order_draft");
           toast.success("Logged out successfully");
           setIsLoggingOut(false);
           router.push("/");

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useCart } from "@/contexts/CartContext";
 import { useCustomerOrderSummary } from "@/hooks/api/customers/useCustomerOrders";
+import { formatCurrency } from "@/helper/formatter";
 
 interface Props {
   mounted: boolean;
 }
 
 export const HeaderCartActions = ({ mounted }: Props) => {
-  const { totalItems, setIsCartOpen } = useCart();
+  const { totalItems, totalPrice, setIsCartOpen } = useCart();
   const { data: orderSummary } = useCustomerOrderSummary();
 
   const activeOrdersCount =
@@ -39,16 +40,21 @@ export const HeaderCartActions = ({ mounted }: Props) => {
 
       <button
         onClick={() => setIsCartOpen(true)}
-        className="relative p-2 sm:p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 group cursor-pointer"
+        className={`relative flex items-center gap-2 p-2 sm:p-3 rounded-full transition-all duration-300 group cursor-pointer ${
+          mounted && totalItems > 0
+            ? "bg-brand-color-500 hover:bg-brand-color-600 text-white"
+            : "bg-gray-100 hover:bg-gray-200 darkText"
+        }`}
       >
         <DynamicIcon
           name="ShoppingCart"
           size={20}
-          className="group-hover:scale-110 transition-transform darkText"
+          className="group-hover:scale-110 transition-transform"
         />
         {mounted && totalItems > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-color-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">
-            {totalItems}
+          <span className="flex items-center gap-1 pr-1 text-sm font-semibold">
+            <span>({totalItems})</span>
+            <span>{formatCurrency(totalPrice)}</span>
           </span>
         )}
       </button>
