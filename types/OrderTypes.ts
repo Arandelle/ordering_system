@@ -247,6 +247,8 @@ export interface CreateOrderPayload {
     line1: string;
     line2?: string;
     city: string;
+    cityCode?: string;
+    barangayCode?: string;
     province: string;
     zipCode: string;
     country: "Philippines";

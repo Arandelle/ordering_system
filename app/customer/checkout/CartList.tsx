@@ -42,7 +42,6 @@ import type { ActivePromotionsResponse } from "@/types/promotions.type";
 import { useQuery } from "@tanstack/react-query";
 import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
-import { FREE_DELIVERY_ENABLED } from "@/lib/deliveryFee";
 import { getCheckoutActionMode } from "./checkoutAction";
 import { useBranchCapacity } from "@/hooks/api/useBranchCapacity";
 import { AppImage } from "@/components/AppImage";
@@ -238,6 +237,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     landmark,
     coordinates,
     placeName,
+    barangayCode,
   } = orderDetails?.shippingAddress;
   const {
     cartItems,
@@ -265,6 +265,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       coordinates?.lat,
       coordinates?.lng,
       productDiscountedSubtotal,
+      barangayCode,
     ],
     queryFn: () => {
       if (!selectedBranch?._id || !coordinates) {
@@ -277,11 +278,13 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           branchId: string;
           coordinates: { lat: number; lng: number };
           itemSubtotalAmount: number;
+          customerBarangayCode?: string;
         }
       >("/customer/delivery-fee/estimate", {
         branchId: selectedBranch._id,
         coordinates,
         itemSubtotalAmount: productDiscountedSubtotal,
+        customerBarangayCode: barangayCode || undefined,
       });
     },
     enabled: Boolean(isDelivery && selectedBranch?._id && coordinates),
@@ -307,14 +310,12 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     availableVoucherBalance,
     discountAdjustedTotal,
   );
-  const freeDeliveryEligible =
-    FREE_DELIVERY_ENABLED && isDelivery
-      ? (deliveryFeeEstimate?.data.freeDeliveryEligible ?? false)
-      : false;
-  const freeDeliveryReason =
-    FREE_DELIVERY_ENABLED && isDelivery
-      ? (deliveryFeeEstimate?.data.freeDeliveryReason ?? undefined)
-      : undefined;
+  const freeDeliveryEligible = isDelivery
+    ? (deliveryFeeEstimate?.data.freeDeliveryEligible ?? false)
+    : false;
+  const freeDeliveryReason = isDelivery
+    ? (deliveryFeeEstimate?.data.freeDeliveryReason ?? undefined)
+    : undefined;
   const deliveryFeeAmount = isDelivery
     ? (deliveryFeeEstimate?.data.deliveryFee ?? 0)
     : 0;

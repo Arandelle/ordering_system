@@ -26,6 +26,7 @@ import {
 } from "@/services/checkout/checkoutPricing.service";
 import { resolveCheckoutFulfillment } from "@/services/checkout/checkoutFulfillment.service";
 import { isFreeDeliveryEligible } from "@/lib/deliveryFee";
+import { Settings } from "@/models/Setting";
 import {
   reserveInventory,
   resolveCart,
@@ -76,8 +77,11 @@ export async function POST(request: NextRequest) {
         ? await assertCanUsePromoCardDiscount(customerId, session)
         : null;
 
-    // 4. Resolve branch
-    const branch = await fetchBranch(body.branchId, session);
+    // 4. Resolve branch + global settings
+    const [branch, settings] = await Promise.all([
+      fetchBranch(body.branchId, session),
+      Settings.findOne(),
+    ]);
 
     // 4.1 Resolve final delivery/pickup/dine-in details server-side.
     const fulfillment = await resolveCheckoutFulfillment({
@@ -87,6 +91,7 @@ export async function POST(request: NextRequest) {
       reservation: body.reservation,
       pickupTime: body.pickupTime,
       session,
+      deliveryAreas: settings?.deliveryAreas ?? [],
     });
 
     // 5. Resolve cart items + reserve inventory
@@ -131,6 +136,20 @@ export async function POST(request: NextRequest) {
       fulfillment.fulfillmentType,
       fulfillment.distanceKm,
       productDiscountedTotal,
+      settings
+        ? {
+            freeDeliveryEnabled: settings.freeDeliveryEnabled ?? false,
+            freeDeliveryMinimumPurchase: settings.freeDeliveryMinimumPurchase ?? 549,
+            freeDeliveryMaxDistanceKm: settings.freeDeliveryMaxDistanceKm ?? 5,
+          }
+        : undefined,
+      {
+        barangayCode: branch.address?.barangayCode ?? "",
+        deliveryRadiusKm: branch.deliveryRadiusKm ?? null,
+      },
+      fulfillment.shippingAddress?.barangayCode
+        ? { barangayCode: fulfillment.shippingAddress.barangayCode }
+        : undefined,
     );
 
     const tax = computeTax(

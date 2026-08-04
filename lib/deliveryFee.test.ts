@@ -8,6 +8,9 @@ import {
   isFreeDeliveryEligible,
   FREE_DELIVERY_MINIMUM_PURCHASE,
   FREE_DELIVERY_MAX_DISTANCE_KM,
+  type FreeDeliveryConfig,
+  type BranchDeliveryContext,
+  type CustomerDeliveryContext,
 } from "./deliveryFee";
 
 describe("Delivery Fee", () => {
@@ -141,5 +144,142 @@ describe("isFreeDeliveryEligible", () => {
 
   test("returns false at boundary distance slightly over 5 km", () => {
     assert.equal(isFreeDeliveryEligible("delivery", 5.01, 549), false);
+  });
+});
+
+describe("Barangay-based Free Delivery", () => {
+  const enabledConfig: FreeDeliveryConfig = {
+    freeDeliveryEnabled: true,
+    freeDeliveryMinimumPurchase: 549,
+    freeDeliveryMaxDistanceKm: 5,
+  };
+
+  // PSGC code for a specific barangay in Makati
+  const branch: BranchDeliveryContext = {
+    barangayCode: "137604020",
+    deliveryRadiusKm: null,
+  };
+
+  test("same barangayCode grants free delivery even with low subtotal", () => {
+    const result = resolveEffectiveDeliveryFee(
+      3, 100, enabledConfig, branch, { barangayCode: "137604020" },
+    );
+    assert.equal(result.freeDeliveryEligible, true);
+    assert.equal(result.effectiveDeliveryFee, 0);
+  });
+
+  test("same barangayCode grants free delivery even beyond max distance", () => {
+    const result = resolveEffectiveDeliveryFee(
+      10, 100, enabledConfig, branch, { barangayCode: "137604020" },
+    );
+    assert.equal(result.freeDeliveryEligible, true);
+    assert.equal(result.effectiveDeliveryFee, 0);
+  });
+
+  test("different barangayCode does not match", () => {
+    const result = resolveEffectiveDeliveryFee(
+      3, 100, enabledConfig, branch, { barangayCode: "137604030" },
+    );
+    assert.equal(result.freeDeliveryEligible, false);
+    assert.equal(result.effectiveDeliveryFee, result.deliveryFee);
+  });
+
+  test("no match when branch barangayCode is empty", () => {
+    const result = resolveEffectiveDeliveryFee(
+      3, 100, enabledConfig, { barangayCode: "", deliveryRadiusKm: null }, { barangayCode: "137604020" },
+    );
+    assert.equal(result.freeDeliveryEligible, false);
+  });
+
+  test("no match when customer barangayCode is missing", () => {
+    const result = resolveEffectiveDeliveryFee(
+      3, 100, enabledConfig, branch, undefined,
+    );
+    assert.equal(result.freeDeliveryEligible, false);
+  });
+
+  test("no barangay match when free delivery is globally disabled", () => {
+    const disabledConfig: FreeDeliveryConfig = {
+      freeDeliveryEnabled: false,
+      freeDeliveryMinimumPurchase: 549,
+      freeDeliveryMaxDistanceKm: 5,
+    };
+    const result = resolveEffectiveDeliveryFee(
+      3, 549, disabledConfig, branch, { barangayCode: "137604020" },
+    );
+    assert.equal(result.freeDeliveryEligible, false);
+    assert.equal(result.effectiveDeliveryFee, result.deliveryFee);
+  });
+});
+
+describe("isFreeDeliveryEligible with barangay match", () => {
+  const enabledConfig: FreeDeliveryConfig = {
+    freeDeliveryEnabled: true,
+    freeDeliveryMinimumPurchase: 549,
+    freeDeliveryMaxDistanceKm: 5,
+  };
+  const branch: BranchDeliveryContext = {
+    barangayCode: "137604020",
+    deliveryRadiusKm: null,
+  };
+
+  test("barangay match bypasses minimum purchase and distance", () => {
+    assert.equal(
+      isFreeDeliveryEligible("delivery", 10, 50, enabledConfig, branch, { barangayCode: "137604020" }),
+      true,
+    );
+  });
+
+  test("different barangayCode falls back to standard distance + minimum checks", () => {
+    assert.equal(
+      isFreeDeliveryEligible("delivery", 10, 50, enabledConfig, branch, { barangayCode: "137604030" }),
+      false,
+    );
+  });
+
+  test("missing customer barangayCode falls back to standard checks", () => {
+    assert.equal(
+      isFreeDeliveryEligible("delivery", 10, 50, enabledConfig, branch, undefined),
+      false,
+    );
+  });
+
+  test("globally disabled blocks even barangay match", () => {
+    const disabledConfig: FreeDeliveryConfig = {
+      freeDeliveryEnabled: false,
+      freeDeliveryMinimumPurchase: 549,
+      freeDeliveryMaxDistanceKm: 5,
+    };
+    assert.equal(
+      isFreeDeliveryEligible("delivery", 1, 549, disabledConfig, branch, { barangayCode: "137604020" }),
+      false,
+    );
+  });
+});
+
+describe("Branch deliveryRadiusKm override", () => {
+  const enabledConfig: FreeDeliveryConfig = {
+    freeDeliveryEnabled: true,
+    freeDeliveryMinimumPurchase: 549,
+    freeDeliveryMaxDistanceKm: 5,
+  };
+
+  test("branch radius extends free delivery range beyond global max", () => {
+    const branch: BranchDeliveryContext = { barangayCode: "137604020", deliveryRadiusKm: 10 };
+    // 7km is beyond global 5km but within branch 10km; different barangay so only distance+subtotal path
+    const result = resolveEffectiveDeliveryFee(
+      7, 549, enabledConfig, branch, { barangayCode: "137604030" },
+    );
+    assert.equal(result.freeDeliveryEligible, true);
+    assert.equal(result.effectiveDeliveryFee, 0);
+  });
+
+  test("branch radius restricts free delivery range below global max", () => {
+    const branch: BranchDeliveryContext = { barangayCode: "137604020", deliveryRadiusKm: 3 };
+    // 4km is within global 5km but beyond branch 3km; different barangay so only distance+subtotal path
+    const result = resolveEffectiveDeliveryFee(
+      4, 549, enabledConfig, branch, { barangayCode: "137604030" },
+    );
+    assert.equal(result.freeDeliveryEligible, false);
   });
 });

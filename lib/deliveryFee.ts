@@ -20,18 +20,65 @@ export type EffectiveDeliveryFee = DeliveryFeeEstimate & {
   freeDeliveryReason?: string;   // why free delivery does not apply (if not eligible)
 };
 
+/**
+ * Free delivery configuration from global settings.
+ * Pass this to resolveEffectiveDeliveryFee / isFreeDeliveryEligible
+ * instead of relying on env vars.
+ */
+export type FreeDeliveryConfig = {
+  freeDeliveryEnabled: boolean;
+  freeDeliveryMinimumPurchase: number;
+  freeDeliveryMaxDistanceKm: number;
+};
+
+/**
+ * Branch-level delivery context for area-based free delivery.
+ * Barangay code match bypasses minimum purchase and distance checks entirely.
+ * deliveryRadiusKm overrides the global max distance when set.
+ */
+export type BranchDeliveryContext = {
+  barangayCode: string;
+  deliveryRadiusKm: number | null;
+};
+
+/**
+ * Customer delivery context for area-based free delivery.
+ */
+export type CustomerDeliveryContext = {
+  barangayCode?: string;
+};
+
 const BASE_DELIVERY_FARE = 65;
 const FIRST_TIER_KM = 5;
 const FIRST_TIER_RATE = 10;
 const EXCESS_TIER_RATE = 8;
 
-// Free delivery: waived when item subtotal ≥ threshold AND distance is within the max km.
-// Distance exceeding the max km disqualifies free delivery even if the subtotal threshold is met.
-// Toggle via NEXT_PUBLIC_FREE_DELIVERY_ENABLED env var — set "false" to disable (e.g. after promo period).
+// Legacy defaults — used when no FreeDeliveryConfig is passed (backward compat).
+// These will be replaced by Settings values from the database.
 export const FREE_DELIVERY_MINIMUM_PURCHASE = 549;
 export const FREE_DELIVERY_MAX_DISTANCE_KM = 5;
 export const FREE_DELIVERY_ENABLED =
   process.env.NEXT_PUBLIC_FREE_DELIVERY_ENABLED !== "false";
+
+/** Resolves the active free delivery config — DB settings override env defaults. */
+const resolveConfig = (config?: FreeDeliveryConfig) => ({
+  enabled: config?.freeDeliveryEnabled ?? FREE_DELIVERY_ENABLED,
+  minimumPurchase: config?.freeDeliveryMinimumPurchase ?? FREE_DELIVERY_MINIMUM_PURCHASE,
+  maxDistanceKm: config?.freeDeliveryMaxDistanceKm ?? FREE_DELIVERY_MAX_DISTANCE_KM,
+});
+
+/**
+ * Barangay code match — the customer is in the same barangay as the branch.
+ * PSGC codes are unique identifiers so exact comparison is sufficient.
+ * This is the strongest signal: free delivery with no minimum purchase or distance check.
+ */
+const isBarangayMatch = (
+  branch?: BranchDeliveryContext,
+  customer?: CustomerDeliveryContext,
+): boolean => {
+  if (!branch?.barangayCode || !customer?.barangayCode) return false;
+  return branch.barangayCode === customer.barangayCode;
+};
 
 // how far is the delivery location from the branch, in km? Used for delivery fee calculation and estimation.
 export const getBranchToDeliveryDistanceKm = (
@@ -72,18 +119,22 @@ export const calculateDeliveryFee = (
   };
 };
 
-// Determines the effective delivery fee, applying free delivery when the item subtotal
-// meets the minimum purchase threshold AND the delivery distance is within the allowed range.
-// Free delivery is disqualified if the distance exceeds FREE_DELIVERY_MAX_DISTANCE_KM,
-// even when the purchase threshold is met.
+// Determines the effective delivery fee, applying free delivery when:
+// 1. Barangay match (branch brgy === customer brgy) → free, no minimum, no distance check
+// 2. Branch deliveryRadiusKm set AND within radius → needs minimum purchase
+// 3. Fallback: global max distance + minimum purchase
 export const resolveEffectiveDeliveryFee = (
   distanceKm: number,
   itemSubtotalAmount: number,
+  config?: FreeDeliveryConfig,
+  branch?: BranchDeliveryContext,
+  customer?: CustomerDeliveryContext,
 ): EffectiveDeliveryFee => {
   const estimate = calculateDeliveryFee(distanceKm);
+  const { enabled, minimumPurchase, maxDistanceKm } = resolveConfig(config);
 
-  // When free delivery is disabled (promo ended), behave as if the feature doesn't exist.
-  if (!FREE_DELIVERY_ENABLED) {
+  // When free delivery is disabled globally, no free delivery anywhere.
+  if (!enabled) {
     return {
       ...estimate,
       freeDeliveryEligible: false,
@@ -92,8 +143,21 @@ export const resolveEffectiveDeliveryFee = (
     };
   }
 
-  const exceedsMaxDistance = distanceKm > FREE_DELIVERY_MAX_DISTANCE_KM;
-  const meetsMinimumPurchase = itemSubtotalAmount >= FREE_DELIVERY_MINIMUM_PURCHASE;
+  // Barangay match — free delivery, no minimum purchase or distance check.
+  if (isBarangayMatch(branch, customer)) {
+    return {
+      ...estimate,
+      freeDeliveryEligible: true,
+      effectiveDeliveryFee: 0,
+      freeDeliveryReason: undefined,
+    };
+  }
+
+  // Determine the effective max distance — branch override or global.
+  const effectiveMaxDistanceKm = branch?.deliveryRadiusKm ?? maxDistanceKm;
+
+  const exceedsMaxDistance = distanceKm > effectiveMaxDistanceKm;
+  const meetsMinimumPurchase = itemSubtotalAmount >= minimumPurchase;
   const freeDeliveryEligible = meetsMinimumPurchase && !exceedsMaxDistance;
 
   const effectiveDeliveryFee = freeDeliveryEligible ? 0 : estimate.deliveryFee;
@@ -101,10 +165,10 @@ export const resolveEffectiveDeliveryFee = (
   let freeDeliveryReason: string | undefined;
   if (!freeDeliveryEligible && isDeliveryFeeScenario(distanceKm, itemSubtotalAmount)) {
     if (exceedsMaxDistance) {
-      freeDeliveryReason = `Free delivery is only available within ${FREE_DELIVERY_MAX_DISTANCE_KM} km.`;
+      freeDeliveryReason = `Free delivery is only available within ${effectiveMaxDistanceKm} km.`;
     } else {
-      const amountNeeded = roundMoney(FREE_DELIVERY_MINIMUM_PURCHASE - itemSubtotalAmount);
-      freeDeliveryReason = `Add ₱${amountNeeded.toFixed(2)} more to get free delivery within ${FREE_DELIVERY_MAX_DISTANCE_KM} km.`;
+      const amountNeeded = roundMoney(minimumPurchase - itemSubtotalAmount);
+      freeDeliveryReason = `Add ₱${amountNeeded.toFixed(2)} more to get free delivery within ${effectiveMaxDistanceKm} km.`;
     }
   }
 
@@ -120,18 +184,27 @@ export const resolveEffectiveDeliveryFee = (
 const isDeliveryFeeScenario = (distanceKm: number, itemSubtotalAmount: number) =>
   distanceKm > 0 && itemSubtotalAmount > 0;
 
-// Checks whether free delivery applies for a delivery order given the item
-// subtotal and distance. Used by checkout routes after cart resolution,
-// where the subtotal is known but wasn't available at fulfillment resolution.
+// Checks whether free delivery applies for a delivery order.
+// Priority: barangay match (instant free) → branch radius → global distance + minimum.
 export function isFreeDeliveryEligible(
   fulfillmentType: string,
   distanceKm: number,
   itemSubtotalAmount: number,
+  config?: FreeDeliveryConfig,
+  branch?: BranchDeliveryContext,
+  customer?: CustomerDeliveryContext,
 ): boolean {
-  if (!FREE_DELIVERY_ENABLED) return false;
+  const { enabled, minimumPurchase, maxDistanceKm } = resolveConfig(config);
+  if (!enabled) return false;
   if (fulfillmentType !== FULFILLMENT_TYPE.DELIVERY) return false;
-  if (distanceKm > FREE_DELIVERY_MAX_DISTANCE_KM) return false;
-  if (itemSubtotalAmount < FREE_DELIVERY_MINIMUM_PURCHASE) return false;
+
+  // Barangay match — free delivery, no minimum purchase or distance check.
+  if (isBarangayMatch(branch, customer)) return true;
+
+  // Branch radius override or global max distance.
+  const effectiveMaxDistanceKm = branch?.deliveryRadiusKm ?? maxDistanceKm;
+  if (distanceKm > effectiveMaxDistanceKm) return false;
+  if (itemSubtotalAmount < minimumPurchase) return false;
   return true;
 }
 
@@ -155,10 +228,13 @@ export const resolveEffectiveDeliveryFeeFromCoordinates = (
   branchCoordinates: BranchGeoJsonCoordinates,
   deliveryCoordinates: Coordinates,
   itemSubtotalAmount: number,
+  config?: FreeDeliveryConfig,
+  branch?: BranchDeliveryContext,
+  customer?: CustomerDeliveryContext,
 ) => {
   const distanceKm = getBranchToDeliveryDistanceKm(
     branchCoordinates,
     deliveryCoordinates,
   );
-  return resolveEffectiveDeliveryFee(distanceKm, itemSubtotalAmount);
+  return resolveEffectiveDeliveryFee(distanceKm, itemSubtotalAmount, config, branch, customer);
 };

@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { isValidCoordinate } from "@/helper/isValidCoordinates";
 import { fetchBranch } from "@/services/branch/branch.service";
+import { Settings } from "@/models/Setting";
 
 type DeliveryFeeEstimateBody = {
   branchId?: string;
@@ -12,12 +13,13 @@ type DeliveryFeeEstimateBody = {
     lng?: number;
   };
   itemSubtotalAmount?: number;
+  customerBarangayCode?: string;
 };
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as DeliveryFeeEstimateBody;
-    const { branchId, coordinates, itemSubtotalAmount } = body;
+    const { branchId, coordinates, itemSubtotalAmount, customerBarangayCode } = body;
     const deliveryCoordinates = {
       lat: Number(coordinates?.lat),
       lng: Number(coordinates?.lng),
@@ -48,7 +50,10 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const branch = await fetchBranch(branchId);
+    const [branch, settings] = await Promise.all([
+      fetchBranch(branchId),
+      Settings.findOne(),
+    ]);
 
     if (!branch.location?.coordinates) {
       return NextResponse.json(
@@ -57,11 +62,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resolve effective delivery fee including free delivery eligibility.
+    // Resolve effective delivery fee including free delivery eligibility from DB settings.
     const estimate = resolveEffectiveDeliveryFeeFromCoordinates(
       branch.location.coordinates,
       deliveryCoordinates,
       subtotal,
+      settings
+        ? {
+            freeDeliveryEnabled: settings.freeDeliveryEnabled ?? false,
+            freeDeliveryMinimumPurchase: settings.freeDeliveryMinimumPurchase ?? 549,
+            freeDeliveryMaxDistanceKm: settings.freeDeliveryMaxDistanceKm ?? 5,
+          }
+        : undefined,
+      {
+        barangayCode: branch.address?.barangayCode ?? "",
+        deliveryRadiusKm: branch.deliveryRadiusKm ?? null,
+      },
+      customerBarangayCode ? { barangayCode: customerBarangayCode } : undefined,
     );
 
     return NextResponse.json({ data: estimate });
