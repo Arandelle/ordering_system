@@ -23,6 +23,12 @@ type PsgcAddressFieldsProps = {
   errors?: Partial<Record<"city" | "province" | "line2", string>>;
   onFieldChange: (field: keyof PsgcAddressSelection, value: string) => void;
   onFieldBlur?: (field: "city" | "province" | "line2", value: string) => void;
+  /**
+   * When provided, only cities whose PSGC code is in this list are shown in
+   * the city dropdown. Used to restrict the selector to admin-configured delivery areas.
+   * When empty or omitted, all NCR cities are shown.
+   */
+  allowedCityCodes?: string[]
 };
 
 // Saved profile data and map reverse-geocoding may only have the city name.
@@ -52,6 +58,7 @@ export function PsgcAddressFields({
   errors,
   onFieldChange,
   onFieldBlur,
+  allowedCityCodes,
 }: PsgcAddressFieldsProps) {
   // NCR is the only supported service region, so the first selectable parent is
   // the NCR city/municipality list.
@@ -60,6 +67,15 @@ export function PsgcAddressFields({
     queryFn: fetchNcrCities,
     staleTime: 1000 * 60 * 60 * 24,
   });
+
+  // Filter the displayed city list to admin-configured delivery areas when
+  // provided. The full `cities` list is still used internally for matching
+  // saved/detected addresses, so only the dropdown options are restricted.
+  const displayCities = useMemo(() => {
+    if (!allowedCityCodes?.length) return cities;
+    const allowed = new Set(allowedCityCodes);
+    return cities.filter((city) => allowed.has(city.code));
+  }, [cities, allowedCityCodes]);
 
   const selectedCity = useSelectedCity(cities, value);
   const isManila = selectedCity?.code === MANILA_CITY_CODE;
@@ -265,7 +281,7 @@ export function PsgcAddressFields({
           }}
           options={[
             { value: "", label: "Select City", disabled: true },
-            ...cities.map((city) => ({
+            ...displayCities.map((city) => ({
               value: city.code,
               label: city.name,
             })),
