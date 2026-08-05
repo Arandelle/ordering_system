@@ -138,6 +138,70 @@ const MenuSection = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // ── Recent searches (persisted in localStorage, max 5) ──────────────────
+  const RECENT_SEARCHES_KEY = "menu_recent_searches";
+  const MAX_RECENT_SEARCHES = 5;
+
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Load recent searches from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (stored) setRecentSearches(JSON.parse(stored));
+    } catch {
+      // ignore corrupt data
+    }
+  }, []);
+
+  // Save the search term once the debounce fires with a real value
+  useEffect(() => {
+    if (!debouncedSearch) return;
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((s) => s !== debouncedSearch);
+      const next = [debouncedSearch, ...filtered].slice(0, MAX_RECENT_SEARCHES);
+      try {
+        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+      } catch {
+        // storage full — ignore
+      }
+      return next;
+    });
+  }, [debouncedSearch]);
+
+  const removeRecentSearch = (term: string) => {
+    setRecentSearches((prev) => {
+      const next = prev.filter((s) => s !== term);
+      try {
+        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSelectRecentSearch = (term: string) => {
+    setSearchQuery(term);
+    // Don't set isSearchFocused to false — the input stays focused
+    // via onMouseDown + preventDefault, so recent searches remain
+    // accessible if the user keeps typing
+  };
+
+  // Show recent searches only when the input is focused and the user has started typing
+  const showRecentSearches =
+    isSearchFocused && recentSearches.length > 0;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryInitialized = useRef(false);
@@ -446,6 +510,55 @@ const MenuSection = () => {
 
   const csLoading = branchId ? isCsBranchLoading : isCsAllLoading;
 
+  // Recent searches dropdown — shown when focused and typing
+  const renderRecentSearches = showRecentSearches ? (
+    <div className="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-gray-100 bg-white shadow-md py-2">
+      <div className="flex items-center justify-between px-3 mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          Recent Searches
+        </p>
+        <IconButton
+          variant="ghost"
+          text="Clear all"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            clearRecentSearches();
+          }}
+          className="!text-[10px] !p-1 text-red-400 hover:text-red-500 hover:bg-red-50"
+        />
+      </div>
+      {recentSearches.map((term) => (
+        <div
+          key={term}
+          className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 group"
+        >
+          <IconButton 
+           type="button"
+            onMouseDown={(e) => {
+              // Prevent blur from firing before the click registers
+              e.preventDefault();
+              handleSelectRecentSearch(term);
+            }}
+            icon={{name: "Clock"}}
+            text={term}
+            variant="ghost"
+            className="w-full justify-start hover:bg-transparent"
+          />
+          <IconButton
+            variant="ghost"
+            icon={{ name: "X", size: 14 }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              removeRecentSearch(term);
+            }}
+            className="!p-1 text-gray-300 hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          />
+        </div>
+      ))}
+    </div>
+  ) : null;
+
   // Inline render helpers (avoids defining components inside the render function,
   // which would cause React to unmount/remount them on every state change)
   const renderDiscountedShelf =
@@ -699,19 +812,24 @@ const MenuSection = () => {
         {/* Sticky pill bar */}
         <div className="sticky top-18 z-30 bg-white border-b border-gray-100 pt-4 pb-2">
           {/* Search bar */}
-          <div className="mb-3">
+          <div className="mb-3 relative">
             <InputField
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
               placeholder="Search products..."
               leftIcon={<DynamicIcon name="Search" size={15} />}
               rightElement={
                 searchQuery && (
-                  <IconButton variant="ghost" icon={{ name: "X", size: 15 }} />
+                  <IconButton 
+                  onClick={() => setSearchQuery("")}
+                  variant="ghost" icon={{ name: "X", size: 15 }} />
                 )
               }
               className="rounded-xl text-sm"
             />
+            {renderRecentSearches}
           </div>
 
           {/* Category pills + Coming Soon toggle */}
@@ -789,18 +907,27 @@ const MenuSection = () => {
             </p>
 
             {/* Search bar */}
-            <InputField
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products..."
-              leftIcon={<DynamicIcon name="Search" size={15} />}
-              rightElement={
-                searchQuery && (
-                  <IconButton variant="ghost" icon={{ name: "X", size: 15 }} />
-                )
-              }
-              className="rounded-xl text-sm"
-            />
+            <div className="relative">
+              <InputField
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                placeholder="Search products..."
+                leftIcon={<DynamicIcon name="Search" size={15} />}
+                rightElement={
+                  searchQuery && (
+                    <IconButton
+                      onClick={() => setSearchQuery("")}
+                      variant="ghost"
+                      icon={{ name: "X", size: 15 }}
+                    />
+                  )
+                }
+                className="rounded-xl text-sm"
+              />
+              {renderRecentSearches}
+            </div>
 
             {/* All */}
             <IconButton
