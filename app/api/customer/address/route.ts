@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { User } from "@/models/User";
+import { User, Settings } from "@/models";
 import { requireBetterAuth } from "@/lib/getAuth";
 import {
-  isWithinMetroManilaDeliveryArea,
-  OUTSIDE_DELIVERY_AREA_MESSAGE,
+  isCityAllowedForDelivery,
+  CITY_RESTRICTION_MESSAGE,
 } from "@/lib/deliveryArea";
 import { isValidCoordinate } from "@/helper/isValidCoordinates";
+import { getBadRequestError, getInternalServerError, getNotFoundError } from "@/lib/getApiError";
 
 type AddressInput = {
   city?: string;
@@ -22,6 +23,7 @@ type AddressInput = {
 };
 
 export async function GET(request: Request) {
+  try{
   const customer = await requireBetterAuth(request);
 
   await connectDB();
@@ -31,6 +33,10 @@ export async function GET(request: Request) {
     .lean();
 
   return NextResponse.json({ shippingAddress: user?.shippingAddress ?? null });
+  } catch(error){
+    return getInternalServerError(error, "Failed to fetch shipping address. Please try again!.")
+  }
+
 }
 
 export async function PUT(req: Request) {
@@ -40,7 +46,7 @@ export async function PUT(req: Request) {
   const { address } = body;
 
   if (!address || typeof address !== "object" || Array.isArray(address)) {
-    return NextResponse.json({ error: "Address is required" }, { status: 400 });
+    return getBadRequestError("Address is required");
   }
 
   const addressPayload = address as AddressInput;
@@ -48,22 +54,15 @@ export async function PUT(req: Request) {
 
   if (coordinates) {
     if (!isValidCoordinate(coordinates.lat, coordinates.lng)) {
-      return NextResponse.json(
-        { error: "Valid delivery coordinates are required." },
-        { status: 400 },
-      );
+      return getBadRequestError("Valid delivery coordinates are required");
     }
 
-    const deliveryCoordinates = {
-      lat: coordinates.lat as number,
-      lng: coordinates.lng as number,
-    };
+    // Validate city against admin-configured delivery areas.
+    const settings = await Settings.findOne().lean();
+    const deliveryAreas = settings?.deliveryAreas ?? [];
 
-    if (!isWithinMetroManilaDeliveryArea(deliveryCoordinates)) {
-      return NextResponse.json(
-        { error: OUTSIDE_DELIVERY_AREA_MESSAGE },
-        { status: 400 },
-      );
+    if (!isCityAllowedForDelivery(addressPayload.cityCode, deliveryAreas)) {
+      return getBadRequestError(CITY_RESTRICTION_MESSAGE);
     }
   }
 
@@ -76,7 +75,7 @@ export async function PUT(req: Request) {
   ).lean();
 
   if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return getNotFoundError("User not found");
   }
 
   return NextResponse.json({ success: true, address: user.shippingAddress });

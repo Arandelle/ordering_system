@@ -28,7 +28,13 @@ type PsgcAddressFieldsProps = {
    * the city dropdown. Used to restrict the selector to admin-configured delivery areas.
    * When empty or omitted, all NCR cities are shown.
    */
-  allowedCityCodes?: string[]
+  allowedCityCodes?: string[];
+  /**
+   * Optional hint text shown below the locked Region field. Use to explain
+   * region-specific restrictions (e.g. "Delivery is currently limited to NCR").
+   * When omitted, no hint is displayed.
+   */
+  regionHint?: string;
 };
 
 // Saved profile data and map reverse-geocoding may only have the city name.
@@ -59,6 +65,7 @@ export function PsgcAddressFields({
   onFieldChange,
   onFieldBlur,
   allowedCityCodes,
+  regionHint,
 }: PsgcAddressFieldsProps) {
   // NCR is the only supported service region, so the first selectable parent is
   // the NCR city/municipality list.
@@ -263,9 +270,7 @@ export function PsgcAddressFields({
           required
         />
 
-        <p className="text-xs text-gray-500">
-          Delivery is currently limited to NCR addresses.
-        </p>
+        {regionHint && <p className="text-xs text-gray-500">{regionHint}</p>}
       </div>
 
       <div className="flex flex-col gap-2">

@@ -10,7 +10,9 @@ import { OrderFormState } from "../FormSchema";
 import dynamic from "next/dynamic";
 import type { ResolvedDeliveryAddress } from "./DeliveryLocationPicker";
 import Modal from "@/components/ui/Modal";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { normalizePsgcName } from "@/lib/psgcAddress";
+import { useSettings } from "@/hooks/api/useSettings";
 
 const DeliveryLocationPicker = dynamic(
   () => import("./DeliveryLocationPicker"),
@@ -30,7 +32,11 @@ type ShippingAddressProps = {
   isAuthenticated: boolean;
   shouldShowSyncProfileDetails: boolean;
   onSyncProfileDetails: () => void;
-  onChange: (type: keyof Omit<OrderFormState, "fulfillmentType" | "pickupTime">, field: string, value: string) => void;
+  onChange: (
+    type: keyof Omit<OrderFormState, "fulfillmentType" | "pickupTime">,
+    field: string,
+    value: string,
+  ) => void;
   onBlur: (field: keyof ShippingErrors, value: string) => void;
   onCoordinatesChange: (
     coordinates: OrderFormState["shippingAddress"]["coordinates"],
@@ -57,9 +63,41 @@ const ShippingAddress = ({
     .filter(Boolean)
     .join(", ");
 
+  // Fetch admin-configured delivery areas. When deliveryAreas is empty,
+  // all NCR cities are allowed (no restriction passed to children).
+  const { data: settings } = useSettings();
+  const allowedCityCodes = useMemo(() => {
+    const areas = settings?.deliveryAreas ?? [];
+    return areas.length ? areas.map((a) => a.cityCode) : undefined;
+  }, [settings?.deliveryAreas]);
+
+  const allowedCityNames = useMemo(() => {
+    const areas = settings?.deliveryAreas ?? [];
+    return areas.length ? areas.map((a) => a.cityName) : undefined;
+  }, [settings?.deliveryAreas]);
+
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
 
+  // Tracks the city from the last map pin reverse-geocode. Uses a ref instead
+  // of state to avoid React's bailout when the same city is pinned again —
+  // the warning must re-evaluate on every dropdown change.
+  const pinnedCityRef = useRef<string | undefined>(undefined);
+
+  // Re-evaluates whenever the dropdown city changes. The ref always holds
+  // the latest pinned city without React skipping the update.
+  const pinnedCityWarning = useMemo(() => {
+    const pinned = pinnedCityRef.current;
+    if (!pinned || !shippingAddress.city) return undefined;
+    if (normalizePsgcName(pinned) === normalizePsgcName(shippingAddress.city))
+      return undefined;
+    return `Your pin is in "${pinned}" but the selected city is "${shippingAddress.city}". The dropdown fields will be used as your delivery address.`;
+  }, [shippingAddress.city]);
+
   const handleAddressResolved = (address: ResolvedDeliveryAddress) => {
+    if (address.city) {
+      pinnedCityRef.current = address.city;
+    }
+
     if (address.placeName) {
       onChange("shippingAddress", "placeName", address.placeName);
     }
@@ -148,6 +186,29 @@ const ShippingAddress = ({
           )}
         </div>
       )}
+      <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
+        <DynamicIcon
+          name="Info"
+          size={14}
+          className="mt-0.5 shrink-0 text-slate-400"
+        />
+        <p>
+          Use the map to pin your approximate location. Then confirm your exact
+          city and barangay using the fields below — these will be your delivery
+          address.
+        </p>
+      </div>
+
+      {pinnedCityWarning && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+          <DynamicIcon
+            name="AlertTriangle"
+            size={14}
+            className="mt-0.5 shrink-0 text-amber-500"
+          />
+          <p>{pinnedCityWarning}</p>
+        </div>
+      )}
 
       <button
         type="button"
@@ -214,9 +275,9 @@ const ShippingAddress = ({
         </button>
         {showMapHint && (
           <p className="text-xs leading-5 text-slate-500">
-            Delivery fee and service coverage follow the pinned map
-            coordinates. The city, area, barangay, and address fields add the
-            delivery details, so keep them accurate and matched with the pin.
+            Delivery fee and service coverage follow the pinned map coordinates.
+            The city, area, barangay, and address fields add the delivery
+            details, so keep them accurate and matched with the pin.
           </p>
         )}
       </div>
@@ -248,6 +309,8 @@ const ShippingAddress = ({
           }}
           onFieldChange={handlePsgcFieldChange}
           onFieldBlur={onBlur}
+          allowedCityCodes={allowedCityCodes}
+          regionHint="Delivery is currently limited to NCR addresses."
         />
       </div>
 
@@ -303,6 +366,7 @@ const ShippingAddress = ({
             <DeliveryLocationPicker
               value={shippingAddress.coordinates}
               addressQuery={shippingAddress.placeName || addressQuery}
+              allowedCityNames={allowedCityNames}
               error={errors.coordinates}
               onChange={onCoordinatesChange}
               onAddressResolved={handleAddressResolved}

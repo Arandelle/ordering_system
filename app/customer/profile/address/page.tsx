@@ -9,12 +9,17 @@ import type { ShippingAddressForm } from "@/types/address";
 import { SectionCard } from "../component/SectionCard";
 import { toast } from "sonner";
 import { useMyAddress, useUpdateAddress } from "../../hooks/useMyAddress";
-import { useEffect, useState } from "react";
-import { NCR_REGION, type PsgcAddressSelection } from "@/lib/psgcAddress";
+import { useEffect, useMemo, useState } from "react";
+import {
+  NCR_REGION,
+  normalizePsgcName,
+  type PsgcAddressSelection,
+} from "@/lib/psgcAddress";
 import { useModalQuery } from "@/hooks/utils/useModalQuery";
 import Modal from "@/components/ui/Modal";
 import dynamic from "next/dynamic";
 import type { ResolvedDeliveryAddress } from "../../checkout/shipping/DeliveryLocationPicker";
+import { useSettings } from "@/hooks/api/useSettings";
 
 const DeliveryLocationPicker = dynamic(
   () => import("../../checkout/shipping/DeliveryLocationPicker"),
@@ -51,6 +56,17 @@ const AddressTab = () => {
 
   const [form, setForm] = useState<ShippingAddressForm>(DEFAULT_ADDRESS_FORM);
   const [saving, setSaving] = useState(false);
+
+  // Admin-configured delivery areas — empty means all NCR cities allowed.
+  const { data: settings } = useSettings();
+  const allowedCityCodes = useMemo(() => {
+    const areas = settings?.deliveryAreas ?? [];
+    return areas.length ? areas.map((a) => a.cityCode) : undefined;
+  }, [settings?.deliveryAreas]);
+  const allowedCityNames = useMemo(() => {
+    const areas = settings?.deliveryAreas ?? [];
+    return areas.length ? areas.map((a) => a.cityName) : undefined;
+  }, [settings?.deliveryAreas]);
 
   const { modal, openModal, closeModal } = useModalQuery();
 
@@ -92,11 +108,24 @@ const AddressTab = () => {
     setForm((prev) => ({ ...prev, coordinates }));
   };
 
+  // Tracks the city from the last map pin reverse-geocode.
+  const [pinnedCity, setPinnedCity] = useState<string | undefined>(undefined);
+
+  const pinnedCityWarning = useMemo(() => {
+    if (!pinnedCity || !form.city) return undefined;
+    if (normalizePsgcName(pinnedCity) === normalizePsgcName(form.city))
+      return undefined;
+    return `Your pin is in "${pinnedCity}" but the selected city is "${form.city}". The dropdown fields will be used as your delivery address.`;
+  }, [pinnedCity, form.city]);
+
   // Reverse geocoding gives us address names, not PSGC codes. We update the
   // visible fields from those names, then clear old codes that may belong to a
   // previous city/barangay. PsgcAddressFields will match the new names against
   // the loaded PSGC options and write the correct codes back into this form.
   const handleAddressResolved = (address: ResolvedDeliveryAddress) => {
+    if (address.city) {
+      setPinnedCity(address.city);
+    }
     setForm((prev) => ({
       ...prev,
       ...(address.line2
@@ -182,7 +211,20 @@ const AddressTab = () => {
       subtitle="Default address for deliveries and orders"
       icon="MapPin"
     >
-      <div className="mb-5">
+      <div className="mb-5 space-y-3">
+        <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
+          <DynamicIcon
+            name="Info"
+            size={14}
+            className="mt-0.5 shrink-0 text-slate-400"
+          />
+          <p>
+            Use the map to pin your approximate location. Then confirm your
+            exact city and barangay using the fields below — these will be your
+            delivery address.
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={() => openModal("shipping-address-coordinates")}
@@ -240,6 +282,7 @@ const AddressTab = () => {
           <DeliveryLocationPicker
             value={form.coordinates}
             addressQuery={form.placeName ?? ""}
+            allowedCityNames={allowedCityNames}
             onChange={handleCoordinatesChange}
             onAddressResolved={handleAddressResolved}
           />
@@ -273,6 +316,8 @@ const AddressTab = () => {
         <PsgcAddressFields
           value={form}
           onFieldChange={handleAddressFieldChange}
+          allowedCityCodes={allowedCityCodes}
+          regionHint="Delivery is currently limited to NCR addresses."
         />
         <InputField
           label="ZIP Code"

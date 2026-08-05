@@ -2,8 +2,6 @@ import { FULFILLMENT_TYPE, FulfillmentType } from "@/types/orderConstants";
 import {
   CITY_RESTRICTION_MESSAGE,
   isCityAllowedForDelivery,
-  isWithinMetroManilaDeliveryArea,
-  OUTSIDE_DELIVERY_AREA_MESSAGE,
   type DeliveryAreaConfig,
 } from "../../lib/deliveryArea";
 import { calculateDeliveryFeeFromCoordinates } from "../../lib/deliveryFee";
@@ -269,9 +267,6 @@ export async function validateFulfillmentPayload({
   }
   if (!shippingAddress.zipCode) throw new Error("Postal code is required.");
   if (!coordinates) throw new Error("Pin your delivery location on the map.");
-  if (!isWithinMetroManilaDeliveryArea(coordinates)) {
-    throw new Error(OUTSIDE_DELIVERY_AREA_MESSAGE);
-  }
 
   // Check city against admin-configured delivery areas (by PSGC cityCode).
   if (!isCityAllowedForDelivery(shippingAddress.cityCode, deliveryAreas ?? [])) {

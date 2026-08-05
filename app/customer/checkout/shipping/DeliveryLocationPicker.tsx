@@ -9,18 +9,16 @@ import {
   BaseLeafletMap,
   DraggableMapMarker,
   MapClickHandler,
-  MapPolygon,
   RecenterMap,
   type MapCoordinates,
 } from "@/components/leaflet";
-import {
-  isWithinMetroManilaDeliveryArea,
-  METRO_MANILA_CENTER,
-  DELIVERY_AREA_POLYGON,
-  OUTSIDE_DELIVERY_AREA_MESSAGE,
-} from "@/lib/deliveryArea";
+import { METRO_MANILA_CENTER } from "@/lib/deliveryArea";
+import { normalizePsgcName } from "@/lib/psgcAddress";
 import { InputField } from "@/components/ui/FormComponents/InputField";
-import { toast } from "sonner";
+
+// Approximate bounding box for NCR (lon1, lat1, lon2, lat2).
+// Used to bias Nominatim search results toward the service region.
+const NCR_VIEWBOX = "120.94,14.76,121.12,14.35";
 
 type DeliveryCoordinates = MapCoordinates;
 
@@ -74,6 +72,13 @@ type DeliveryLocationPickerProps = {
   addressQuery: string;
 
   /**
+   * Admin-configured city names for delivery restriction.
+   * When provided, only pins that reverse-geocode to one of these cities
+   * are accepted. When empty/undefined, all NCR cities are allowed.
+   */
+  allowedCityNames?: string[];
+
+  /**
    * External validation message from the parent form, shown with local map
    * errors such as outside-service-area selections.
    */
@@ -116,6 +121,7 @@ const getUniqueAddressParts = (parts: Array<string | undefined>): string[] => {
 const DeliveryLocationPicker = ({
   value,
   addressQuery,
+  allowedCityNames,
   error,
   onChange,
   onAddressResolved,
@@ -196,6 +202,24 @@ const DeliveryLocationPicker = ({
 
         if (requestId !== resolveRequestIdRef.current) return;
 
+        // When admin has configured specific delivery cities, verify the
+        // reverse-geocoded city is in the allowed list. Uses normalizePsgcName
+        // to handle variations like "City of Parañaque" vs "Parañaque".
+        if (allowedCityNames?.length && city) {
+          const normalizedDetected = normalizePsgcName(city);
+          const isAllowed = allowedCityNames.some(
+            (name) => normalizePsgcName(name) === normalizedDetected,
+          );
+
+          if (!isAllowed) {
+            if (requestId !== resolveRequestIdRef.current) return;
+            setLocationError(
+              `Delivery is not available in "${city}". Please select a location within the allowed delivery areas.`,
+            );
+            return;
+          }
+        }
+
         // City check passed — commit the selection to the parent.
         setLocationError(null);
         onChange(coordinates);
@@ -211,7 +235,7 @@ const DeliveryLocationPicker = ({
         }
       }
     },
-    [onChange, onAddressResolved, onResolvingAddressChange],
+    [allowedCityNames, onChange, onAddressResolved, onResolvingAddressChange],
   );
 
   const selectCoordinates = useCallback(
@@ -221,13 +245,9 @@ const DeliveryLocationPicker = ({
         lng: Number(coordinates.lng.toFixed(6)),
       };
 
-      if (!isWithinMetroManilaDeliveryArea(nextCoordinates)) {
-        setLocationError(OUTSIDE_DELIVERY_AREA_MESSAGE);
-        return;
-      }
-
-      // Polygon check passed — resolve the address (which also runs the
-      // city-level restriction and calls onChange only when both checks pass).
+      // Resolve the address — the city-level restriction check runs inside
+      // resolveAddressFromCoordinates and calls onChange only when the
+      // reverse-geocoded city is in the admin-allowed list.
       resolveAddressFromCoordinates(nextCoordinates);
     },
     [resolveAddressFromCoordinates],
@@ -248,7 +268,7 @@ const DeliveryLocationPicker = ({
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
           `${trimmed}, Philippines`,
-        )}&format=json&limit=5&countrycodes=ph`,
+        )}&format=json&limit=5&countrycodes=ph&viewbox=${NCR_VIEWBOX}`,
         { headers: { "Accept-Language": "en" } },
       );
 
@@ -433,16 +453,6 @@ const DeliveryLocationPicker = ({
         center={value ? [value.lat, value.lng] : METRO_MANILA_CENTER}
         zoom={value ? 16 : 12}
       >
-        <MapPolygon
-          positions={DELIVERY_AREA_POLYGON}
-          pathOptions={{
-            color: "#16a34a",
-            fillColor: "#22c55e",
-            fillOpacity: 0.08,
-            weight: 2,
-            dashArray: "6 4",
-          }}
-        />
         <MapClickHandler onClick={selectCoordinates} />
         <RecenterMap value={value} />
 
@@ -501,9 +511,9 @@ const DeliveryLocationPicker = ({
       <div className="flex items-start gap-2 text-xs text-slate-500">
         <DynamicIcon name="MapPinned" size={15} className="mt-0.5 shrink-0" />
         <p>
-          Click inside the highlighted service area to place your delivery pin.
-          Drag the pin to fine-tune it, or allow location access to start from
-          your current position.
+          Click on the map to place your delivery pin. Drag the pin to
+          fine-tune it, or allow location access to start from your current
+          position. The dropdown fields are the official delivery address.
         </p>
       </div>
     </div>

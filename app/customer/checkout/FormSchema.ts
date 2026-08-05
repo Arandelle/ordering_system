@@ -1,10 +1,6 @@
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 import z from "zod";
-import {
-  isWithinMetroManilaDeliveryArea,
-  OUTSIDE_DELIVERY_AREA_MESSAGE,
-} from "@/lib/deliveryArea";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 
 export const CustomerSchema = z.object({
@@ -82,16 +78,10 @@ export const ShippingSchema = ShippingFieldsSchema.superRefine((value, ctx) => {
       path: ["coordinates"],
       message: "Pin your delivery location on the map",
     });
-    return;
   }
 
-  if (!isWithinMetroManilaDeliveryArea(value.coordinates)) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["coordinates"],
-      message: OUTSIDE_DELIVERY_AREA_MESSAGE,
-    });
-  }
+  // City-level restriction (admin-configured delivery areas) is validated
+  // on the backend via isCityAllowedForDelivery in checkoutFulfillment.service.
 });
 
 const DeliveryOrderFormSchema = z.object({
