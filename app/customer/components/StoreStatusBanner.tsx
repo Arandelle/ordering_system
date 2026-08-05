@@ -48,13 +48,13 @@ export default function StoreStatusBanner() {
         variant="danger"
         icon={{ name: "Ban", size: 12 }}
         text="Closed today"
-        className="text-xs p-2 rounded-lg absolute right-4 top-20 z-50"
+        className="text-xs p-2 rounded-lg fixed right-4 top-22 z-50"
       />
     );
   }
 
   return (
-    <div className="fixed top-20 sm:inset-x-auto inset-x-0 xs:right-0 sm:right-12 z-50 px-3">
+    <div className="fixed top-22 sm:inset-x-auto inset-x-0 xs:right-0 sm:right-12 z-50 px-3">
       <div className="mx-auto max-w-60 flex flex-col items-center gap-2.5 rounded-xl bg-gray-50 border border-gray-200/60 px-4 py-2.5 shadow-md shadow-gray-900/5 relative">
         <IconButton
           onClick={() => setDismissed(true)}

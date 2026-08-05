@@ -23,9 +23,8 @@ import { useProductsInfinite } from "@/hooks/api/useInfiniteProducts";
 import { useDiscountedProducts } from "@/hooks/api/useDiscountedProducts";
 import { FetchError } from "@/components/ui/FetchError";
 import { trackSearch } from "@/lib/metaPixel";
-import { Search, X } from "lucide-react";
 import { IconButton } from "@/components/ui/buttons";
-import { SelectField } from "@/components/ui/FormComponents";
+import { InputField, SelectField } from "@/components/ui/FormComponents";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,6 +82,38 @@ function groupProducts(products: MenuProduct[]): CategoryGroup[] {
     ),
   }));
 }
+
+// ─── Product Grid (stable reference — must live outside MenuSection) ─────
+
+const ProductGrid = ({
+  items,
+  branchId,
+  selectedBranch,
+  openBranchSelector,
+}: {
+  items: MenuProduct[];
+  branchId: string | undefined;
+  selectedBranch: { _id?: string } | null;
+  openBranchSelector: () => void;
+}) => (
+  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-4 md:gap-5">
+    {items.map((item, indexItem) => (
+      <div
+        key={item._id || indexItem}
+        id={item._id}
+        className="product-card-wrapper h-full transition-all duration-500"
+        style={{ transitionDelay: `${(indexItem % 8) * 60}ms` }}
+      >
+        <ProductCard
+          item={item as BranchProduct}
+          hasBranch={!!branchId}
+          selectedBranch={selectedBranch?._id}
+          openBranchSelector={openBranchSelector}
+        />
+      </div>
+    ))}
+  </div>
+);
 
 // ─── Component ────────────────────────────────────────────────────────────
 
@@ -318,9 +349,15 @@ const MenuSection = () => {
     ? (searchBranchData?.pages.flatMap((p) => p.data) ?? [])
     : (searchAllData?.pages.flatMap((p) => p.data) ?? []);
   const isSearchLoading = branchId ? isLoadingSearchBranch : isLoadingSearchAll;
-  const isFetchingSearch = branchId ? isFetchingSearchBranch : isFetchingSearchAll;
-  const hasSearchNextPage = branchId ? hasSearchBranchNextPage : hasSearchAllNextPage;
-  const fetchNextSearchPage = branchId ? fetchNextSearchBranchPage : fetchNextSearchAllPage;
+  const isFetchingSearch = branchId
+    ? isFetchingSearchBranch
+    : isFetchingSearchAll;
+  const hasSearchNextPage = branchId
+    ? hasSearchBranchNextPage
+    : hasSearchAllNextPage;
+  const fetchNextSearchPage = branchId
+    ? fetchNextSearchBranchPage
+    : fetchNextSearchAllPage;
 
   // Scroll to subcategory section once products are rendered in the DOM.
   // The ref is set by handleSelectSubcategory (or initial load) and consumed here.
@@ -407,37 +444,13 @@ const MenuSection = () => {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  let globalIndex = 0;
+  const csLoading = branchId ? isCsBranchLoading : isCsAllLoading;
 
-  const ProductGrid = ({ items }: { items: MenuProduct[] }) => (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-4 md:gap-5">
-      {items.map((item, indexItem) => {
-        const index = globalIndex++;
-        return (
-          <div
-            key={index || indexItem}
-            data-index={index}
-            id={item._id}
-            className="product-card-wrapper h-full transition-all duration-500"
-            style={{ transitionDelay: `${(index % 8) * 60}ms` }}
-          >
-            <ProductCard
-              item={item as BranchProduct}
-              hasBranch={!!branchId}
-              selectedBranch={selectedBranch?._id}
-              openBranchSelector={openBranchSelector}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const DiscountedProductsShelf = () => {
-    if (discountedProducts.length === 0) return null;
-
-    return (
-      <section className="">
+  // Inline render helpers (avoids defining components inside the render function,
+  // which would cause React to unmount/remount them on every state change)
+  const renderDiscountedShelf =
+    discountedProducts.length > 0 ? (
+      <section>
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-green-600">
@@ -448,7 +461,12 @@ const MenuSection = () => {
             </h2>
           </div>
         </div>
-        <ProductGrid items={discountedProducts} />
+        <ProductGrid
+          items={discountedProducts}
+          branchId={branchId}
+          selectedBranch={selectedBranch}
+          openBranchSelector={openBranchSelector}
+        />
         {hasMoreDiscountedProducts && (
           <IconButton
             onClick={() => fetchNextDiscountedPage()}
@@ -460,11 +478,9 @@ const MenuSection = () => {
           />
         )}
       </section>
-    );
-  };
+    ) : null;
 
-  const ComingSoonView = () => {
-    const csLoading = branchId ? isCsBranchLoading : isCsAllLoading;
+  const renderComingSoon = (() => {
     if (csLoading && comingSoonProducts.length === 0) {
       return (
         <div className="text-center py-20">
@@ -507,19 +523,23 @@ const MenuSection = () => {
           <div>
             <h2 className="text-xl font-bold text-gray-900">Coming Soon</h2>
             <p className="text-xs text-gray-500">
-              These items aren't available yet — check back soon!
+              These items aren&apos;t available yet — check back soon!
             </p>
           </div>
         </div>
-        <ProductGrid items={comingSoonProducts} />
+        <ProductGrid
+          items={comingSoonProducts}
+          branchId={branchId}
+          selectedBranch={selectedBranch}
+          openBranchSelector={openBranchSelector}
+        />
       </div>
     );
-  };
+  })();
 
-  const GroupedContent = () => (
+  const renderGroupedContent = (
     <>
       {debouncedSearch ? (
-        /* ── Server-side search results view ─────────────────────── */
         isSearchLoading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin mb-4">
@@ -532,7 +552,11 @@ const MenuSection = () => {
         ) : searchResults.length > 0 ? (
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <Search size={18} className="text-gray-400 shrink-0" />
+              <DynamicIcon
+                name="Search"
+                size={18}
+                className="text-gray-400 shrink-0"
+              />
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
                   {searchResults.length} result
@@ -541,8 +565,12 @@ const MenuSection = () => {
                 </h2>
               </div>
             </div>
-            <ProductGrid items={searchResults} />
-            {/* Infinite scroll "load more" for search results */}
+            <ProductGrid
+              items={searchResults}
+              branchId={branchId}
+              selectedBranch={selectedBranch}
+              openBranchSelector={openBranchSelector}
+            />
             {hasSearchNextPage && (
               <div className="flex justify-center pt-4">
                 <IconButton
@@ -558,9 +586,10 @@ const MenuSection = () => {
           </div>
         ) : (
           <div className="text-center py-16">
-            <Search
+            <DynamicIcon
+              name="Search"
               size={40}
-              className="mx-auto text-gray-300 mb-4"
+              className="mx-auto text-gray-30 mb-4"
             />
             <h3 className="text-base font-semibold text-gray-700 mb-1">
               No products found
@@ -572,10 +601,10 @@ const MenuSection = () => {
           </div>
         )
       ) : showComingSoon ? (
-        <ComingSoonView />
+        renderComingSoon
       ) : groupedItems.length > 0 || discountedProducts.length > 0 ? (
         <div className="space-y-12">
-          {activeCategory === "All" && <DiscountedProductsShelf />}
+          {activeCategory === "All" && renderDiscountedShelf}
 
           {groupedItems.map(({ categoryName, subcategoryGroups }) => (
             <div key={categoryName}>
@@ -602,7 +631,12 @@ const MenuSection = () => {
                         <div className="flex-1 h-px bg-gray-100" />
                       </div>
                     )}
-                    <ProductGrid items={items} />
+                    <ProductGrid
+                      items={items}
+                      branchId={branchId}
+                      selectedBranch={selectedBranch}
+                      openBranchSelector={openBranchSelector}
+                    />
                   </div>
                 ))}
               </div>
@@ -665,26 +699,19 @@ const MenuSection = () => {
         {/* Sticky pill bar */}
         <div className="sticky top-18 z-30 bg-white border-b border-gray-100 pt-4 pb-2">
           {/* Search bar */}
-          <div className="relative mb-3">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
-            <input
-              type="text"
+          <div className="mb-3">
+            <InputField
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search products..."
-              className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-10 text-sm outline-none transition focus:border-brand-color-500 focus:bg-white focus:ring-1 focus:ring-brand-color-500"
+              leftIcon={<DynamicIcon name="Search" size={15} />}
+              rightElement={
+                searchQuery && (
+                  <IconButton variant="ghost" icon={{ name: "X", size: 15 }} />
+                )
+              }
+              className="rounded-xl text-sm"
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            )}
           </div>
 
           {/* Category pills + Coming Soon toggle */}
@@ -714,6 +741,7 @@ const MenuSection = () => {
                   value: cat.name,
                 })),
               ]}
+              className="rounded-xl text-sm"
             />
           </div>
 
@@ -746,9 +774,7 @@ const MenuSection = () => {
         </div>
 
         {/* Mobile product content */}
-        <div className="px-4 py-6">
-          <GroupedContent />
-        </div>
+        <div className="px-4 py-6">{renderGroupedContent}</div>
       </div>
 
       {/* ══════════════════════════════════════════════
@@ -763,27 +789,18 @@ const MenuSection = () => {
             </p>
 
             {/* Search bar */}
-            <div className="relative px-1 mb-2">
-              <Search
-                size={15}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-9 text-sm outline-none transition focus:border-brand-color-500 focus:bg-white focus:ring-1 focus:ring-brand-color-500"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                >
-                  <X size={15} />
-                </button>
-              )}
-            </div>
+            <InputField
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              leftIcon={<DynamicIcon name="Search" size={15} />}
+              rightElement={
+                searchQuery && (
+                  <IconButton variant="ghost" icon={{ name: "X", size: 15 }} />
+                )
+              }
+              className="rounded-xl text-sm"
+            />
 
             {/* All */}
             <IconButton
@@ -902,7 +919,7 @@ const MenuSection = () => {
 
         {/* Content */}
         <div ref={contentRef} className="flex-1 min-w-0">
-          <GroupedContent />
+          {renderGroupedContent}
         </div>
       </div>
 
