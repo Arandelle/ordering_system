@@ -350,6 +350,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     "maya",
   );
   const [isCodPending, setIsCodPending] = useState(false);
+  const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
 
   // check if current step has any errors or empty required fields
   const isDetailsIncomplete = !CustomerSchema.safeParse(orderDetails.customer)
@@ -397,8 +398,35 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     onNext();
   };
 
+  // Validates the form and shows the confirmation modal before placing the order.
+  const handleConfirmClick = () => {
+    if (!validateAll()) {
+      const errors = [
+        ...Object.values(customerErrors),
+        ...Object.values(shippingErrors),
+      ].filter(Boolean);
+
+      errors.map((error) => toast.error(error));
+      return;
+    }
+
+    if (pickupTimeValidationError) {
+      toast.error(pickupTimeValidationError);
+      return;
+    }
+
+    if (!selectedBranch) {
+      toast.error("Please select a branch.");
+      return;
+    }
+
+    setShowOrderConfirmation(true);
+  };
+
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
+    setShowOrderConfirmation(false);
+
     if (!validateAll()) {
       const errors = [
         ...Object.values(customerErrors),
@@ -734,7 +762,7 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
       {/* CTA */}
       <>
         <IconButton
-          onClick={isSubmitStep ? handlePlaceOrder : handleNext}
+          onClick={isSubmitStep ? handleConfirmClick : handleNext}
           disabled={isActionPending || isNextDisabled}
           text={
             isActionPending
@@ -813,6 +841,102 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
           , and delivery service guidelines, including use of your provided
           contact details and delivery location to process the order.
         </p>
+      )}
+      {showOrderConfirmation && (
+        <Modal
+          title="Confirm your order"
+          subTitle="Please review the details below before placing your order."
+          onClose={() => setShowOrderConfirmation(false)}
+        >
+          <div className="space-y-4">
+            {/* Branch & fulfillment */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <DynamicIcon name="Store" size={15} className="text-slate-400 shrink-0" />
+                <span className="text-sm font-medium text-slate-700">
+                  {selectedBranch?.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <DynamicIcon name="Truck" size={15} className="text-slate-400 shrink-0" />
+                <span className="text-sm text-slate-600 capitalize">
+                  {orderDetails.fulfillmentType}
+                </span>
+              </div>
+              {isDelivery && (
+                <div className="flex items-start gap-2">
+                  <DynamicIcon name="MapPin" size={15} className="mt-0.5 text-slate-400 shrink-0" />
+                  <span className="text-sm text-slate-600">
+                    {[line1, line2, city, province].filter(Boolean).join(", ")}
+                  </span>
+                </div>
+              )}
+              {isDineIn && orderDetails.reservation && (
+                <div className="flex items-center gap-2">
+                  <DynamicIcon name="Calendar" size={15} className="text-slate-400 shrink-0" />
+                  <span className="text-sm text-slate-600">
+                    {new Date(orderDetails.reservation.scheduledAt).toLocaleString("en-PH", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}{" "}
+                    · {orderDetails.reservation.partySize} guest{orderDetails.reservation.partySize !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+              {isPickup && orderDetails.pickupTime && (
+                <div className="flex items-center gap-2">
+                  <DynamicIcon name="Clock" size={15} className="text-slate-400 shrink-0" />
+                  <span className="text-sm text-slate-600">
+                    Pickup:{" "}
+                    {new Date(orderDetails.pickupTime).toLocaleString("en-PH", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Items summary */}
+            <div className="rounded-xl border border-slate-200 px-4 py-3 space-y-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                {cartItems.length} item{cartItems.length !== 1 ? "s" : ""}
+              </p>
+              <div className="max-h-40 overflow-y-auto divide-y divide-slate-100">
+                {cartItems.map((item) => (
+                  <div key={getCartKey(item)} className="flex justify-between py-1.5 text-sm">
+                    <span className="text-slate-600 truncate mr-2">
+                      {item.quantity}× {item.name}
+                    </span>
+                    <span className="text-slate-800 font-medium shrink-0">
+                      {formatCurrency(item.price * item.quantity)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="flex items-center justify-between px-1">
+              <span className="text-sm font-semibold text-slate-700">Total</span>
+              <span className="text-lg font-bold text-brand-color-500">
+                {formatCurrency(displayTotalPrice)}
+              </span>
+            </div>
+
+            {/* Confirm button */}
+            <IconButton
+              onClick={handlePlaceOrder}
+              disabled={isActionPending}
+              text={isActionPending ? "Placing Order..." : "Confirm & Place Order"}
+              icon={{
+                name: isActionPending ? "Loader2" : "CheckCircle",
+                className: isActionPending ? "animate-spin" : "",
+              }}
+              className="bg-brand-color-500 hover:bg-brand-color-600 rounded-xl py-3 w-full"
+            />
+          </div>
+        </Modal>
       )}
       {showPaymentOptions && (
         <Modal
