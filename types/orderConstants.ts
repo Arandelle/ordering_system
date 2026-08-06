@@ -209,7 +209,7 @@ export const ORDER_ACTION_CONFIG: Record<
       paymentMethods: ["cod", "maya"],
     },
     [ORDER_STATUSES.PREPARING]: {
-      label: "Accept",
+      label: "Accept Order",
       variant: "text-[#ef4501] hover:text-[#c13500]",
       roles: ["admin"],
       paymentMethods: ["cod", "maya"],

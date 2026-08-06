@@ -37,6 +37,23 @@ const CONFIRM_REQUIRED_STATUSES: OrderStatus[] = [
   ORDER_STATUSES.COMPLETED,
 ];
 
+/** Solid button styles keyed by the target status (action purpose) */
+const ACTION_STYLE_MAP: Partial<Record<OrderStatus, string>> = {
+  // Accept / confirm — brand orange for early-stage progression
+  [ORDER_STATUSES.CONFIRMED]: "bg-[#ef4501] hover:bg-[#c13500] text-white",
+  [ORDER_STATUSES.PREPARING]: "bg-[#ef4501] hover:bg-[#c13500] text-white",
+  // Fulfillment — green for dispatch / ready
+  [ORDER_STATUSES.DISPATCH]: "bg-green-600 hover:bg-green-700 text-white",
+  [ORDER_STATUSES.READY_FOR_PICKUP]:
+    "bg-green-600 hover:bg-green-700 text-white",
+  // Completion — amber for final positive action
+  [ORDER_STATUSES.COMPLETED]: "bg-amber-500 hover:bg-amber-600 text-white",
+  // Destructive — red for cancel
+  [ORDER_STATUSES.CANCELLED]: "bg-red-500 hover:bg-red-600 text-white",
+  // Passive destructive — muted gray for expire
+  [ORDER_STATUSES.EXPIRED]: "bg-gray-500 hover:bg-gray-600 text-white",
+};
+
 export function OrderActionButton({ order, role }: Props) {
   const { mutate, isPending } = useAdminUpdateOrder();
   const [pendingAction, setPendingAction] = useState<OrderStatus | null>(null);
@@ -208,15 +225,18 @@ export function OrderActionButton({ order, role }: Props) {
         return (
           <IconButton
             key={nextStatus}
-            variant="underline"
             disabled={true}
-            className="text-xs p-0"
+            className={`rounded-md px-3 text-xs font-medium ${ACTION_STYLE_MAP[ORDER_STATUSES.PREPARING] ?? ""}`}
             title={`Reservation: ${formatDate(scheduled)} — You can start preparing at ${formatDate(earliest)}`}
             text={actionConfig.label}
           />
         );
       }
     }
+
+    const solidStyle =
+      ACTION_STYLE_MAP[nextStatus] ??
+      "bg-gray-500 hover:bg-gray-600 text-white";
 
     return (
       <IconButton
@@ -225,8 +245,7 @@ export function OrderActionButton({ order, role }: Props) {
         disabled={isBusy}
         isLoading={isBusy}
         text={isBusy ? "Updating..." : actionConfig.label}
-        variant="underline"
-        className={`text-xs p-1 ${actionConfig.variant}`}
+        className={`rounded-md px-3 text-xs font-medium ${solidStyle}`}
         title={actionConfig.label}
       />
     );
@@ -234,13 +253,13 @@ export function OrderActionButton({ order, role }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-1 items-center">
+      <div className="flex flex-row gap-1.5 items-center">
         {/* Forward-flow actions */}
         {forwardActions.map(renderActionButton)}
 
-        {/* Visual separator before destructive actions */}
+        {/* Vertical separator before destructive actions */}
         {forwardActions.length > 0 && destructiveActions.length > 0 && (
-          <div className="w-10 border-t border-stone-200 my-0.5" />
+          <div className="h-5 border-l border-stone-300 mx-0.5" />
         )}
 
         {/* Destructive actions (Cancel, Expire) */}

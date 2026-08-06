@@ -42,8 +42,6 @@ const SORT_OPTIONS = [
   { value: "total.totalAmount:asc", label: "Lowest total" },
 ];
 
-const COLUMN_COUNT = 5;
-
 interface OrdersTableProps {
   orders: OrderType[];
   isPending: boolean;
@@ -172,12 +170,13 @@ export default function OrdersTable({
     return PaymentStatusCapsule("unpaid");
   };
 
+  /** Column definitions — width % is applied via table-layout: fixed */
   const ORDERS_HEADER = [
-    "Customer",
-    "Total",
-    "Fulfillment/Branch",
-    "Status",
-    "Actions",
+    { label: "Customer", width: "w-[20%]" },
+    { label: "Total", width: "w-[12%]" },
+    { label: "Fulfillment/Branch", width: "w-[18%]" },
+    { label: "Status", width: "w-[15%]" },
+    { label: "Actions", width: "w-[30%]" },
   ];
 
   return (
@@ -235,7 +234,7 @@ export default function OrdersTable({
         <TableSkeleton
           columns={ORDERS_HEADER.length}
           rows={10}
-          headers={ORDERS_HEADER}
+          headers={ORDERS_HEADER.map((c) => c.label)}
         />
       ) : isError ? (
         <FetchError
@@ -247,15 +246,15 @@ export default function OrdersTable({
           onRetry={onRetry ?? (() => {})}
         />
       ) : (
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              {ORDERS_HEADER.map((head, index) => (
+              {ORDERS_HEADER.map((col, index) => (
                 <TableHead
                   key={index}
-                  className="px-4 py-4 uppercase text-xs font-semibold tracking-wider text-center"
+                  className={`px-4 py-4 uppercase text-xs font-semibold tracking-wider text-center ${col.width}`}
                 >
-                  {head}
+                  {col.label}
                 </TableHead>
               ))}
             </TableRow>
@@ -295,19 +294,21 @@ export default function OrdersTable({
                     }`}
                   >
                     {/* CUSTOMER */}
-                    <TableCell className="flex flex-col items-center gap-2">
-                      {isNewPaidOrder && (
-                        <span className="shrink-0 inline-flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full animate-pulse">
-                          New
-                        </span>
-                      )}
-                      <div className="normal-case flex flex-col">
-                        <span className="text-base font-medium text-brand-color-500 truncate">
-                          {fullname ?? "Customer Name"}
-                        </span>
-                        <span className="text-xs font-medium text-gray-600 truncate">
-                          {order.paymentInfo.customerPhone ?? "--"}
-                        </span>
+                    <TableCell className="px-4 py-4">
+                      <div className="flex flex-col items-center gap-1">
+                        {isNewPaidOrder && (
+                          <span className="shrink-0 inline-flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full animate-pulse">
+                            New
+                          </span>
+                        )}
+                        <div className="normal-case flex flex-col text-center">
+                          <span className="text-base font-medium text-brand-color-500 truncate">
+                            {fullname ?? "Customer Name"}
+                          </span>
+                          <span className="text-xs font-medium text-gray-600 truncate">
+                            {order.paymentInfo.customerPhone ?? "--"}
+                          </span>
+                        </div>
                       </div>
                     </TableCell>
 
@@ -337,7 +338,7 @@ export default function OrdersTable({
 
                     {/* STATUS */}
                     <TableCell className="px-4 py-4">
-                      <div className="flex flex-col place-self-start gap-1.5">
+                      <div className="flex flex-col gap-1.5">
                         <div className="flex gap-1.5 flex-wrap">
                           <StatusBadge status={order.status} />
                           {mayaCapsule}
@@ -352,18 +353,17 @@ export default function OrdersTable({
                     </TableCell>
 
                     {/* ACTIONS */}
-                    <TableCell className="px-4 py-4 w-xs">
-                      <div className=" grid grid-cols-2 gap-2">
-                        <IconButton
-                          onClick={() => router.push(`/orders/${order._id}`)}
-                          variant="underline"
-                          className="text-blue-600 hover:text-gray-700 text-xs"
-                          title="View details"
-                          text="View Details"
-                        />
+                    <TableCell className="px-4 py-4">
+                      <div className="flex flex-wrap gap-2 items-center justify-end">
                         <PermissionGuard permission="orders.update">
                           <OrderActionButton order={order} role="admin" />
                         </PermissionGuard>
+                        <IconButton
+                          onClick={() => router.push(`/orders/${order._id}`)}
+                          className="text-xs bg-blue-500 rounded-lg px-3"
+                          title="View details"
+                          text="View Details"
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

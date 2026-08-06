@@ -1,9 +1,9 @@
 // components/ui/Pagination.tsx
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { InputField } from "./FormComponents/InputField";
 import { useState } from "react";
+import { IconButton } from "./buttons";
+import { SelectField, InputField } from "./FormComponents";
 
 interface PaginationProps {
   currentPage: number;
@@ -37,7 +37,7 @@ const getPaginationRange = (
   const half = Math.floor(siblingCount / 2);
 
   // Breakpoint: how close to the edges before we collapse one ellipsis
-  const leftBreakpoint = 1 + 2 + half;        // e.g. 4 for windowSize=7
+  const leftBreakpoint = 1 + 2 + half; // e.g. 4 for windowSize=7
   const rightBreakpoint = totalPages - 2 - half; // e.g. totalPages-3 for windowSize=7
 
   if (currentPage <= leftBreakpoint) {
@@ -96,13 +96,17 @@ export default function Pagination({
       <div className="flex items-center gap-8">
         <div className="flex justify-between gap-1">
           {/* Prev */}
-          <button
+          <IconButton
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-4 py-2 flex items-center justify-center rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft size={16} className="text-brand-color-500" />
-          </button>
+            icon={{
+              name: "ChevronLeft",
+              size: 16,
+              className: "text-brand-color-500",
+            }}
+            className="px-4 rounded-lg disabled:opacity-80"
+            variant="outline"
+          />
 
           {/* Pages */}
           {getPaginationRange(currentPage, totalPages, windowSize).map(
@@ -115,44 +119,41 @@ export default function Pagination({
                   ...
                 </span>
               ) : (
-                <button
+                <IconButton
                   key={`${page}-${index}`}
                   onClick={() => onPageChange(page as number)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    currentPage === page
-                      ? "bg-brand-color-500 text-white"
-                      : "border border-stone-200 text-stone-600 hover:bg-stone-100 cursor-pointer"
-                  }`}
-                >
-                  {page}
-                </button>
+                  className="px-4 rounded-lg"
+                  variant={currentPage === page ? "primary" : "outline"}
+                  text={String(page)}
+                />
               ),
           )}
-
           {/* Next */}
-          <button
+          <IconButton
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 flex items-center justify-center rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronRight size={16} className="text-brand-color-500" />
-          </button>
+            icon={{
+              name: "ChevronRight",
+              size: 16,
+              className: "text-brand-color-500",
+            }}
+            className="px-4 rounded-lg disabled:opacity-80"
+            variant="outline"
+          />
         </div>
 
         {onLimitChange && (
           <div className="flex items-center gap-2">
-            <select
+            <SelectField
               value={limit}
               onChange={(e) => onLimitChange(Number(e.target.value))}
-              className="border border-gray-200 px-2 py-2 rounded-lg cursor-pointer focus:outline-1 focus:outline-brand-color-600"
-            >
-              {limitOptions.map((opt, index) => (
-                <option key={index} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            <span>/ Page</span>
+              options={limitOptions.map((opt, index) => ({
+                label: String(opt),
+                value: String(opt),
+              }))}
+              className="text-xs"
+            />
+            <span>/Page</span>
           </div>
         )}
       </div>
@@ -177,12 +178,11 @@ export default function Pagination({
           onChange={(e) => setPageInput(e.target.value)}
           className="py-2 px-1.5 w-24 text-center"
         />
-        <button
+        <IconButton
           type="submit"
-          className="px-3 py-2 bg-brand-color-500 hover:bg-brand-color-600 cursor-pointer text-white rounded-lg"
-        >
-          Go
-        </button>
+          text="Go"
+          className="px-3 rounded-lg text-base"
+        />
       </form>
     </div>
   );
