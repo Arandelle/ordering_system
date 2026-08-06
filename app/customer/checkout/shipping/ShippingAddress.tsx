@@ -16,7 +16,7 @@ import Modal from "@/components/ui/Modal";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSettings } from "@/hooks/api/useSettings";
 import { IconButton } from "@/components/ui/buttons";
-import { buildEmbedUrl } from "@/lib/google-maps";
+import MapPreview from "../components/MapPreview";
 
 const DeliveryLocationPicker = dynamic(
   () => import("./DeliveryLocationPicker"),
@@ -296,14 +296,11 @@ const ShippingAddress = ({
 
       {/* Static map preview of the pinned delivery location */}
       {hasPinnedLocation && shippingAddress.coordinates && (
-        <div className="overflow-hidden rounded-xl border border-slate-200">
-          <iframe
-            title="Delivery location preview"
-            className="h-48 w-full border-0"
-            loading="lazy"
-            src={buildEmbedUrl(shippingAddress.coordinates.lat, shippingAddress.coordinates.lng)}
-          />
-        </div>
+        <MapPreview
+          lat={shippingAddress.coordinates.lat}
+          lng={shippingAddress.coordinates.lng}
+          className="mt-0"
+        />
       )}
 
       {/** How delivery calculated question */}

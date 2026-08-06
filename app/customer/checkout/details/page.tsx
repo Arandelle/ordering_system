@@ -10,10 +10,12 @@ import { trackInitiateCheckout } from "@/lib/metaPixel";
 import { ReservationPicker } from "../ReservationPicker";
 import { PickupTimePicker } from "../PickupTimePicker";
 import { useSettings } from "@/hooks/api/useSettings";
+import MapPreview from "../components/MapPreview";
 
 const page = () => {
   const {
     session,
+    selectedBranch,
     orderDetails,
     customerErrors,
     reservationErrors,
@@ -87,6 +89,15 @@ const page = () => {
           onChange={handlePickupTimeChange}
           error={pickupTimeError}
           operatingHours={settings?.operatingHours}
+        />
+      )}
+
+      {/* Branch location preview for pickup and dine-in orders */}
+      {(isPickup || isDineIn) && selectedBranch?.location && (
+        <MapPreview
+          isBranch
+          lat={selectedBranch.location.coordinates[1]}
+          lng={selectedBranch.location.coordinates[0]}
         />
       )}
     </>

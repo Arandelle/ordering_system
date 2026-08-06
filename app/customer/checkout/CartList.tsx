@@ -5,7 +5,7 @@ import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useSettings } from "@/hooks/api/useSettings";
 import { getStoreStatus } from "@/lib/storeStatus";
 import { normalizePsgcName } from "@/lib/psgcAddress";
-import { buildEmbedUrl } from "@/lib/google-maps";
+import MapPreview from "./components/MapPreview";
 import { Branch } from "@/types/branch";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -903,14 +903,21 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
 
             {/* Map preview and pin-vs-dropdown mismatch warnings */}
             {isDelivery && coordinates && (
-              <div className="overflow-hidden rounded-xl border border-slate-200">
-                <iframe
-                  title="Delivery location preview"
-                  className="h-40 w-full border-0"
-                  loading="lazy"
-                  src={buildEmbedUrl(coordinates.lat, coordinates.lng)}
-                />
-              </div>
+              <MapPreview
+                lat={coordinates.lat}
+                lng={coordinates.lng}
+                className="mt-0"
+                iframeClassName="h-40"
+              />
+            )}
+            {(isPickup || isDineIn) && selectedBranch?.location && (
+              <MapPreview
+                isBranch
+                lat={selectedBranch.location.coordinates[1]}
+                lng={selectedBranch.location.coordinates[0]}
+                className="mt-0"
+                iframeClassName="h-40"
+              />
             )}
             {isDelivery && pinnedCity && city && normalizePsgcName(pinnedCity) !== normalizePsgcName(city) && (
               <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
