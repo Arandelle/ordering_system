@@ -61,6 +61,15 @@ const page = () => {
 
   return (
     <>
+      {/* Branch location preview for pickup and dine-in orders */}
+      {(isPickup || isDineIn) && selectedBranch?.location && (
+        <MapPreview
+          isBranch
+          lat={selectedBranch.location.coordinates[1]}
+          lng={selectedBranch.location.coordinates[0]}
+        />
+      )}
+      
       <CustomerDetails
         customerData={orderDetails.customer}
         errors={customerErrors}
@@ -89,15 +98,6 @@ const page = () => {
           onChange={handlePickupTimeChange}
           error={pickupTimeError}
           operatingHours={settings?.operatingHours}
-        />
-      )}
-
-      {/* Branch location preview for pickup and dine-in orders */}
-      {(isPickup || isDineIn) && selectedBranch?.location && (
-        <MapPreview
-          isBranch
-          lat={selectedBranch.location.coordinates[1]}
-          lng={selectedBranch.location.coordinates[0]}
         />
       )}
     </>

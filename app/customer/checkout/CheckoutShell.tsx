@@ -1,19 +1,20 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { CheckoutHeader } from "./CheckoutHeader";
 import { syne } from "@/app/font";
-import CartList from "./CartList";
+import CartList, { CartListHandle } from "./CartList";
 import BranchSelector from "./BranchSelector";
 import { CheckoutStep, useCheckout } from "@/contexts/CheckoutContext";
 import { FulfillmentSelector } from "./FulfillmentSelector";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import ProductRecommendations from "../components/ProductRecommendations";
 import { useCart } from "@/contexts/CartContext";
+import OrderConfirmationModal from "./components/OrderConfirmationModal";
 
 const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
-
-  const { cartItems} = useCart();
+  const { cartItems } = useCart();
 
   const {
     selectedBranch,
@@ -27,12 +28,28 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
   const isPickup = orderDetails.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
   const isDineIn = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
 
-  return (
-    <div className={`${syne.className} min-h-screen bg-slate-50`}>
-      <CheckoutHeader step={pathname} />
+  // ── Lifted state (shared between CartList and the confirmation modal) ──
+  const cartListRef = useRef<CartListHandle>(null);
+  const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<"maya" | "cod">("maya");
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 items-start">
+  // CartList calls this after validation passes — opens the modal at shell level
+  const handleConfirmOrder = () => setShowOrderConfirmation(true);
+
+  // User confirmed in the modal — delegates to CartList's placeOrder
+  const handlePlaceOrderFromModal = () => {
+    setShowOrderConfirmation(false);
+    cartListRef.current?.placeOrder();
+  };
+
+  return (
+    <div className={`${syne.className} h-screen bg-slate-50 overflow-y-auto hide-scrollbar`}>
+      <div className="sticky top-0 z-20">
+        <CheckoutHeader step={pathname} />
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
+        <div className=" grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 items-start">
           <div className="bg-white rounded-2xl border border-slate-100 p-6">
             {/* Shared header */}
             <div className="pb-6">
@@ -66,11 +83,17 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
             {children}
           </div>
 
-          <CartList
-            selectedBranch={selectedBranch}
-            orderDetails={orderDetails}
-            onNext={handleNext}
-          />
+          <div className="sticky top-20 z-10">
+            <CartList
+              ref={cartListRef}
+              selectedBranch={selectedBranch}
+              orderDetails={orderDetails}
+              onNext={handleNext}
+              onConfirmOrder={handleConfirmOrder}
+              selectedPayment={selectedPayment}
+              setSelectedPayment={setSelectedPayment}
+            />
+          </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg">
@@ -82,6 +105,18 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
           />
         </div>
       </div>
+
+      {/* Confirmation modal rendered at shell level so it sits above the sticky header in the DOM */}
+      <OrderConfirmationModal
+        isOpen={showOrderConfirmation}
+        onClose={() => setShowOrderConfirmation(false)}
+        onConfirm={handlePlaceOrderFromModal}
+        selectedBranch={selectedBranch}
+        orderDetails={orderDetails}
+        cartItems={cartItems}
+        displayTotalPrice={cartListRef.current?.getDisplayTotal() ?? 0}
+        isPlacingOrder={false}
+      />
     </div>
   );
 };
