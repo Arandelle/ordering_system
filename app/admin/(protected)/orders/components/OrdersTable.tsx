@@ -23,6 +23,7 @@ import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { IconButton } from "@/components/ui/buttons";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SelectField } from "@/components/ui/FormComponents";
+import { FetchError } from "@/components/ui/FetchError";
 
 // ─── Filter & sort option constants ──────────────────────────────────────────
 
@@ -46,6 +47,9 @@ const COLUMN_COUNT = 5;
 interface OrdersTableProps {
   orders: OrderType[];
   isPending: boolean;
+  isError: boolean;
+  error: Error | null;
+  onRetry?: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onSearch: () => void;
@@ -63,6 +67,9 @@ interface OrdersTableProps {
 export default function OrdersTable({
   orders,
   isPending,
+  isError,
+  error,
+  onRetry,
   searchQuery,
   onSearchChange,
   onSearch,
@@ -165,6 +172,14 @@ export default function OrdersTable({
     return PaymentStatusCapsule("unpaid");
   };
 
+  const ORDERS_HEADER = [
+    "Customer",
+    "Total",
+    "Fulfillment/Branch",
+    "Status",
+    "Actions",
+  ];
+
   return (
     <TableCard>
       <TableCardHeader
@@ -215,17 +230,27 @@ export default function OrdersTable({
           />
         )}
       </TableToolbar>
-      <div className="overflow-x-auto">
+
+      {isPending ? (
+        <TableSkeleton
+          columns={ORDERS_HEADER.length}
+          rows={10}
+          headers={ORDERS_HEADER}
+        />
+      ) : isError ? (
+        <FetchError
+          error={
+            error instanceof Error
+              ? error
+              : new Error("We couldn't load these products")
+          }
+          onRetry={onRetry ?? (() => {})}
+        />
+      ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              {[
-                "Customer",
-                "Total",
-                "Fulfillment/Branch",
-                "Status",
-                "Actions",
-              ].map((head, index) => (
+              {ORDERS_HEADER.map((head, index) => (
                 <TableHead
                   key={index}
                   className="px-4 py-4 uppercase text-xs font-semibold tracking-wider text-center"
@@ -344,22 +369,19 @@ export default function OrdersTable({
                   </TableRow>
                 );
               })
-            ) : isPending ? (
-              <TableSkeleton columns={COLUMN_COUNT} rows={7} />
             ) : (
               <TableRow>
-                <TableCell colSpan={COLUMN_COUNT}>
+                <TableCell colSpan={ORDERS_HEADER.length}>
                   <TableEmptyState
-                    icon="ShoppingCart"
-                    title="No orders found"
-                    description="No orders match your current filters. Try adjusting your search or filters."
+                    title="No Products Found"
+                    description="Try refreshing the page or use the search bar"
                   />
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </div>
+      )}
     </TableCard>
   );
 }

@@ -92,7 +92,7 @@ const OrdersPage = () => {
     (option) => option.key === statusFilter,
   )!;
 
-  const { data, isPending } = useAdminOrders({
+  const { data, isPending, isError, error, refetch } = useAdminOrders({
     page: currentPage,
     limit,
     search: appliedSearch,
@@ -155,6 +155,9 @@ const OrdersPage = () => {
       <OrdersTable
         orders={orders}
         isPending={isPending}
+        isError={isError}
+        error={error}
+        onRetry={refetch}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onSearch={handleSearch}
