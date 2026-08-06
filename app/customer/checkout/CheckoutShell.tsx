@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { CheckoutHeader } from "./CheckoutHeader";
 import { syne } from "@/app/font";
@@ -8,6 +8,8 @@ import CartList, { CartListHandle } from "./CartList";
 import BranchSelector from "./BranchSelector";
 import { CheckoutStep, useCheckout } from "@/contexts/CheckoutContext";
 import { FulfillmentSelector } from "./FulfillmentSelector";
+import { useSettings } from "@/hooks/api/useSettings";
+import { resolveCodAvailability } from "@/lib/codAvailability";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import ProductRecommendations from "../components/ProductRecommendations";
 import { useCart } from "@/contexts/CartContext";
@@ -28,6 +30,17 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
   const isPickup = orderDetails.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
   const isDineIn = orderDetails.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
 
+  // ── COD availability (tri-state resolution) ──
+  const { data: settings } = useSettings();
+  const isCodAvailable = useMemo(
+    () =>
+      resolveCodAvailability(
+        selectedBranch?.codEnabled,
+        settings?.codEnabled ?? false,
+      ),
+    [selectedBranch?.codEnabled, settings?.codEnabled],
+  );
+
   // ── Lifted state (shared between CartList and the confirmation modal) ──
   const cartListRef = useRef<CartListHandle>(null);
   const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
@@ -36,7 +49,7 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
   // CartList calls this after validation passes — opens the modal at shell level
   const handleConfirmOrder = () => setShowOrderConfirmation(true);
 
-  // User confirmed in the modal — delegates to CartList's placeOrder
+  // User confirmed in the modal — place the order with the selected payment method
   const handlePlaceOrderFromModal = () => {
     setShowOrderConfirmation(false);
     cartListRef.current?.placeOrder();
@@ -92,6 +105,7 @@ const CheckoutShell = ({ children }: { children: React.ReactNode }) => {
               onConfirmOrder={handleConfirmOrder}
               selectedPayment={selectedPayment}
               setSelectedPayment={setSelectedPayment}
+              isCodAvailable={isCodAvailable}
             />
           </div>
         </div>

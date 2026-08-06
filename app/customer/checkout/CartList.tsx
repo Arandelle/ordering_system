@@ -17,7 +17,7 @@ import useFormErrors from "./useFormErrors";
 import { usePathname, useRouter } from "next/navigation";
 import { CheckoutStep } from "@/contexts/CheckoutContext";
 import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
-import Modal from "@/components/ui/Modal";
+
 import { CreateOrderPayload } from "@/types/OrderTypes";
 import { authClient } from "@/lib/auth-client";
 import { apiClient } from "@/lib/apiClient";
@@ -44,7 +44,7 @@ import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import { getCheckoutActionMode } from "./checkoutAction";
 import { useBranchCapacity } from "@/hooks/api/useBranchCapacity";
-import { AppImage } from "@/components/AppImage";
+
 import { formatCurrency } from "@/helper/formatter/";
 import { Checkbox, InputField } from "@/components/ui/FormComponents";
 import { validatePickupTime } from "@/lib/operatingHours";
@@ -70,6 +70,8 @@ type CartListProps = {
   /** Payment method controlled by the parent (shared with the confirmation modal) */
   selectedPayment: "maya" | "cod";
   setSelectedPayment: (payment: "maya" | "cod") => void;
+  /** Whether COD is available for the selected branch (tri-state resolved) */
+  isCodAvailable: boolean;
 };
 
 /** Methods exposed to the parent via ref so CheckoutShell can trigger order placement */
@@ -94,9 +96,6 @@ type PaymentButtonProps = {
   id: "maya" | "cod";
   label: string;
   description: string;
-  badge?: string;
-  imageSrc: string;
-  imageAlt: string;
   selectedPayment: "maya" | "cod";
   setSelectedPayment: (payment: "maya" | "cod") => void;
 };
@@ -105,9 +104,6 @@ const PaymentButton = ({
   id,
   label,
   description,
-  badge,
-  imageSrc,
-  imageAlt,
   selectedPayment,
   setSelectedPayment,
 }: PaymentButtonProps) => {
@@ -115,40 +111,28 @@ const PaymentButton = ({
 
   return (
     <button
+      type="button"
       onClick={() => setSelectedPayment(id)}
-      className={`flex flex-col p-4 rounded-xl border-2 transition-all text-left w-full gap-6
+      className={`flex items-center justify-between p-3.5 rounded-xl border-2 transition-all text-left w-full
         ${
           isSelected
             ? "border-green-500 bg-green-50"
             : "border-gray-200 bg-white hover:border-gray-300"
         }`}
     >
-      <div className="flex items-start justify-between w-full">
-        <div className="w-20 h-20 rounded-xl bg-white flex items-center justify-center shrink-0">
-          <div className="w-full h-full object-contain">
-            <AppImage src={imageSrc} alt={imageAlt} />
-          </div>
-        </div>
-        <div
-          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
-          ${isSelected ? "border-green-500" : "border-gray-300"}`}
-        >
-          {isSelected && (
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-          )}
-        </div>
+      <div className="flex flex-col gap-0.5">
+        <span className={`text-sm font-semibold ${isSelected ? "text-green-700" : "text-slate-700"}`}>
+          {label}
+        </span>
+        <span className="text-xs text-gray-500">{description}</span>
       </div>
-
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-green-500">{label}</span>
-          {badge && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-600 font-medium">
-              {badge}
-            </span>
-          )}
-        </div>
-        <p className="text-sm text-gray-500">{description}</p>
+      <div
+        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
+        ${isSelected ? "border-green-500" : "border-gray-300"}`}
+      >
+        {isSelected && (
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+        )}
       </div>
     </button>
   );
@@ -163,6 +147,7 @@ const CartList = forwardRef<CartListHandle, CartListProps>(
       onConfirmOrder,
       selectedPayment,
       setSelectedPayment,
+      isCodAvailable,
     },
     ref,
   ) => {
@@ -370,7 +355,6 @@ const CartList = forwardRef<CartListHandle, CartListProps>(
     setPromoCardDiscountRate,
   ]);
 
-  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [isCodPending, setIsCodPending] = useState(false);
 
   // Expose placeOrder + display total to the parent (CheckoutShell) via ref
@@ -501,6 +485,14 @@ const CartList = forwardRef<CartListHandle, CartListProps>(
         "Some items with invalid quantities were removed from your order.",
       );
     }
+
+    // Track payment method selection for analytics
+    trackAddPaymentInfo({
+      content_category:
+        selectedPayment === "maya" ? "Online" : "Cash on Delivery",
+      currency: "PHP",
+      value: totalPrice,
+    });
 
     const orderPayload: CreateOrderPayload = {
       branchId: selectedBranch!._id,
@@ -784,6 +776,38 @@ const CartList = forwardRef<CartListHandle, CartListProps>(
           />
         </div>
       </div>
+
+      {/* Payment method selector — only shown when COD is available for this branch */}
+      {isSubmitStep && isCodAvailable && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            Payment Method
+          </p>
+          <div className="flex flex-col gap-2">
+            <PaymentButton
+              id="maya"
+              label="Pay Online"
+              description="Secure payment via QR or card"
+              selectedPayment={selectedPayment}
+              setSelectedPayment={setSelectedPayment}
+            />
+            <PaymentButton
+              id="cod"
+              label={
+                isDelivery
+                  ? "Cash on Delivery"
+                  : isDineIn
+                    ? "Pay at Branch"
+                    : "Cash on Pickup"
+              }
+              description="Pay in cash when you receive your order"
+              selectedPayment={selectedPayment}
+              setSelectedPayment={setSelectedPayment}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Estimated time hint */}
       <div className="flex items-center gap-2 px-1">
         <DynamicIcon name="Clock" size={13} className=" text-slate-400" />
@@ -873,72 +897,6 @@ const CartList = forwardRef<CartListHandle, CartListProps>(
           , and delivery service guidelines, including use of your provided
           contact details and delivery location to process the order.
         </p>
-      )}
-      {showPaymentOptions && (
-        <Modal
-          title="Choose Payment Method"
-          onClose={() => setShowPaymentOptions(false)}
-        >
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-3">
-              {/* Maya */}
-              <PaymentButton
-                id="maya"
-                label="Maya"
-                description="Pay via Maya e-wallet or card"
-                badge="Instant"
-                imageSrc="/images/maya-white.png"
-                imageAlt="Maya"
-                selectedPayment={selectedPayment}
-                setSelectedPayment={setSelectedPayment}
-              />
-              <PaymentButton
-                id="cod"
-                label={
-                  isDelivery
-                    ? "Cash on Delivery"
-                    : isDineIn
-                      ? "Pay at Branch"
-                      : "Cash on Pickup"
-                }
-                description="Pay when your order arrives"
-                badge="No fee"
-                imageSrc="/images/cod-icon.png"
-                imageAlt={
-                  isDelivery
-                    ? "Cash on Delivery"
-                    : isDineIn
-                      ? "Pay at Branch"
-                      : "Cash on Pickup"
-                }
-                selectedPayment={selectedPayment}
-                setSelectedPayment={setSelectedPayment}
-              />
-            </div>
-            {/* Confirm */}
-            <IconButton
-              disabled={isStoreClosed || !selectedPayment}
-              onClick={() => {
-                trackAddPaymentInfo({
-                  content_category:
-                    selectedPayment === "maya" ? "Maya" : "Cash on Delivery",
-                  currency: "PHP",
-                  value: totalPrice,
-                });
-                handlePlaceOrder();
-                setShowPaymentOptions(false);
-              }}
-              text="Confirm Payment"
-              variant="primary"
-              className="bg-green-500 hover:bg-green-600 rounded-lg py-3"
-            />
-            {isStoreClosed && storeClosedInfo && (
-              <p className="text-xs text-center text-red-500 mt-2">
-                {storeClosedInfo.body} — {storeClosedInfo.suggestion}
-              </p>
-            )}
-          </div>
-        </Modal>
       )}
     </div>
   );

@@ -41,6 +41,7 @@ import { logOrderCreated } from "@/services/activityLog.service";
 import { notifyNewOrder } from "@/services/notification.service";
 import { getAPIError } from "@/lib/getApiError";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { resolveCodAvailability } from "@/lib/codAvailability";
 
 const MINIMUM_AMOUNT = 100;
 
@@ -83,7 +84,12 @@ export async function POST(request: NextRequest) {
       Settings.findOne(),
     ]);
 
-    // 4.1 Resolve final delivery/pickup/dine-in details server-side.
+    // 4.1 Guard: COD must be available for this branch (tri-state resolution).
+    if (!resolveCodAvailability(branch.codEnabled, settings?.codEnabled ?? false)) {
+      throw new Error("Cash on Delivery is not available for this branch.");
+    }
+
+    // 4.2 Resolve final delivery/pickup/dine-in details server-side.
     const fulfillment = await resolveCheckoutFulfillment({
       fulfillmentType: body.fulfillmentType,
       branch,
