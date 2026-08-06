@@ -1,6 +1,25 @@
 # Changelog
 
 
+## 1.19.1 - Security Patches & Dependency Cleanup - 2026-08-06
+**Release Focus:** Resolved npm audit security vulnerabilities and removed unused dependencies to reduce attack surface and bundle size.
+
+### Changed
+- **Next.js updated to 16.3.0** — patches DoS, SSRF, cache poisoning, middleware bypass, and XSS vulnerabilities (CVEs from 16.1.3)
+- **eslint-config-next updated to 16.3.0** — aligned with Next.js version
+
+### Removed
+- **`crypto`** — deprecated empty npm shim; Node.js built-in crypto was not used anywhere
+- **`enhanced-resolve`** — webpack internal already pulled transitively by Next.js; not directly used
+- **`framer-motion`** — zero imports across the codebase
+- **`gsap`** — zero imports across the codebase
+- **`@react-email/preview-server`** (devDep) — not referenced in source or config
+- **`tsx`** (devDep) — not used in scripts, CI, or source files
+
+### Security
+- npm audit reduced from **47 vulnerabilities (26 high)** to **7 (1 high)** — remaining 7 are in dev/build toolchain only (esbuild in react-email preview, serialize-javascript in next-pwa's workbox dependency); no production runtime impact
+
+
 ## 1.19.0 - Admin Table Overhaul, Bulk Product Editing, Delivery Area Config & Customer Search - 2026-08-06
 **Release Focus:** Centralized admin table system with skeleton loading and consistent empty/error states, bulk product editing with multi-select, configurable delivery areas using PSGC barangay/city codes, customer-facing product search with debounce and recent searches, and map preview for pickup/reservation fulfillment.
 
