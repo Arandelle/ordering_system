@@ -41,6 +41,7 @@ const branchSchema = z.object({
   deliveryRadiusKm: z.number().min(0).nullable().default(null),
   openingSoon: z.boolean().default(false),
   isBusy: z.boolean().default(false),
+  codEnabled: z.enum(["global", "enabled", "disabled"]).default("global"),
   maxActiveOrders: z.number().min(1).nullable().default(null),
   maxReservationsPerHour: z.number().min(1).nullable().default(null),
   maxReservationsPerDay: z.number().min(1).nullable().default(null),
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, address, location, deliveryRadiusKm, openingSoon, isBusy, maxActiveOrders, maxReservationsPerHour, maxReservationsPerDay } = parsed.data;
+    const { name, address, location, deliveryRadiusKm, openingSoon, isBusy, codEnabled, maxActiveOrders, maxReservationsPerHour, maxReservationsPerDay } = parsed.data;
 
     // Generate unique branch code
     const count = await Branch.countDocuments();
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
       deliveryRadiusKm,
       openingSoon,
       isBusy,
+      codEnabled,
       maxActiveOrders,
       maxReservationsPerHour,
       maxReservationsPerDay,

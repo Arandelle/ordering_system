@@ -33,6 +33,7 @@ export interface SettingsType {
   freeDeliveryEnabled: boolean;
   freeDeliveryMinimumPurchase: number;
   freeDeliveryMaxDistanceKm: number;
+  codEnabled: boolean;
   deliveryAreas: DeliveryArea[];
 }
 

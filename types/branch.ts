@@ -12,6 +12,8 @@ export type BranchAddress = {
   province: string;
 };
 
+export type BranchCodOverride = "global" | "enabled" | "disabled";
+
 export type Branch = {
   _id: string;
   name: string;
@@ -25,6 +27,7 @@ export type Branch = {
   maxReservationsPerHour: number | null;
   maxReservationsPerDay: number | null;
   isBusy: boolean;
+  codEnabled: BranchCodOverride;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -45,6 +48,7 @@ export type BranchFormData = {
   deliveryRadiusKm: number | null;
   openingSoon: boolean;
   isBusy: boolean;
+  codEnabled: BranchCodOverride;
   maxActiveOrders: number | null;
   maxReservationsPerHour: number | null;
   maxReservationsPerDay: number | null;

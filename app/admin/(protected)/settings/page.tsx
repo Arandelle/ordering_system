@@ -37,6 +37,7 @@ type Action =
   | { type: "SET_FREE_DELIVERY_ENABLED"; value: boolean }
   | { type: "SET_FREE_DELIVERY_MINIMUM_PURCHASE"; value: number }
   | { type: "SET_FREE_DELIVERY_MAX_DISTANCE_KM"; value: number }
+  | { type: "SET_COD_ENABLED"; value: boolean }
   | { type: "ADD_DELIVERY_AREA"; cityCode: string; cityName: string }
   | { type: "REMOVE_DELIVERY_AREA"; cityCode: string }
   | { type: "LOAD_SETTINGS"; payload: SettingsType }
@@ -59,6 +60,7 @@ const DEFAULT_STATE: SettingsType = {
   freeDeliveryEnabled: false,
   freeDeliveryMinimumPurchase: 549,
   freeDeliveryMaxDistanceKm: 5,
+  codEnabled: false,
   deliveryAreas: [],
 };
 
@@ -127,6 +129,9 @@ function settingsReducer(state: SettingsType, action: Action): SettingsType {
 
     case "SET_FREE_DELIVERY_MAX_DISTANCE_KM":
       return { ...state, freeDeliveryMaxDistanceKm: action.value };
+
+    case "SET_COD_ENABLED":
+      return { ...state, codEnabled: action.value };
 
     case "ADD_DELIVERY_AREA": {
       // Prevent duplicates by cityCode
@@ -636,6 +641,34 @@ const SettingsPage = () => {
                 No delivery areas configured — all cities will be allowed.
               </p>
             )}
+          </div>
+        </>
+
+        {/** Cash on Delivery */}
+        <>
+          <h2 className="text-xl font-bold text-stone-800">Cash on Delivery</h2>
+          <div className="p-6 border border-gray-200 space-y-4">
+            <p className="text-sm text-stone-600">
+              Control Cash on Delivery (COD) globally. When enabled, customers
+              can pay in cash upon delivery or pickup. Individual branches can
+              override this setting to force COD on or off.
+            </p>
+            <Checkbox
+              label="Enable Cash on Delivery"
+              subLabel="Allow COD across all branches by default. Branches can override this individually."
+              checked={settings.codEnabled}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_COD_ENABLED",
+                  value: e.target.checked,
+                })
+              }
+            />
+            <p className="text-xs text-stone-400">
+              When disabled globally, branches set to &ldquo;Follow Global&rdquo;
+              will not accept COD. A branch can still force-enable COD by
+              setting its override to &ldquo;Enabled&rdquo;.
+            </p>
           </div>
         </>
 

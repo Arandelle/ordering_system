@@ -88,6 +88,15 @@ const SettingsSchema = new Schema(
       default: 5,
       min: 0,
     },
+    // Global Cash on Delivery toggle.
+    // When false, COD is disabled for all branches unless a branch explicitly
+    // overrides with its own codEnabled = "enabled".
+    // When true, COD is available for all branches unless a branch explicitly
+    // overrides with codEnabled = "disabled".
+    codEnabled: {
+      type: Boolean,
+      default: false,
+    },
     // Admin-configured list of cities where delivery is available.
     // Each entry stores the PSGC city code + display name for reliable matching.
     // When empty, no city-level restriction is applied.

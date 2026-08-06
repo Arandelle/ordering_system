@@ -21,6 +21,7 @@ const emptyForm: BranchFormData = {
   deliveryRadiusKm: null,
   openingSoon: false,
   isBusy: false,
+  codEnabled: "global",
   maxActiveOrders: null,
   maxReservationsPerHour: null,
   maxReservationsPerDay: null,

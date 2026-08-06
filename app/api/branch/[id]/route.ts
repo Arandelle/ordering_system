@@ -84,6 +84,7 @@ export async function PUT(
       deliveryRadiusKm,
       openingSoon,
       isBusy,
+      codEnabled,
       maxActiveOrders,
       maxReservationsPerHour,
       maxReservationsPerDay,
@@ -121,6 +122,7 @@ export async function PUT(
           ? null
           : Number(deliveryRadiusKm),
       ...(isBusy !== undefined && { isBusy }),
+      ...(codEnabled !== undefined && { codEnabled }),
       ...(maxActiveOrders !== undefined && {
         maxActiveOrders:
           maxActiveOrders === null || maxActiveOrders === ""

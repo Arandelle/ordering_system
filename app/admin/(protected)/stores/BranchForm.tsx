@@ -9,6 +9,7 @@ import {
   formatBranchDataForForm,
 } from "@/hooks/api/useBranch";
 import { Branch, BranchFormData, BranchFormErrors } from "@/types/branch";
+import { useSettings } from "@/hooks/api/useSettings";
 import {
   ToggleButton,
   InputField,
@@ -39,6 +40,7 @@ const emptyForm: BranchFormData = {
   deliveryRadiusKm: null,
   openingSoon: false,
   isBusy: false,
+  codEnabled: "global",
   maxActiveOrders: null,
   maxReservationsPerHour: null,
   maxReservationsPerDay: null,
@@ -64,6 +66,10 @@ const BranchForm = ({ branch }: BranchFormProps) => {
   const createBranch = useCreateBranch();
   const updateBranch = useUpdateBranch();
   const isSaving = createBranch.isPending || updateBranch.isPending;
+
+  // Fetch global settings to show what "Follow Global" resolves to
+  const { data: globalSettings } = useSettings();
+  const globalCodLabel = globalSettings?.codEnabled ? "On" : "Off";
 
   // PSGC: NCR cities for branch location
   const { data: ncrCities = [], isLoading: isLoadingCities } = useQuery({
@@ -205,6 +211,28 @@ const BranchForm = ({ branch }: BranchFormProps) => {
               onCheckedChange={(val) =>
                 setForm((prev) => ({ ...prev, isBusy: val }))
               }
+            />
+          </div>
+
+          {/* COD override — tri-state selector */}
+          <div className="border-t border-gray-100 pt-4">
+            <SelectField
+              label="Cash on Delivery"
+              subLabel="Override the global COD setting for this branch."
+              value={form.codEnabled}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  codEnabled: e.target.value as "global" | "enabled" | "disabled",
+                }))
+              }
+              options={[
+                { value: "global", label: `Follow Global (currently ${globalCodLabel})` },
+                { value: "enabled", label: "Enabled" },
+                { value: "disabled", label: "Disabled" },
+              ]}
+              leftIcon={<DynamicIcon name="Banknote" size={15} />}
+              className="text-sm"
             />
           </div>
 

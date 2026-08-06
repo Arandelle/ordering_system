@@ -88,6 +88,15 @@ const BranchSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    // Per-branch COD override (tri-state).
+    // "global"   → follow the global settings.codEnabled toggle.
+    // "enabled"  → force COD on for this branch regardless of global.
+    // "disabled" → force COD off for this branch regardless of global.
+    codEnabled: {
+      type: String,
+      enum: ["global", "enabled", "disabled"],
+      default: "global",
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Staff",
