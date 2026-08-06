@@ -69,6 +69,10 @@ const ShippingFieldsSchema = z.object({
   landmark: z.string().optional(),
   placeName: z.string().optional(),
   coordinates: CoordinatesSchema.optional(),
+  /** City resolved from the map pin — used to warn when dropdown city diverges. */
+  pinnedCity: z.string().optional(),
+  /** Barangay resolved from the map pin — used to warn when dropdown barangay diverges. */
+  pinnedLine2: z.string().optional(),
 });
 
 export const ShippingSchema = ShippingFieldsSchema.superRefine((value, ctx) => {

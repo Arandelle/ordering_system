@@ -2,7 +2,10 @@
 
 import { InputField } from "@/components/ui/FormComponents/InputField";
 import { PsgcAddressFields } from "@/components/customer/PsgcAddressFields";
-import type { PsgcAddressSelection } from "@/lib/psgcAddress";
+import {
+  type PsgcAddressSelection,
+  normalizePsgcName,
+} from "@/lib/psgcAddress";
 import { ModalType, useModalQuery } from "@/hooks/utils/useModalQuery";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { ShippingErrors } from "../useFormErrors";
@@ -10,9 +13,10 @@ import { OrderFormState } from "../FormSchema";
 import dynamic from "next/dynamic";
 import type { ResolvedDeliveryAddress } from "./DeliveryLocationPicker";
 import Modal from "@/components/ui/Modal";
-import { useMemo, useRef, useState } from "react";
-import { normalizePsgcName } from "@/lib/psgcAddress";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSettings } from "@/hooks/api/useSettings";
+import { IconButton } from "@/components/ui/buttons";
+import { buildEmbedUrl } from "@/lib/google-maps";
 
 const DeliveryLocationPicker = dynamic(
   () => import("./DeliveryLocationPicker"),
@@ -78,24 +82,49 @@ const ShippingAddress = ({
 
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
 
-  // Tracks the city from the last map pin reverse-geocode. Uses a ref instead
-  // of state to avoid React's bailout when the same city is pinned again —
-  // the warning must re-evaluate on every dropdown change.
-  const pinnedCityRef = useRef<string | undefined>(undefined);
+  // One-time seed for legacy drafts that have coordinates but no pinnedCity/pinnedLine2.
+  // After the first pin, these fields are saved in the draft and this effect is a no-op.
+  const didSeedRef = useRef(false);
+  useEffect(() => {
+    if (didSeedRef.current) return;
+    if (!shippingAddress.coordinates || shippingAddress.pinnedCity) return;
+    didSeedRef.current = true;
+    if (shippingAddress.city) {
+      onChange("shippingAddress", "pinnedCity", shippingAddress.city);
+    }
+    if (shippingAddress.line2) {
+      onChange("shippingAddress", "pinnedLine2", shippingAddress.line2);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time legacy draft migration
+  }, [shippingAddress.coordinates, shippingAddress.pinnedCity]);
 
-  // Re-evaluates whenever the dropdown city changes. The ref always holds
-  // the latest pinned city without React skipping the update.
+  // Warns when the map pin's city differs from the selected dropdown city.
+  // pinnedCity/pinnedLine2 are stored in form state so they persist across
+  // page refreshes (session draft) and are shared with the confirmation modal.
   const pinnedCityWarning = useMemo(() => {
-    const pinned = pinnedCityRef.current;
+    const pinned = shippingAddress.pinnedCity;
     if (!pinned || !shippingAddress.city) return undefined;
     if (normalizePsgcName(pinned) === normalizePsgcName(shippingAddress.city))
       return undefined;
     return `Your pin is in "${pinned}" but the selected city is "${shippingAddress.city}". The dropdown fields will be used as your delivery address.`;
-  }, [shippingAddress.city]);
+  }, [shippingAddress.pinnedCity, shippingAddress.city]);
+
+  // Warns when the map pin's barangay differs from the selected dropdown barangay.
+  const pinnedBarangayWarning = useMemo(() => {
+    const pinned = shippingAddress.pinnedLine2;
+    if (!pinned || !shippingAddress.line2) return undefined;
+    if (normalizePsgcName(pinned) === normalizePsgcName(shippingAddress.line2))
+      return undefined;
+    return `Your pin is in "${pinned}" but the selected barangay is "${shippingAddress.line2}". Make sure the dropdown matches your actual delivery location.`;
+  }, [shippingAddress.pinnedLine2, shippingAddress.line2]);
 
   const handleAddressResolved = (address: ResolvedDeliveryAddress) => {
     if (address.city) {
-      pinnedCityRef.current = address.city;
+      onChange("shippingAddress", "pinnedCity", address.city);
+    }
+
+    if (address.line2) {
+      onChange("shippingAddress", "pinnedLine2", address.line2);
     }
 
     if (address.placeName) {
@@ -140,7 +169,7 @@ const ShippingAddress = ({
 
   const { modal, openModal, closeModal } = useModalQuery();
   const [showProfileHint, setShowProfileHint] = useState(false);
-  const [showMapHint, setShowMapHint] = useState(false);
+  const [showMapHint, setShowMapHint] = useState(true);
   const hasPinnedLocation = Boolean(shippingAddress.coordinates);
   const pinnedLocationLabel =
     shippingAddress.placeName ||
@@ -155,28 +184,27 @@ const ShippingAddress = ({
   return (
     <div className="space-y-5 py-6">
       {shouldShowSyncProfileDetails && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={onSyncProfileDetails}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            <DynamicIcon name="RefreshCw" size={15} />
-            Sync from profile
-          </button>
-        </div>
+        <IconButton
+          type="button"
+          onClick={onSyncProfileDetails}
+          text="Sync from profile"
+          icon={{ name: "RefreshCw", size: 15 }}
+          variant="secondary"
+          className="rounded-md place-self-end"
+        />
       )}
 
       {isAuthenticated && (
         <div className="space-y-2 text-sm text-slate-600">
-          <button
+          <IconButton
             type="button"
             onClick={() => setShowProfileHint((current) => !current)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800"
-          >
-            <DynamicIcon name="CircleHelp" size={14} />
-            Why is my address filled?
-          </button>
+            variant="ghost"
+            icon={{ name: "CircleHelp" }}
+            text="Why is my address filled?"
+            className="text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-transparent"
+          />
+
           {showProfileHint && (
             <p className="text-xs leading-5 text-slate-500">
               Your saved profile address may be used as a starting point. Check
@@ -186,27 +214,29 @@ const ShippingAddress = ({
           )}
         </div>
       )}
-      <div className="flex items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-500">
-        <DynamicIcon
-          name="Info"
-          size={14}
-          className="mt-0.5 shrink-0 text-slate-400"
-        />
-        <p>
-          Use the map to pin your approximate location. Then confirm your exact
-          city and barangay using the fields below — these will be your delivery
-          address.
-        </p>
-      </div>
 
-      {pinnedCityWarning && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-          <DynamicIcon
-            name="AlertTriangle"
-            size={14}
-            className="mt-0.5 shrink-0 text-amber-500"
-          />
-          <p>{pinnedCityWarning}</p>
+      {(pinnedCityWarning || pinnedBarangayWarning) && (
+        <div className="space-y-2">
+          {pinnedCityWarning && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+              <DynamicIcon
+                name="AlertTriangle"
+                size={14}
+                className="mt-0.5 shrink-0 text-amber-500"
+              />
+              <p>{pinnedCityWarning}</p>
+            </div>
+          )}
+          {pinnedBarangayWarning && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+              <DynamicIcon
+                name="AlertTriangle"
+                size={14}
+                className="mt-0.5 shrink-0 text-amber-500"
+              />
+              <p>{pinnedBarangayWarning}</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -264,20 +294,36 @@ const ShippingAddress = ({
         />
       </button>
 
+      {/* Static map preview of the pinned delivery location */}
+      {hasPinnedLocation && shippingAddress.coordinates && (
+        <div className="overflow-hidden rounded-xl border border-slate-200">
+          <iframe
+            title="Delivery location preview"
+            className="h-48 w-full border-0"
+            loading="lazy"
+            src={buildEmbedUrl(shippingAddress.coordinates.lat, shippingAddress.coordinates.lng)}
+          />
+        </div>
+      )}
+
+      {/** How delivery calculated question */}
       <div className="space-y-2 text-sm text-slate-600">
-        <button
+        <IconButton
           type="button"
           onClick={() => setShowMapHint((current) => !current)}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800"
-        >
-          <DynamicIcon name="CircleHelp" size={14} />
-          How is delivery fee calculated?
-        </button>
+          variant="ghost"
+          icon={{ name: "CircleHelp" }}
+          text="How is delivery fee calculated?"
+          className="text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-transparent"
+        />
         {showMapHint && (
           <p className="text-xs leading-5 text-slate-500">
             Delivery fee and service coverage follow the pinned map coordinates.
             The city, area, barangay, and address fields add the delivery
-            details, so keep them accurate and matched with the pin.
+            details,{" "}
+            <span className="text-red-500">
+              so keep them accurate and matched with the pin.
+            </span>
           </p>
         )}
       </div>
@@ -374,16 +420,25 @@ const ShippingAddress = ({
             />
             {shippingAddress?.placeName && (
               <div className="w-full flex py-2">
-                <button
+                <IconButton
                   disabled={isResolvingAddress}
-                  className="ml-auto flex items-center gap-2 text-white bg-brand-color-500 hover:bg-brand-color-600 py-2 px-4 cursor-pointer disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                   onClick={closeModal}
-                >
-                  <DynamicIcon name="MapPin" />
-                  {isResolvingAddress
-                    ? "Searching place..."
-                    : shippingAddress?.placeName}
-                </button>
+                  icon={{
+                    name: isResolvingAddress ? "Loader2" : "Check",
+                    className: isResolvingAddress ? "animate-spin" : "",
+                  }}
+                  text={
+                    isResolvingAddress
+                      ? "Searching place..."
+                      : shippingAddress.placeName
+                  }
+                  className="ml-auto rounded-lg px-3"
+                  title={
+                    isResolvingAddress
+                      ? "Searching place..."
+                      : `Select ${shippingAddress.placeName}`
+                  }
+                />
               </div>
             )}
           </>

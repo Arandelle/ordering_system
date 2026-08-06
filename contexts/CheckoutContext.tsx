@@ -88,6 +88,8 @@ const getDefaultOrderDetails = (): OrderFormState => ({
     landmark: "",
     placeName: "",
     coordinates: undefined,
+    pinnedCity: "",
+    pinnedLine2: "",
   },
   reservation: {
     scheduledAt: String(new Date()),

@@ -4,6 +4,8 @@ import { useCreateOrder } from "@/hooks/api/customers/useCustomerOrders";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { useSettings } from "@/hooks/api/useSettings";
 import { getStoreStatus } from "@/lib/storeStatus";
+import { normalizePsgcName } from "@/lib/psgcAddress";
+import { buildEmbedUrl } from "@/lib/google-maps";
 import { Branch } from "@/types/branch";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -238,6 +240,8 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
     coordinates,
     placeName,
     barangayCode,
+    pinnedCity,
+    pinnedLine2,
   } = orderDetails?.shippingAddress;
   const {
     cartItems,
@@ -896,6 +900,30 @@ const CartList = ({ selectedBranch, orderDetails, onNext }: CartListProps) => {
                 </div>
               )}
             </div>
+
+            {/* Map preview and pin-vs-dropdown mismatch warnings */}
+            {isDelivery && coordinates && (
+              <div className="overflow-hidden rounded-xl border border-slate-200">
+                <iframe
+                  title="Delivery location preview"
+                  className="h-40 w-full border-0"
+                  loading="lazy"
+                  src={buildEmbedUrl(coordinates.lat, coordinates.lng)}
+                />
+              </div>
+            )}
+            {isDelivery && pinnedCity && city && normalizePsgcName(pinnedCity) !== normalizePsgcName(city) && (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                <DynamicIcon name="AlertTriangle" size={14} className="mt-0.5 shrink-0 text-amber-500" />
+                <p>Your pin is in &ldquo;{pinnedCity}&rdquo; but the selected city is &ldquo;{city}&rdquo;. The dropdown fields will be used as your delivery address.</p>
+              </div>
+            )}
+            {isDelivery && pinnedLine2 && line2 && normalizePsgcName(pinnedLine2) !== normalizePsgcName(line2) && (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                <DynamicIcon name="AlertTriangle" size={14} className="mt-0.5 shrink-0 text-amber-500" />
+                <p>Your pin is in &ldquo;{pinnedLine2}&rdquo; but the selected barangay is &ldquo;{line2}&rdquo;. Make sure the dropdown matches your actual delivery location.</p>
+              </div>
+            )}
 
             {/* Items summary */}
             <div className="rounded-xl border border-slate-200 px-4 py-3 space-y-2">
