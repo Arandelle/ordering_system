@@ -1,6 +1,54 @@
 # Changelog
 
 
+## 1.19.0 - Admin Table Overhaul, Bulk Product Editing, Delivery Area Config & Customer Search - 2026-08-06
+**Release Focus:** Centralized admin table system with skeleton loading and consistent empty/error states, bulk product editing with multi-select, configurable delivery areas using PSGC barangay/city codes, customer-facing product search with debounce and recent searches, and map preview for pickup/reservation fulfillment.
+
+### Added
+- **Reusable table system** — centralized `TableCard`, `TableCardHeader`, and `TableTools` components applied across all admin list pages; includes `TableSkeleton` for loading states and built-in empty/error state handling
+- **Bulk product editing** — admin can multi-select products from the table, open a bulk edit modal, and update multiple products at once via a dedicated bulk update route
+- **Online exclusive flag** — products can be marked as online-exclusive with a yellow badge; URL-based subcategory routing for cleaner navigation
+- **Configurable delivery areas** — admin can configure which cities/barangays are available for delivery per branch; replaced hard-coded polygon-based area restrictions with admin-driven configuration
+- **PSGC address codes** — customer addresses now store barangay and city PSGC codes; free delivery eligibility comparison switched from city name to PSGC brgy code for accuracy
+- **Branch address & delivery settings** — branch settings expanded to include full address and delivery configuration (area coverage, delivery fees, minimum order)
+- **City filtering from admin config** — customer-facing city select fields are filtered to only show admin-configured delivery locations
+- **Product search with debounce** — customers can search products with a debounced search input; results update in real-time without excessive API calls
+- **Recent search** — customer search retains a list of recent search queries for quick re-access
+- **Cart icon with count & price** — floating cart icon now shows item count and total price; includes a clear cart action
+- **Checkout confirmation** — customers see a confirmation dialog before placing an order, preventing accidental submissions
+- **Map preview on fulfillment** — pickup and reservation fulfillment screens show an embedded map preview of the branch location
+- **Customer pinned location iframe** — checkout displays an iframe map of the customer's pinned delivery location; on mount, compares the pinned city/barangay against the form fields and warns if they differ
+- **Archived accounts page** — admin can view archived (hard-deleted) customer accounts; cleanup cron adjusted from daily to weekly
+- **Deleted user filter & details** — admin user list can filter deleted accounts and view deletion details
+- **Order action confirmations** — admin order actions (status changes) now require confirmation; processes locked as idempotent to prevent duplicate actions
+- **Fulfillment type filtering & sorting** — admin orders table supports filtering by fulfillment type (delivery, pickup, dine-in) with sorting; shows "N/A" when fulfillment info is missing
+- **Breadcrumb navigation** — improved breadcrumbs using structured objects with links for better admin navigation
+- **Reusable product badge ribbon helper** — extracted badge ribbon logic into a shared helper for consistent rendering
+
+### Improved
+- **Admin table consistency** — all admin list pages (products, orders, users, inventory, etc.) now share the same table layout, loading skeleton, empty state, and error state handling
+- **Product visibility accuracy** — customer menu only shows categories with active products; coming soon products counted correctly (only when flag is true and go-live date hasn't passed)
+- **Coming soon query separation** — coming soon products fetched via a separate query for cleaner data handling and accurate count badges
+- **Online exclusive counting** — removed a separate API call for counting online exclusive products; now included in the main product query
+- **Section header simplification** — admin section headers accept action props directly, reducing prop drilling and boilerplate
+- **Error handling expansion** — added proper forbidden (403) and bad request (400) error responses for admin API routes
+- **Branch section grouping** — admin branch settings grouped by section for a more readable layout
+- **Close/open store banner** — banner is now dismissible (close/open) to avoid blocking the admin interface
+
+### Fixed
+- **Client-side subcategory filtering removed** — subcategory filtering no longer happens on the client side, preventing stale or incorrect results
+- **Category URL initialization** — fixed category state not initializing correctly from URL parameters on page load
+- **goLiveDate leak** — `goLiveDate` is only sent in the payload when the Coming Soon toggle is active, preventing accidental scheduling on regular products
+- **Product grid rerender** — extracted product grid into its own component and converted helper functions to JSX variables to prevent unnecessary rerenders
+- **Hard-coded city restrictions removed** — UI components no longer have hard-coded city name checks; delivery eligibility is now fully driven by admin configuration
+
+### Changed
+- Delivery area system no longer uses polygon-based geofencing; switched to admin-configured city/barangay lists
+- Free delivery eligibility now compares PSGC barangay codes instead of city name strings
+- Product view moved from inline modal to a dedicated `/product/view/[id]` route
+- Archived accounts cleanup cron changed from daily to weekly schedule
+
+
 ## 1.18.0 - Go-Live Scheduler, NEW Badge & Coming Soon Section - 2026-07-28
 **Release Focus:** Scheduled product launches with automatic go-live, "NEW!" badge for recently launched products, customer-facing coming soon section toggle, and a unified ribbon-style badge system across product cards and detail pages.
 
