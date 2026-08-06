@@ -57,7 +57,7 @@ export const FulfillmentCard = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border p-4 shadow-sm ${theme.card}`}
+      className={`relative overflow-hidden  border p-4  ${theme.card}`}
     >
       <div className="flex items-center gap-2 mb-3">
         <div
@@ -71,7 +71,7 @@ export const FulfillmentCard = ({
           {label}
         </p>
         <span
-          className={`ml-auto inline-flex items-center rounded-lg px-3 py-1 text-xs font-bold shadow-sm ${theme.badge}`}
+          className={`ml-auto inline-flex items-center rounded-lg px-3 py-1 text-xs font-bold  ${theme.badge}`}
         >
           {branchSnapshot?.name}
         </span>

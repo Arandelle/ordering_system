@@ -14,9 +14,9 @@ export const CustomerCard = ({ customerDetails }: CustomerCardProps) => {
   const { firstName, lastName, email, phone } = customerDetails;
   const fullName =
     [firstName, lastName].filter(Boolean).join(" ") || "Customer's Name";
-    
+
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className=" border border-gray-200 bg-white p-4 ">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center">
           <DynamicIcon name="UserIcon" size={14} className="text-gray-400" />

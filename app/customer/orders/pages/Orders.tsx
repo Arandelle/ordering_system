@@ -18,10 +18,11 @@ import {
   useCustomerOrderSummary,
 } from "@/hooks/api/customers/useCustomerOrders";
 import Pagination from "@/components/ui/Pagination";
-import { formatDate,formatCurrency } from "@/helper/formatter";
+import { formatDate, formatCurrency } from "@/helper/formatter";
 import { useOrderState, CustomerPaymentKey } from "../hooks/useOrderState";
 import { OrderActions } from "../components/OrderActions";
 import { OrderType } from "@/types/OrderTypes";
+import { IconButton } from "@/components/ui/buttons";
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 type Tab = {
@@ -169,21 +170,25 @@ function OrderCard({
 
   const actions = useOrderState(order);
   if (!actions) return null;
-  const {
-    status,
-    paymentStatusKey,
-    needsReview,
-    hasReview,
-    isCancelled,
-  } = actions;
+  const { status, paymentStatusKey, needsReview, hasReview, isCancelled } =
+    actions;
 
   const isPickup =
     order?.fulfillmentType && order.fulfillmentType === FULFILLMENT_TYPE.PICKUP;
   const isDineIn =
-    order?.fulfillmentType && order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
+    order?.fulfillmentType &&
+    order.fulfillmentType === FULFILLMENT_TYPE.DINE_IN;
 
-  const fulfillmentLabel = isDineIn ? "Reservation" : isPickup ? "Pickup" : "Delivery";
-  const fulfillmentIcon = isDineIn ? "UtensilsCrossed" : isPickup ? "Store" : "Truck";
+  const fulfillmentLabel = isDineIn
+    ? "Reservation"
+    : isPickup
+      ? "Pickup"
+      : "Delivery";
+  const fulfillmentIcon = isDineIn
+    ? "UtensilsCrossed"
+    : isPickup
+      ? "Store"
+      : "Truck";
   const fulfillmentStyle = isDineIn
     ? "bg-emerald-50 text-emerald-600"
     : isPickup
@@ -193,9 +198,9 @@ function OrderCard({
   return (
     <div
       className={[
-        "bg-white rounded-2xl border overflow-hidden transition-all duration-150",
+        "bg-white border overflow-hidden transition-all duration-150",
         needsReview || hasReview ? "border-green-200" : "border-gray-100",
-        isCancelled ? "opacity-70" : "hover:border-gray-200 hover:shadow-sm",
+        isCancelled ? "opacity-70" : "hover:border-gray-200",
       ].join(" ")}
     >
       {/* ── Top: image + body ── */}
@@ -250,23 +255,23 @@ function OrderCard({
             <p className="text-[15px] font-medium text-gray-900">
               {formatCurrency(Number(order.total?.totalAmount))}
             </p>
-            <OrderActions order={order} variant="compact" />
+            <OrderActions order={order} />
           </div>
         </div>
       </div>
 
       {/* ── Divider + view details ── */}
       <div className="border-t border-gray-100 px-4 py-2.5 flex justify-end gap-2">
-        <button
+        <IconButton
           onClick={onViewDetails}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-[12px] font-medium transition-colors hover:bg-gray-50"
-        >
-          <DynamicIcon name="Eye" size={13} />
-          View details
-        </button>
+          variant="outline"
+          icon={{ name: "Eye", size: 13 }}
+          text="View details"
+          className="text-xs rounded-lg"
+        />
       </div>
     </div>
-  ); 
+  );
 }
 
 const ITEM_PER_PAGE = 10;
@@ -412,12 +417,12 @@ const Orders = () => {
             );
           })}
 
-          <button
+          <IconButton
             onClick={() => router.push("/")}
-            className="px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap cursor-pointer bg-brand-color-500 text-white border border-brand-color-500 hover:bg-[#c13500] transition-colors"
-          >
-            + New order
-          </button>
+            icon={{ name: "Plus", size: 12 }}
+            text="New Order"
+            className="px-4 py-1.5 rounded-full text-[13px] whitespace-nowrap"
+          />
         </div>
 
         {/* Orders list */}

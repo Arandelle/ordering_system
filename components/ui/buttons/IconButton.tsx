@@ -23,6 +23,7 @@ export interface IconButtonProps extends ComponentPropsWithoutRef<"button"> {
     | "disabled"
     | "underline";
   isLoading?: boolean;
+  loadingText?: string;
   children?: React.ReactNode; // if provided, overrides text/icon layout entirely
 }
 
@@ -67,6 +68,7 @@ const IconButton = ({
   type = "button",
   variant = "primary",
   isLoading = false,
+  loadingText = "Loading...",
   disabled,
   children,
   ...props
@@ -104,7 +106,7 @@ const IconButton = ({
               className={icon.className}
             />
           )}
-          {text && <span>{text}</span>}
+          {text && <span>{isLoading ? loadingText : text}</span>}
           {!isLoading && icon && iconPosition === "right" && icon.name && (
             <DynamicIcon
               name={icon.name}
