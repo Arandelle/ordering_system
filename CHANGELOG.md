@@ -1,6 +1,43 @@
 # Changelog
 
 
+## 1.20.0 - COD Controls, Order Archiving, Rate Limiting & API Hardening - 2026-08-07
+**Release Focus:** Global and per-branch Cash on Delivery toggles, archiving of terminal orders older than 30 days, sliding-window API rate limiting across all routes, customer name normalization, and admin order table improvements.
+
+### Added
+- **Global & per-branch COD settings** — admin can enable/disable Cash on Delivery globally via Settings, and override per branch using a tri-state toggle (`global` / `enabled` / `disabled`); branch-level override takes precedence
+- **Centralized COD availability checker** — `resolveCodAvailability()` utility resolves whether COD is available for a given branch by combining the branch override with the global toggle
+- **COD checkout validation** — COD checkout route now verifies COD availability before accepting the order, preventing orders when COD is disabled
+- **Order archiving** — failed, cancelled, and expired orders older than 30 days can be soft-deleted (archived) by admin; `isDeleted` and `deletedAt` fields added to the Order model
+- **Combined archives page** — admin archived page now consolidates both archived accounts and archived orders into a single tabbed view
+- **Archived orders API** — `GET /api/admin/orders/archived` endpoint for listing archived orders with pagination
+- **API rate limiting** — sliding-window in-memory rate limiter (`lib/rateLimit.ts`) with per-IP tracking, lazy store pruning, and configurable presets (api: 60/min, auth: 10/min, strict: 20/min, write: 30/min, public: 100/min, webhook: 60/min)
+- **Rate limit wrapper** — `withRateLimit()` higher-order function wraps any Next.js route handler with rate limiting; returns 429 with `Retry-After` and `X-RateLimit-*` headers
+- **Rate limit presets applied** — all 93 API routes now wrapped with appropriate rate limit presets (auth endpoints use `auth`, dashboards/reports use `strict`, CRUD writes use `write`, public reads use `public`, webhooks use `webhook`)
+- **Rate limit tests** — 212-line test suite covering sliding-window math, preset enforcement, and edge cases
+- **Reusable payment method label** — `getPaymentMethodLabel()` helper returns human-readable labels based on payment method and fulfillment type (e.g. "Cash on Delivery", "Cash on Pickup", "Pay at Branch", "Online Payment")
+- **Payment method column** — admin orders table now includes a payment method column for quick identification
+- **Customer name normalization** — `normalizeName()` utility trims, collapses whitespace, and applies Title Case to customer names at checkout; applied across order creation, COD checkout, and promo card checkout
+- **Name trimming on Order model** — `firstName` and `lastName` fields now have `trim: true` at the schema level
+
+### Improved
+- **Detailed checkout errors** — cart list checkout now shows more descriptive error messages for better customer experience when orders fail
+- **Admin order action design** — redesigned order action buttons with improved layout; simplified `OrderActions` component by removing ~120 lines of duplicated logic
+- **Order details modal refactor** — `OrderDetailsModal` restructured for cleaner rendering and reduced prop drilling
+- **Admin orders loading state** — orders table now adopts the shared `TableSkeleton` loading state from the table UI system
+- **Admin orders delete button** — delete/archive button shown only on terminal orders older than 30 days, with proper payment method rendering
+- **City code in checkout API** — `cityCode` now included in checkout payload for accurate delivery fee estimation
+
+### Changed
+- Rate limiting middleware runs before all other route logic on every API endpoint
+- `OrderActions` component simplified using extracted `OrderActionButton` for consistent action rendering
+- `Pagination` component refactored for cleaner rendering
+
+### Security
+- All API routes protected with sliding-window rate limiting — brute-force and abuse protection across auth, admin, customer, and webhook endpoints
+- Auth endpoints limited to 10 requests/minute per IP to block credential stuffing
+
+
 ## 1.19.1 - Security Patches & Dependency Cleanup - 2026-08-06
 **Release Focus:** Resolved npm audit security vulnerabilities and removed unused dependencies to reduce attack surface and bundle size.
 
