@@ -369,13 +369,23 @@ const CartList = forwardRef<CartListHandle, CartListProps>(
   );
 
   // check if current step has any errors or empty required fields
-  const isDetailsIncomplete = !CustomerSchema.safeParse(orderDetails.customer)
-    .success;
-  const isShippingIncomplete =
-    isDelivery &&
-    !ShippingSchema.safeParse(orderDetails.shippingAddress).success;
-  const isReservationIncomplete =
-    isDineIn && !ReservationSchema.safeParse(orderDetails.reservation).success;
+  const customerResult = CustomerSchema.safeParse(orderDetails.customer);
+  const isDetailsIncomplete = !customerResult.success;
+  const customerValidationIssues = customerResult.success
+    ? []
+    : customerResult.error.issues;
+
+  const shippingResult = ShippingSchema.safeParse(orderDetails.shippingAddress);
+  const isShippingIncomplete = isDelivery && !shippingResult.success;
+  const shippingValidationIssues =
+    isDelivery && !shippingResult.success ? shippingResult.error.issues : [];
+
+  const reservationResult = ReservationSchema.safeParse(
+    orderDetails.reservation,
+  );
+  const isReservationIncomplete = isDineIn && !reservationResult.success;
+  const reservationValidationIssues =
+    isDineIn && !reservationResult.success ? reservationResult.error.issues : [];
   const pickupTimeValidationError = isPickup
     ? validatePickupTime(orderDetails.pickupTime, settings?.operatingHours)
     : null;
@@ -872,9 +882,44 @@ const CartList = forwardRef<CartListHandle, CartListProps>(
           selectedBranch &&
           !isAtCapacity &&
           !isStoreClosed && (
-            <p className="text-xs text-center text-red-400">
-              Complete all required fields to continue
-            </p>
+            <div className="rounded-2xl border border-red-200/60 bg-red-50 px-4 py-3 space-y-1">
+              <p className="text-xs font-semibold text-red-600 text-center">
+                Please fix the following to continue:
+              </p>
+              <ul className="list-disc list-inside space-y-0.5">
+                {isDetails &&
+                  customerValidationIssues.map((issue) => (
+                    <li key={issue.path.join(".")} className="text-xs text-red-500">
+                      {issue.message}
+                    </li>
+                  ))}
+                {isDetails &&
+                  reservationValidationIssues.map((issue) => (
+                    <li key={issue.path.join(".")} className="text-xs text-red-500">
+                      {issue.message}
+                    </li>
+                  ))}
+                {isDetails && isPickupTimeIncomplete && pickupTimeValidationError && (
+                  <li className="text-xs text-red-500">{pickupTimeValidationError}</li>
+                )}
+                {isShipping &&
+                  shippingValidationIssues.map((issue) => (
+                    <li key={issue.path.join(".")} className="text-xs text-red-500">
+                      {issue.message}
+                    </li>
+                  ))}
+                {isShipping && isDelivery && isDeliveryFeeLoading && (
+                  <li className="text-xs text-red-500">
+                    Calculating delivery fee…
+                  </li>
+                )}
+                {isShipping && isDelivery && isDeliveryFeeError && (
+                  <li className="text-xs text-red-500">
+                    Delivery fee could not be calculated
+                  </li>
+                )}
+              </ul>
+            </div>
           )}
       </>
       <Link
