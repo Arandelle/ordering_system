@@ -5,6 +5,11 @@ import { STAFF_ROLES, StaffRole } from "./types/staff";
 import { blockNonMaya, isMayaCallbackPath } from "./lib/mayaGuard";
 import { isRouteBlocked } from "./utils/pageStatus";
 import { COOKIE_NAMES, getAdminAuth } from "./lib/getAuth";
+import {
+  checkRateLimit,
+  getClientIP,
+  rateLimitResponse,
+} from "./lib/rateLimit";
 
 const getAdminLandingPath = (role?: StaffRole) =>
   role === STAFF_ROLES.CASHIER ? "/orders" : "/dashboard";
@@ -14,6 +19,26 @@ export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const { pathname } = url;
   const subdomain = hostname.split(".")[0];
+
+  // ── API rate limiting (runs before any routing logic) ──────────
+  if (pathname.startsWith("/api/")) {
+    
+    const ip = getClientIP(request);
+
+    const isAuthRoute = pathname.startsWith("/api/auth/");
+    const limit = isAuthRoute ? 15 : 120;
+    const prefix = isAuthRoute ? "proxy-auth" : "proxy-global";
+    const key = `${prefix}:${ip}`;
+
+    const result = checkRateLimit(key, limit, 60_000);
+    if (!result.allowed) {
+      return rateLimitResponse(result, pathname);
+    }
+
+    // API routes pass through — per-route rate limiting is handled
+    // by withRateLimit() in each route handler (lib/rateLimit.ts)
+    return NextResponse.next();
+  }
 
   console.log(
     "Hostname:",
@@ -123,6 +148,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|images|videos|gif|promos|policies|manifest\\.json|sw\\.js|workbox-.*|icons).*)",
+    "/((?!_next/static|_next/image|favicon.ico|images|videos|gif|promos|policies|manifest\\.json|sw\\.js|workbox-.*|icons).*)",
   ],
 };
