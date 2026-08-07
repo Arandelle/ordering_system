@@ -24,11 +24,8 @@ export const useUpdateAddress = () => {
       apiClient.put("/customer/address", {address}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user_address"] });
-      toast.success("Address updated successfully!");
+      // Success toast is handled by the calling component
     },
-
-    onError: (error: Record<string, string>) => {
-      toast.error(error?.error ?? "Something went wrong.");
-    },
+    // Error toast is handled by the calling component to show specific validation errors
   });
 };

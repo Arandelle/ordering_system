@@ -20,6 +20,9 @@ import Modal from "@/components/ui/Modal";
 import dynamic from "next/dynamic";
 import type { ResolvedDeliveryAddress } from "../../checkout/shipping/DeliveryLocationPicker";
 import { useSettings } from "@/hooks/api/useSettings";
+import { ShippingFieldsSchema } from "../../checkout/FormSchema";
+import MapPreview from "../../checkout/components/MapPreview";
+import { IconButton } from "@/components/ui/buttons";
 
 const DeliveryLocationPicker = dynamic(
   () => import("../../checkout/shipping/DeliveryLocationPicker"),
@@ -32,6 +35,35 @@ const DeliveryLocationPicker = dynamic(
     ),
   },
 );
+
+// ─── Validation using shared checkout schema ─────────────────────────────────
+
+// These must match the schemas in lib/validations.ts (used by ShippingFieldsSchema)
+const LINE1_MAX_LENGTH = 200;
+const LANDMARK_MAX_LENGTH = 100;
+const ZIP_CODE_MAX_LENGTH = 4;
+
+type AddressErrors = Partial<Record<keyof ShippingAddressForm, string>>;
+
+const validateAddress = (form: ShippingAddressForm): AddressErrors => {
+  const errors: AddressErrors = {};
+
+  // Use the same schema as checkout shipping address
+  const result = ShippingFieldsSchema.safeParse(form);
+
+  if (!result.success) {
+    // Extract field-specific errors
+    result.error.issues.forEach((issue) => {
+      const field = issue.path[0] as keyof ShippingAddressForm;
+      // Only store the first error for each field
+      if (!errors[field]) {
+        errors[field] = issue.message;
+      }
+    });
+  }
+
+  return errors;
+};
 
 const DEFAULT_ADDRESS_FORM: ShippingAddressForm = {
   placeName: "",
@@ -56,6 +88,7 @@ const AddressTab = () => {
 
   const [form, setForm] = useState<ShippingAddressForm>(DEFAULT_ADDRESS_FORM);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<AddressErrors>({});
 
   // Admin-configured delivery areas — empty means all NCR cities allowed.
   const { data: settings } = useSettings();
@@ -87,10 +120,38 @@ const AddressTab = () => {
   }, [myAddress]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+
+    // Enforce max lengths - but allow editing if value is being shortened
+    // (handles cases where existing data exceeds limits due to pre-validation saves)
+    if (
+      name === "line1" &&
+      value.length > LINE1_MAX_LENGTH &&
+      value.length >= form.line1.length
+    )
+      return;
+    if (
+      name === "landmark" &&
+      value.length > LANDMARK_MAX_LENGTH &&
+      value.length >= (form.landmark?.length || 0)
+    )
+      return;
+    if (
+      name === "zipCode" &&
+      value.length > ZIP_CODE_MAX_LENGTH &&
+      value.length >= form.zipCode.length
+    )
+      return;
+
     setForm((prev) => ({
       ...prev,
-      [event.target.name]: event.target.value,
+      [name]: value,
     }));
+
+    // Clear error when user types
+    if (errors[name as keyof AddressErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleAddressFieldChange = (
@@ -110,6 +171,9 @@ const AddressTab = () => {
 
   // Tracks the city from the last map pin reverse-geocode.
   const [pinnedCity, setPinnedCity] = useState<string | undefined>(undefined);
+  const [pinnedBarangay, setPinnedBarangay] = useState<string | undefined>(
+    undefined,
+  );
 
   const pinnedCityWarning = useMemo(() => {
     if (!pinnedCity || !form.city) return undefined;
@@ -118,6 +182,13 @@ const AddressTab = () => {
     return `Your pin is in "${pinnedCity}" but the selected city is "${form.city}". The dropdown fields will be used as your delivery address.`;
   }, [pinnedCity, form.city]);
 
+  const pinnedBarangayWarning = useMemo(() => {
+    if (!pinnedBarangay || !form.line2) return undefined;
+    if (normalizePsgcName(pinnedBarangay) === normalizePsgcName(form.line2))
+      return undefined;
+    return `Your pin is in "${pinnedBarangay}" but the selected barangay is "${form.line2}". Make sure the dropdown matches your actual delivery location.`;
+  }, [pinnedBarangay, form.line2]);
+
   // Reverse geocoding gives us address names, not PSGC codes. We update the
   // visible fields from those names, then clear old codes that may belong to a
   // previous city/barangay. PsgcAddressFields will match the new names against
@@ -125,6 +196,9 @@ const AddressTab = () => {
   const handleAddressResolved = (address: ResolvedDeliveryAddress) => {
     if (address.city) {
       setPinnedCity(address.city);
+    }
+    if (address.line2) {
+      setPinnedBarangay(address.line2);
     }
     setForm((prev) => ({
       ...prev,
@@ -163,12 +237,23 @@ const AddressTab = () => {
   };
 
   const handleSave = async () => {
+    // Validate address fields
+    const validationErrors = validateAddress(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      const firstError = Object.values(validationErrors)[0];
+      toast.error(firstError);
+      return;
+    }
+
     setSaving(true);
     try {
       await updateAddress.mutateAsync({ address: form });
-    } catch (error) {
-      console.error("Address save error:", error); // ← see full error in console
-      toast.error(error instanceof Error ? error.message : "Failed to update");
+      toast.success("Address updated successfully");
+    } catch (error: any) {
+      // apiClient throws { message, details } object, not Error instance
+      const errorMessage = error?.message || "Failed to update address";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -271,6 +356,15 @@ const AddressTab = () => {
             className="mt-2 shrink-0 text-slate-400"
           />
         </button>
+
+        {/* Static map preview of the pinned delivery location */}
+        {hasPinnedLocation && form.coordinates && (
+          <MapPreview
+            lat={form.coordinates.lat}
+            lng={form.coordinates.lng}
+            className="mt-0"
+          />
+        )}
       </div>
 
       {modal === "shipping-address-coordinates" && (
@@ -288,17 +382,42 @@ const AddressTab = () => {
           />
           {form.coordinates && (
             <div className="mt-4 flex justify-end">
-              <button
+              <IconButton
                 type="button"
                 onClick={closeModal}
-                className="inline-flex items-center gap-2 rounded-lg bg-brand-color-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-color-600"
-              >
-                <DynamicIcon name="MapPinned" size={15} />
-                {form.placeName || "Use this pin location"}
-              </button>
+                text={form.placeName || "Use this pin location"}
+                icon={{name: "MapPinned", size: 15}}
+                className="px-3 rounded-lg"
+              />
             </div>
           )}
         </Modal>
+      )}
+
+      {/* Warning when pinned location differs from selected address */}
+      {(pinnedCityWarning || pinnedBarangayWarning) && (
+        <div className="mb-4 space-y-2">
+          {pinnedCityWarning && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+              <DynamicIcon
+                name="AlertTriangle"
+                size={14}
+                className="mt-0.5 shrink-0 text-amber-500"
+              />
+              <p>{pinnedCityWarning}</p>
+            </div>
+          )}
+          {pinnedBarangayWarning && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+              <DynamicIcon
+                name="AlertTriangle"
+                size={14}
+                className="mt-0.5 shrink-0 text-amber-500"
+              />
+              <p>{pinnedBarangayWarning}</p>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -311,6 +430,8 @@ const AddressTab = () => {
             placeholder="House/Unit No., Street Name, Barangay"
             leftIcon={<DynamicIcon name="Home" />}
             required
+            maxLength={LINE1_MAX_LENGTH}
+            error={errors.line1}
           />
         </div>
         <PsgcAddressFields
@@ -327,6 +448,8 @@ const AddressTab = () => {
           placeholder="1100"
           leftIcon={<DynamicIcon name="Hash" />}
           required
+          maxLength={ZIP_CODE_MAX_LENGTH}
+          error={errors.zipCode}
         />
         <InputField
           label="Country"
@@ -344,23 +467,23 @@ const AddressTab = () => {
             onChange={handleInputChange}
             placeholder="Near SM, beside the church, etc."
             leftIcon={<DynamicIcon name="Navigation" />}
+            maxLength={LANDMARK_MAX_LENGTH}
+            error={errors.landmark}
           />
         </div>
       </div>
 
       <div className="mt-6 flex justify-end">
-        <button
+        <IconButton
           onClick={handleSave}
           disabled={saving}
-          className={`flex items-center gap-2 bg-brand-color-500 hover:bg-brand-color-600 text-white font-bold text-sm px-6 py-2.5 rounded-xl transition-colors disabled:opacity-60 cursor-pointer`}
-        >
-          {saving ? (
-            <DynamicIcon name="Loader2" size={15} className="animate-spin" />
-          ) : (
-            <DynamicIcon name="Save" size={15} />
-          )}
-          {saving ? "Saving..." : "Save Address"}
-        </button>
+          loadingText="Saving..."
+          isLoading={saving}
+          icon={{ name: "Save", size: 15 }}
+          text="Save Address"
+          title="Save your shipping address"
+          className="px-3 rounded-lg"
+        />
       </div>
     </SectionCard>
   );

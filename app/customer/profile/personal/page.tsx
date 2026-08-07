@@ -9,6 +9,8 @@ import { authClient } from "@/lib/auth-client";
 import { apiClient } from "@/lib/apiClient";
 import { fileToBase64 } from "@/utils/fileUtils";
 import { ImagePreviewModal } from "@/components/ImagePreviewModal";
+import { IconButton } from "@/components/ui/buttons";
+import { AppImage } from "@/components/AppImage";
 
 interface PersonalForm {
   firstName: string;
@@ -16,6 +18,19 @@ interface PersonalForm {
   email: string;
   phone: string;
 }
+
+// ─── Validation helpers ──────────────────────────────────────────────────────
+
+const PHONE_REGEX = /^(09|\+639)\d{9}$/;
+const PHONE_MAX_LENGTH = 13; // +639XXXXXXXXX = 13 chars
+
+const validatePhone = (phone: string): string | undefined => {
+  if (!phone) return undefined; // phone is optional
+  if (!PHONE_REGEX.test(phone)) {
+    return "Invalid phone. Use 09XXXXXXXXX or +639XXXXXXXXX";
+  }
+  return undefined;
+};
 
 // ─── Tab: Personal Info ───────────────────────────────────────────────────────
 
@@ -33,11 +48,29 @@ const PersonalTab = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+
+    // Enforce phone max length - but allow editing existing longer values
+    // (handles cases where existing data exceeds limits due to pre-validation saves)
+    if (
+      name === "phone" &&
+      value.length > PHONE_MAX_LENGTH &&
+      value.length >= form.phone.length
+    ) {
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+    // Clear phone error when user types
+    if (name === "phone") {
+      setPhoneError(undefined);
+    }
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,17 +103,35 @@ const PersonalTab = () => {
   };
 
   const handleSave = async () => {
+    // Validate phone before saving
+    const phoneValidationError = validatePhone(form.phone);
+    if (phoneValidationError) {
+      setPhoneError(phoneValidationError);
+      toast.error(phoneValidationError);
+      return;
+    }
+
     setSaving(true);
     try {
-      await authClient.updateUser({
+      // Better Auth returns errors in response object, not as thrown exceptions
+      const { error } = await authClient.updateUser({
         firstName: form.firstName,
         lastName: form.lastName,
         name: `${form.firstName} ${form.lastName}`.trim(),
         phone: form.phone,
       });
+
+      if (error) {
+        toast.error(error.message || "Failed to update profile");
+        return;
+      }
+
       toast.success("Profile updated successfully");
-    } catch {
-      toast.error("Failed to update profile");
+    } catch (error) {
+      // Catch network errors or unexpected exceptions
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update profile",
+      );
     } finally {
       setSaving(false);
     }
@@ -130,10 +181,10 @@ const PersonalTab = () => {
         <div className="flex items-center gap-5">
           <div className="relative">
             {(preview ?? session?.user?.image) ? (
-              <img
+              <AppImage
                 src={preview || session?.user?.image || ""}
                 alt="Avatar"
-                className="w-20 h-20 rounded-2xl object-cover border-2 border-gray-100"
+                className="cursor-pointer w-20 h-20 rounded-2xl object-cover border-2 border-gray-100"
                 onClick={() => setShowPreview(true)}
               />
             ) : (
@@ -144,28 +195,20 @@ const PersonalTab = () => {
               </div>
             )}
 
-            <button
-              className="absolute top-2 left-2 cursor-pointer"
+            <IconButton
+              className="absolute top-2 left-2 hover:bg-transparent p-0"
               onClick={() => setShowPreview(true)}
-            >
-              <DynamicIcon
-                name="Maximize2"
-                className="text-gray-400"
-                size={12}
-              />
-            </button>
+              icon={{ name: "Maximize2", size: 12 }}
+              variant="ghost"
+            />
 
-            <button
+            <IconButton
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingAvatar}
-              className="absolute -bottom-2 -right-2 w-7 h-7 bg-brand-color-500 hover:bg-brand-color-600 text-white rounded-lg flex items-center justify-center transition-colors shadow-md cursor-pointer"
-            >
-              <DynamicIcon
-                name={uploadingAvatar ? "Loader2" : "Pencil"}
-                size={12}
-                className={uploadingAvatar ? "animate-spin" : ""}
-              />
-            </button>
+              isLoading={uploadingAvatar}
+              icon={{ name: "Pencil", size: 12 }}
+              className="rounded-lg absolute -bottom-2 -right-2"
+            />
             <input
               ref={fileInputRef}
               type="file"
@@ -250,8 +293,10 @@ const PersonalTab = () => {
             type="tel"
             value={form.phone}
             onChange={handleChange}
-            placeholder="+63 9XX XXX XXXX"
+            placeholder="09XXXXXXXXX or +639XXXXXXXXX"
             leftIcon={<DynamicIcon name="Phone" />}
+            maxLength={PHONE_MAX_LENGTH}
+            error={phoneError}
           />
         </div>
 
@@ -269,18 +314,15 @@ const PersonalTab = () => {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button
+          <IconButton
             onClick={handleSave}
             disabled={saving}
-            className={`flex items-center gap-2 bg-brand-color-500 hover:bg-brand-color-600 text-white font-bold text-sm px-6 py-2.5 rounded-xl transition-colors disabled:opacity-60 cursor-pointer`}
-          >
-            {saving ? (
-              <DynamicIcon name="Loader2" size={15} className="animate-spin" />
-            ) : (
-              <DynamicIcon name="Save" size={15} />
-            )}
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
+            isLoading={saving}
+            icon={{ name: "Save", size: 15 }}
+            text="Save Changes"
+            loadingText="Saving..."
+            className="px-3 rounded-lg"
+          />
         </div>
       </SectionCard>
 

@@ -7,6 +7,11 @@ import { CustomerErrors } from "../useFormErrors";
 import { OrderFormState } from "../FormSchema";
 import { useState } from "react";
 
+// ─── Validation constants ────────────────────────────────────────────────────
+
+const PHONE_MAX_LENGTH = 13; // +639XXXXXXXXX = 13 chars
+const NOTES_MAX_LENGTH = 500;
+
 type customerDataProps = {
   customerData: OrderFormState["customer"];
   errors: CustomerErrors;
@@ -111,18 +116,30 @@ const CustomerDetails = ({
         type="tel"
         name="customerPhone"
         value={customerData.customerPhone}
-        onChange={(e) => onChange("customer", "customerPhone", e.target.value)}
+        onChange={(e) => {
+          // Enforce max length
+          if (e.target.value.length <= PHONE_MAX_LENGTH) {
+            onChange("customer", "customerPhone", e.target.value);
+          }
+        }}
         onBlur={(e) => onBlur("customerPhone", e.target.value)}
         leftIcon={<DynamicIcon name="Phone" size={15} />}
         error={errors.customerPhone}
         required
+        maxLength={PHONE_MAX_LENGTH}
       />
       <TextareaField
         label="Note (Optional)"
         placeholder="Enter any special instructions for your order"
         name="note"
         value={customerData.notes}
-        onChange={(e) => onChange("customer", "notes", e.target.value)}
+        onChange={(e) => {
+          // Enforce max length
+          if (e.target.value.length <= NOTES_MAX_LENGTH) {
+            onChange("customer", "notes", e.target.value);
+          }
+        }}
+        maxLength={NOTES_MAX_LENGTH}
       />
     </div>
   );

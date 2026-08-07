@@ -334,11 +334,18 @@ const ShippingAddress = ({
           type="text"
           name="line1"
           value={shippingAddress.line1}
-          onChange={(e) => onChange("shippingAddress", "line1", e.target.value)}
+          onChange={(e) => {
+            // Enforce max length (200 chars) - but allow editing existing longer values
+            const currentValue = shippingAddress.line1;
+            if (e.target.value.length <= 40 || e.target.value.length < currentValue.length) {
+              onChange("shippingAddress", "line1", e.target.value);
+            }
+          }}
           onBlur={(e) => onBlur("line1", e.target.value)}
           required
           leftIcon={<DynamicIcon name="MapPin" size={15} />}
           error={errors.line1}
+          maxLength={40}
         />
       </div>
 
@@ -365,13 +372,18 @@ const ShippingAddress = ({
           type="text"
           name="zipCode"
           value={shippingAddress.zipCode}
-          onChange={(e) =>
-            onChange("shippingAddress", "zipCode", e.target.value)
-          }
+          onChange={(e) => {
+            // Enforce 4-digit limit - but allow editing existing longer values
+            const currentValue = shippingAddress.zipCode;
+            if (e.target.value.length <= 4 || e.target.value.length < currentValue.length) {
+              onChange("shippingAddress", "zipCode", e.target.value);
+            }
+          }}
           onBlur={(e) => onBlur("zipCode", e.target.value)}
           required
           leftIcon={<DynamicIcon name="Hash" size={15} />}
           error={errors.zipCode}
+          maxLength={4}
         />
         <InputField
           label="Country"
@@ -391,11 +403,16 @@ const ShippingAddress = ({
         type="text"
         name="landmark"
         value={shippingAddress.landmark ?? ""}
-        onChange={(e) =>
-          onChange("shippingAddress", "landmark", e.target.value)
-        }
+        onChange={(e) => {
+          // Enforce max length (100 chars) - but allow editing existing longer values
+          const currentValue = shippingAddress.landmark ?? "";
+          if (e.target.value.length <= 40 || e.target.value.length < currentValue.length) {
+            onChange("shippingAddress", "landmark", e.target.value);
+          }
+        }}
         leftIcon={<DynamicIcon name="Flag" size={15} />}
         error={errors.landmark}
+        maxLength={40}
       />
 
       {modal === "shipping-address-coordinates" && (
