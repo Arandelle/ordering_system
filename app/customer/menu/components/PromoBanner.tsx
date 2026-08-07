@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { OrderItemImage } from "../../components/OrderItemImage";
-import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import { AppImage } from "@/components/AppImage";
+import { IconButton } from "@/components/ui/buttons";
 
 interface PromoCard {
   id: number;
@@ -25,7 +25,11 @@ const PromoBanner = ({
   const promoCards: PromoCard[] = [
     {
       id: 0,
-      image: "promos/COVER PHOTO V1.png",
+      image: "promos/Slider Banner 1.png",
+    },
+    {
+      id: 0.1,
+      image: "promos/Slider Banner 2.png",
     },
     {
       id: 1,
@@ -98,9 +102,9 @@ const PromoBanner = ({
             <div key={card.id} className="min-w-full relative">
               <div className="relative h-64 sm:h-72 md:h-80 lg:h-108">
                 <div className="w-full h-full">
-                  <OrderItemImage
-                    image={card.image}
-                    name={`Promo Banner ${card.id}`}
+                  <AppImage
+                    src={card.image}
+                    alt={`Promo Banner ${card.id}`}
                     className="aspect-video"
                   />
                   <div className="absolute bg-linear-to-t from-black/30 to-transparent inset-0" />
@@ -111,42 +115,43 @@ const PromoBanner = ({
         </div>
 
         {/* Navigation Buttons */}
-        <button
+        <IconButton
           onClick={goToPrevious}
-          className="absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
+          variant="secondary"
+          className="absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 rounded-full md:p-3 z-10"
           aria-label="Previous slide"
-        >
-          <DynamicIcon
-            name="ChevronLeft"
-            size={20}
-            className="text-gray-800 sm:w-6 sm:h-6"
-          />
-        </button>
-        <button
+          icon={{
+            name: "ChevronLeft",
+            size: 20,
+            className: "text-gray-800 sm:w-6 sm:h-6",
+          }}
+        />
+
+        <IconButton
           onClick={goToNext}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white p-2 md:p-3 shadow-lg transition-all z-10"
+          variant="secondary"
+          className="absolute top-1/2 right-2 sm:right-4 -translate-y-1/2 rounded-full md:p-3 z-10"
           aria-label="Next slide"
-        >
-          <DynamicIcon
-            name="ChevronRight"
-            size={20}
-            className="text-gray-800 sm:w-6 sm:h-6"
-          />
-        </button>
+          icon={{
+            name: "ChevronRight",
+            size: 20,
+            className: "text-gray-800 sm:w-6 sm:h-6",
+          }}
+        />
 
         {/* Dots Indicator */}
         <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {Array.from({ length: totalSlides }).map((_, index) => (
-            <button
+            <IconButton
               key={index}
               onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all cursor-pointer ${
-                currentIndex === index
-                  ? "bg-brand-color-500 w-8"
-                  : "bg-white/50 w-2 hover:bg-white/75"
-              }`}
+              variant={currentIndex === index ? "primary" : "secondary"}
+              className={`h-2 rounded-full p-0 ${
+                currentIndex === index ? "w-8" : " w-2 "
+              } `}
               aria-label={`Go to slide ${index + 1}`}
-            ></button>
+              title={`Go to slide ${index + 1}`}
+            />
           ))}
         </div>
       </div>
@@ -176,9 +181,9 @@ const PromoBanner = ({
                     >
                       <div className="relative h-64">
                         <div className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
-                          <OrderItemImage
-                            image={card.image}
-                            name={`Promo Banner ${card.id}`}
+                          <AppImage
+                            src={card.image}
+                            alt={`Promo Banner ${card.id}`}
                           />
                         </div>
                       </div>
@@ -193,41 +198,42 @@ const PromoBanner = ({
       {/* Navigation for multi-card view */}
       {totalSlides > 1 && (
         <>
-          <button
+          <IconButton
             onClick={goToPrevious}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white hover:bg-gray-100 p-3 rounded-full shadow-lg transition-all z-10"
+            variant="secondary"
+            className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-4 rounded-full p-3 z-10"
             aria-label="Previous slide"
-          >
-            <DynamicIcon
-              name="ChevronLeft"
-              size={24}
-              className="text-gray-800"
-            />
-          </button>
-          <button
+            icon={{
+              name: "ChevronLeft",
+              size: 24,
+              className: "text-gray-800",
+            }}
+          />
+
+          <IconButton
             onClick={goToNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white hover:bg-gray-100 p-3 rounded-full shadow-lg transition-all z-10"
+            variant="secondary"
+            className="absolute top-1/2 right-0 -translate-y-1/2 rounded-full p-3 z-10"
             aria-label="Next slide"
-          >
-            <DynamicIcon
-              name="ChevronRight"
-              size={24}
-              className="text-gray-800"
-            />
-          </button>
+            icon={{
+              name: "ChevronRight",
+              size: 24,
+              className: "text-gray-800",
+            }}
+          />
 
           <div className="flex justify-center gap-2 mt-6">
             {Array.from({ length: totalSlides }).map((_, index) => (
-              <button
+              <IconButton
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all ${
-                  currentIndex === index
-                    ? "bg-brand-color-500 w-8"
-                    : "bg-gray-300 w-2 hover:bg-gray-400"
-                }`}
+                variant={currentIndex === index ? "primary" : "secondary"}
+                className={`h-2 rounded-full p-0 ${
+                  currentIndex === index ? "w-8" : " w-2 "
+                } `}
                 aria-label={`Go to slide ${index + 1}`}
-              ></button>
+                title={`Go to slide ${index + 1}`}
+              />
             ))}
           </div>
         </>
