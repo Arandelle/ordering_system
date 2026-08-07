@@ -384,15 +384,22 @@ const OrderSummaryEmail = ({ order = mockOrder }: OrderSummaryEmailProps) => {
               )}
             </Section>
 
+            {/* ── Disclaimer ── */}
+            <Section className="px-8 pt-4 pb-2 text-center">
+              <Text className="text-[11px] text-gray-400 italic m-0">
+                This is a system-generated summary and does not serve as an official receipt.
+              </Text>
+            </Section>
+
             {/* ── Footer ── */}
             <Section className="px-8 py-5 border-t border-gray-100 text-center">
               <Text className="text-sm text-gray-500 mb-1">
-                Questions?{" "}
+                Questions? Email us at{" "}
                 <Link
-                  href="mailto:harrisoninasalbbq@gmail.com"
+                  href="mailto:info@jpfoodlab.com"
                   className="text-[#1D9E75]"
                 >
-                  Reply to this email
+                  info@jpfoodlab.com
                 </Link>
               </Text>
               <Text className="text-xs text-gray-600 m-0">

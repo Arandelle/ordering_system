@@ -109,7 +109,10 @@ export function ForgotPasswordEmail({
                   © {new Date().getFullYear()} Harrison's Inasál BBQ
                 </Text>
                 <Text className="text-[10px] text-gray-400 mt-1">
-                  Do not reply to this automated email.
+                  For questions, email{" "}
+                  <Link href="mailto:info@jpfoodlab.com" className="text-[#1D9E75]">
+                    info@jpfoodlab.com
+                  </Link>
                 </Text>
               </Section>
             </Section>

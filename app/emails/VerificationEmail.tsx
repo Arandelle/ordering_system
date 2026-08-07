@@ -102,8 +102,10 @@ export function VerificationEmail({
             {/* ── Footer ── */}
             <Section className="px-8 py-5 text-center">
               <Text className="text-xs text-gray-700 m-0">
-                © {new Date().getFullYear()} Harrison's Inasál BBQ · Do not
-                reply to this email.
+                © {new Date().getFullYear()} Harrison's Inasál BBQ · For questions, email{" "}
+                <Link href="mailto:info@jpfoodlab.com" className="text-[#1D9E75]">
+                  info@jpfoodlab.com
+                </Link>
               </Text>
             </Section>
 

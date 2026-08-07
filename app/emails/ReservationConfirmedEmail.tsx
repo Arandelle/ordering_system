@@ -166,12 +166,12 @@ const ReservationConfirmedEmail = ({
             {/* ── Footer ── */}
             <Section className="px-8 py-5 border-t border-gray-100 text-center">
               <Text className="text-sm text-gray-500 mb-1">
-                Questions?{" "}
+                Questions? Email us at{" "}
                 <Link
-                  href="mailto:harrisoninasalbbq@gmail.com"
+                  href="mailto:info@jpfoodlab.com"
                   className="text-[#1D9E75]"
                 >
-                  Reply to this email
+                  info@jpfoodlab.com
                 </Link>
               </Text>
               <Text className="text-xs text-gray-600 m-0">
