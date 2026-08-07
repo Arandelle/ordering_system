@@ -25,11 +25,10 @@ import { StatCard, StatCardProps } from "@/components/ui/StatCard";
 import type { ArchivedCustomersListResponse } from "@/types/CustomerAccountType";
 import { DynamicIcon } from "@/components/ui/DynamicIcon";
 import { IconButton } from "@/components/ui/buttons";
-import ArchivedCustomerDetailModal from "../components/ArchivedCustomerDetailModal";
+import ArchivedCustomerDetailModal from "@/app/admin/(protected)/customers/components/ArchivedCustomerDetailModal";
 import { formatCurrency, formatDate } from "@/helper/formatter";
-import SectionHeader from "@/app/admin/components/SectionHeader";
 
-const ArchivedCustomersPage = () => {
+const ArchivedAccountsTab = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
@@ -69,13 +68,7 @@ const ArchivedCustomersPage = () => {
   ];
 
   return (
-    <section className="space-y-6">
-      {/* Header */}
-      <SectionHeader
-        title="Archived Accounts"
-        subTitle="Permanently deleted customer account preserved for historical records"
-      />
-
+    <div className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {(
@@ -96,7 +89,7 @@ const ArchivedCustomersPage = () => {
 
       {/* Table */}
       <TableCard>
-        <TableCardHeader title="Recent archived accounts" />
+        <TableCardHeader title="Archived accounts" />
         <TableToolbar>
           <div className="w-full max-w-lg">
             <InputField
@@ -247,8 +240,8 @@ const ArchivedCustomersPage = () => {
           onClose={() => setSelectedArchivedId(null)}
         />
       )}
-    </section>
+    </div>
   );
 };
 
-export default ArchivedCustomersPage;
+export default ArchivedAccountsTab;

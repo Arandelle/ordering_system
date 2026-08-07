@@ -57,10 +57,10 @@ const AdminHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
       permission: "activity-logs.read",
     },
     {
-      label: "Archived Accounts",
-      path: "/customers/archived",
-      icon: "Users",
-      permission: "customers.read",
+      label: "Archived Records",
+      path: "/archived",
+      icon: "Archive",
+      permission: "archived.read",
     },
   ];
 
