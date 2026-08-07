@@ -36,7 +36,6 @@ export function VerificationEmail({
 
         <Section className="bg-white py-8 px-4">
           <Section className="max-w-[600px] mx-auto bg-white rounded-xl border border-gray-100">
-
             {/* ── Header ── */}
             <Section className="px-8 py-7 border-b border-gray-100 text-center">
               <Img
@@ -49,10 +48,9 @@ export function VerificationEmail({
                 Email Verification
               </Text>
               <Text className="text-sm text-gray-600 m-0">
-                Hi{" "}
-                <span className="font-medium text-black">{name}</span>,
-                you're almost there. Click the button below to verify your
-                email address and activate your account.
+                Hi <span className="font-medium text-black">{name}</span>,
+                you're almost there. Click the button below to verify your email
+                address and activate your account.
               </Text>
             </Section>
 
@@ -85,8 +83,8 @@ export function VerificationEmail({
               {/* Warning */}
               <Section className="bg-[#FAEEDA] rounded-lg px-3.5 py-2.5 mb-3">
                 <Text className="text-sm text-[#854F0B] m-0 leading-relaxed">
-                  If you didn't request this, ignore this email. No action
-                  is needed.
+                  If you didn't request this, ignore this email. No action is
+                  needed.
                 </Text>
               </Section>
 
@@ -100,15 +98,20 @@ export function VerificationEmail({
             </Section>
 
             {/* ── Footer ── */}
-            <Section className="px-8 py-5 text-center">
-              <Text className="text-xs text-gray-700 m-0">
-                © {new Date().getFullYear()} Harrison's Inasál BBQ · For questions, email{" "}
-                <Link href="mailto:info@jpfoodlab.com" className="text-[#1D9E75]">
+            <Section className="px-8 py-6 bg-gray-50 text-center">
+              <Text className="text-[10px] text-gray-400 m-0 uppercase tracking-widest">
+                © {new Date().getFullYear()} Harrison's Inasal & BBQ
+              </Text>
+              <Text className="text-[10px] text-gray-400 mt-1">
+                For questions, email{" "}
+                <Link
+                  href="mailto:info@jpfoodlab.com"
+                  className="text-[#1D9E75]"
+                >
                   info@jpfoodlab.com
                 </Link>
               </Text>
             </Section>
-
           </Section>
         </Section>
       </Html>

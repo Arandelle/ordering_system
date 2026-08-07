@@ -70,7 +70,13 @@ const mockOrder: OrderType = {
       quantity: 2,
       image: "",
     },
-    { productId: "p002", name: "Crispy Pata", price: 680, quantity: 1, image: "" },
+    {
+      productId: "p002",
+      name: "Crispy Pata",
+      price: 680,
+      quantity: 1,
+      image: "",
+    },
     {
       productId: "p003",
       name: "Combo Meal A",
@@ -88,7 +94,13 @@ const mockOrder: OrderType = {
           maxSelect: 1,
           maxQty: 1,
           items: [
-            { productId: "mp1", name: "Chicken Inasal", label: "Chicken Inasal", upgradePrice: 0, quantity: 1 },
+            {
+              productId: "mp1",
+              name: "Chicken Inasal",
+              label: "Chicken Inasal",
+              upgradePrice: 0,
+              quantity: 1,
+            },
           ],
         },
         {
@@ -101,13 +113,31 @@ const mockOrder: OrderType = {
           maxSelect: 2,
           maxQty: 2,
           items: [
-            { productId: "dp1", name: "Coke", label: "Coke", upgradePrice: 0, quantity: 1 },
-            { productId: "dp2", name: "Iced Tea", label: "Iced Tea", upgradePrice: 25, quantity: 1 },
+            {
+              productId: "dp1",
+              name: "Coke",
+              label: "Coke",
+              upgradePrice: 0,
+              quantity: 1,
+            },
+            {
+              productId: "dp2",
+              name: "Iced Tea",
+              label: "Iced Tea",
+              upgradePrice: 25,
+              quantity: 1,
+            },
           ],
         },
       ],
     },
-    { productId: "p004", name: "Mango Shake", price: 110, quantity: 2, image: "" },
+    {
+      productId: "p004",
+      name: "Mango Shake",
+      price: 110,
+      quantity: 2,
+      image: "",
+    },
   ],
   paymentInfo: {
     method: {
@@ -154,7 +184,7 @@ const OrderSummaryEmail = ({ order = mockOrder }: OrderSummaryEmailProps) => {
   } = order;
 
   const statusCopy = getStatusCopy(status);
-  const {firstName} = paymentInfo
+  const { firstName } = paymentInfo;
 
   return (
     <Tailwind>
@@ -294,7 +324,9 @@ const OrderSummaryEmail = ({ order = mockOrder }: OrderSummaryEmailProps) => {
                 return (
                   <Row key={i} className="border-b border-gray-100">
                     <Column className="py-2.5">
-                      <Text className="text-sm text-black m-0">{item.name}</Text>
+                      <Text className="text-sm text-black m-0">
+                        {item.name}
+                      </Text>
                       {/* Modifier breakdown for combo/set products */}
                       {hasModifiers &&
                         modifiers.map((group, gi) => (
@@ -387,25 +419,23 @@ const OrderSummaryEmail = ({ order = mockOrder }: OrderSummaryEmailProps) => {
             {/* ── Disclaimer ── */}
             <Section className="px-8 pt-4 pb-2 text-center">
               <Text className="text-[11px] text-gray-400 italic m-0">
-                This is a system-generated summary and does not serve as an official receipt.
+                This is a system-generated summary and does not serve as an
+                official receipt.
               </Text>
             </Section>
 
             {/* ── Footer ── */}
-            <Section className="px-8 py-5 border-t border-gray-100 text-center">
-              <Text className="text-sm text-gray-500 mb-1">
-                Questions? Email us at{" "}
-                <Link
-                  href="mailto:info@jpfoodlab.com"
-                  className="text-[#1D9E75]"
-                >
-                  info@jpfoodlab.com
-                </Link>
-              </Text>
-              <Text className="text-xs text-gray-600 m-0">
-                © 2026 Harrison's Inasál BBQ. All rights reserved.
-              </Text>
-            </Section>
+            <Section className="px-8 py-6 bg-gray-50 text-center">
+                <Text className="text-[10px] text-gray-400 m-0 uppercase tracking-widest">
+                  © {new Date().getFullYear()} Harrison's Inasal & BBQ
+                </Text>
+                <Text className="text-[10px] text-gray-400 mt-1">
+                  For questions, email{" "}
+                  <Link href="mailto:info@jpfoodlab.com" className="text-[#1D9E75]">
+                    info@jpfoodlab.com
+                  </Link>
+                </Text>
+              </Section>
           </Section>
         </Section>
       </Html>

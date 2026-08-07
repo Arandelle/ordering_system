@@ -266,20 +266,17 @@ const OrderMessageEmail = ({ order = mockOrder }: OrderMessageEmailProps) => {
             )}
 
             {/* ── Footer ── */}
-            <Section className="px-8 py-5 border-t border-gray-100 text-center">
-              <Text className="text-sm text-gray-500 mb-1">
-                Questions? Email us at{" "}
-                <Link
-                  href="mailto:info@jpfoodlab.com"
-                  className="text-[#1D9E75]"
-                >
-                  info@jpfoodlab.com
-                </Link>
-              </Text>
-              <Text className="text-xs text-gray-600 m-0">
-                © 2026 Harrison's Inasál BBQ. All rights reserved.
-              </Text>
-            </Section>
+            <Section className="px-8 py-6 bg-gray-50 text-center">
+                <Text className="text-[10px] text-gray-400 m-0 uppercase tracking-widest">
+                  © {new Date().getFullYear()} Harrison's Inasal & BBQ
+                </Text>
+                <Text className="text-[10px] text-gray-400 mt-1">
+                  For questions, email{" "}
+                  <Link href="mailto:info@jpfoodlab.com" className="text-[#1D9E75]">
+                    info@jpfoodlab.com
+                  </Link>
+                </Text>
+              </Section>
           </Section>
         </Section>
       </Html>

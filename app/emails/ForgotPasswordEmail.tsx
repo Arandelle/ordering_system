@@ -106,7 +106,7 @@ export function ForgotPasswordEmail({
               {/* Footer */}
               <Section className="px-8 py-6 bg-gray-50 text-center">
                 <Text className="text-[10px] text-gray-400 m-0 uppercase tracking-widest">
-                  © {new Date().getFullYear()} Harrison's Inasál BBQ
+                  © {new Date().getFullYear()} Harrison's Inasal & BBQ
                 </Text>
                 <Text className="text-[10px] text-gray-400 mt-1">
                   For questions, email{" "}
