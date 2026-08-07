@@ -2,21 +2,25 @@
 
 import z from "zod";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
-import { nameSchema } from "@/lib/validations";
+import {
+  nameSchema,
+  customerPhoneSchema,
+  customerEmailSchema,
+  orderNotesSchema,
+  addressLine1Schema,
+  zipCodeSchema,
+  landmarkSchema,
+} from "@/lib/validations";
 
 export const CustomerSchema = z.object({
   firstName: nameSchema,
   lastName: nameSchema,
 
-  customerPhone: z
-    .string()
-    .regex(/^(09|\+639)\d{9}$/, "Invalid PH mobile number"),
+  customerPhone: customerPhoneSchema,
 
-  customerEmail: z
-    .string()
-    .email("Invalid emaild address"),
+  customerEmail: customerEmailSchema,
 
-  notes: z.string().optional().or(z.literal("")),
+  notes: orderNotesSchema,
 });
 
 const CoordinatesSchema = z.object({
@@ -54,8 +58,8 @@ export const PickupTimeSchema = z
     return !isNaN(date.getTime());
   }, "Invalid date format");
 
-const ShippingFieldsSchema = z.object({
-  line1: z.string().min(1, "Please provide your house no."),
+export const ShippingFieldsSchema = z.object({
+  line1: addressLine1Schema,
   line2: z.string().min(1, "Please provide brgy/village"),
   city: z.string().min(1, "City is required"),
   cityCode: z.string().optional(),
@@ -65,9 +69,9 @@ const ShippingFieldsSchema = z.object({
   barangayCode: z.string().optional(),
   subMunicipality: z.string().optional(),
   subMunicipalityCode: z.string().optional(),
-  zipCode: z.string().min(1, "Postal code is required"),
+  zipCode: zipCodeSchema,
   country: z.literal("Philippines"),
-  landmark: z.string().optional(),
+  landmark: landmarkSchema,
   placeName: z.string().optional(),
   coordinates: CoordinatesSchema.optional(),
   /** City resolved from the map pin — used to warn when dropdown city diverges. */

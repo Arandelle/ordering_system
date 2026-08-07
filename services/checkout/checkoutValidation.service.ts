@@ -10,6 +10,12 @@ import { getPaidPromoCardBenefit } from "../promoCardBenefits";
 import { validateFulfillmentPayload } from "./checkoutFulfillment.service";
 import { Branch } from "@/models/Branch";
 import { toPHDate } from "@/utils/toPHDate";
+import {
+  nameSchema,
+  customerPhoneSchema,
+  customerEmailSchema,
+  orderNotesSchema,
+} from "@/lib/validations";
 
 /**
  * Guard:  check that a branch has not reached its reservation capacity
@@ -210,13 +216,47 @@ export async function assertValidPayload(
   body: CreateOrderPayload,
   session?: ClientSession,
 ): Promise<void> {
-  const { branchId, firstName, lastName, customerPhone, items } = body;
+  const { branchId, firstName, lastName, customerPhone, customerEmail, notes, items } = body;
 
   if (!branchId) throw new Error("Branch is required.");
-  if (!firstName || !lastName || !customerPhone)
-    throw new Error("Customer details are required.");
+  if (!firstName || !lastName)
+    throw new Error("Customer name is required.");
+  if (!customerPhone)
+    throw new Error("Customer phone is required.");
+  if (!customerEmail)
+    throw new Error("Customer email is required.");
   if (!items || !Array.isArray(items) || items.length === 0)
     throw new Error("Cart is empty.");
+
+  // Validate customer details format
+  const firstNameResult = nameSchema.safeParse(firstName);
+  if (!firstNameResult.success) {
+    throw new Error(`First name: ${firstNameResult.error.issues[0].message}`);
+  }
+
+  const lastNameResult = nameSchema.safeParse(lastName);
+  if (!lastNameResult.success) {
+    throw new Error(`Last name: ${lastNameResult.error.issues[0].message}`);
+  }
+
+  const phoneResult = customerPhoneSchema.safeParse(customerPhone);
+  if (!phoneResult.success) {
+    throw new Error(phoneResult.error.issues[0].message);
+  }
+
+  const emailResult = customerEmailSchema.safeParse(customerEmail);
+  if (!emailResult.success) {
+    throw new Error(emailResult.error.issues[0].message);
+  }
+
+  // Validate notes if provided
+  if (notes) {
+    const notesResult = orderNotesSchema.safeParse(notes);
+    if (!notesResult.success) {
+      throw new Error(notesResult.error.issues[0].message);
+    }
+  }
+
   await validateFulfillmentPayload(body, session);
 }
 

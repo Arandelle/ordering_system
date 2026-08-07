@@ -109,6 +109,35 @@ export const customerPhoneSchema = z
   .regex(/^(09|\+639)\d{9}$/, "Invalid phone number. Use 09XXXXXXXXX or +639XXXXXXXXX.");
 
 // ---------------------------------------------------------------------------
+// Address fields — shared between profile address and checkout shipping
+// ---------------------------------------------------------------------------
+
+/** Address Line 1: house/unit no., street, etc. Max 200 chars. */
+export const addressLine1Schema = z
+  .string()
+  .min(1, "Address line 1 is required")
+  .max(40, "Address line 1 is too long (max 40 characters)");
+
+/** ZIP code: Philippine 4-digit format. */
+export const zipCodeSchema = z
+  .string()
+  .regex(/^\d{4}$/, "Invalid ZIP code. Use 4-digit format (e.g., 1100)");
+
+/** Landmark: optional, max 100 chars. */
+export const landmarkSchema = z
+  .string()
+  .max(100, "Landmark is too long (max 100 characters)")
+  .optional()
+  .or(z.literal(""));
+
+/** Order notes: optional, max 500 chars. */
+export const orderNotesSchema = z
+  .string()
+  .max(500, "Notes are too long (max 500 characters)")
+  .optional()
+  .or(z.literal(""));
+
+// ---------------------------------------------------------------------------
 // Admin profile self-update — limited to name, phone, and image
 // ---------------------------------------------------------------------------
 
