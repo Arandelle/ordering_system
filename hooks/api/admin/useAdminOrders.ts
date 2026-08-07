@@ -28,6 +28,26 @@ export const useAdminUpdateOrder = () => {
 };
 
 /**
+ * Soft-delete a terminal order (cancelled/expired/failed) older than 30 days.
+ * The order is flagged as deleted and excluded from the main orders list.
+ */
+export const useAdminDeleteOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (orderId: string) =>
+      apiClient.delete(`/admin/orders/${orderId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Order archived successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to archive order");
+    },
+  });
+};
+
+/**
  * Process a refund on a completed or cancelled order.
  * Refund is independent of order status — tracked in the refund subdocument.
  */

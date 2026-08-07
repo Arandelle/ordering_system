@@ -509,3 +509,95 @@ export async function PATCH(
     await session.endSession();
   }
 }
+
+// ============================================
+// DELETE /api/orders/[id] — soft-delete (archive)
+// ============================================
+
+/** Terminal statuses eligible for archival */
+const ARCHIVABLE_STATUSES: string[] = [
+  ORDER_STATUSES.CANCELLED,
+  ORDER_STATUSES.EXPIRED,
+  ORDER_STATUSES.FAILED,
+];
+
+/** Minimum age before an order can be archived (30 days) */
+const MIN_ARCHIVE_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Soft-delete a terminal order.
+ * Sets isDeleted: true + deletedAt timestamp so the order is excluded
+ * from the main list but preserved for historical/audit purposes.
+ */
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDB();
+
+    const staff = await requireAdmin(request);
+    if (!canAccess(staff.role, "orders.delete")) {
+      return getAPIError("Forbidden", 403);
+    }
+
+    const { id } = await context.params;
+    if (!id || !getValidObjectId(id)) {
+      return getAPIError("Invalid order ID format");
+    }
+
+    const order = await Order.findById(id);
+    if (!order) {
+      return getAPIError("Order not found", 404);
+    }
+
+    // Branch scoping — admin can only archive orders from their branch
+    if (
+      staff.role === STAFF_ROLES.ADMIN &&
+      order.branchId?.toString() !== staff.branch?.toString()
+    ) {
+      return getAPIError(
+        "Access denied. This order does not belong to your branch",
+        403,
+      );
+    }
+
+    // Only terminal statuses can be archived
+    if (!ARCHIVABLE_STATUSES.includes(order.status)) {
+      return getAPIError(
+        `Cannot archive order with status "${order.status}". Only cancelled, expired, or failed orders can be archived.`,
+        400,
+      );
+    }
+
+    // Must be at least 30 days old
+    const orderAge = Date.now() - new Date(order.createdAt).getTime();
+    if (orderAge < MIN_ARCHIVE_AGE_MS) {
+      const daysOld = Math.floor(orderAge / (24 * 60 * 60 * 1000));
+      return getAPIError(
+        `Order is only ${daysOld} day${daysOld === 1 ? "" : "s"} old. Orders must be at least 30 days old before they can be archived.`,
+        400,
+      );
+    }
+
+    // Already archived — idempotent
+    if (order.isDeleted) {
+      return NextResponse.json({ message: "Order is already archived" });
+    }
+
+    await Order.updateOne(
+      { _id: id },
+      { $set: { isDeleted: true, deletedAt: new Date() } },
+    );
+
+    return NextResponse.json({
+      message: "Order archived successfully",
+      orderId: id,
+    });
+  } catch (error: any) {
+    console.error("DELETE /api/orders/[id] error:", error);
+    return getAPIError(error, 500, {
+      fallbackMessage: "Failed to archive order",
+    });
+  }
+}

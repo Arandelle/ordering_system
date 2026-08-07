@@ -19,7 +19,7 @@ const resourcePermissions: Record<
   Partial<Record<StaffRole, readonly string[]>>
 > = {
   dashboard:        { superadmin: R,    admin: R,    cashier: R },
-  orders:           { superadmin: RCU,  admin: RU,   cashier: RU },
+  orders:           { superadmin: FULL, admin: RU,   cashier: RU },
   products:         { superadmin: FULL, admin: R },
   categories:       { superadmin: FULL, admin: R },
   subcategories:    { superadmin: FULL, admin: R },
@@ -38,6 +38,7 @@ const resourcePermissions: Record<
   changelog:        { superadmin: R,    admin: R,    cashier: R },
   reservations:     { superadmin: R,    admin: R,    cashier: R },
   notifications:    { superadmin: R,    admin: R,    cashier: R },
+  archived:         { superadmin: R,    admin: R,    cashier: R },
 };
 
 /** Build the "resource.action" string sets from the resource-centric definition above */

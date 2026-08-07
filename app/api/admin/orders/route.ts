@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // MongoDB cannot have two top-level $or keys — the second silently overwrites the first,
     // which was breaking search on tabs that also need a payment-confirmation $or.
     const searchOr = match.$or as Record<string, any>[] | undefined;
-    const baseMatch = { ...match };
+    const baseMatch = { ...match, isDeleted: { $ne: true } };
     if (searchOr) delete baseMatch.$or;
 
     const filter: Record<string, any> = { ...baseMatch };

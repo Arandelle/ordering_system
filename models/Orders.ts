@@ -326,6 +326,10 @@ const OrderSchema = new Schema(
 
     reviewedAt: Date,
 
+    // Soft-delete — admin can archive terminal orders older than 30 days
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
+
     // used by Inngest sleepUntil + cron job safety net
     expiresAt: {
       type: Date,
