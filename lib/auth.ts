@@ -10,7 +10,7 @@ import { VerificationEmail } from "@/app/emails/VerificationEmail";
 import { ForgotPasswordEmail } from "@/app/emails/ForgotPasswordEmail";
 import { expo } from "@better-auth/expo"; // ✅ correct
 import { GMAIL_DOMAIN } from "@/lib/isAllowedEmails";
-import { isPasswordSecure } from "@/lib/validations";
+import { isPasswordSecure, nameSchema } from "@/lib/validations";
 
 const client = new MongoClient(process.env.MONGODB_URI!);
 const db = client.db();
@@ -143,9 +143,30 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      // Validate email domain + password complexity + terms acceptance on customer signup
+      // Validate email domain + password complexity + name rules + terms acceptance on customer signup
       if (ctx.path === "/sign-up/email") {
-        const body = ctx.body as { email?: string; password?: string; termsAcceptedAt?: string };
+        const body = ctx.body as {
+          email?: string;
+          password?: string;
+          firstName?: string;
+          lastName?: string;
+          termsAcceptedAt?: string;
+        };
+
+        // Validate names — reject emojis, special chars, numbers
+        const firstNameResult = nameSchema.safeParse(body.firstName);
+        if (!firstNameResult.success) {
+          throw new APIError("BAD_REQUEST", {
+            message: `First name: ${firstNameResult.error.issues[0].message}`,
+          });
+        }
+        const lastNameResult = nameSchema.safeParse(body.lastName);
+        if (!lastNameResult.success) {
+          throw new APIError("BAD_REQUEST", {
+            message: `Last name: ${lastNameResult.error.issues[0].message}`,
+          });
+        }
+
         const email = body.email?.trim().toLowerCase();
         if (email) {
           const domain = email.split("@")[1];
@@ -166,6 +187,27 @@ export const auth = betterAuth({
           throw new APIError("BAD_REQUEST", {
             message: "You must accept the Terms of Use and Privacy Policy to create an account",
           });
+        }
+      }
+
+      // Validate name fields on customer profile update
+      if (ctx.path === "/update-user") {
+        const body = ctx.body as { firstName?: string; lastName?: string };
+        if (body.firstName !== undefined) {
+          const result = nameSchema.safeParse(body.firstName);
+          if (!result.success) {
+            throw new APIError("BAD_REQUEST", {
+              message: `First name: ${result.error.issues[0].message}`,
+            });
+          }
+        }
+        if (body.lastName !== undefined) {
+          const result = nameSchema.safeParse(body.lastName);
+          if (!result.success) {
+            throw new APIError("BAD_REQUEST", {
+              message: `Last name: ${result.error.issues[0].message}`,
+            });
+          }
         }
       }
 

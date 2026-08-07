@@ -43,8 +43,24 @@ export const passwordSchema = z
 // Name — shared between staff and customer forms
 // ---------------------------------------------------------------------------
 
-/** Zod schema for a required, trimmed first/last name. */
-export const nameSchema = z.string().min(1).trim();
+/**
+ * Zod schema for a required, trimmed first/last name.
+ * Allows letters (including ñ/Ñ), spaces, hyphens, apostrophes, and periods.
+ * Rejects emojis, numbers, and special characters.
+ * Transforms to Title Case (e.g. "juan dela cruz" → "Juan Dela Cruz").
+ */
+export const nameSchema = z
+  .string()
+  .min(1, "Name is required")
+  .max(50, "Name is too long")
+  .trim()
+  .regex(
+    /^[a-zA-Z\s.'\-ñÑ]+$/,
+    "Only letters, spaces, hyphens, apostrophes, and periods are allowed",
+  )
+  .transform((val) =>
+    val.replace(/\s+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+  );
 
 // ---------------------------------------------------------------------------
 // Email — same format validation, different domain restrictions

@@ -6,6 +6,8 @@ import { getPromoCardConfig } from "@/lib/promoCardConfig";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
+import { normalizeName } from "@/utils/normalizeName";
+import { getAPIError, getInternalServerError } from "@/lib/getApiError";
 
 type PromoCardCheckoutBody = {
   firstName?: string;
@@ -36,14 +38,15 @@ export async function POST(request: NextRequest) {
     const customer = await requireBetterAuth(request);
 
     if (!customer?._id) {
-      return NextResponse.json(
-        { error: "Login is required to purchase a promo card." },
-        { status: 401 },
-      );
+      return getAPIError("Login is required to purchase a promo card.", 401);
     }
 
     const body = (await request.json()) as PromoCardCheckoutBody;
     assertValidPromoCardPayload(body);
+
+    // Normalize customer names for consistent storage
+    body.firstName = normalizeName(body.firstName);
+    body.lastName = normalizeName(body.lastName);
 
     const activePromoCard = await PromoCardPurchase.findOne({
       customerId: customer._id,
@@ -53,29 +56,25 @@ export async function POST(request: NextRequest) {
       .lean();
 
     if (activePromoCard) {
-      return NextResponse.json(
+      return getAPIError(
+        activePromoCard.status === "paid"
+          ? "You already have an active promo card."
+          : "You already have a pending promo card payment.",
+        409,
         {
-          error:
-            activePromoCard.status === "paid"
-              ? "You already have an active promo card."
-              : "You already have a pending promo card payment.",
-          promoCard: {
+          extra: {
             referenceNumber: activePromoCard.referenceNumber,
             status: activePromoCard.status,
           },
         },
-        { status: 409 },
       );
     }
 
     const promoCardConfig = await getPromoCardConfig();
     if (!promoCardConfig.enabled) {
-      return NextResponse.json(
-        {
-          error:
-            "Promo card is currently unavailable. Please contact marketing for final review.",
-        },
-        { status: 409 },
+      return getAPIError(
+        "Promo card is currently unavailable. Please contact marketing for final review.",
+        409,
       );
     }
 
@@ -136,18 +135,15 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      const response = await fetch(
-        getMayaCheckoutUrl(),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: getAuthHeader(),
-          },
-          body: JSON.stringify(payload),
+      const response = await fetch(getMayaCheckoutUrl(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: getAuthHeader(),
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
       const data = (await response.json()) as {
         checkoutId?: string;
@@ -190,20 +186,9 @@ export async function POST(request: NextRequest) {
       "code" in error &&
       error.code === 11000
     ) {
-      return NextResponse.json(
-        { error: "You already have an active promo card request." },
-        { status: 409 },
-      );
+      return getAPIError("You already have an active promo card request.", 409);
     }
 
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to create promo card checkout.",
-      },
-      { status: 400 },
-    );
+    return getInternalServerError("Failed to create promo card checkout.");
   }
 }

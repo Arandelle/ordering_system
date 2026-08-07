@@ -12,7 +12,8 @@ export async function GET(request: NextRequest) {
     const { page, limit, skip, sort, match } = parseRequestQuery(request, {
       exactFields: ["status"],
       searchFields: [
-        "paymentInfo.customerName",
+        "paymentInfo.firstName",
+        "paymentInfo.lastName",
         "paymentInfo.customerEmail",
         "paymentInfo.customerPhone",
         "status",

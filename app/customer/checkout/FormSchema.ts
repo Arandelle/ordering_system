@@ -2,10 +2,11 @@
 
 import z from "zod";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { nameSchema } from "@/lib/validations";
 
 export const CustomerSchema = z.object({
-  firstName: z.string().min(1, "Firstname is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: nameSchema,
+  lastName: nameSchema,
 
   customerPhone: z
     .string()

@@ -8,6 +8,7 @@ import { inngest } from "@/inngest/client";
 import { EMAIL_FROM, resend } from "@/lib/resend";
 import OrderMessageEmail from "@/app/emails/OrderMessageEmail";
 import { fetchBranch } from "../branch/branch.service";
+import { normalizeName } from "@/utils/normalizeName";
 
 export async function persistOrder(
   body: CreateOrderPayload,
@@ -26,14 +27,14 @@ export async function persistOrder(
 ) {
   const {
     branchId,
-    firstName,
-    lastName,
     customerEmail,
     customerPhone,
     paymentMethod,
     notes,
     reservation,
   } = body;
+  const firstName = normalizeName(body.firstName);
+  const lastName = normalizeName(body.lastName);
   const fulfillmentType = fulfillment?.fulfillmentType ?? FULFILLMENT_TYPE.DELIVERY;
   const shippingAddress = fulfillment?.shippingAddress ?? body.shippingAddress;
   const {

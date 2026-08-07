@@ -45,6 +45,7 @@ import { logOrderCreated } from "@/services/activityLog.service";
 import { notifyNewOrder } from "@/services/notification.service";
 import { getAPIError } from "@/lib/getApiError";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
+import { normalizeName } from "@/utils/normalizeName";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -68,6 +69,11 @@ export async function POST(request: NextRequest) {
     // 2. Parse & validate body early so we have branchId for capacity check
     const body: CreateOrderPayload = await request.json();
     await assertValidPayload(body, session);
+
+    // Normalize customer names once — downstream code (persistOrder, notifications) uses these
+    body.firstName = normalizeName(body.firstName);
+    body.lastName = normalizeName(body.lastName);
+
     if (body.paymentMethod !== "maya") {
       throw new Error("Invalid payment method for Maya checkout.");
     }

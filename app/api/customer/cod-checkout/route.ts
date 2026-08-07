@@ -42,6 +42,7 @@ import { notifyNewOrder } from "@/services/notification.service";
 import { getAPIError } from "@/lib/getApiError";
 import { FULFILLMENT_TYPE } from "@/types/orderConstants";
 import { resolveCodAvailability } from "@/lib/codAvailability";
+import { normalizeName } from "@/utils/normalizeName";
 
 const MINIMUM_AMOUNT = 100;
 
@@ -57,6 +58,11 @@ export async function POST(request: NextRequest) {
     // 2. Parse & validate body early so we have branchId for capacity check
     const body: CreateOrderPayload = await request.json();
     await assertValidPayload(body, session);
+
+    // Normalize customer names once — downstream code (persistOrder, notifications) uses these
+    body.firstName = normalizeName(body.firstName);
+    body.lastName = normalizeName(body.lastName);
+
     if (body.paymentMethod !== "cod") {
       throw new Error("Invalid payment method for COD checkout.");
     }

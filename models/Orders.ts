@@ -227,10 +227,12 @@ const OrderSchema = new Schema(
       firstName: {
         type: String,
         required: true,
+        trim: true,
       },
       lastName: {
         type: String,
         required: true,
+        trim: true,
       },
       customerEmail: {
         type: String,

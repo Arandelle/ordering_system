@@ -301,7 +301,7 @@ export default function OrdersTable({
                             New
                           </span>
                         )}
-                        <div className="normal-case flex flex-col text-center">
+                        <div className="capitalize flex flex-col text-center">
                           <span className="text-base font-medium text-brand-color-500 truncate">
                             {fullname ?? "Customer Name"}
                           </span>
