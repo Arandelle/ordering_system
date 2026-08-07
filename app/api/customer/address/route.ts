@@ -9,10 +9,20 @@ import {
 import { isValidCoordinate } from "@/helper/isValidCoordinates";
 import { getBadRequestError, getInternalServerError, getNotFoundError } from "@/lib/getApiError";
 import { withRateLimit } from "@/lib/rateLimit";
+import { addressLine1Schema, zipCodeSchema, landmarkSchema } from "@/lib/validations";
+import { z } from "zod";
 
 type AddressInput = {
+  line1?: string;
+  line2?: string;
   city?: string;
   cityCode?: string;
+  province?: string;
+  region?: string;
+  zipCode?: string;
+  country?: string;
+  landmark?: string;
+  placeName?: string;
   town?: string;
   municipality?: string;
   suburb?: string;
@@ -22,6 +32,14 @@ type AddressInput = {
     lng?: unknown;
   } | null;
 };
+
+// ─── Address validation schema ───────────────────────────────────────────────
+
+const addressValidationSchema = z.object({
+  line1: addressLine1Schema,
+  zipCode: zipCodeSchema,
+  landmark: landmarkSchema, // Already optional in validations.ts
+});
 
 async function _GET(request: Request) {
   try{
@@ -51,6 +69,19 @@ async function _PUT(req: Request) {
   }
 
   const addressPayload = address as AddressInput;
+
+  // Validate address fields (line1, zipCode, landmark)
+  const validationResult = addressValidationSchema.safeParse({
+    line1: addressPayload.line1,
+    zipCode: addressPayload.zipCode,
+    landmark: addressPayload.landmark,
+  });
+
+  if (!validationResult.success) {
+    const firstError = validationResult.error.issues[0];
+    return getBadRequestError(firstError.message);
+  }
+
   const coordinates = addressPayload.coordinates;
 
   if (coordinates) {
