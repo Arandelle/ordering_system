@@ -86,7 +86,8 @@ export default function OrdersTable({
   onResetFilters,
 }: OrdersTableProps) {
   const router = useRouter();
-  const { mutate: archiveOrder, isPending: isArchiving } = useAdminDeleteOrder();
+  const { mutate: archiveOrder, isPending: isArchiving } =
+    useAdminDeleteOrder();
   const [archiveTarget, setArchiveTarget] = useState<string | null>(null);
 
   const hasActiveFilters =
@@ -199,12 +200,18 @@ export default function OrdersTable({
 
   /** Column definitions — width % is applied via table-layout: fixed */
   const ORDERS_HEADER = [
-    { label: "Customer", width: "w-[20%]" },
+    { label: "Customer", width: "w-[18%]" },
     { label: "Total", width: "w-[12%]" },
-    { label: "Fulfillment - Method/Branch", width: "w-[18%]" },
+    { label: "Fulfillment/Branch", width: "w-[18%]" },
+    { label: "Payment Method", width: "w-[18%]" },
     { label: "Status", width: "w-[15%]" },
     { label: "Actions", width: "w-[30%]" },
   ];
+
+  const paymentMethodBadge = {
+    maya: "bg-green-100 text-green-700",
+    cash: "bg-orange-100 text-orange-700",
+  } as const;
 
   return (
     <TableCard>
@@ -348,18 +355,36 @@ export default function OrdersTable({
 
                     {/* FULFILLMENT - Method / BRANCH */}
                     <TableCell className="px-4 py-4 text-center">
-                      <p
-                        className={`text-xs font-semibold ${fulfillmentStyle}`}
+                      <div className="flex flex-col items-center gap-1">
+                        <span
+                          className={`text-xs font-semibold ${fulfillmentStyle}`}
+                        >
+                          {fulfillmentLabel}
+                        </span>
+
+                        {isPickup && order.pickupTime && (
+                          <p className="text-xs text-blue-400">
+                            {formatDate(order.pickupTime)}
+                          </p>
+                        )}
+                        <span className="text-xs text-stone-500">
+                          {order.branchSnapshot?.name ?? "—"}
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                          order.paymentInfo?.paymentMethod === "maya"
+                            ? paymentMethodBadge.maya
+                            : paymentMethodBadge.cash
+                        }`}
                       >
-                        {fulfillmentLabel} - {getPaymentMethodLabel(order.paymentInfo?.paymentMethod, order.fulfillmentType)}
-                      </p>
-                      {isPickup && order.pickupTime && (
-                        <p className="text-xs text-blue-400 mt-0.5">
-                          {formatDate(order.pickupTime)}
-                        </p>
-                      )}
-                      <span className="text-xs text-stone-500">
-                        {order.branchSnapshot?.name ?? "—"}
+                        {getPaymentMethodLabel(
+                          order.paymentInfo?.paymentMethod,
+                          order.fulfillmentType,
+                        )}
                       </span>
                     </TableCell>
 
