@@ -18,7 +18,11 @@ import { OrderType } from "@/types/OrderTypes";
 import { OrderActionButton } from "./OrderActionButton";
 import PermissionGuard from "@/lib/PermissionGuard";
 import { formatDate, formatCurrency } from "@/helper/formatter";
+import { getPaymentMethodLabel } from "@/helper/paymentMethodLabel";
+import { useAdminDeleteOrder } from "@/hooks/api/admin/useAdminOrders";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { IconButton } from "@/components/ui/buttons";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -82,12 +86,35 @@ export default function OrdersTable({
   onResetFilters,
 }: OrdersTableProps) {
   const router = useRouter();
+  const { mutate: archiveOrder, isPending: isArchiving } = useAdminDeleteOrder();
+  const [archiveTarget, setArchiveTarget] = useState<string | null>(null);
 
   const hasActiveFilters =
     statusFilter !== "all" ||
     fulfillmentTypeFilter !== "all" ||
     sortOption !== "default" ||
     searchQuery !== "";
+
+  /** Terminal statuses that can be archived */
+  const ARCHIVABLE: Set<string> = new Set([
+    ORDER_STATUSES.CANCELLED,
+    ORDER_STATUSES.EXPIRED,
+    ORDER_STATUSES.FAILED,
+  ]);
+
+  /** Check if an order is eligible for archival (terminal status + 30+ days old) */
+  const canArchiveOrder = (order: OrderType) => {
+    if (!ARCHIVABLE.has(order.status)) return false;
+    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    return Date.now() - new Date(order.createdAt).getTime() >= thirtyDaysMs;
+  };
+
+  const handleArchiveConfirm = () => {
+    if (!archiveTarget) return;
+    archiveOrder(archiveTarget, {
+      onSettled: () => setArchiveTarget(null),
+    });
+  };
 
   /** Payment status capsule — small pill showing Maya payment state */
   const PaymentStatusCapsule = (status: "awaiting" | "paid" | "unpaid") => {
@@ -174,7 +201,7 @@ export default function OrdersTable({
   const ORDERS_HEADER = [
     { label: "Customer", width: "w-[20%]" },
     { label: "Total", width: "w-[12%]" },
-    { label: "Fulfillment/Branch", width: "w-[18%]" },
+    { label: "Fulfillment - Method/Branch", width: "w-[18%]" },
     { label: "Status", width: "w-[15%]" },
     { label: "Actions", width: "w-[30%]" },
   ];
@@ -319,12 +346,12 @@ export default function OrdersTable({
                       </span>
                     </TableCell>
 
-                    {/* FULFILLMENT / BRANCH */}
+                    {/* FULFILLMENT - Method / BRANCH */}
                     <TableCell className="px-4 py-4 text-center">
                       <p
                         className={`text-xs font-semibold ${fulfillmentStyle}`}
                       >
-                        {fulfillmentLabel}
+                        {fulfillmentLabel} - {getPaymentMethodLabel(order.paymentInfo?.paymentMethod, order.fulfillmentType)}
                       </p>
                       {isPickup && order.pickupTime && (
                         <p className="text-xs text-blue-400 mt-0.5">
@@ -364,6 +391,18 @@ export default function OrdersTable({
                           title="View details"
                           text="View Details"
                         />
+                        {canArchiveOrder(order) && (
+                          <PermissionGuard permission="orders.delete">
+                            <IconButton
+                              onClick={() => setArchiveTarget(order._id)}
+                              disabled={isArchiving}
+                              className="text-xs bg-red-500 hover:bg-red-600 rounded-lg px-3"
+                              title="Archive this order"
+                              text="Archive"
+                              icon={{ name: "Trash2", size: 14 }}
+                            />
+                          </PermissionGuard>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -381,6 +420,18 @@ export default function OrdersTable({
             )}
           </TableBody>
         </Table>
+      )}
+
+      {archiveTarget && (
+        <ConfirmModal
+          title="Archive Order"
+          subTitle={`Order #${archiveTarget}`}
+          message="Are you sure you want to archive this order? It will be removed from the active orders list but preserved for historical records."
+          confirmLabel="Archive"
+          isLoading={isArchiving}
+          onClose={() => setArchiveTarget(null)}
+          onConfirm={handleArchiveConfirm}
+        />
       )}
     </TableCard>
   );

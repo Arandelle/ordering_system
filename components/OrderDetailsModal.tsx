@@ -7,6 +7,7 @@ import LoadingPage from "@/components/ui/LoadingPage";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useAdminRefundOrder } from "@/hooks/api/admin/useAdminOrders";
 import { useOrderBase } from "@/hooks/api/shared/useOrdersBase";
+import { getPaymentMethodLabel } from "@/helper/paymentMethodLabel";
 import {
   FULFILLMENT_TYPE,
   ORDER_STATUSES,
@@ -407,15 +408,7 @@ const OrderDetailsModal = ({ orderId, role, variant }: OrderDetailsProps) => {
               <div className="flex flex-col gap-0">
                 <SummaryRow
                   title="Method"
-                  subTitle={
-                    isMaya
-                      ? "Maya"
-                      : isPickup
-                        ? "Cash on Pickup"
-                        : isDineIn
-                          ? "Pay at Branch"
-                          : "Cash on Delivery"
-                  }
+                  subTitle={getPaymentMethodLabel(paymentInfo?.paymentMethod, orderToView?.fulfillmentType)}
                   className={{
                     subTitle: cn(
                       "text-xs font-semibold px-2 py-0.5 rounded-full",
