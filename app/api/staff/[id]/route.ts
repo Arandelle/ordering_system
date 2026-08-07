@@ -6,8 +6,9 @@ import { updateStaffSchema } from "@/lib/validations";
 import Staff from "@/models/Staff";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -42,7 +43,7 @@ export async function PATCH(
   }
 }
 
-export async function PUT(
+async function _PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -111,3 +112,6 @@ export async function PUT(
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");
+export const PUT = withRateLimit(_PUT, "write");

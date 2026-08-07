@@ -4,11 +4,12 @@ import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import { requireSuperAdmin } from "@/lib/getAuth";
+import { withRateLimit } from "@/lib/rateLimit";
 import mongoose from "mongoose";
 
 // ─── PATCH — update subcategory name ─────────────────────────────────────────
 
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -122,7 +123,7 @@ export async function PATCH(
 
 // ─── DELETE — remove subcategory ─────────────────────────────────────────────
 
-export async function DELETE(
+async function _DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
@@ -166,3 +167,6 @@ export async function DELETE(
     );
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");
+export const DELETE = withRateLimit(_DELETE, "write");

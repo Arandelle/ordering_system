@@ -8,6 +8,7 @@ import {
 } from "@/lib/deliveryArea";
 import { isValidCoordinate } from "@/helper/isValidCoordinates";
 import { getBadRequestError, getInternalServerError, getNotFoundError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 type AddressInput = {
   city?: string;
@@ -22,7 +23,7 @@ type AddressInput = {
   } | null;
 };
 
-export async function GET(request: Request) {
+async function _GET(request: Request) {
   try{
   const customer = await requireBetterAuth(request);
 
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
 
 }
 
-export async function PUT(req: Request) {
+async function _PUT(req: Request) {
   const customer = await requireBetterAuth(req);
 
   const body = (await req.json()) as { address?: unknown };
@@ -80,3 +81,6 @@ export async function PUT(req: Request) {
 
   return NextResponse.json({ success: true, address: user.shippingAddress });
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PUT = withRateLimit(_PUT, "write");

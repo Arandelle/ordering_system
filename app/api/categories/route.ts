@@ -1,12 +1,13 @@
 import cloudinary from "@/lib/cloudinary";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Category } from "@/models/Category";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
 import { getInternalServerError } from "@/lib/getApiError";
 
-export async function GET() {
+async function _GET() {
   try {
     await connectDB();
 
@@ -139,7 +140,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     await requireSuperAdmin(request);
@@ -182,3 +183,6 @@ export async function POST(request: NextRequest) {
     return getInternalServerError(error, "Failed to create category");
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

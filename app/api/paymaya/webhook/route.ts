@@ -3,6 +3,7 @@ import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
 import { getMayaClientIP, isMayaAllowedIP } from "@/lib/mayaGuard";
 import { connectDB } from "@/lib/mongodb";
 import { EMAIL_FROM, resend } from "@/lib/resend";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Inventory } from "@/models/Inventory";
 import { Order } from "@/models/Orders";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
@@ -52,7 +53,7 @@ export function getStatusSubject(
   }
 }
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   // Step 1: IP whitelisting
   // Maya does not use HMAC signatures - security is purely IP-based.
 
@@ -321,3 +322,5 @@ export async function POST(request: NextRequest) {
     return ack;
   }
 }
+
+export const POST = withRateLimit(_POST, "webhook");

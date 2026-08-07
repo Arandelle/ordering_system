@@ -6,6 +6,7 @@ import { User } from "@/models/User";
 import { Cart } from "@/models/Cart";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { withRateLimit } from "@/lib/rateLimit";
 
 const RETENTION_DAYS = 30;
 
@@ -20,7 +21,7 @@ const RETENTION_DAYS = 30;
  * Orders, reviews, and activity logs are preserved — they already
  * snapshot customer info and remain intact for historical records.
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     const customer = await requireBetterAuth(request);
@@ -79,3 +80,5 @@ export async function POST(request: NextRequest) {
     });
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

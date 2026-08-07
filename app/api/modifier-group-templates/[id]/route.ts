@@ -9,6 +9,7 @@ import { requireSuperAdmin } from "@/lib/getAuth";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { withRateLimit } from "@/lib/rateLimit";
 import { modifierItemSchema } from "@/types/modifier-zod";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ const templateUpdateSchema = z.object({
  * GET /api/modifier-group-templates/[id]
  * Fetch a single template with populated product references
  */
-export async function GET(
+async function _GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -136,7 +137,7 @@ export async function GET(
  * PUT /api/modifier-group-templates/[id]
  * Update an existing modifier group template
  */
-export async function PUT(
+async function _PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -212,7 +213,7 @@ export async function PUT(
  * Note: Products that reference this template will keep their embedded data
  * but the templateId link becomes stale
  */
-export async function DELETE(
+async function _DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -251,3 +252,7 @@ export async function DELETE(
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PUT = withRateLimit(_PUT, "write");
+export const DELETE = withRateLimit(_DELETE, "write");

@@ -1,8 +1,9 @@
 import { connectDB } from "@/lib/mongodb";
 import { getPromoCardConfig } from "@/lib/promoCardConfig";
 import { NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET() {
+async function _GET() {
   try {
     await connectDB();
 
@@ -22,3 +23,5 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

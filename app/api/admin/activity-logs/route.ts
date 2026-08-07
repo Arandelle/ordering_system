@@ -12,9 +12,10 @@ import { requireAdmin } from "@/lib/getAuth";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { ActivityLog } from "@/models/ActivityLog";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 import mongoose from "mongoose";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     const staff = await requireAdmin(request);
@@ -197,3 +198,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// Heavy query with multiple populates — limit to 20 req/min per IP
+export const GET = withRateLimit(_GET, "strict");

@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/getAuth";
 import { Types } from "mongoose";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { STAFF_ROLES } from "@/types/staff";
+import { withRateLimit } from "@/lib/rateLimit";
 
 const updateInventorySchema = z
   .object({
@@ -18,7 +19,7 @@ const updateInventorySchema = z
 
 type UpdateInventoryInput = z.infer<typeof updateInventorySchema>;
 
-export async function PUT(
+async function _PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -109,3 +110,5 @@ export async function PUT(
     );
   }
 }
+
+export const PUT = withRateLimit(_PUT, "write");

@@ -20,8 +20,9 @@ import { logOrderCancelledByCustomer } from "@/services/activityLog.service";
 import { EMAIL_FROM, resend } from "@/lib/resend";
 import { getStatusSubject } from "@/app/api/paymaya/webhook/route";
 import OrderSummaryEmail from "@/app/emails/OrderSummaryEmail";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(
+async function _GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -66,7 +67,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -240,3 +241,6 @@ export async function PATCH(
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PATCH = withRateLimit(_PATCH, "write");

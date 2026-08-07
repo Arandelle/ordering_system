@@ -13,8 +13,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUnreadCount } from "@/services/notification.service";
 import { getAPIError, getForbiddenError } from "@/lib/getApiError";
 import { STAFF_ROLES } from "@/types/staff";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     const staff = await requireAdmin(request);
@@ -41,3 +42,5 @@ export async function GET(request: NextRequest) {
     return getAPIError(error, 500, {fallbackMessage: "Failed to fetch unread count"});
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

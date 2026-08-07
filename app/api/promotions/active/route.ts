@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/mongodb";
 import { isPromotionScheduleActive } from "@/lib/promotions/promotions.service";
 import { getStoreStatus } from "@/lib/storeStatus";
+import { withRateLimit } from "@/lib/rateLimit";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
 import { Settings } from "@/models/Setting";
 import type {
@@ -73,7 +74,7 @@ function toActiveOrderDiscountPromotion(
   };
 }
 
-export async function GET() {
+async function _GET() {
   try {
     await connectDB();
 
@@ -122,3 +123,5 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

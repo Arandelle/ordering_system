@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/getAuth";
 import { getAPIError } from "@/lib/getApiError";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 import { runAccountCleanup } from "@/services/customer/account-cleanup.service";
 
 /**
@@ -12,7 +13,7 @@ import { runAccountCleanup } from "@/services/customer/account-cleanup.service";
  *
  * Requires admin authentication.
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await requireAdmin(request);
 
@@ -31,3 +32,6 @@ export async function POST(request: NextRequest) {
     });
   }
 }
+
+// Destructive admin operation — limit to 30 req/min per IP
+export const POST = withRateLimit(_POST, "write");

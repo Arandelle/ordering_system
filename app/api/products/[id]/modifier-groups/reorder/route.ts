@@ -2,6 +2,7 @@ import { getAPIError } from "@/lib/getApiError";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import { reorderSubDocuments } from "@/lib/reorder";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Product } from "@/models/Product";
 import { isValidNonEmptyArray } from "@/utils/assertNonEmptyArray";
 import { NextRequest, NextResponse } from "next/server";
@@ -12,7 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
  * Body: { groups: [{ id, position }] }
  * "id" is the sub-document _id of the modifier group.
  */
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -52,3 +53,5 @@ export async function PATCH(
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

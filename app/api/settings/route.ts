@@ -1,9 +1,10 @@
 
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Settings } from "@/models/Setting";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+async function _GET() {
   try {
     await connectDB();
 
@@ -24,7 +25,7 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   try {
     await connectDB();
 
@@ -69,3 +70,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "public");
+export const POST = withRateLimit(_POST, "write");

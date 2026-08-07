@@ -35,6 +35,7 @@ import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { logOrderStatusChange } from "@/services/activityLog.service";
 import { getAPIError } from "@/lib/getApiError";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
+import { withRateLimit } from "@/lib/rateLimit";
 
 // ============================================
 // GET /api/orders/[id]
@@ -44,7 +45,7 @@ import { getValidObjectId } from "@/helper/getValidObjectIds";
  * Fetch a single order by ID
  * Returns complete order data in consistent format
  */
-export async function GET(
+async function _GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -143,7 +144,7 @@ export async function completeInventory(
  * Uses STATUS_TRANSITIONS from constants for safe state transitions
  * Automatically updates timeline when status changes
  */
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -529,7 +530,7 @@ const MIN_ARCHIVE_AGE_MS = 30 * 24 * 60 * 60 * 1000;
  * Sets isDeleted: true + deletedAt timestamp so the order is excluded
  * from the main list but preserved for historical/audit purposes.
  */
-export async function DELETE(
+async function _DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -601,3 +602,7 @@ export async function DELETE(
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PATCH = withRateLimit(_PATCH, "write");
+export const DELETE = withRateLimit(_DELETE, "write");

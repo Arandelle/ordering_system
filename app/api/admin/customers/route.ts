@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
 import { buildPaginationMeta, parseRequestQuery } from "@/utils/query-helpers";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -122,3 +123,5 @@ export async function GET(request: NextRequest) {
     })
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

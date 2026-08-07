@@ -1,8 +1,9 @@
 import cloudinary from "@/lib/cloudinary";
 import { requireAdmin } from "@/lib/getAuth";
+import { withRateLimit } from "@/lib/rateLimit";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     
     await requireAdmin(request);
@@ -26,3 +27,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "write");

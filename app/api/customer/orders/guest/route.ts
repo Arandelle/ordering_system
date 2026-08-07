@@ -1,8 +1,9 @@
 import { connectDB } from "@/lib/mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import { queryOrders } from "@/services/order/order.service";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -51,3 +52,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

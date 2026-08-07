@@ -1,11 +1,12 @@
 import { getAPIError } from "@/lib/getApiError";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Branch } from "@/models/Branch";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET single branch by ID — used by the edit page
-export async function GET(
+async function _GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -31,7 +32,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -62,7 +63,7 @@ export async function PATCH(
   }
 }
 
-export async function PUT(
+async function _PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -169,7 +170,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
+async function _DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -200,3 +201,8 @@ export async function DELETE(
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "public");
+export const PATCH = withRateLimit(_PATCH, "write");
+export const PUT = withRateLimit(_PUT, "write");
+export const DELETE = withRateLimit(_DELETE, "write");

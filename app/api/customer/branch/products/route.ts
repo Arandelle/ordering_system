@@ -8,6 +8,7 @@ import { getActiveProductDiscountPreviews } from "@/lib/product-promotions/produ
 import { fetchBranch } from "@/services/branch/branch.service";
 import { getAPIError } from "@/lib/getApiError";
 import type { ModifierGroupAggregate, ModifierItemAggregate } from "@/types/modifier-aggregate";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * GET /api/branch/products
@@ -22,7 +23,7 @@ import type { ModifierGroupAggregate, ModifierItemAggregate } from "@/types/modi
  * GET /api/branch/products?branchId=507f1f77bcf86cd799439011
  */
 
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     await connectDB();
 
@@ -378,3 +379,5 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

@@ -4,13 +4,14 @@ import { connectDB } from "@/lib/mongodb";
 import { updateProfileSchema } from "@/lib/validations";
 import Staff from "@/models/Staff";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * PUT /api/staff/profile
  * Allows an authenticated admin to update their own profile details.
  * Only name, phone, and image can be changed — role/email/password are excluded.
  */
-export async function PUT(request: NextRequest) {
+async function _PUT(request: NextRequest) {
   try {
     await connectDB();
 
@@ -55,3 +56,5 @@ export async function PUT(request: NextRequest) {
     });
   }
 }
+
+export const PUT = withRateLimit(_PUT, "write");

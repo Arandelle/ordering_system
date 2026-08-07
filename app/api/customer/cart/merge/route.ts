@@ -15,8 +15,9 @@ import { CartItem } from "@/types/MenuTypes";
 import { requireBetterAuth } from "@/lib/getAuth";
 import { getAPIError } from "@/lib/getApiError";
 import { getCartKey } from "@/contexts/CartContext";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   try {
     const customer = await requireBetterAuth(req);
 
@@ -71,3 +72,5 @@ export async function POST(req: Request) {
     });
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

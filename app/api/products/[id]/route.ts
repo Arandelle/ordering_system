@@ -5,12 +5,13 @@ import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { extractPublicId } from "@/utils/extractImagePublicId";
 import { requireSuperAdmin } from "@/lib/getAuth";
+import { withRateLimit } from "@/lib/rateLimit";
 import mongoose from "mongoose";
 import { STOCK_STATUSES } from "@/types/inventory_types";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
 
-export async function GET(
+async function _GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -190,7 +191,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
+async function _PUT(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -376,7 +377,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
+async function _DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -409,3 +410,7 @@ export async function DELETE(
     return getAPIError(error, 500, {fallbackMessage: "Failed to delete product"});
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PUT = withRateLimit(_PUT, "write");
+export const DELETE = withRateLimit(_DELETE, "write");

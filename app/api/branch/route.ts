@@ -1,12 +1,13 @@
 import { getAPIError } from "@/lib/getApiError";
 import { getAdminAuth, requireSuperAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Branch } from "@/models/Branch";
 import { STAFF_ROLES } from "@/types/staff";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -47,7 +48,7 @@ const branchSchema = z.object({
   maxReservationsPerDay: z.number().min(1).nullable().default(null),
 });
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     await requireSuperAdmin(request);
@@ -91,3 +92,6 @@ export async function POST(request: NextRequest) {
     return getAPIError(error, 500, {fallbackMessage: "Failed to create branch"});
   }
 }
+
+export const GET = withRateLimit(_GET, "public");
+export const POST = withRateLimit(_POST, "write");

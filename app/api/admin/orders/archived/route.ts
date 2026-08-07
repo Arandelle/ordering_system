@@ -17,8 +17,9 @@ import {
   getForbiddenError,
   getInternalServerError,
 } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -71,3 +72,5 @@ export async function GET(request: NextRequest) {
     return getInternalServerError("Failed to fetch arachived orders");
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

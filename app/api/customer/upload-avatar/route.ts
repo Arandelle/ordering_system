@@ -1,13 +1,14 @@
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { getAPIError } from "@/lib/getApiError";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/customer/upload-avatar
  * Uploads a customer's profile avatar to Cloudinary under the customer_profile folder.
  * Accepts a base64-encoded imageFile and an optional oldPublicId to destroy the previous image.
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { imageFile, oldPublicId } = body;
@@ -28,3 +29,5 @@ export async function POST(request: NextRequest) {
     });
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

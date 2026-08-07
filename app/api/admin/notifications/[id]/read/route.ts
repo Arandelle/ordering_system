@@ -17,8 +17,9 @@ import {
   getInvalidIdError,
 } from "@/lib/getApiError";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -45,3 +46,5 @@ export async function PATCH(
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

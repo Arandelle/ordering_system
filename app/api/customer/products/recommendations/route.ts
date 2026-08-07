@@ -10,6 +10,7 @@ import { getAPIError } from "@/lib/getApiError";
 import mongoose, { PipelineStage } from "mongoose";
 import { fetchBranch } from "@/services/branch/branch.service";
 import { getValidObjectIds, getValidObjectId } from "@/helper/getValidObjectIds";
+import { withRateLimit } from "@/lib/rateLimit";
 
 const DEFAULT_LIMIT = 6;
 const MAX_LIMIT = 12;
@@ -27,7 +28,7 @@ const MAX_LIMIT = 12;
  * - categoryId (optional) — filter to same category for relevance
  * - limit      (optional) — max products to return (default 6, max 12)
  */
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     await connectDB();
 
@@ -284,3 +285,5 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

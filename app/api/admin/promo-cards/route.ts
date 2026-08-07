@@ -18,13 +18,14 @@ import {
   VoucherValidityUnit,
 } from "@/types/voucher.types";
 import { getPromoCardConfig } from "@/lib/promoCardConfig";
+import { withRateLimit } from "@/lib/rateLimit";
 import { PromoCardConfigModel } from "@/models/PromoCardConfig";
 import { PromoCardPurchase } from "@/models/PromoCardPurchase";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
 import { PromotionDiscountDay } from "@/types/promotions/promotion-constant";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+async function _PATCH(request: NextRequest) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -312,3 +313,6 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PATCH = withRateLimit(_PATCH, "write");

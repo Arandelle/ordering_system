@@ -5,6 +5,7 @@ import { z } from "zod";
 import "@/lib/registerModels";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 // Validates that at least one updatable field is provided
 const bulkUpdateSchema = z.object({
@@ -32,7 +33,7 @@ const bulkUpdateSchema = z.object({
  * Bulk-update shared attributes across multiple products at once.
  * Only the fields present in `updates` are applied — omitted fields are left untouched.
  */
-export async function PUT(request: NextRequest) {
+async function _PUT(request: NextRequest) {
   try {
     await connectDB();
     await requireSuperAdmin(request);
@@ -87,3 +88,5 @@ export async function PUT(request: NextRequest) {
     return getAPIError(error, 500, { fallbackMessage: "Failed to bulk update products" });
   }
 }
+
+export const PUT = withRateLimit(_PUT, "write");

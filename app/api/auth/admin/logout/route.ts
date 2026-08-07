@@ -1,7 +1,8 @@
 import { COOKIE_NAMES } from "@/lib/getAuth";
 import {NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function POST() {
+async function _POST() {
   try {
     const response = NextResponse.json({ message: "Logout!" });
     response.cookies.delete(COOKIE_NAMES.ADMIN_TOKEN);
@@ -15,3 +16,5 @@ export async function POST() {
     );
   }
 }
+
+export const POST = withRateLimit(_POST, "api");

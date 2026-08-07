@@ -8,6 +8,7 @@ import { Review } from "@/models/Review";
 import { ReviewBody } from "@/types/ReviewTypes";
 import { getAPIError } from "@/lib/getApiError";
 import { ORDER_STATUSES } from "@/types/orderConstants";
+import { withRateLimit } from "@/lib/rateLimit";
 
 // Lean shapes returned by Mongoose .lean() — ObjectIds stay as ObjectId objects
 
@@ -33,7 +34,7 @@ interface LeanOrderItem {
 // Fetches the review for a given order, if one exists.
 // Only the order owner (authenticated customer or guest) can access it.
 
-export async function GET(
+async function _GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -87,7 +88,7 @@ export async function GET(
 
 // ─── POST /api/customer/orders/[id]/review ────────────────────────────────────
 
-export async function POST(
+async function _POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -195,3 +196,6 @@ export async function POST(
     return getAPIError(error, 500, {fallbackMessage: "Failed to create review"});
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

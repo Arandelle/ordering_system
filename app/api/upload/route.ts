@@ -5,13 +5,14 @@ import {
   destroyCloudinaryImage,
 } from "@/lib/cloudinaryUpload";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/upload
  * General-purpose image upload for products (superadmin only).
  * Accepts FormData with a file field, validates type (image only) and size (max 5MB).
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await requireSuperAdmin(request);
     const formData = await request.formData();
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
  * DELETE /api/upload?publicId=...
  * Removes a Cloudinary image by its public ID (superadmin only).
  */
-export async function DELETE(request: NextRequest) {
+async function _DELETE(request: NextRequest) {
   try {
     await requireSuperAdmin(request);
     const { searchParams } = new URL(request.url);
@@ -81,3 +82,6 @@ export async function DELETE(request: NextRequest) {
     });
   }
 }
+
+export const POST = withRateLimit(_POST, "write");
+export const DELETE = withRateLimit(_DELETE, "write");

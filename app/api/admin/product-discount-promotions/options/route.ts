@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
 import "@/lib/registerModels";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
 import mongoose from "mongoose";
@@ -22,7 +23,7 @@ type ProductRecord = {
   category?: mongoose.Types.ObjectId | null;
 };
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -105,3 +106,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

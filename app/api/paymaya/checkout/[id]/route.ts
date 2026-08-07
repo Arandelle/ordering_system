@@ -6,10 +6,11 @@ import { Order } from "@/models/Orders";
 import { ORDER_STATUSES } from "@/types/orderConstants";
 import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 import { addMoney, multiplyMoney, roundMoney } from "@/lib/money";
+import { withRateLimit } from "@/lib/rateLimit";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(
+async function _POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -299,3 +300,5 @@ export async function POST(
     );
   }
 }
+
+export const POST = withRateLimit(_POST, "api");

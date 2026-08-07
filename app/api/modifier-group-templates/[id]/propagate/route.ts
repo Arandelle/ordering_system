@@ -13,6 +13,7 @@ import {
   getNotFoundError,
 } from "@/lib/getApiError";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/modifier-group-templates/[id]/propagate
@@ -25,7 +26,7 @@ import { canAccess } from "@/lib/roleBasedAccessCtrl";
  * labels, removed items) will be replaced with the current template data.
  */
 
-export async function POST(
+async function _POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -149,3 +150,5 @@ export async function POST(
     );
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

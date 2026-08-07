@@ -15,8 +15,9 @@ import { Review } from "@/models/Review";
 import mongoose from "mongoose";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function POST(
+async function _POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -107,3 +108,5 @@ export async function POST(
     return getAPIError(error, 500, {fallbackMessage: "Failed to update vote"});
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

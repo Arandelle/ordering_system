@@ -6,6 +6,7 @@ import { PromoCardPurchase } from "@/models/PromoCardPurchase";
 import { getCustomerVoucherBalance } from "@/services/promoCardBenefits";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
+import { withRateLimit } from "@/lib/rateLimit";
 
 type PromoCardUsageOrder = {
   _id: unknown;
@@ -29,7 +30,7 @@ type PromoCardUsageOrder = {
   };
 };
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     const customer = await requireBetterAuth(request);
@@ -135,3 +136,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

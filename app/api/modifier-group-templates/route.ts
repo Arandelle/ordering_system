@@ -7,6 +7,7 @@ import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { getAPIError } from "@/lib/getApiError";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { withRateLimit } from "@/lib/rateLimit";
 import { modifierItemSchema } from "@/types/modifier-zod";
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ const templateCreateSchema = z.object({
  * GET /api/modifier-group-templates
  * List all modifier group templates with populated product references
  */
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
  * POST /api/modifier-group-templates
  * Create a new reusable modifier group template
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
 
@@ -167,3 +168,6 @@ export async function POST(request: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

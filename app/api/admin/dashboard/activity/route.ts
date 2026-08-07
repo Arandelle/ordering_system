@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/getAuth";
 import { NextRequest, NextResponse } from "next/server";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * GET /api/admin/dashboard/activity
@@ -15,7 +16,7 @@ import { getAPIError } from "@/lib/getApiError";
  * - low/out-of-stock items (recent 5)
  * - new customers (last 7 days, recent 5)
  */
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     const admin = await requireAdmin(req);
     if (!canAccess(admin.role, "dashboard.read")) {
@@ -34,3 +35,5 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "strict");

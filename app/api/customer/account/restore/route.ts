@@ -3,6 +3,7 @@ import { getAPIError } from "@/lib/getApiError";
 import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
 import { auth } from "@/lib/auth";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/customer/account/restore
@@ -28,7 +29,7 @@ import { auth } from "@/lib/auth";
  *
  * This endpoint does NOT require authentication (the user is locked out).
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
 
@@ -117,3 +118,5 @@ export async function POST(request: NextRequest) {
     });
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

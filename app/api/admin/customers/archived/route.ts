@@ -4,12 +4,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { ArchivedUser } from "@/models/ArchivedUser";
 import { buildPaginationMeta, parseRequestQuery } from "@/utils/query-helpers";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * GET /api/admin/customers/archived
  * Returns paginated list of permanently deleted (archived) customer accounts.
  */
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -42,3 +43,5 @@ export async function GET(request: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

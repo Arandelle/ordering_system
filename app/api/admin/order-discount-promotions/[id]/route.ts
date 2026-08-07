@@ -5,6 +5,7 @@ import {
   type OrderDiscountPromotionPayload,
   validateOrderDiscountPromotionConfig,
 } from "@/lib/order-promotions/order-promotion.validation";
+import { withRateLimit } from "@/lib/rateLimit";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
@@ -16,7 +17,7 @@ type RouteContext = {
   }>;
 };
 
-export async function PATCH(request: NextRequest, context: RouteContext) {
+async function _PATCH(request: NextRequest, context: RouteContext) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -73,7 +74,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+async function _DELETE(request: NextRequest, context: RouteContext) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -109,3 +110,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");
+export const DELETE = withRateLimit(_DELETE, "write");

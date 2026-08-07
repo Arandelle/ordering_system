@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Policy } from "@/models/Policy";
 
 /**
@@ -9,7 +10,7 @@ import { Policy } from "@/models/Policy";
  * No authentication required. Returns an empty array if no
  * policies have been seeded yet.
  */
-export async function GET() {
+async function _GET() {
   try {
     await connectDB();
 
@@ -26,3 +27,5 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

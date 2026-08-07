@@ -8,6 +8,7 @@ import { getAPIError } from "@/lib/getApiError";
 import mongoose from "mongoose";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import type { ModifierGroupAggregate, ModifierItemAggregate } from "@/types/modifier-aggregate";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * GET /api/customer/products/[id]
@@ -19,7 +20,7 @@ import type { ModifierGroupAggregate, ModifierItemAggregate } from "@/types/modi
  * - branchId (optional): If provided, includes branch-specific stock info
  */
 
-export async function GET(
+async function _GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -326,3 +327,5 @@ export async function GET(
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

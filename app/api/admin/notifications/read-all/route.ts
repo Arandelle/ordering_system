@@ -12,8 +12,9 @@ import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { NextRequest } from "next/server";
 import { markAllAsRead } from "@/services/notification.service";
 import { getAPIError, getForbiddenError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function PATCH(request: NextRequest) {
+async function _PATCH(request: NextRequest) {
   try {
     await connectDB();
     const staff = await requireAdmin(request);
@@ -42,3 +43,5 @@ export async function PATCH(request: NextRequest) {
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

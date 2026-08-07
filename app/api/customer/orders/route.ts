@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireBetterAuth } from "@/lib/getAuth";
 import { queryOrders } from "@/services/order/order.service";
 import { parseRequestQuery } from "@/utils/query-helpers";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     const customer = await requireBetterAuth(request);
@@ -51,3 +52,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

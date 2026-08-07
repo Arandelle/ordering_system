@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
 type ResendVerificationStatus = "sent" | "already_verified" | "not_found";
 
@@ -15,7 +16,7 @@ type ResendVerificationResponse = {
 
 const EMAIL_PATTERN = /\S+@\S+\.\S+/;
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     const body = (await request.json()) as { email?: unknown };
     const email =
@@ -72,3 +73,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Email sending — limit to 10 req/min per IP to prevent abuse
+export const POST = withRateLimit(_POST, "auth");

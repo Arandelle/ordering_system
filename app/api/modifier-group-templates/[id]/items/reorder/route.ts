@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { ModifierGroupTemplate } from "@/models/ModifierGroupTemplate";
 import { assertNonEmptyArray } from "@/utils/assertNonEmptyArray";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * PATCH /api/modifier-group-templates/[id]/items/reorder
@@ -12,7 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
  * Since items in ModifierTemplateItemSchema have `_id: false`,
  * "id" is the array index (as a string) rather than a sub-document _id.
  */
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -83,3 +84,5 @@ export async function PATCH(
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

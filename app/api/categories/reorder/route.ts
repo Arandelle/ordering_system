@@ -1,10 +1,11 @@
 import { getAPIError } from "@/lib/getApiError";
 import { requireSuperAdmin } from "@/lib/getAuth";
 import { handleReorderRequest } from "@/lib/reorder";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Category } from "@/models/Category";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PATCH(request: NextRequest) {
+async function _PATCH(request: NextRequest) {
   try {
     await requireSuperAdmin(request);
 
@@ -22,3 +23,5 @@ export async function PATCH(request: NextRequest) {
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

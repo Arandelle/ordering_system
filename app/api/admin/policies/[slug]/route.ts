@@ -5,8 +5,9 @@ import { connectDB } from "@/lib/mongodb";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { Policy } from "@/models/Policy";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(
+async function _GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
@@ -46,7 +47,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
+async function _PUT(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
@@ -137,3 +138,6 @@ export async function PUT(
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PUT = withRateLimit(_PUT, "write");

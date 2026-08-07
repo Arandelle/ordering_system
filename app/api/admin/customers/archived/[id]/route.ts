@@ -4,12 +4,13 @@ import { ArchivedUser } from "@/models/ArchivedUser";
 import { NextRequest, NextResponse } from "next/server";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * GET /api/admin/customers/archived/[id]
  * Returns a single archived customer record by its document ID.
  */
-export async function GET(
+async function _GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -35,3 +36,5 @@ export async function GET(
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

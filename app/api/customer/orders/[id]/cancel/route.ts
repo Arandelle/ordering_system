@@ -14,8 +14,9 @@ import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -150,3 +151,5 @@ export async function PATCH(
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

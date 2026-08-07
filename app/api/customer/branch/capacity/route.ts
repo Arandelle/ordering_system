@@ -6,6 +6,7 @@ import { FULFILLMENT_TYPE, ORDER_STATUSES } from "@/types/orderConstants";
 import { PAYMENT_STATUSES } from "@/types/paymentConstants";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
+import { withRateLimit } from "@/lib/rateLimit";
 
 const ACTIVE_STATUSES = [
   ORDER_STATUSES.PENDING,
@@ -22,7 +23,7 @@ const ACTIVE_STATUSES = [
  * no capacity counting since pickup doesn't share riders.
  * Delivery orders are subject to full capacity counting.
  */
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -114,3 +115,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

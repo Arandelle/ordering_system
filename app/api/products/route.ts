@@ -7,6 +7,7 @@ import { z } from "zod";
 import "@/lib/registerModels";
 import { extractPublicId } from "@/utils/extractImagePublicId";
 import { requireSuperAdmin } from "@/lib/getAuth";
+import { withRateLimit } from "@/lib/rateLimit";
 import { buildPaginationMeta, parseRequestQuery } from "@/utils/query-helpers";
 import { getActiveProductDiscountPreviews } from "@/lib/product-promotions/product-promotion.application";
 import {
@@ -94,7 +95,7 @@ const productCreateSchema = productBaseSchema
  * - limit: Limit results (0 = no limit)
  */
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -369,7 +370,7 @@ export async function GET(request: NextRequest) {
  * Create a new product
  *
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   let uploadResult: any;
 
   try {
@@ -547,3 +548,6 @@ export async function POST(request: NextRequest) {
     return getInternalServerError(error, "Failed to create product");
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

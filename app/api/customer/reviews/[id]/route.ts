@@ -30,8 +30,9 @@ import { Review } from "@/models/Review";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
 import { Order } from "@/models/Orders";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function PATCH(
+async function _PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -180,3 +181,5 @@ export async function PATCH(
     return getAPIError(error, 500, {fallbackMessage: "Failed to update review"});
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

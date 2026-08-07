@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import { CreateOrderPayload } from "@/types/OrderTypes";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 import "@/lib/registerModels";
 import { calculatePromoCardTotal } from "@/lib/promoCard";
 import { redeemCustomerVoucher } from "@/services/promoCardBenefits";
@@ -57,7 +58,7 @@ const MINIMUM_AMOUNT = 100;
 // Route handler
 // ---------------------------------------------------------------------------
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   await connectDB();
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -288,3 +289,6 @@ export async function POST(request: NextRequest) {
     await session.endSession();
   }
 }
+
+// Payment initiation — limit to 30 req/min per IP
+export const POST = withRateLimit(_POST, "write");

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import { Policy } from "@/models/Policy";
 import { POLICY_SLUGS } from "@/data/policyData";
 
@@ -10,7 +11,7 @@ import { POLICY_SLUGS } from "@/data/policyData";
  * No authentication required. Returns 404 if no record exists
  * (policies must be seeded by admin first).
  */
-export async function GET(
+async function _GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
@@ -41,3 +42,5 @@ export async function GET(
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

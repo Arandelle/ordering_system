@@ -14,10 +14,11 @@ import { listNotifications } from "@/services/notification.service";
 import { NotificationType } from "@/types/notification";
 import { getAPIError, getForbiddenError } from "@/lib/getApiError";
 import { parsePagination } from "@/utils/query-helpers";
+import { withRateLimit } from "@/lib/rateLimit";
 
 const VALID_TYPES: string[] = ["order", "reservation", "low_stock", "system"];
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     const staff = await requireAdmin(request);
@@ -59,3 +60,5 @@ export async function GET(request: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

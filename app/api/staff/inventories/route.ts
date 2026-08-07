@@ -14,6 +14,7 @@ import { STAFF_ROLES } from "@/types/staff";
 import { parseRequestQuery, buildPaginationMeta } from "@/utils/query-helpers";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * Resolves the branchId the staff member is allowed to query.
@@ -115,7 +116,7 @@ const computeInventoryFields = (): Record<string, any>[] => {
  * Paginated inventory list with search, status filter, and sorting.
  * Returns `{ data, pagination, counts }`.
  */
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     await connectDB();
 
@@ -126,7 +127,7 @@ export async function GET(req: NextRequest) {
     }
 
     const resolved = await resolveBranchAccess(req, staff);
-    if ("error" in resolved) return resolved.error;
+    if ("error" in resolved) return resolved.error!;
 
     const { branchId, allBranches } = resolved;
     const { searchParams } = new URL(req.url);
@@ -422,3 +423,5 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

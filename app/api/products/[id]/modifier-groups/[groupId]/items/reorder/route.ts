@@ -4,6 +4,7 @@ import { Product } from "@/models/Product";
 import { NextRequest, NextResponse } from "next/server";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * PATCH /api/products/[id]/modifier-groups/[groupId]/items/reorder
@@ -15,7 +16,7 @@ import { getAPIError } from "@/lib/getApiError";
  *
  * Body: { items: [{ product: "objectId", position: 1 }, ...] }
  */
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; groupId: string }> },
 ) {
@@ -107,3 +108,5 @@ export async function PATCH(
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

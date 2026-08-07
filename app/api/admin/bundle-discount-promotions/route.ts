@@ -6,10 +6,11 @@ import {
   validateBundleDiscountPromotionConfig,
 } from "@/lib/bundle-promotions/bundle-promotion.validation";
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import { BundleDiscountPromotion } from "@/models/BundleDiscountPromotion";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     const admin = await requireAdmin(request);
@@ -79,3 +80,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

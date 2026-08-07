@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isValidCoordinate } from "@/helper/isValidCoordinates";
 import { fetchBranch } from "@/services/branch/branch.service";
 import { Settings } from "@/models/Setting";
+import { withRateLimit } from "@/lib/rateLimit";
 
 type DeliveryFeeEstimateBody = {
   branchId?: string;
@@ -16,7 +17,7 @@ type DeliveryFeeEstimateBody = {
   customerBarangayCode?: string;
 };
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     const body = (await request.json()) as DeliveryFeeEstimateBody;
     const { branchId, coordinates, itemSubtotalAmount, customerBarangayCode } = body;
@@ -96,3 +97,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withRateLimit(_POST, "api");

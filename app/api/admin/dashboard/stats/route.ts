@@ -6,8 +6,9 @@ import {
 import { requireAdmin } from "@/lib/getAuth";
 import { NextRequest, NextResponse } from "next/server";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     const admin = await requireAdmin(req);
     if (!canAccess(admin.role, "dashboard.read")) {
@@ -41,3 +42,6 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+// Heavy aggregation query — limit to 20 req/min per IP
+export const GET = withRateLimit(_GET, "strict");

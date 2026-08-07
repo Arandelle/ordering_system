@@ -16,8 +16,9 @@ import { STAFF_ROLES } from "@/types/staff";
 import { buildPaginationMeta, parseRequestQuery } from "@/utils/query-helpers";
 import { PipelineStage } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     await connectDB();
 
@@ -252,3 +253,5 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

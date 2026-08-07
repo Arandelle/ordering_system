@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
 import { normalizeName } from "@/utils/normalizeName";
 import { getAPIError, getInternalServerError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 type PromoCardCheckoutBody = {
   firstName?: string;
@@ -32,7 +33,7 @@ function assertValidPromoCardPayload(
   }
 }
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     const customer = await requireBetterAuth(request);
@@ -192,3 +193,5 @@ export async function POST(request: NextRequest) {
     return getInternalServerError("Failed to create promo card checkout.");
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

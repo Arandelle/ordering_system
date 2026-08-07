@@ -13,8 +13,9 @@ import { Review } from "@/models/Review";
 import { getAPIError } from "@/lib/getApiError";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
 import { buildPaginationMeta, parseRequestQuery } from "@/utils/query-helpers";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(
+async function _GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -164,3 +165,5 @@ export async function GET(
     return getAPIError(error, 500, {fallbackMessage: "Failed to fetch product reviews"});
   }
 }
+
+export const GET = withRateLimit(_GET, "api");

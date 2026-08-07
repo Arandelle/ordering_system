@@ -1,5 +1,6 @@
 import { COOKIE_NAMES } from "@/lib/getAuth";
 import { connectDB } from "@/lib/mongodb";
+import { withRateLimit } from "@/lib/rateLimit";
 import Staff from "@/models/Staff";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
@@ -11,7 +12,7 @@ if (!process.env.JWT_SECRET) {
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
 
@@ -88,3 +89,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Brute-force protection — limit to 10 req/min per IP
+export const POST = withRateLimit(_POST, "auth");

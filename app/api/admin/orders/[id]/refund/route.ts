@@ -15,8 +15,9 @@ import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { logActivity, ACTOR_TYPE } from "@/services/activityLog.service";
 import { getAPIError } from "@/lib/getApiError";
 import { getValidObjectId } from "@/helper/getValidObjectIds";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function PATCH(
+async function _PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -130,3 +131,5 @@ export async function PATCH(
     });
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

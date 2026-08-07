@@ -6,6 +6,7 @@ import { Inventory } from "@/models/Inventory";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { Types } from "mongoose";
 import { STAFF_ROLES } from "@/types/staff";
+import { withRateLimit } from "@/lib/rateLimit";
 
 const bulkUpdateSchema = z.object({
   items: z
@@ -27,7 +28,7 @@ const bulkUpdateSchema = z.object({
  * Bulk update multiple inventory records. Superadmins can pass `branchId`
  * to target any branch; regular admins are locked to their own branch.
  */
-export async function PUT(request: NextRequest) {
+async function _PUT(request: NextRequest) {
   try {
     await connectDB();
     const staff = await requireAdmin(request);
@@ -107,3 +108,5 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
+export const PUT = withRateLimit(_PUT, "write");

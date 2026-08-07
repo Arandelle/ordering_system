@@ -7,13 +7,14 @@ import { requireAdmin } from "@/lib/getAuth";
 import { NextRequest, NextResponse } from "next/server";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * GET /api/admin/reports
  * Returns all report data: key metrics, trend, category sales, peak hours.
  * Supports the same period/branch query params as the dashboard.
  */
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     const admin = await requireAdmin(req);
     if (!canAccess(admin.role, "reports.read")) {
@@ -33,3 +34,6 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+// Heavy report generation — limit to 20 req/min per IP
+export const GET = withRateLimit(_GET, "strict");

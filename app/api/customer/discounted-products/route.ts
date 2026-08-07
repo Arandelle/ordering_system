@@ -20,6 +20,7 @@ import type {
 import { buildPaginationMeta, parsePagination } from "@/utils/query-helpers";
 import mongoose, { type PipelineStage } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
 type ProductDiscountPromotionRecord = {
   products: {
@@ -146,7 +147,7 @@ function normalizeProduct(
   };
 }
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -442,3 +443,5 @@ export async function GET(request: NextRequest) {
     return getAPIError(error, 500, {fallbackMessage: "An error occured while fetching discounted products"});
   }
 }
+
+export const GET = withRateLimit(_GET, "public");

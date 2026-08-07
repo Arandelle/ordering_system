@@ -4,13 +4,14 @@ import Staff from "@/models/Staff";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/getAuth";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/auth/admin/change-password
  * Allows an authenticated admin to change their own password.
  * Session is validated via the admin_token cookie, so current password is not required.
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
 
@@ -47,3 +48,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Password change — limit to 10 req/min per IP
+export const POST = withRateLimit(_POST, "auth");

@@ -3,10 +3,11 @@ import { SubCategory } from "@/models/SubCategory";
 import { NextRequest, NextResponse } from "next/server";
 import "@/models/Category";
 import { requireSuperAdmin } from "@/lib/getAuth";
+import { withRateLimit } from "@/lib/rateLimit";
 
 // ─── GET — all subcategories (optionally filtered by ?category=<id>) ──────────
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
 
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
 
 // ─── POST — create subcategory ────────────────────────────────────────────────
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     await requireSuperAdmin(request);
@@ -78,3 +79,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

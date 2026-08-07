@@ -5,8 +5,9 @@ import Staff from "@/models/Staff";
 import { STAFF_ROLES } from "@/types/staff";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(req: NextRequest) {
+async function _GET(req: NextRequest) {
   try {
     await connectDB();
 
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     await requireSuperAdmin(request);
@@ -81,3 +82,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

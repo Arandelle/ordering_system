@@ -2,8 +2,9 @@ import { connectDB } from "@/lib/mongodb";
 import { Cart } from "@/models/Cart";
 import { requireBetterAuth } from "@/lib/getAuth";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: Request) {
+async function _GET(request: Request) {
   try {
     await connectDB();
     const customer = await requireBetterAuth(request);
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function _PUT(request: NextRequest) {
   try {
     await connectDB();
     const customer = await requireBetterAuth(request);
@@ -37,3 +38,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Failed to save cart" }, { status: 500 });
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const PUT = withRateLimit(_PUT, "write");

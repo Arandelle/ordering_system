@@ -13,8 +13,9 @@ import { connectDB } from "@/lib/mongodb";
 import { canAccess } from "@/lib/roleBasedAccessCtrl";
 import { Review } from "@/models/Review";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function PATCH(
+async function _PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -103,3 +104,5 @@ export async function PATCH(
     return getAPIError(error, 500, {fallbackMessage: "Failed to update review"});
   }
 }
+
+export const PATCH = withRateLimit(_PATCH, "write");

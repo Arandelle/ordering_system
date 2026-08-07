@@ -2,13 +2,14 @@ import { requireAdmin } from "@/lib/getAuth";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { NextRequest, NextResponse } from "next/server";
 import { getAPIError } from "@/lib/getApiError";
+import { withRateLimit } from "@/lib/rateLimit";
 
 /**
  * POST /api/staff/upload-avatar
  * Uploads an admin's profile avatar to Cloudinary under the admin_profile folder.
  * Accepts a base64-encoded imageFile and an optional oldPublicId to destroy the previous image.
  */
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await requireAdmin(request);
 
@@ -35,3 +36,5 @@ export async function POST(request: NextRequest) {
     });
   }
 }
+
+export const POST = withRateLimit(_POST, "write");

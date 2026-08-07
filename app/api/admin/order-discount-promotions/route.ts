@@ -5,11 +5,12 @@ import {
   type OrderDiscountPromotionPayload,
   validateOrderDiscountPromotionConfig,
 } from "@/lib/order-promotions/order-promotion.validation";
+import { withRateLimit } from "@/lib/rateLimit";
 import { OrderDiscountPromotion } from "@/models/OrderDiscountPromotion";
 import { NextRequest, NextResponse } from "next/server";
 import "@/lib/registerModels";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     await requireAdmin(request);
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function _POST(request: NextRequest) {
   try {
     await connectDB();
     const admin = await requireAdmin(request);
@@ -67,3 +68,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "api");
+export const POST = withRateLimit(_POST, "write");

@@ -1,8 +1,9 @@
 import { queryOrders } from "@/services/order/order.service";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
 // app/api/orders/guest/[id]/route.ts
-export async function GET(
+async function _GET(
   request: NextRequest,
   context: {params: Promise<{id: string}>},
 ) {
@@ -25,3 +26,5 @@ const { id } = await context.params;
 
   return NextResponse.json({ data: found });
 }
+
+export const GET = withRateLimit(_GET, "public");

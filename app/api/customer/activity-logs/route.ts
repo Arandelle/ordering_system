@@ -11,8 +11,9 @@ import { connectDB } from "@/lib/mongodb";
 import { requireBetterAuth } from "@/lib/getAuth";
 import { ActivityLog } from "@/models/ActivityLog";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function GET(request: NextRequest) {
+async function _GET(request: NextRequest) {
   try {
     await connectDB();
     const customer = await requireBetterAuth(request);
@@ -86,3 +87,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimit(_GET, "strict");
