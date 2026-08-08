@@ -2,17 +2,17 @@ import { cn } from "@/lib/utils";
 import React, { ComponentPropsWithoutRef } from "react";
 import { DynamicIcon } from "../DynamicIcon";
 
-type IconPosition = "left" | "right";
+export interface ButtonIconProps {
+  name: string;
+  size?: number;
+  className?: string;
+}
 
-export interface IconButtonProps extends ComponentPropsWithoutRef<"button"> {
-  icon?: {
-    name: string | null;
-    size?: number;
-    className?: string;
-    position?: IconPosition; // default "left"
-  };
+export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
+  iconLeft?: ButtonIconProps;
+  iconRight?: ButtonIconProps;
   text?: string;
-  title?: string; // used as tooltip content, not native title attribute
+  title?: string;
   variant?:
     | "primary"
     | "secondary"
@@ -24,17 +24,13 @@ export interface IconButtonProps extends ComponentPropsWithoutRef<"button"> {
     | "underline";
   isLoading?: boolean;
   loadingText?: string;
-  children?: React.ReactNode; // if provided, overrides text/icon layout entirely
+  children?: React.ReactNode;
 }
 
-// Shared disabled styling used by most variants
 const DEFAULT_DISABLED =
   "disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed disabled:opacity-100";
 
-const variantClasses: Record<
-  NonNullable<IconButtonProps["variant"]>,
-  string
-> = {
+const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary: cn(
     "bg-brand-color-500 hover:bg-brand-color-600 text-white",
     DEFAULT_DISABLED,
@@ -52,7 +48,6 @@ const variantClasses: Record<
     "bg-red-500 hover:bg-red-600 text-white",
     "disabled:bg-red-200 disabled:cursor-not-allowed",
   ),
-  // success intentionally does NOT use DEFAULT_DISABLED — it stays green when disabled
   success:
     "bg-green-500 text-white disabled:bg-green-500 disabled:text-white disabled:opacity-100 disabled:cursor-default",
   disabled: DEFAULT_DISABLED,
@@ -61,7 +56,8 @@ const variantClasses: Record<
 };
 
 const IconButton = ({
-  icon,
+  iconLeft,
+  iconRight,
   text,
   title,
   className,
@@ -72,8 +68,9 @@ const IconButton = ({
   disabled,
   children,
   ...props
-}: IconButtonProps) => {
-  const iconPosition = icon?.position ?? "left";
+}: ButtonProps) => {
+  const leftIconSize = iconLeft?.size ?? 14;
+  const rightIconSize = iconRight?.size ?? 14;
 
   return (
     <button
@@ -92,26 +89,23 @@ const IconButton = ({
         children
       ) : (
         <>
-          {isLoading && (
-            <DynamicIcon
-              name="Loader2"
-              size={icon?.size ?? 14}
-              className="animate-spin"
-            />
-          )}
-          {!isLoading && icon && iconPosition === "left" && icon.name && (
-            <DynamicIcon
-              name={icon.name}
-              size={icon.size ?? 14}
-              className={icon.className}
-            />
+          {isLoading ? (
+            <DynamicIcon name="Loader2" size={leftIconSize} className="animate-spin" />
+          ) : (
+            iconLeft && (
+              <DynamicIcon
+                name={iconLeft.name}
+                size={leftIconSize}
+                className={iconLeft.className}
+              />
+            )
           )}
           {text && <span>{isLoading ? loadingText : text}</span>}
-          {!isLoading && icon && iconPosition === "right" && icon.name && (
+          {!isLoading && iconRight && (
             <DynamicIcon
-              name={icon.name}
-              size={icon.size ?? 14}
-              className={icon.className}
+              name={iconRight.name}
+              size={rightIconSize}
+              className={iconRight.className}
             />
           )}
         </>
