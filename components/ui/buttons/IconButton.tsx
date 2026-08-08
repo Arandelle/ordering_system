@@ -8,7 +8,13 @@ export interface ButtonIconProps {
   className?: string;
 }
 
+interface LegacyIconProps extends ButtonIconProps {
+  position?: "left" | "right";
+}
+
 export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
+  /** @deprecated Use `iconLeft` / `iconRight` instead. Kept for backward compatibility. */
+  icon?: LegacyIconProps;
   iconLeft?: ButtonIconProps;
   iconRight?: ButtonIconProps;
   text?: string;
@@ -56,6 +62,7 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
 };
 
 const IconButton = ({
+  icon,
   iconLeft,
   iconRight,
   text,
@@ -69,8 +76,13 @@ const IconButton = ({
   children,
   ...props
 }: ButtonProps) => {
-  const leftIconSize = iconLeft?.size ?? 14;
-  const rightIconSize = iconRight?.size ?? 14;
+  const resolvedLeft =
+    iconLeft ?? (icon && icon.position !== "right" ? icon : undefined);
+  const resolvedRight =
+    iconRight ?? (icon && icon.position === "right" ? icon : undefined);
+
+  const leftIconSize = resolvedLeft?.size ?? 14;
+  const rightIconSize = resolvedRight?.size ?? 14;
 
   return (
     <button
@@ -90,22 +102,26 @@ const IconButton = ({
       ) : (
         <>
           {isLoading ? (
-            <DynamicIcon name="Loader2" size={leftIconSize} className="animate-spin" />
+            <DynamicIcon
+              name="Loader2"
+              size={leftIconSize}
+              className="animate-spin"
+            />
           ) : (
-            iconLeft && (
+            resolvedLeft && (
               <DynamicIcon
-                name={iconLeft.name}
+                name={resolvedLeft.name}
                 size={leftIconSize}
-                className={iconLeft.className}
+                className={resolvedLeft.className}
               />
             )
           )}
           {text && <span>{isLoading ? loadingText : text}</span>}
-          {!isLoading && iconRight && (
+          {!isLoading && resolvedRight && (
             <DynamicIcon
-              name={iconRight.name}
+              name={resolvedRight.name}
               size={rightIconSize}
-              className={iconRight.className}
+              className={resolvedRight.className}
             />
           )}
         </>
