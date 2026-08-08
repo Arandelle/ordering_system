@@ -105,7 +105,7 @@ const PromoBanner = ({
                   <AppImage
                     src={card.image}
                     alt={`Promo Banner ${card.id}`}
-                    className="aspect-video"
+                    className="aspect-video object-fill"
                   />
                   <div className="absolute bg-linear-to-t from-black/30 to-transparent inset-0" />
                 </div>

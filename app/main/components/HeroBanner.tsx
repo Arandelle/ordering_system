@@ -43,19 +43,20 @@ export default function CarouselBanner() {
       <div
         role="region"
         aria-label="Image Carousel"
-        className="relative w-full h-[30vh] md:h-[50vh] lg:h-[60vh] overflow-hidden"
-        style={{ aspectRatio: "16/9" }}
+        className="relative w-full overflow-hidden bg-brand-color-500"
+        style={{ aspectRatio: "16/9", maxHeight: "70vh" }}
       >
         {/* Images */}
         {images.map((src, i) => (
           <div
             key={i}
-            className="absolute inset-0 w-full h-[30vh] md:h-[50vh] lg:h-[60vh] object-contain transition-opacity duration-700"
+            className="absolute inset-0 w-full h-full transition-opacity duration-700"
           >
             <AppImage
               src={src}
               alt={`Slide ${i + 1}`}
               style={{ opacity: i === current ? 1 : 0 }}
+              className=" object-fill"
             />
           </div>
         ))}
